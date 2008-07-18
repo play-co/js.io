@@ -1,0 +1,108 @@
+/* @override http://localhost:5000/css/lobby.css */
+
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    overflow: hidden;
+    background: #d4e3ff url(background.png) no-repeat 50% 50%;
+}
+
+.yui-resize-handle-br { 
+    height: 11px; 
+     width: 11px; 
+     background-position: -20px -60px; 
+     background-color: transparent; 
+ } 
+
+.yui-skin-sam .yui-layout .yui-resize-proxy div { 
+    background-color: #666666;
+    border: 0px none;
+} 
+
+/* @group User List */
+
+.selectedUsername {
+    background-color: #39F !important;
+    color: white !important;
+}
+.userlist {
+    background-color: white;
+    border: 1px solid #333;
+	overflow: auto;
+	height: 100%;
+}
+
+.userlist div.username {
+	padding: 2px 5px 2px 20px;
+	background-image: url(buddy.png);
+	background-position: 2px 50%;
+	background-repeat: no-repeat;
+	cursor: default;
+	font: 12px Verdana, Helvetica, Arial;
+}
+
+.userlist div.username:hover {
+	background-color: #ACF;
+	color: white;
+}
+
+.userlist .yui-button button,
+.userlist .yui-button a {
+
+    outline: none;
+    
+}
+
+/* @end */
+
+/* @group Chat */
+
+.chat-history {
+	font: 12px "Verdana";
+	height: 100%;
+	width: 100%;
+	position: relative;
+	overflow: auto;
+	background-color: white;
+}
+
+.chat-history table,
+.chat-history table tr,
+.chat-history table td {
+	border: 0px none;
+	margin: 0;
+	padding: 0;
+}
+
+.chat-history table.history {
+    width: 100%;
+}
+
+.chat-history td.username {
+	text-align: right;
+}
+
+/* Make the username area as small as possible */
+.chat-history td.message {
+	width: 100%;
+}
+
+.chat-history table.history td {
+	padding: 0px .25em;
+}
+
+/* Message Styles */
+.chat-history .chatMessage .username {
+	font-weight: bold;
+	color: #555;
+}
+
+.chat-history .enterExitMessage .username {
+	font-weight: bold;
+	color: #00A;
+}
+.chat-history .enterExitMessage .message {
+    color: #555;
+}

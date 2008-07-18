@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>JavaScript Stomp Test</title>
+    <script src="/static/BinaryTCPSocket.js"></script>
+    <script src="shell.js"></script>
+    <script src="/static/protocols/stomp/stomp.js"></script>
+    <script>
+        onload = function() {
+            // set up shell.
+            var output = document.getElementById('output');
+            var shell = new Shell(output);
+
+            // set up stomp client.
+            stomp = new STOMPClient();
+            stomp.onopen = function() {
+                shell.print("Transport openned");
+            };
+            stomp.onclose = function() {
+                shell.print("Transport closed");
+            };
+            stomp.onerror = function(error) {
+                alert(error);
+            };
+            stomp.onerrorframe = function(frame) {
+                alert(frame.body);
+            };
+            stomp.onconnectedframe = function() {
+                shell.print("Connected to ActiveMQ as user " + document.getElementById('username').value);
+            };
+            stomp.onmessageframe = function(frame) {
+                shell.print(frame.body);
+            };
+        };
+    </script>
+</head>
+<body>
+    <h1>STOMP Test</h1>
+    <div id="output" style="background-color: #eee; overflow-y: scroll; height : 200px;"></div>
+
+    
+    <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value, document.getElementById('password').value)">Connect</button>
+    <button onclick="stomp.disconnect()">Disconnect</button>
+    Name: <input id="username" value="frank">
+    Password: <input id="password" value="">
+    <br>    
+    <button onclick="stomp.subscribe(document.getElementById('sub_channel').value)">Subscribe</button>
+    <button onclick="stomp.unsubscribe(document.getElementById('sub_channel').value)">Unsubscribe</button>
+    channel:
+    <input id="sub_channel" value="/topic/home"><br>
+    
+    
+    <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value)">Send</button>
+    <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('pub_channel').value, {transaction : document.getElementById('trans_pub_id').value})">Send with Transaction Id</button>
+    
+    <input id="input" value="hello">
+    channel:
+    <input id="pub_channel" value="/topic/home">
+    transaction id:
+    <input id="trans_pub_id" value="trans1">
+    <br>
+    
+    
+    <br>
+    <button onclick="stomp.begin(document.getElementById('trans_id').value)">Begin Transaction</button>
+    <button onclick="stomp.commit(document.getElementById('trans_id').value)">Commit</button>
+    <button onclick="stomp.abort(document.getElementById('trans_id').value)">Abort</button>
+    transaction id:
+    <input id="trans_id" value="trans1">
+
+</body>
+</html>
+

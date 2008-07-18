@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Orbited Web Telnet Client</title>
+  <script src="/static/orbited.js"></script>
+  <script>
+      function eventcb(data) { console.log(data) }
+      Orbited.connect(eventcb, 'tester');
+  </script>
+ </head>
+ <body>
+  <h1> Orbited Dispatch Test </h1>
+ </body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Orbited In-browser IRC</title>
+  <link rel="stylesheet" href="chat.css">
+  <script src="/static/TCPSocket.js"></script>
+  <script src="/static/protocols/irc/irc.js"></script>
+  <script src="simplechat.js"></script>
+  <!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script> -->
+  <script src="/static/demos/lib/jquery.js"></script>
+  <script>
+    //ORBITED_DOMAIN = "www.test.local"
+    ENTER_KEY = 13
+    
+    $(function(){
+      $('#nickname').focus();
+      
+      $('#nickname').keypress( function(e) {
+        var key = e.charCode || e.keyCode || 0
+        if (key == ENTER_KEY) {
+          connect();
+        };
+      });
+      
+      $('#chatbox_input').keypress(function(e) {
+        var key = e.charCode || e.keyCode || 0;
+        if (key == ENTER_KEY) {
+          chat();
+          return false;
+        };
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="chatbox">
+    <div id="signin_popup">
+      <h2>Sign in to the #orbited chat room.</h2>
+      <label for="nickname">Nickname:</label>
+  		<input type="text" id="nickname" maxlength="16" value="">
+    </div>
+    <div id="absorb_clicks" onclick=""></div>
+    <div class="left_column">
+      <div class="chathistory" id="chathistory">
+      </div>
+      <textarea name="message" class="chatbox_input" id="chatbox_input" rows="2" cols="50"></textarea>
+    </div>
+    <div class="user_list" id="user_list">
+    </div>
+  </div>
+</body>
+</html>
