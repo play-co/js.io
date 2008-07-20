@@ -1,0 +1,1 @@
+js.io simplifies creating rich web applications by providing direct integration with Open protocols.
