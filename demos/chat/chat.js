@@ -1,3 +1,5 @@
+// TODO refactor this code into a UI and non-UI part.
+
 var CHANNEL = "#orbited"
 var IRC_SERVER = 'irc.freenode.net'
 var IRC_PORT = 6667
