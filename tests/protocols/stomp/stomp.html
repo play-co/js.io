@@ -3,8 +3,9 @@
     <head>
         <title>stomp.js unit tests</title>
         <script type="text/javascript" src="/static/dojo-trunk/dojo/dojo.js" djConfig="isDebug:true"></script>
-        <script src="/static/BinaryTCPSocket.js"></script>
-        <script src="/static/protocols.local/stomp/stomp.js"></script>
+        <!-- TODO move this include to common place -->
+        <script src="/static/protocols/stomp/unicode.js"></script>
+        <script src="/static/protocols/stomp/stomp.js"></script>
         <script type="text/javascript">
             dojo.require("doh.runner");
 
@@ -12,6 +13,7 @@
                 function TCPSocketMock() {
                     var self = this;
                     self.data = [];
+                    self.open = function() {};
                     self.send = function(data) {
                         self.data.push.apply(self.data, data);
                     };
