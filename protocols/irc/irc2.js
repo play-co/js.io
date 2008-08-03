@@ -66,14 +66,15 @@ IRCClient = function() {
                             
     self.connect = function(hostname, port) {
         log.debug("connect");
-        conn = self._createTransport(hostname, port);
+        conn = self._createTransport();
         conn.onopen = conn_opened
         conn.onclose = conn_closed
         conn.onread = conn_read
+        conn.open(hostname, port)
         // TODO set onerror.
     }
-    self._createTransport = function(hostname, port) {
-        return new TCPSocket(hostname, port);
+    self._createTransport = function() {
+        return new TCPSocket();
     };
     self.close = function() {
         log.debug("close");
