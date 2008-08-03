@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>irc2.js unit tests</title>
+        <script type="text/javascript" src="/static/dojo-trunk/dojo/dojo.js" djConfig="isDebug:true"></script>
+        <script src="/static/protocols.local/irc/irc2.js"></script>
+        <script type="text/javascript">
+            dojo.require("doh.runner");
+
+            dojo.addOnLoad(function() {
+                function TCPSocketMock() {
+                    var self = this;
+                    self.data = [];
+                    self.close = function() {};
+                    self.send = function(data) {
+                        self.data.push.apply(self.data, data);
+                    };
+                    self.onopen = null;
+                    self.onread = null;
+                    self.onerror = null;
+                    self.onclose = null;
+                }
+
+                function setUp(t) {
+                    var irc = new IRCClient();
+                    irc._createTransport = function() {
+                        return t._context.transport = new TCPSocketMock();
+                    };
+                    irc.onPRIVMSG = function(command) {
+                        t._context.commands.push(command);
+                    };
+                    irc.onerror = function(command) {
+                        t._context.commands.push(command);
+                    };
+                    t._context = {
+                        irc: irc,
+                        transport: null,
+                        commands: []
+                    };
+                }
+
+                doh.register("Irc2Tests",
+                    [
+                        {
+                            name: "Irc2Baseline",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                // make sure all the transport callbacks are set.
+                                t.t(context.transport.onopen !== null);
+                                t.t(context.transport.onread !== null);
+                                // TODO t.t(context.transport.onerror !== null);
+                                t.t(context.transport.onclose !== null);
+
+                                // send dummy.
+                                context.transport.onread("PRIVMSG\r\n");
+                                context.irc.close();
+
+                                t.is([{prefix:null,type:"PRIVMSG",args:[]}], context.commands);
+                            }
+                        },
+
+                        {
+                            name: "emptyLines",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread("\r\n\r\n");
+                                context.irc.close();
+
+                                t.is([], context.commands);
+                            }
+                        },
+
+                        {
+                            name: "singleArg",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread("PRIVMSG one\r\n");
+                                context.irc.close();
+
+                                t.is([{prefix:null,type:"PRIVMSG",args:["one"]}], context.commands);
+                            }
+                        },
+
+                        {
+                            name: "multipleArgs",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread("PRIVMSG one two three\r\n");
+                                context.irc.close();
+
+                                t.is([{prefix:null,type:"PRIVMSG",args:["one", "two", "three"]}], context.commands);
+                            }
+                        },
+
+                        {
+                            name: "trailingArg",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread("PRIVMSG one :command with embedded  spaces  and : (colons)\r\n");
+                                context.irc.close();
+
+                                t.is([{prefix:null,type:"PRIVMSG",args:["one", "command with embedded  spaces  and : (colons)"]}], context.commands);
+                            }
+                        },
+
+                        {
+                            name: "multipleCommands",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread("PRIVMSG one\r\nPRIVMSG two\r\n");
+                                context.irc.close();
+
+                                t.is([
+                                        {prefix:null,type:"PRIVMSG",args:["one"]},
+                                        {prefix:null,type:"PRIVMSG",args:["two"]}
+                                    ],
+                                    context.commands
+                                );
+                            }
+                        },
+
+                        {
+                            name: "multipleCommandsWithPartialReads",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread("PRIVMSG one");
+                                context.transport.onread("\r\nPRIV");
+                                context.transport.onread("MSG two\r");
+                                context.transport.onread("\n");
+                                context.irc.close();
+
+                                t.is([
+                                        {prefix:null,type:"PRIVMSG",args:["one"]},
+                                        {prefix:null,type:"PRIVMSG",args:["two"]}
+                                    ],
+                                    context.commands
+                                );
+                            }
+                        },
+
+                        {
+                            name: "withPrefix",
+                            setUp: setUp,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.irc.connect();
+                                context.transport.onread(":Chicken PRIVMSG Cow!\r\n:Cow PRIVMSG Chicken!\r\n");
+                                context.irc.close();
+
+                                t.is([
+                                        {prefix:"Chicken",type:"PRIVMSG",args:["Cow!"]},
+                                        {prefix:"Cow",type:"PRIVMSG",args:["Chicken!"]}
+                                    ],
+                                    context.commands
+                                );
+                            }
+                        }
+                    ]
+                );
+
+                doh.run();
+            })
+        </script>
+    </head>
+    <body>
+        <p>NB: if you running Firefox with Firebug, look at its console.</p>
+    </body>
+</html>
