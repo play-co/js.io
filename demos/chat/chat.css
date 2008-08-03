@@ -58,6 +58,12 @@
 .chatbox .chathistory .message.mentioned{
   background-color: #d5c5ff;
 }
+.chatbox .chathistory .message.private{
+  background-color: #ccc;
+}
+.chatbox .chathistory .message.ctcp {
+  background-color: #f0f;
+}
 .chatbox .chathistory .action,
 .chatbox .chathistory .action .user {
   color: #D68850;
