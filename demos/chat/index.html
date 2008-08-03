@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <title>Orbited In-browser IRC</title>
   <link rel="stylesheet" href="chat.css">
-  <script src="/static/TCPSocket.js"></script>
-  <script src="/static/protocols.local/irc/irc2.js"></script>
+  <script src="/static/Orbited.js"></script>
+  <script>TCPSocket = Orbited.TCPSocket</script>
+  <script src="/static/protocols/irc/irc2.js"></script>
   <script src="chat.js"></script>
   <script src="/static/demos/lib/jquery.js"></script>
   <script>
