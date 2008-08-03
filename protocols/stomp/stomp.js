@@ -7,7 +7,8 @@
  * Rui Lopes (ruilopes.com)
  */
 
-STOMP_DEBUG = false;
+// TODO make this false after test.
+STOMP_DEBUG = true;
 
 if (STOMP_DEBUG) {
     function getStompLogger(name) {
@@ -140,10 +141,17 @@ LineProtocol = function(transport) {
     };
 
     self.send = function(data) {
+        log.debug("send: data=", data);
         return transport.send(data);
     };
 
+    self.open = function(host, port, isBinary) {
+        log.debug("open: host=", host, ':', port, ' isBinary=', isBinary);
+        transport.open(host, port, isBinary);
+    };
+
     self.close = function() {
+        log.debug("close");
         transport.close();
     };
 
@@ -436,25 +444,21 @@ STOMPClient = function() {
             self.sendFrame("CONNECT", {'login':user, 'passcode':password});
             self.onopen();
         }
-        protocol = self._createProtocol(domain, port);
-        // XXX shouldn't LineProtocol/BinaryTCPSocket have an connect method?
-        //     because the constructor will automatically try to connect before
-        //     we have a chance to set event handlers (OK, this might not
-        //     happen with current single threaded JS implementation, but I'm
-        //     not sure about that...).
-        protocol.onopen = onopen
+        protocol = self._createProtocol();
+        protocol.onopen = onopen;
         // XXX even though we are connecting to onclose, this never gets fired
         //     after we shutdown orbited.
-        protocol.onclose = self.onclose
+        protocol.onclose = self.onclose;
         // TODO what should we do when there is a protocol error?
-        protocol.onerror = self.onerror
+        protocol.onerror = self.onerror;
         protocol.onlinereceived = protocol_onLineReceived;
         protocol.onrawdatareceived = protocol_onRawDataReceived;
+        protocol.open(domain, port, true);
     };
 
     // NB: this is needed for the unit tests.
-    self._createProtocol = function(domain, port) {
-        return new LineProtocol(new BinaryTCPSocket(domain, port));
+    self._createProtocol = function() {
+        return new LineProtocol(new TCPSocket());
     };
 
     self.disconnect = function() {
