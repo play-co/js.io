@@ -7,8 +7,7 @@
  * Rui Lopes (ruilopes.com)
  */
 
-// TODO make this false after test.
-STOMP_DEBUG = true;
+STOMP_DEBUG = false;
 
 if (STOMP_DEBUG) {
     function getStompLogger(name) {
