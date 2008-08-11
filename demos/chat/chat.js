@@ -1,7 +1,7 @@
 // TODO refactor this code into a UI and non-UI part.
 
 var CHANNEL = "#orbited"
-var IRC_SERVER = 'irc.freenode.net'
+var IRC_SERVER = 'localhost'
 var IRC_PORT = 6667
 
 var orig_domain = document.domain;
@@ -14,6 +14,7 @@ var log = getIrcLogger("Chat");
 var connect = function () {
   $('#signin_popup, #absorb_clicks').hide();
   $('#chatbox_input').focus();
+  $('#chatbox_input').val('')
 
   nickname = $("#nickname").val();
 
@@ -153,7 +154,8 @@ var connect = function () {
       return 'Are you sure you want to quit and lose the chat connection?';
     };
     $(window).unload(function() {
-      quit();
+        hardquit();
+//      quit();
     })
   }
   irc.onclose = function() {
@@ -212,7 +214,9 @@ var chat = function () {
   // the IRC server will not echo our message back, so simulate a send.
   irc.onPRIVMSG({prefix:nickname,type:'PRIVMSG',args:[CHANNEL, msg]});
 }
-
+var hardquit = function() {
+    irc.reset();
+}
 var quit = function () {
   // XXX sometimes the quit reason is not seen when we quit...
   //     probably because the browser is immediately closed

@@ -4,8 +4,23 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Orbited In-browser IRC</title>
   <link rel="stylesheet" href="chat.css" />
+  <!--script src="/static/log4js.js"></script-->
+  <script>document.domain = document.domain</script>
   <script src="/static/Orbited.js"></script>
-  <script>TCPSocket = Orbited.TCPSocket</script>
+  <script>
+    TCPSocket = Orbited.TCPSocket
+    Orbited.settings.hostname = 'www.test.local'; 
+// LOGGING
+// firebug way of doing it
+//    Orbited.system.enabled = true;
+//    Orbited.loggers['Orbited.XSDR'].enabled = true
+//    Orbited.loggers['Orbited.CometSession'].enabled = true
+//    Orbited.loggers['XSDRBridge'].enabled = true
+
+// Log4js way of doing it
+//    Orbited.loggers['Orbited.TCPSocket'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['Orbited.TCPSocket'].addAppender(new Log4js.ConsoleAppender());
+  </script>
   <script src="/static/protocols/irc/irc2.js"></script>
   <script src="chat.js"></script>
   <script src="/static/demos/lib/jquery.js"></script>
@@ -30,6 +45,8 @@
           return false;
         };
       });
+//      $('#nickname').val('wooters')
+//      connect();
     });
   </script>
 </head>
