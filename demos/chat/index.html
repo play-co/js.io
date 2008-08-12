@@ -4,22 +4,35 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Orbited In-browser IRC</title>
   <link rel="stylesheet" href="chat.css" />
+  <!--script>document.domain = document.domain</script-->
   <!--script src="/static/log4js.js"></script-->
-  <script>document.domain = document.domain</script>
   <script src="/static/Orbited.js"></script>
   <script>
     TCPSocket = Orbited.TCPSocket
-    Orbited.settings.hostname = 'www.test.local'; 
+//    Orbited.settings.hostname = 'www.test.local'; 
+//    Orbited.util.chooseTransport = function() {
+//        return Orbited.CometTransports.LongPoll;
+//    }
 // LOGGING
 // firebug way of doing it
-//    Orbited.system.enabled = true;
-//    Orbited.loggers['Orbited.XSDR'].enabled = true
-//    Orbited.loggers['Orbited.CometSession'].enabled = true
-//    Orbited.loggers['XSDRBridge'].enabled = true
+/*    Orbited.system.enabled = true;
+    Orbited.loggers['Orbited.XSDR'].enabled = false
+    Orbited.loggers['Orbited.CometSession'].enabled = true
+    Orbited.loggers['Orbited.TCPSocket'].enabled = true
+    Orbited.loggers['XSDRBridge'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.LongPoll'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.XHRStream'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.HTMLFile'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.SSE'].enabled = true
+*/
+// Log4js way of doing it    
+//    Orbited.loggers['Orbited.CometTransports.LongPoll'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['Orbited.CometTransports.LongPoll'].addAppender(new Log4js.ConsoleAppender());
+//    Orbited.loggers['Orbited.XSDR'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['Orbited.XSDR'].addAppender(new Log4js.ConsoleAppender());
+//    Orbited.loggers['XSDRBridge'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['XSDRBridge'].addAppender(new Log4js.ConsoleAppender());
 
-// Log4js way of doing it
-//    Orbited.loggers['Orbited.TCPSocket'].setLevel(Log4js.Level.ALL);
-//    Orbited.loggers['Orbited.TCPSocket'].addAppender(new Log4js.ConsoleAppender());
   </script>
   <script src="/static/protocols/irc/irc2.js"></script>
   <script src="chat.js"></script>
