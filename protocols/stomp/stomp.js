@@ -81,11 +81,6 @@ LineProtocol = function(transport) {
     };
 
     transport.onread = function(data) {
-        var decoded = []
-        for (var i = 0; i < data.length; ++i) {
-            decoded.push(data.charCodeAt(i));
-        }
-        data = decoded
         log.debug("transport.onread: enter isLineMode=", isLineMode, " buffer=", buffer, " data=", data);
 
         if (isLineMode) {
@@ -140,23 +135,12 @@ LineProtocol = function(transport) {
     self.setLineMode = function(extra) {
         log.debug("setLineMode: extra=", extra);
         isLineMode = true;
-        if (extra && extra.length > 0) {
-            var encoded = []
-            for (var i = 0; i < extra.length; ++i) {
-                encoded.push(String.fromCharCode(extra[i]))
-            }
-
-            transport.onread(encoded.join(""));
-        }
+        if (extra && extra.length > 0)
+            transport.onread(extra);
     };
 
     self.send = function(data) {
         log.debug("send: data=", data);
-        var encoded = []
-        for (var i = 0; i < data.length; ++i) {
-            encoded.push(String.fromCharCode(data[i]))
-        }
-        return transport.send(encoded.join(""));
         return transport.send(data);
     };
 
