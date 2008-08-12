@@ -21,8 +21,8 @@
             stomp.onopen = function() {
                 shell.print("Transport openned");
             };
-            stomp.onclose = function() {
-                shell.print("Transport closed");
+            stomp.onclose = function(code) {
+                shell.print("Transport closed (code: " + code + ")");
             };
             stomp.onerror = function(error) {
                 alert(error);
