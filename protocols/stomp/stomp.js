@@ -92,12 +92,12 @@ LineProtocol = function(transport) {
             var start = 0;
             var end;
             while ((end = buffer.indexOf("\n", start)) >= 0 && isLineMode) {
-                // TODO it would be nice that toUtf8 received the
+                // TODO it would be nice that decode received the
                 //      start and end indexes, if it did, we didn't
                 //      need the slice copy.
                 var bytes = buffer.slice(start, end);
                 // TODO do not depend on Orbited.
-                var line = Orbited.utf8.toUtf8(bytes)[0];
+                var line = Orbited.utf8.decode(bytes)[0];
                 log.debug("fire onlinereceived line[", line.length, "]=", line);
                 self.onlinereceived(line);
                 start = end + 1;
@@ -310,22 +310,23 @@ STOMPClient = function() {
         log.debug("onLineReceived: found header ", key, "=", value);
     }
 
-    /*
-    function dumpStringAsIntArray(title, data) {
-        var bytes = [];
-        for (var n = 0; n < data.length; ++n) {
-            bytes.push(data.charCodeAt(n));
+    if (STOMP_DEBUG) {
+        function dumpStringAsIntArray(title, data) {
+            var bytes = [];
+            for (var n = 0; n < data.length; ++n) {
+                bytes.push(data.charCodeAt(n));
+            }
+            log.debug(title);
+            log.debug('length=', bytes.length, " bytes=", bytes);
         }
-        log.debug(title);
-        log.debug('length=', bytes.length, " bytes=", bytes);
+    } else {
+        function dumpStringAsIntArray() {}
     }
-    */
 
     function protocol_onRawDataReceived(data) {
-        log.debug("protocol_onRawDataReceived: data.length=", data.length);
-        // TODO figure out how to see if a given log is in debug mode, if so, dump the buffer and data.
-        //dumpStringAsIntArray("buffer", buffer);
-        //dumpStringAsIntArray("data", data);
+        log.debug("protocol_onRawDataReceived");
+        dumpStringAsIntArray("buffer", buffer);
+        dumpStringAsIntArray("data", data);
 
         if (remainingBodyLength === null) {
             // we're doing a message parsing without knowing the exact
@@ -364,11 +365,15 @@ STOMPClient = function() {
     }
 
     function doDispatch(bytes, extra) {
+        log.debug("doDispatch: bytes[", bytes.length, "]=", bytes, " extra[", extra.length, "]=", extra);
+        dumpStringAsIntArray("bytes", bytes);
+        dumpStringAsIntArray("extra", extra);
+
         var frame = {
             type: type,
             headers: headers,
             // TODO stop assuming the body is UTF8 encoded.
-            body: Orbited.utf8.toUtf8(bytes)[0]
+            body: Orbited.utf8.decode(bytes)[0]
         };
 
         log.debug("doDispatch: end frame; body.length=", frame.body.length);
@@ -437,7 +442,9 @@ STOMPClient = function() {
 
     self.sendFrame = function(type, headers, body) {
         var head = [type];
-        if (body !== undefined) {
+        if (body) {
+            // TODO stop assuming body is going the be UTF-8 encoded.
+            body = Orbited.utf8.encode(body);
             head.push("content-length:" + body.length);
         }
         for (var key in headers) {
@@ -447,10 +454,9 @@ STOMPClient = function() {
             head.push(key + ":" + headers[key]);
         }
         head.push("\n");
-        var bytes = Orbited.utf8.fromUtf8(head.join("\n"));
+        var bytes = Orbited.utf8.encode(head.join("\n"));
         if (body) {
-            // TODO stop assuming body is going the be UTF-8 encoded.
-            bytes += Orbited.utf8.fromUtf8(body);
+           bytes += body;
         }
         bytes += "\x00";
         protocol.send(bytes);

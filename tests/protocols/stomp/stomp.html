@@ -115,7 +115,7 @@
                                 // NB: "á" is UTF-8 encoded as two bytes [195, 161]
                                 var unicode = "olá mundo\n";
                                 t.is(10, unicode.length);
-                                var bytes = Orbited.utf8.fromUtf8(unicode);
+                                var bytes = Orbited.utf8.encode(unicode);
                                 t.is(11, bytes.length);
                                 context.transport.onread(bytes.slice(0, 3));
                                 context.transport.onread(bytes.slice(3));
