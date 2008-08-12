@@ -78,9 +78,7 @@ IRCClient = function() {
     };
     self.close = function() {
         log.debug("close");
-        // XXX there is no TCPSocket.close method... so I'm removing all
-        //     the listeners here (until this is fixed).
-        //conn.close()
+        conn.close()
         conn.onopen = null;
         conn.onclose = null;
         conn.onread = null;
@@ -104,10 +102,10 @@ IRCClient = function() {
     self.quit = function(reason) {
         var reason = reason || "leaving";
         send("QUIT", ":" + reason)
-        // XXX there is no TCPSocket.close method... YET!
-        //     but sending a QUIT should make the IRCD close
-        //     the connection too...
-        //conn.close()
+        conn.close()
+    }
+    self.reset = function() {
+        conn.reset();
     }
     self.privmsg = function(destination, message) {
         send('PRIVMSG', destination + ' :' + message)
