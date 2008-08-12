@@ -1,10 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>stomp.js unit tests</title>
         <script type="text/javascript" src="/static/tests/lib/doh/doh.js" djConfig="isDebug:true"></script>
         <!-- TODO move this include to common place -->
-        <script src="/static/protocols/stomp/unicode.js"></script>
+        <script src="/static/Orbited.js"></script>
         <script src="/static/protocols/stomp/stomp.js"></script>
         <script type="text/javascript">
             dojo.require("doh.runner");
@@ -12,10 +13,10 @@
             dojo.addOnLoad(function() {
                 function TCPSocketMock() {
                     var self = this;
-                    self.data = [];
+                    self.data = "";
                     self.open = function() {};
                     self.send = function(data) {
-                        self.data.push.apply(self.data, data);
+                        self.data += data;
                     };
                     self.onopen = null;
                     self.onread = null;
@@ -68,7 +69,7 @@
 
                                 // send a full STOMP frame.
                                 context.transport.onopen();
-                                context.transport.onread(UTF8ToBytes("MESSAGE\nheader-1:0\n\n\0"));
+                                context.transport.onread("MESSAGE\nheader-1:0\n\n\0");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
@@ -86,14 +87,14 @@
                                 var context = t._context;
 
                                 context.transport.onopen();
-                                context.transport.onread(UTF8ToBytes("\n"));
-                                context.transport.onread(UTF8ToBytes("ME"));
-                                context.transport.onread(UTF8ToBytes("SSAGE"));
-                                context.transport.onread(UTF8ToBytes("\n"));
-                                context.transport.onread(UTF8ToBytes("header-1:0"));
-                                context.transport.onread(UTF8ToBytes("\n\n"));
-                                context.transport.onread(UTF8ToBytes("\0"));
-                                context.transport.onread(UTF8ToBytes("\n"));
+                                context.transport.onread("\n");
+                                context.transport.onread("ME");
+                                context.transport.onread("SSAGE");
+                                context.transport.onread("\n");
+                                context.transport.onread("header-1:0");
+                                context.transport.onread("\n\n");
+                                context.transport.onread("\0");
+                                context.transport.onread("\n");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
@@ -112,7 +113,10 @@
 
                                 context.transport.onopen();
                                 // NB: "á" is UTF-8 encoded as two bytes [195, 161]
-                                var bytes = UTF8ToBytes("olá mundo\n");
+                                var unicode = "olá mundo\n";
+                                t.is(10, unicode.length);
+                                var bytes = Orbited.utf8.fromUtf8(unicode);
+                                t.is(11, bytes.length);
                                 context.transport.onread(bytes.slice(0, 3));
                                 context.transport.onread(bytes.slice(3));
                                 context.transport.onclose();
@@ -138,12 +142,11 @@
                                         context.lines.push(line);
                                 };
                                 context.protocol.onrawdatareceived = function(data) {
-                                    var end = data.indexOf(0);
+                                    var end = data.indexOf("\0");
                                     if (end >= 0) {
                                         // split into head (bytes) and tail (data).
-                                        var bytes = data.splice(0, end + 1);
-                                        // remove NUL.
-                                        bytes.pop();
+                                        var bytes = data.slice(0, end);
+                                        data = data.slice(end + 1, data.length);
                                         context.raw.push(bytes);
                                         // let the protocol handle the remaining lines inside data.
                                         context.protocol.setLineMode(data);
@@ -151,19 +154,18 @@
                                 };
 
                                 context.transport.onopen();
-                                context.transport.onread(UTF8ToBytes("head\n\nraw\0mooo\n\n\0line\ntail"));
+                                context.transport.onread("head\n\nraw\0mooo\n\n\0line\ntail");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
                                 t.is(["head", "mooo", "line"], context.lines);
-                                t.is([UTF8ToBytes("raw"), []], context.raw);
+                                t.is(["raw", []], context.raw);
                                 t.is([], context.errors);
                                 t.is(1, context.oncloseCounter);
                             }
                         },
                     ]
                 );
-
 
                 function setUpSTOMPClientRAW(t) {
                     var transport = new TCPSocketMock();
@@ -201,7 +203,7 @@
                     context.transport.onopen();
                     // NB: CONNECTED frames are eated, though, they generate
                     //     the needed "onopen" event.
-                    context.transport.onread(UTF8ToBytes("CONNECTED\n\n\0"));
+                    context.transport.onread("CONNECTED\n\n\0");
                     // cleanup the received transport data (we already test it in "baseline")
                     context.transport.data = [];
                 }
@@ -226,11 +228,11 @@
                                 context.transport.onopen();
                                 // NB: CONNECTED frames are eated, though, they generate
                                 //     the needed "onopen" event.
-                                context.transport.onread(UTF8ToBytes("CONNECTED\n\n\0"));
+                                context.transport.onread("CONNECTED\n\n\0");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
-                                t.is(UTF8ToBytes("CONNECT\nlogin:user\npasscode:password\n\n\0"), context.transport.data);
+                                t.is("CONNECT\nlogin:user\npasscode:password\n\n\0", context.transport.data);
                                 t.is([], context.frames);
                                 t.is([], context.errors);
                                 t.is(1, context.oncloseCounter);
@@ -243,7 +245,7 @@
                             runTest: function(t) {
                                 var context = t._context;
 
-                                context.transport.onread(UTF8ToBytes("MESSAGE\nheader-1:0\n\nbody\0"));
+                                context.transport.onread("MESSAGE\nheader-1:0\n\nbody\0");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
@@ -262,8 +264,8 @@
                             runTest: function(t) {
                                 var context = t._context;
 
-                                context.transport.onread(UTF8ToBytes("MESSAGE\nheader-1:0\n\nbody 0\0"));
-                                context.transport.onread(UTF8ToBytes("MESSAGE\nheader-1:1\n\nbody 1\0"));
+                                context.transport.onread("MESSAGE\nheader-1:0\n\nbody 0\0");
+                                context.transport.onread("MESSAGE\nheader-1:1\n\nbody 1\0");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
@@ -284,8 +286,8 @@
                             runTest: function(t) {
                                 var context = t._context;
 
-                                context.transport.onread(UTF8ToBytes("\nMESSAGE\nheader-1:0\n\nbody 0\0\n\n"));
-                                context.transport.onread(UTF8ToBytes("\nMESSAGE\nheader-1:1\n\nbody 1\0\n"));
+                                context.transport.onread("\nMESSAGE\nheader-1:0\n\nbody 0\0\n\n");
+                                context.transport.onread("\nMESSAGE\nheader-1:1\n\nbody 1\0\n");
                                 context.transport.onclose();
 
                                 t.is(1, context.onopenCounter);
@@ -306,7 +308,7 @@
                             runTest: function(t) {
                                 var context = t._context;
 
-                                context.transport.onread(UTF8ToBytes("MESSAGE\n header-1 :   0 \n\nbody\0"));
+                                context.transport.onread("MESSAGE\n header-1 :   0 \n\nbody\0");
                                 context.transport.onclose();
 
                                 // make sure we've received a message.
@@ -326,7 +328,7 @@
                             runTest: function(t) {
                                 var context = t._context;
 
-                                context.transport.onread(UTF8ToBytes("MESSAGE\n\na\0MESSAGE\n\nb\0"));
+                                context.transport.onread("MESSAGE\n\na\0MESSAGE\n\nb\0");
                                 context.transport.onclose();
 
                                 // make sure we've received two messages, one with
@@ -349,7 +351,7 @@
                             runTest: function(t) {
                                 var context = t._context;
 
-                                context.transport.onread(UTF8ToBytes("MESSAGE\ncontent-length: 3\n\na\0b\0MESSAGE\n\nbody\0"));
+                                context.transport.onread("MESSAGE\ncontent-length: 3\n\na\0b\0MESSAGE\n\nbody\0");
                                 context.transport.onclose();
 
                                 // make sure we've received two messages, one with
@@ -358,7 +360,7 @@
                                 t.is([], context.transport.data);
                                 t.is(2, context.frames.length);
                                 t.is({"content-length": "3"}, context.frames[0].headers);
-                                t.is([97, 0, 98], context.frames[0].body);
+                                t.is("a\0b", context.frames[0].body);
                                 t.is({}, context.frames[1].headers);
                                 t.is("body", context.frames[1].body);
                                 t.is([], context.errors);
@@ -371,16 +373,15 @@
                             setUp: setUpSTOMPClient,
                             runTest: function(t) {
                                 var context = t._context;
-                                context.stomp.send([97, 0, 98], "/topic/NULL");
+                                context.stomp.send("a\0b", "/topic/NULL");
                                 t.is(
                                     "SEND\ncontent-length:3\ndestination:/topic/NULL\n\na\0b\0",
-                                    bytesToUTF8(context.transport.data)
+                                    context.transport.data
                                 );
                             }
                         },
                     ]
                 );
-
                 doh.run();
             })
         </script>

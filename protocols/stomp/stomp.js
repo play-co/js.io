@@ -55,6 +55,8 @@ if (!Array.prototype.indexOf) {
 
 // NB: This is loosly based on twisted.protocols.basic.LineReceiver
 //     See http://twistedmatrix.com/documents/8.1.0/api/twisted.protocols.basic.LineReceiver.html
+// XXX this assumes the lines are UTF-8 encoded.
+// XXX this assumes the lines are terminated with a single NL ("\n") character.
 LineProtocol = function(transport) {
     var log = getStompLogger("LineProtocol");
     var self = this;
@@ -66,7 +68,7 @@ LineProtocol = function(transport) {
     //
 
     transport.onopen = function() {
-        buffer = [];
+        buffer = "";
         isLineMode = true;
         self.onopen();
     };
@@ -81,25 +83,27 @@ LineProtocol = function(transport) {
     };
 
     transport.onread = function(data) {
-        log.debug("transport.onread: enter isLineMode=", isLineMode, " buffer=", buffer, " data=", data);
+        log.debug("transport.onread: enter isLineMode=", isLineMode, " buffer[", buffer.length, "]=", buffer, " data[", data.length, "]=", data);
 
         if (isLineMode) {
-            buffer.push.apply(buffer, data);
-            data = [];
+            buffer += data;
+            data = "";
 
             var start = 0;
             var end;
-            while ((end = buffer.indexOf(10, start)) >= 0 && isLineMode) {
-                // TODO it would be nice that bytesToUTF8 received the
+            while ((end = buffer.indexOf("\n", start)) >= 0 && isLineMode) {
+                // TODO it would be nice that toUtf8 received the
                 //      start and end indexes, if it did, we didn't
                 //      need the slice copy.
                 var bytes = buffer.slice(start, end);
-                var line = bytesToUTF8(bytes);
+                // TODO do not depend on Orbited.
+                var line = Orbited.utf8.toUtf8(bytes)[0];
+                log.debug("fire onlinereceived line[", line.length, "]=", line);
                 self.onlinereceived(line);
                 start = end + 1;
             }
             // remove the portion (head) of the array we've processed.
-            buffer.splice(0, start);
+            buffer = buffer.slice(start);
 
             if (isLineMode) {
                 // TODO if this buffer length is above a given threshold, we should
@@ -108,11 +112,12 @@ LineProtocol = function(transport) {
             } else {
                 // we've left the line mode and what remains in buffer is raw data.
                 data = buffer;
-                buffer = [];
+                buffer = "";
             }
         }
 
         if (data.length > 0) {
+            log.debug("fire onrawdatareceived data[", data.length, "]=", data);
             self.onrawdatareceived(data);
         }
 
@@ -192,10 +197,8 @@ LineProtocol = function(transport) {
 //
 //      TODO: implement ``ondisconnect''.
 //
-//  send(message : string|int[], destination : string, extraHeaders : {}|undefined)
+//  send(message : string, destination : string, extraHeaders : {}|undefined)
 //      sends the given message to destination.
-//
-//      to send a binary message use an int[].
 //
 //  subscribe(destination : string)
 //      starts receiving messages from the given destination.
@@ -226,7 +229,7 @@ LineProtocol = function(transport) {
 //
 //          type : string
 //          headers : {string: string}
-//          body : string|int[]
+//          body : string
 //
 //  onconnectedframe(frame : Frame)
 //      received a CONNECTED STOMP frame.
@@ -252,7 +255,7 @@ STOMPClient = function() {
     var log = getStompLogger("STOMPClient");
     var self = this;
     var protocol = null;
-    var buffer = [];
+    var buffer = "";
     var type = null;
     var headers = null;
     var remainingBodyLength = null;
@@ -295,6 +298,8 @@ STOMPClient = function() {
             log.debug("onLineReceived: begin ", line, " frame");
             type = line;
             headers = {};
+            buffer = "";
+            remainingBodyLength = null;
             return;
         }
 
@@ -305,32 +310,52 @@ STOMPClient = function() {
         log.debug("onLineReceived: found header ", key, "=", value);
     }
 
+    /*
+    function dumpStringAsIntArray(title, data) {
+        var bytes = [];
+        for (var n = 0; n < data.length; ++n) {
+            bytes.push(data.charCodeAt(n));
+        }
+        log.debug(title);
+        log.debug('length=', bytes.length, " bytes=", bytes);
+    }
+    */
+
     function protocol_onRawDataReceived(data) {
         log.debug("protocol_onRawDataReceived: data.length=", data.length);
+        // TODO figure out how to see if a given log is in debug mode, if so, dump the buffer and data.
+        //dumpStringAsIntArray("buffer", buffer);
+        //dumpStringAsIntArray("data", data);
 
         if (remainingBodyLength === null) {
-            // we're doing a text message parsing.
+            // we're doing a message parsing without knowing the exact
+            // body length.
 
-            buffer.push.apply(buffer, data);
+            buffer += data;
 
-            var end = buffer.indexOf(0);
+            var end = buffer.indexOf("\0");
             if (end >= 0) {
                 // split into head (bytes) and tail (buffer).
-                var bytes = buffer.splice(0, end + 1);
+                var bytes = buffer.slice(0, end);
+                buffer = buffer.slice(end + 1);
                 doDispatch(bytes, buffer);
             }
         } else {
-            // we're doing a binary message parsing.
+            // we're doing a message parsing knowing the exact body
+            // length.
 
             var toRead = Math.min(data.length, remainingBodyLength);
             remainingBodyLength -= toRead;
 
             // split into head (bytes) and tail (data).
-            // NB: we don't do "toRead + 1" because that NUL char was
-            //     already accounted in remainingBodyLength.
-            var bytes = data.splice(0, toRead);
+            if (remainingBodyLength === 0) {
+                var bytes = data.slice(0, toRead - 1);
+            } else {
+                var bytes = data.slice(0, toRead);
+            }
+            data = data.slice(toRead);
             // buffer will contain the whole message body.
-            buffer.push.apply(buffer, bytes);
+            buffer += bytes;
 
             if (remainingBodyLength === 0) {
                 doDispatch(buffer, data);
@@ -339,21 +364,19 @@ STOMPClient = function() {
     }
 
     function doDispatch(bytes, extra) {
-        // remove NUL (this marks EOF).
-        bytes.pop();
-
         var frame = {
             type: type,
             headers: headers,
-            body: (remainingBodyLength === null ? bytesToUTF8(bytes) : bytes)
+            // TODO stop assuming the body is UTF8 encoded.
+            body: Orbited.utf8.toUtf8(bytes)[0]
         };
 
-        log.debug("doDispatch: end frame");
+        log.debug("doDispatch: end frame; body.length=", frame.body.length);
         log.dir(frame);
 
         self.onframe(frame);
 
-        buffer = [];
+        buffer = "";
         type = null;
         headers = {};
         remainingBodyLength = null;
@@ -413,22 +436,23 @@ STOMPClient = function() {
     //
 
     self.sendFrame = function(type, headers, body) {
-        var isText = typeof(body) === "string";
         var head = [type];
-        if (!isText && body !== undefined) {
+        if (body !== undefined) {
             head.push("content-length:" + body.length);
         }
         for (var key in headers) {
+            // TODO move comparation outside the loop
             if (key === "content-length")
                 continue;
             head.push(key + ":" + headers[key]);
         }
         head.push("\n");
-        var bytes = UTF8ToBytes(head.join("\n"));
+        var bytes = Orbited.utf8.fromUtf8(head.join("\n"));
         if (body) {
-            bytes.push.apply(bytes, isText ? UTF8ToBytes(body) : body);
+            // TODO stop assuming body is going the be UTF-8 encoded.
+            bytes += Orbited.utf8.fromUtf8(body);
         }
-        bytes.push(0);
+        bytes += "\x00";
         protocol.send(bytes);
     };
 
