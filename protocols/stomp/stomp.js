@@ -442,16 +442,23 @@ STOMPClient = function() {
 
     self.sendFrame = function(type, headers, body) {
         var head = [type];
-        if (body) {
-            // TODO stop assuming body is going the be UTF-8 encoded.
-            body = Orbited.utf8.encode(body);
+        var ignoreHeaders = {};
+        if (body && headers['content-length'] === undefined) {
+            if (headers["content-type"] === undefined) {
+                head.push("content-type:text/plain");
+                ignoreHeaders["content-type"] = true;
+            }
+            if (headers["content-encoding"] === undefined) {
+                head.push("content-encoding:utf-8");
+                ignoreHeaders["content-encoding"] = true;
+                body = Orbited.utf8.encode(body);
+            }
             head.push("content-length:" + body.length);
+            ignoreHeaders["content-length"] = true;
         }
         for (var key in headers) {
-            // TODO move comparation outside the loop
-            if (key === "content-length")
-                continue;
-            head.push(key + ":" + headers[key]);
+            if (!(key in ignoreHeaders))
+                head.push(key + ":" + headers[key]);
         }
         head.push("\n");
         var bytes = Orbited.utf8.encode(head.join("\n"));
