@@ -268,7 +268,14 @@ STOMPClient = function() {
         // See http://blog.stevenlevithan.com/archives/faster-trim-javascript
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
-    
+
+    function mergeObject(dst, src) {
+        for (var k in src) {
+            dst[k] = src[k];
+        }
+        return dst;
+    }
+ 
     //
     // LineProtocol implementation.
     //
@@ -505,20 +512,15 @@ STOMPClient = function() {
     };
 
     self.send = function(message, destination, extraHeaders) {
-        var headers = {destination:destination};
-        if (extraHeaders) {
-            for (var key in extraHeaders)
-                headers[key] = extraHeaders[key];
-        }
-        self.sendFrame("SEND", headers, message);
+        self.sendFrame("SEND", mergeObject({destination:destination}, extraHeaders), message);
     };
 
-    self.subscribe = function(destination) {
-        self.sendFrame("SUBSCRIBE", {"destination": destination});
+    self.subscribe = function(destination, extraHeaders) {
+        self.sendFrame("SUBSCRIBE", mergeObject({destination:destination}, extraHeaders));
     };
     
-    self.unsubscribe = function(destination) {
-        self.sendFrame("UNSUBSCRIBE", {"destination": destination});
+    self.unsubscribe = function(destination, extraHeaders) {
+        self.sendFrame("UNSUBSCRIBE", mergeObject({destination:destination}, extraHeaders));
     };
 
     self.begin = function(id) {
