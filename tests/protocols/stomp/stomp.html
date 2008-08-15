@@ -375,7 +375,7 @@
                                 var context = t._context;
                                 context.stomp.send("a\0b", "/topic/NULL");
                                 t.is(
-                                    "SEND\ncontent-length:3\ndestination:/topic/NULL\n\na\0b\0",
+                                    "SEND\ncontent-type:text/plain\ncontent-encoding:utf-8\ncontent-length:3\ndestination:/topic/NULL\n\na\0b\0",
                                     context.transport.data
                                 );
                             }
