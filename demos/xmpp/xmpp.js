@@ -151,8 +151,8 @@ xmpp.onSocketConnect = function() {
     }
 }
 ////
-// 'mariobalibrera.com' is the machine running the ejabberd server
-xmpp.connect('mariobalibrera.com', 5222);
+// 'localhost' is the machine running the ejabberd server
+xmpp.connect('localhost', 5222);
 ////
 // success / failure callbacks
 function registerSuccess() {

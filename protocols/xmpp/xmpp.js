@@ -85,7 +85,7 @@ XMPPClient = function() {
         /////////
         // send raw xml to jabber server with this function
         /////////
-        conn.send(UTF8ToBytes(s));
+        conn.send(Orbited.utf8.encode(s));
 //        console.log("sent: "+s);
     }
     self.quit = function() {
@@ -123,11 +123,12 @@ XMPPClient = function() {
         return return_str + list1[i];
     }
     var reconnect = function() {
-        conn = new self.transport(host, port);
+        conn = new self.transport();
         conn.onread = setDomain;
         conn.onopen = self.onSocketConnect;
         conn.onclose = close;
         parser.onread = nodeReceived;
+        conn.open(host, port, true);
 //        console.log("connection opened");
     }
     var nodeReceived = function(node) {
@@ -153,12 +154,12 @@ XMPPClient = function() {
         }
     }
     var read = function(evt) {
-        var s = bytesToUTF8(evt);
+        var s = Orbited.utf8.decode(evt);
 //        console.log('received: '+s);
         parser.receive(s);
     }
     var setDomain = function(evt) {
-        var s = bytesToUTF8(evt);
+        var s = Orbited.utf8.decode(evt);
 //        console.log('setDomain received: '+s);
         if (s.indexOf("host-unknown") != -1) {
             if (failure) {failure();}
@@ -168,7 +169,7 @@ XMPPClient = function() {
         }
     }
     var regUser = function(evt) {
-        var s = bytesToUTF8(evt);
+        var s = Orbited.utf8.decode(evt);
 //        console.log('regUser received: '+s);
         if (s.indexOf("conflict") != -1) {
             if (failure) {failure();}
@@ -179,7 +180,7 @@ XMPPClient = function() {
         }
     }
     var setUser = function(evt) {
-        var s = bytesToUTF8(evt);
+        var s = Orbited.utf8.decode(evt);
 //        console.log('setUser received: '+s);
         if (s.indexOf("not-authorized") != -1) {
             if (failure) {failure();}
@@ -190,9 +191,9 @@ XMPPClient = function() {
             if (success) {success();}
         }
     }
-    var close = function(evt) {
+    var close = function(code) {
 //        console.log("connection closed");
         reconnect();
     }
 }
-XMPPClient.prototype.transport = BinaryTCPSocket;
+XMPPClient.prototype.transport = TCPSocket;
