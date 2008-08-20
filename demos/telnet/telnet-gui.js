@@ -1,9 +1,9 @@
 var htmlescape = function(s) {
-	var s = s.replace("&", "&amp;", "g")
+    var s = s.replace("&", "&amp;", "g")
     s = s.replace("<", "&lt;", "g")
     s = s.replace(">", "&gt;", "g")
     s = s.replace(" ", "&nbsp;", "g")
-	return s
+    return s
 }
 
 var print = function(s) {
@@ -18,11 +18,11 @@ var print = function(s) {
 var client = new TelnetClient()
 var connect = function(host, port) {
     client.onmessage = print
-    client.onclose = function() {
-        print("Connection Closed", "red")
+    client.onclose = function(code) {
+        print("Connection Closed (" + code + ")", "red");
     }
     client.onopen = function() {
-
+        print("Connection Open", "green");
     }
     client.connect(host, port)
 }

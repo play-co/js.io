@@ -9,19 +9,20 @@ TelnetClient = function() {
     // Public callbacks
     self.onopen = function() {}
     self.onmessage = function() {}
-    self.onclose = function() {}
+    self.onclose = function(code) {}
     
     
     // Public methods: connect, nick, ident, names, join, quit
     self.connect = function(host, port) {
-        conn = new self.transport(host, port)
+        conn = new self.transport();
         // Set socket callbacks
         conn.onread = read
         conn.onclose = close
         conn.onopen = open
+        conn.open(host, port);
     }
     self.close = function() {
-        close()
+        conn.close()
     }
     self.send = function(s) {
         send(s + ENDL)
@@ -40,8 +41,8 @@ TelnetClient = function() {
     var open = function() {
         self.onopen()
     }
-    var close = function() {
-        self.onclose()
+    var close = function(code) {
+        self.onclose(code)
     }
     
     // Message parsing and dispatching

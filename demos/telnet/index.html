@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
     <title>Orbited Web Telnet Client</title>
@@ -7,12 +7,13 @@
         #shell {height: 300px; overflow-y: scroll; background-color: #ccc;}
         #input {width:100%;}
     </style>
-    <script src="/static/TCPSocket.js"></script>
+    <script src="/static/Orbited.js"></script>
+    <script>TCPSocket = Orbited.TCPSocket;</script>
     <script src="/static/protocols/telnet/telnet.js"></script>
     <script src="telnet-gui.js"></script>
 </head>
 <body>
-<h1>Orbited Web Telnet Client</h1>
+    <h1>Orbited Web Telnet Client</h1>
     <div id="shell"></div>
     <input type=text id="input" value="GET / HTTP/1.0">
     <br><button onclick="send(document.getElementById('input').value)">Send</button>
