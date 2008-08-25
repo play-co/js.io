@@ -4,7 +4,6 @@ var CHANNEL = "#orbited"
 var IRC_SERVER = 'irc.freenode.net'
 var IRC_PORT = 6667
 
-var orig_domain = document.domain;
 var nickname = null;
 var users = {};
 
@@ -22,7 +21,35 @@ var connect = function () {
     // TODO remove privileges from name head.
     return identity.split("!", 1)[0];
   }
+  irc.onACTION = function(command) {
+      console.log('onACTION')
+      var messagediv = $('<div class="message"></div>');
+      var sender = parseName(command.prefix);
+      messagediv.addClass("action");
+      var target = command.args[0];
+      var message = command.args.slice(1).join(" ")
 
+      if (sender == nickname)
+        messagediv.addClass("self");
+
+      if (isSubstring(nickname, message))
+        messagediv.addClass("mentioned");
+
+      messagediv.html('<span class="user">' + sender + ':</span> ' +
+                      sanitize(message))
+                .appendTo("#chathistory");
+    scrollDown();
+  }
+  irc.onCTCP = function(command) {
+    var messagediv = $('<div class="message"></div>');
+    messagediv.addClass("ctcp");
+    message = command.args.slice(1).join(" ")
+    var sender = parseName(command.prefix);
+    messagediv.
+       html('<span class="user">' + sender + ':</span> ' + sanitize(message)).
+       appendTo("#chathistory");    
+    scrollDown();
+  }
   irc.onPRIVMSG = function(command) {
     var sender = parseName(command.prefix);
     var target = command.args[0];
