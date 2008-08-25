@@ -107,6 +107,10 @@ IRCClient = function() {
     self.reset = function() {
         conn.reset();
     }
+    self.action = function(destination, message) {
+        send('PRIVMSG', destination + ' :ACTION\01' + message + '\01')
+    }
+
     self.privmsg = function(destination, message) {
         send('PRIVMSG', destination + ' :' + message)
     }
@@ -127,6 +131,7 @@ IRCClient = function() {
 
     // Internal Functions
     var send = function(type, payload) {
+        console.log('SEND:', type + " " + payload + ENDL)
         conn.send(type + " " + payload + ENDL)
     }
     var parse_buffer= function() {
@@ -170,20 +175,43 @@ IRCClient = function() {
     };
     var dispatch = function(line) {
         command = parse_command(line);
-        
+        console.log('recv', command.args.toString(), command.prefix.toString())
         if (command.type == "PING") {
             send("PONG", ":" + command.args)
-        } else if (!isNaN(parseInt(command.type))) {
+        }
+        if (!isNaN(parseInt(command.type))) {
             var error_code = parseInt(command.type)
             if (error_code > 400)
-                self.onerror(command)
+                return self.onerror(command)
             else
-                self.onresponse(command)
-        } else if (typeof(self["on" + command.type]) == "function") {
+                return self.onresponse(command)
+        } 
+        if (command.type == "PRIVMSG") {
+            msg = command.args[1]
+            if (msg.charCodeAt(0) == 1 && msg.charCodeAt(msg.length-1) == 1) {
+                var args = [command.args[0]]
+                var newargs = msg.slice(1, msg.length - 1).split(' ')
+                console.log('newargs', newargs.toString())
+                if (newargs[0] == 'ACTION') {
+                    command.type = newargs.shift()
+                }
+                else {
+                    command.type = 'CTCP'
+                }
+
+                for (var i = 0; i < newargs.length; ++i) {
+                    args.push(newargs[i])
+                }
+                command.args = args
+            }
+        }
+        if (typeof(self["on" + command.type]) == "function") {
             // XXX the user is able to define unknown command handlers,
             //     but cannot send any arbitrary command
+            console.log('priv?', command)
             self["on" + command.type](command);
         } else {
+            console.log('priv?', command)
             log.debug("unhandled command received: ", command.type);
         }
     };
