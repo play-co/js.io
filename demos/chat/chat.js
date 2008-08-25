@@ -22,7 +22,6 @@ var connect = function () {
     return identity.split("!", 1)[0];
   }
   irc.onACTION = function(command) {
-      console.log('onACTION')
       var messagediv = $('<div class="message"></div>');
       var sender = parseName(command.prefix);
       messagediv.addClass("action");
@@ -35,7 +34,7 @@ var connect = function () {
       if (isSubstring(nickname, message))
         messagediv.addClass("mentioned");
 
-      messagediv.html('<span class="user">' + sender + ':</span> ' +
+      messagediv.html('<span class="user">' + sender + '</span> ' +
                       sanitize(message))
                 .appendTo("#chathistory");
     scrollDown();
@@ -46,7 +45,7 @@ var connect = function () {
     message = command.args.slice(1).join(" ")
     var sender = parseName(command.prefix);
     messagediv.
-       html('<span class="user">' + sender + ':</span> ' + sanitize(message)).
+       html('<span class="user">' + sender + '(CTCP):</span> ' + sanitize(message)).
        appendTo("#chathistory");    
     scrollDown();
   }

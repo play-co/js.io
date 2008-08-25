@@ -131,7 +131,6 @@ IRCClient = function() {
 
     // Internal Functions
     var send = function(type, payload) {
-        console.log('SEND:', type + " " + payload + ENDL)
         conn.send(type + " " + payload + ENDL)
     }
     var parse_buffer= function() {
@@ -175,7 +174,6 @@ IRCClient = function() {
     };
     var dispatch = function(line) {
         command = parse_command(line);
-        console.log('recv', command.args.toString(), command.prefix.toString())
         if (command.type == "PING") {
             send("PONG", ":" + command.args)
         }
@@ -191,7 +189,6 @@ IRCClient = function() {
             if (msg.charCodeAt(0) == 1 && msg.charCodeAt(msg.length-1) == 1) {
                 var args = [command.args[0]]
                 var newargs = msg.slice(1, msg.length - 1).split(' ')
-                console.log('newargs', newargs.toString())
                 if (newargs[0] == 'ACTION') {
                     command.type = newargs.shift()
                 }
@@ -208,10 +205,8 @@ IRCClient = function() {
         if (typeof(self["on" + command.type]) == "function") {
             // XXX the user is able to define unknown command handlers,
             //     but cannot send any arbitrary command
-            console.log('priv?', command)
             self["on" + command.type](command);
         } else {
-            console.log('priv?', command)
             log.debug("unhandled command received: ", command.type);
         }
     };
