@@ -108,7 +108,7 @@ IRCClient = function() {
         conn.reset();
     }
     self.action = function(destination, message) {
-        send('PRIVMSG', destination + ' :ACTION\01' + message + '\01')
+        send('PRIVMSG', destination + ' :\01ACTION ' + message + '\01')
     }
 
     self.privmsg = function(destination, message) {
