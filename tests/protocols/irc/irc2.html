@@ -3,6 +3,7 @@
     <head>
         <title>irc2.js unit tests</title>
         <script type="text/javascript" src="/static/tests/lib/doh/doh.js" djConfig="isDebug:true"></script>
+        <script src="/static/Orbited.js"></script>
         <script src="/static/protocols/irc/irc2.js"></script>
         <script type="text/javascript">
             dojo.require("doh.runner");
@@ -28,6 +29,9 @@
                         return t._context.transport = new TCPSocketMock();
                     };
                     irc.onPRIVMSG = function(command) {
+                        t._context.commands.push(command);
+                    };
+                    irc.onXTEST = function(command) {
                         t._context.commands.push(command);
                     };
                     irc.onerror = function(command) {
@@ -56,10 +60,10 @@
                                 t.t(context.transport.onclose !== null);
 
                                 // send dummy.
-                                context.transport.onread("PRIVMSG\r\n");
+                                context.transport.onread("PRIVMSG alice :hello world\r\n");
                                 context.irc.close();
 
-                                t.is([{prefix:null,type:"PRIVMSG",args:[]}], context.commands);
+                                t.is([{prefix:null,type:"PRIVMSG",args:['alice', 'hello world']}], context.commands);
                             }
                         },
 
@@ -84,10 +88,10 @@
                                 var context = t._context;
 
                                 context.irc.connect();
-                                context.transport.onread("PRIVMSG one\r\n");
+                                context.transport.onread("XTEST one\r\n");
                                 context.irc.close();
 
-                                t.is([{prefix:null,type:"PRIVMSG",args:["one"]}], context.commands);
+                                t.is([{prefix:null,type:"XTEST",args:["one"]}], context.commands);
                             }
                         },
 
@@ -126,12 +130,12 @@
                                 var context = t._context;
 
                                 context.irc.connect();
-                                context.transport.onread("PRIVMSG one\r\nPRIVMSG two\r\n");
+                                context.transport.onread("XTEST one\r\nXTEST two\r\n");
                                 context.irc.close();
 
                                 t.is([
-                                        {prefix:null,type:"PRIVMSG",args:["one"]},
-                                        {prefix:null,type:"PRIVMSG",args:["two"]}
+                                        {prefix:null,type:"XTEST",args:["one"]},
+                                        {prefix:null,type:"XTEST",args:["two"]}
                                     ],
                                     context.commands
                                 );
@@ -145,15 +149,15 @@
                                 var context = t._context;
 
                                 context.irc.connect();
-                                context.transport.onread("PRIVMSG one");
-                                context.transport.onread("\r\nPRIV");
-                                context.transport.onread("MSG two\r");
+                                context.transport.onread("XTEST one");
+                                context.transport.onread("\r\nXT");
+                                context.transport.onread("EST two\r");
                                 context.transport.onread("\n");
                                 context.irc.close();
 
                                 t.is([
-                                        {prefix:null,type:"PRIVMSG",args:["one"]},
-                                        {prefix:null,type:"PRIVMSG",args:["two"]}
+                                        {prefix:null,type:"XTEST",args:["one"]},
+                                        {prefix:null,type:"XTEST",args:["two"]}
                                     ],
                                     context.commands
                                 );
@@ -167,12 +171,12 @@
                                 var context = t._context;
 
                                 context.irc.connect();
-                                context.transport.onread(":Chicken PRIVMSG Cow!\r\n:Cow PRIVMSG Chicken!\r\n");
+                                context.transport.onread(":Chicken PRIVMSG Cow Cow!\r\n:Cow PRIVMSG Chicken Chicken!\r\n");
                                 context.irc.close();
 
                                 t.is([
-                                        {prefix:"Chicken",type:"PRIVMSG",args:["Cow!"]},
-                                        {prefix:"Cow",type:"PRIVMSG",args:["Chicken!"]}
+                                        {prefix:"Chicken",type:"PRIVMSG",args:["Cow", "Cow!"]},
+                                        {prefix:"Cow",type:"PRIVMSG",args:["Chicken", "Chicken!"]}
                                     ],
                                     context.commands
                                 );
