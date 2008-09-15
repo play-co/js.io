@@ -28,8 +28,17 @@
 // TODO DRY this by creating a common logging infrastructure (this is also on stomp.js)
 IRC_DEBUG = false;
 
-if (IRC_DEBUG && typeof(console)) {
-    function getIrcLogger(name) {
+if (IRC_DEBUG && typeof(Orbited)) {
+    var getIrcLogger = function(name) {
+        var logger = Orbited.getLogger(name);
+        if (!("dir" in logger)) {
+            logger.dir = function() {};
+        }
+        return logger;
+    }
+}
+else if (IRC_DEBUG && typeof(console)) {
+    var getIrcLogger = function(name) {
         return {
             debug: function() {
                 var args = Array.prototype.slice.call(arguments);
@@ -41,14 +50,15 @@ if (IRC_DEBUG && typeof(console)) {
                 console.dir.apply(console, arguments);
             }
         };
-    }
-} else {
-    function getIrcLogger(name) {
+    };
+}
+else {
+    var getIrcLogger = function(name) {
         return {
             debug: function() {},
             dir: function() {}
         };
-    }
+    };
 }
 
 IRCClient = function() {
@@ -131,8 +141,9 @@ IRCClient = function() {
 
     // Internal Functions
     var send = function(type, payload) {
-        conn.send(type + " " + payload + ENDL)
-    }
+        log.debug("send: " + payload);
+        conn.send(type + " " + payload + ENDL);
+    };
     var parse_buffer= function() {
         var commands = buffer.split(ENDL);
         buffer = commands[commands.length-1];
