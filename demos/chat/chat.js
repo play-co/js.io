@@ -110,6 +110,19 @@ var connect = function () {
         html('<span class="user">' + user + '</span> changed the topic to: ' + sanitize(topic)).
         appendTo("#chathistory");
   };
+irc.onerror = function(command) {
+    self.logger.debug('onerror', command)
+    var responseCode = parseInt(command.type);
+    if (responseCode == 431 || responseCode == 432 || responseCode == 433) {
+    // 431     ERR_NONICKNAMEGIVEN
+    // 432     ERR_ERRONEUSNICKNAME
+    // 433     ERR_NICKNAMEINUSE
+        nickname += '_'
+        irc.nick(nickname)
+        self.onUsernameTaken();
+    }
+
+
   irc.onresponse = function(command) {
     var responseCode = parseInt(command.type);
     
@@ -170,6 +183,8 @@ var connect = function () {
       scrollDown();
     }
   };
+
+
   irc.onopen = function() {
     irc.nick(nickname);
     irc.ident(nickname, '8 *', nickname);
@@ -216,7 +231,8 @@ var connect = function () {
     scrollDown();                        
                                          
     removeName(leaver);                  
-  }                                      
+  }
+
   irc.onQUIT = function(command) {       
     var quitter = parseName(command.prefix);
     var message = command.args.join(" ");
