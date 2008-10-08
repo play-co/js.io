@@ -111,7 +111,6 @@ var connect = function () {
         appendTo("#chathistory");
   };
 irc.onerror = function(command) {
-    self.logger.debug('onerror', command)
     var responseCode = parseInt(command.type);
     if (responseCode == 431 || responseCode == 432 || responseCode == 433) {
     // 431     ERR_NONICKNAMEGIVEN
