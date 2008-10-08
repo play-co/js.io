@@ -118,8 +118,9 @@ irc.onerror = function(command) {
     // 433     ERR_NICKNAMEINUSE
         nickname += '_'
         irc.nick(nickname)
-        self.onUsernameTaken();
+        irc.join(CHANNEL)
     }
+}
 
 
   irc.onresponse = function(command) {
