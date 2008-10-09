@@ -42,7 +42,7 @@ var connect = function () {
   irc.onCTCP = function(command) {
     var messagediv = $('<div class="message"></div>');
     messagediv.addClass("ctcp");
-    message = command.args.slice(1).join(" ")
+    var message = command.args.slice(1).join(" ")
     var sender = parseName(command.prefix);
     messagediv.
        html('<span class="user">' + sender + '(CTCP):</span> ' + sanitize(message)).
