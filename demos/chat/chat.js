@@ -39,7 +39,10 @@ var connect = function () {
                 .appendTo("#chathistory");
     scrollDown();
   }
-  irc.onCTCP = function(command) {
+// No more ugly CTCP spans!!
+// -mcarter 10/10/08
+
+/*  irc.onCTCP = function(command) {
     var messagediv = $('<div class="message"></div>');
     messagediv.addClass("ctcp");
     var message = command.args.slice(1).join(" ")
@@ -49,6 +52,7 @@ var connect = function () {
        appendTo("#chathistory");    
     scrollDown();
   }
+*/
   irc.onPRIVMSG = function(command) {
     var sender = parseName(command.prefix);
     var target = command.args[0];
