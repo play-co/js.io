@@ -1,3 +1,9 @@
+/**********************************
+* author: Mario Balibrera
+*    web: mariobalibrera.com
+*  email: mario.balibrera@gmail.com
+**********************************/
+
 CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"];
 REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</username><password>","</password></query></iq>"];
 LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>Orbited</resource></query></iq>"];
