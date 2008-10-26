@@ -5,7 +5,7 @@
 **********************************/
 
 js.io.require('js.io.protocols.mics');
-js.io.require('js.io.tools.ui.stripper);
+js.io.require('js.io.tools.ui.stripper');
 
 OPCOL = {'white':'black','black':'white'};
 
