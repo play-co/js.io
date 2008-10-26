@@ -1,0 +1,52 @@
+body {
+    width:600px;
+}
+
+td {
+    height:40px;
+    width:40px;
+    padding:0px;
+    text-align:center;
+}
+
+#right {
+    float:right;
+}
+
+#clocks {
+    font-size:500%;
+    border:1px solid black;
+}
+
+#white {
+    color:black;
+    background:white;
+}
+
+#black {
+    color:white;
+    background:black;
+}
+
+#board {
+    font-size:200%;
+}
+
+#output {
+    height:100px;
+    background:black;
+    text-align:right;
+    font-size:75%;
+    overflow-y:scroll;
+}
+
+.chat {
+    color:white;
+    border:1px dashed green;
+}
+
+.notice {
+    color:gray;
+    font-weight:bold;
+    border:1px dashed red;
+}

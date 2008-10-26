@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+    <title>JavaScript Stomp Test</title>
+    <style>
+        #output {
+            background-color: #eee;
+            overflow-y: scroll;
+            height : 200px;
+        }
+        p {
+            margin: 0.5em 0;
+        }
+    </style>
+    <script src="/static/Orbited.js"></script>
+    <script src="/static/js.io.js"></script>
+    <script>js.io.require('js.io.protocols.stomp')</script>
+    <script src="shell.js"></script>
+    <script>
+        onload = function() {
+            // set up shell.
+            var output = document.getElementById('output');
+            var shell = new Shell(output);
+
+            // set up stomp client.
+            stomp = new js.io.protocols.stomp.Client();
+            stomp.onopen = function() {
+                shell.print("Transport openned");
+            };
+            stomp.onclose = function(code) {
+                shell.print("Transport closed (code: " + code + ")");
+            };
+            stomp.onerror = function(error) {
+                alert("onerror: " + error);
+            };
+            stomp.onerrorframe = function(frame) {
+                alert("onerrorframe: " + frame.body);
+            };
+            stomp.onconnectedframe = function() {
+                shell.print("Connected as user " + document.getElementById('username').value);
+            };
+            stomp.onmessageframe = function(frame) {
+                shell.print(frame.body);
+            };
+        };
+    </script>
+</head>
+<body>
+    <h1>STOMP Test</h1>
+    <div id="output"></div>
+ 
+    <p>
+        <button onclick="stomp.connect('localhost', 61613, document.getElementById('username').value, document.getElementById('password').value)">Connect</button>
+        <button onclick="stomp.disconnect()">Disconnect</button>
+        Name: <input id="username" value="guest" />
+        Password: <input id="password" value="guest" />
+    </p>
+
+    <p>    
+        <button onclick="stomp.subscribe(document.getElementById('sub_destination').value, {exchange:document.getElementById('sub_exchange').value})">Subscribe</button>
+        <button onclick="stomp.unsubscribe(document.getElementById('sub_destination').value)">Unsubscribe</button>
+        destination:
+        <input id="sub_destination" value="/topic/home" />
+        exchange:
+        <input id="sub_exchange" value="" />
+    </p>
+ 
+    <p>
+        <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('destination').value, {exchange:document.getElementById('exchange').value})">Send</button>
+        <button onclick="stomp.send(document.getElementById('input').value, document.getElementById('destination').value, {exchange:document.getElementById('exchange').value,transaction:document.getElementById('trans_pub_id').value})">Send with Transaction Id</button>
+        <input id="input" value="hello" />
+        destination:
+        <input id="destination" value="/topic/home" />
+        exchange:
+        <input id="exchange" value="" />
+        transaction id:
+        <input id="trans_pub_id" value="trans1" />
+    </p>
+
+    <p>
+        <button onclick="stomp.begin(document.getElementById('trans_id').value)">Begin Transaction</button>
+        <button onclick="stomp.commit(document.getElementById('trans_id').value)">Commit</button>
+        <button onclick="stomp.abort(document.getElementById('trans_id').value)">Abort</button>
+        transaction id:
+        <input id="trans_id" value="trans1" />
+    </p>
+
+    <h2>Notes</h2>
+    <ul>
+        <li>the <em>exchange</em> field only works with AMQP (eg, with RabbitMQ).</li>
+    </ul>
+</body>
+</html>
