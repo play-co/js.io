@@ -279,6 +279,9 @@ function Chess() {
             INPUT.value = "";
         }
     }
+    var recv_draw = function() {
+        notice('your opponent offers a draw');
+    }
     var move_piece = function(f, t, p) {
         clock.change();
         board.move(f, t, p);
@@ -298,12 +301,13 @@ function Chess() {
         clock.set(300);
         client.set_cb('chat', post_chat);
         client.set_cb('confirm', conf);
-        client.set_cb('move', move_piece);
-        client.set_cb('time', clock.sync);
-        client.set_cb('notice', notice);
-        client.set_cb('list', list);
+        client.set_cb('draw', recv_draw);
         client.set_cb('game', new_game);
         client.set_cb('gameover', gameover);
+        client.set_cb('list', list);
+        client.set_cb('move', move_piece);
+        client.set_cb('notice', notice);
+        client.set_cb('time', clock.sync);
         client.connect('localhost', 7777);
     }
     self.new_seek = function() {

@@ -34,6 +34,7 @@ td {
 
 #output {
     height:100px;
+    width:300px;
     background:black;
     text-align:right;
     font-size:75%;
