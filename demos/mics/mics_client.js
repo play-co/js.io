@@ -302,7 +302,7 @@ function Chess() {
         if (INCREMENT_TIMES.indexOf(increment) == -1) {
             return alert('invalid time increment');
         }
-        client.seek(parseInt(initial)*60, increment);
+        client.seek(name, parseInt(initial)*60, increment);
     }
     self.draw = function() {
         client.draw();
