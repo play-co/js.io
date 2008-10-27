@@ -12,7 +12,7 @@ function MICSClient() {
     var conn = null;
     var cbs = {};
     var switch_time = null;
-    var reader = new js.io.tools.io.XMLReader();
+    var reader = new js.io.tools.io.xmlreader.Reader();
     var parse_event = function(node) {
         if (node.nodeName in cbs) {
             cb = cbs[node.nodeName];
