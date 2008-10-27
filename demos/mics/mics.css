@@ -37,7 +37,7 @@ td {
     background:black;
     text-align:right;
     font-size:75%;
-    overflow-y:scroll;
+    overflow:scroll;
 }
 
 .chat {
