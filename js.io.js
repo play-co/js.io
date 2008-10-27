@@ -46,7 +46,7 @@ catch(e) { // dojo does not exist in the global namespace
         // SHOULD be impossible...
         throw new Error('cannot determine path to js.io module!');
     }
-    if (js.io.modPath[0] != '/') {
+    if (js.io.modPath[0] != '/' && js.io.modPath.indexOf('http:') != 0) {
         var docLocation = String(document.location).split('/');
         docLocation.pop();
         js.io.modPath = docLocation.join('/') + '/' + js.io.modPath;
