@@ -4,7 +4,7 @@
 *  email: mario.balibrera@gmail.com
 **********************************/
 
-js.io.require('js.io.tools.io.xmlreader');
+js.io.require('js.io.tools.io.xml');
 js.io.provide('js.io.protocols.xmpp');
 
 CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"];
@@ -25,7 +25,7 @@ XMPPClient = function() {
     var full_jid = null;
     var success = null;
     var failure = null;
-    var parser = new js.io.tools.io.xmlreader.Reader();
+    var parser = new js.io.tools.io.xml.Reader();
     self.onPresence = function(ntype, from) {}
     self.onMessage = function(jid, username, text) {}
     self.onSocketConnect = function() {}

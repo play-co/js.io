@@ -4,7 +4,7 @@
 *  email: mario.balibrera@gmail.com
 **********************************/
 
-js.io.require('js.io.tools.io.xmlreader');
+js.io.require('js.io.tools.io.xml');
 js.io.provide('js.io.protocols.mics');
 
 function MICSClient() {
@@ -12,7 +12,7 @@ function MICSClient() {
     var conn = null;
     var cbs = {};
     var switch_time = null;
-    var reader = new js.io.tools.io.xmlreader.Reader();
+    var reader = new js.io.tools.io.xml.Reader();
     var parse_event = function(node) {
         if (node.nodeName in cbs) {
             cb = cbs[node.nodeName];

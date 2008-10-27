@@ -4,7 +4,7 @@
 *  email: mario.balibrera@gmail.com
 **********************************/
 
-js.io.provide('js.io.tools.io.jsonreader');
+js.io.provide('js.io.tools.io.json');
 
 JSONReader = function() {
     var chars = {'[':']','{':'}','"':'"'};
@@ -38,4 +38,4 @@ JSONReader = function() {
     }
 }
 
-js.io.declare('js.io.tools.io.jsonreader.Reader',JSONReader,{});
+js.io.declare('js.io.tools.io.json.Reader',JSONReader,{});

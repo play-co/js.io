@@ -4,24 +4,22 @@
 *  email: mario.balibrera@gmail.com
 **********************************/
 
-js.io.provide('js.io.tools.io.delimreader');
+js.io.provide('js.io.tools.io.length');
 
-DelimReader = function() {
+LengthReader = function() {
     var self = this;
     var buff = "";
-    var delim = null;
+    var length = 1;
     var cb = null;
     var separate_events = function() {
-        var sep = buff.indexOf(delim);
-        if (sep == -1) {
-            return;
+        if (buff.length >= length) {
+            cb(buff.slice(0,length));
+            buff = buff.slice(length);
+            separate_events();
         }
-        cb(buff.slice(0,sep));
-        buff = buff.slice(sep+delim.length);
-        separate_events();
     }
-    self.set_delim = function(d) {
-        delim = d;
+    self.set_length = function(len) {
+        lenth = len;
     }
     self.set_cb = function(func) {
         cb = func;
@@ -32,4 +30,4 @@ DelimReader = function() {
     }
 }
 
-js.io.declare('js.io.tools.io.delimreader.Reader',DelimReader,{});
+js.io.declare('js.io.tools.io.length.Reader',LengthReader,{});

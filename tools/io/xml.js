@@ -4,7 +4,7 @@
 *  email: mario.balibrera@gmail.com
 **********************************/
 
-js.io.provide('js.io.tools.io.xmlreader');
+js.io.provide('js.io.tools.io.xml');
 
 XMLReader = function() {
     var self = this;
@@ -66,4 +66,4 @@ XMLReader = function() {
     }
 }
 
-js.io.declare('js.io.tools.io.xmlreader.Reader',XMLReader,{});
+js.io.declare('js.io.tools.io.xml.Reader',XMLReader,{});
