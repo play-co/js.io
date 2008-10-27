@@ -124,6 +124,10 @@ function Board() {
         var p = squares[square_id].innerHTML.charCodeAt(0);
         return p == 9817 || p == 9823;
     }
+    self.is_king = function(square_id) {
+        var p = squares[square_id].innerHTML.charCodeAt(0);
+        return p == 9812 || p == 9818;
+    }
     self.set_move_cb = function(cb) {
         move_cb = cb;
     }
@@ -171,12 +175,16 @@ function Board() {
             click_one = square;
         }
     }
+    self.is_castling = function(f, t) {
+        var diff = f[0] - t[0];
+        return diff == -2 || diff == 2;
+    }
     self.move = function(f, t, p) {
         if (self.is_pawn(f)) {
-            if (p) {
+            if (p) { // promotion
                 squares[t].innerHTML = PROMOTIONS[turn][p];
             }
-            else {
+            else { // en passant
                 if (f[0] != t[0] && ! squares[t].innerHTML) {
                     squares[t[0]+f[1]].innerHTML = '';
                 }
@@ -185,6 +193,17 @@ function Board() {
         }
         else {
             squares[t].innerHTML = squares[f].innerHTML;
+        }
+        if (self.is_king(t)) { // check for castle
+            var diff = LETTERS.indexOf(f[0]) - LETTERS.indexOf(t[0]);
+            if (diff == -2) { // kingside
+                squares['f'+f[1]].innerHTML = squares['h'+f[1]].innerHTML;
+                squares['h'+f[1]].innerHTML = '';
+            }
+            else if (diff == 2) { // queenside
+                squares['d'+f[1]].innerHTML = squares['a'+f[1]].innerHTML;
+                squares['a'+f[1]].innerHTML = '';
+            }
         }
         squares[f].innerHTML = '';
         turn = OPCOL[turn];
