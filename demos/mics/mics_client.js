@@ -328,9 +328,11 @@ function Chess() {
         client.seek(name, parseInt(initial)*60, increment);
     }
     self.draw = function() {
+        notice('you offer a draw');
         client.draw();
     }
     self.forfeit = function() {
+        notice('you forfeit');
         client.forfeit();
     }
 }
