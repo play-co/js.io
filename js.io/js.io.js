@@ -57,7 +57,6 @@ dojo.registerModulePath('js.io', js.io.modPath);
 js.io.require = dojo.require;
 js.io.provide = dojo.provide;
 js.io.declare = dojo.declare;
-js.io.registerModulePath = dojo.registerModulePath;
 
 js.io.setSocket = function(/*Socket*/ s) {
     /***************

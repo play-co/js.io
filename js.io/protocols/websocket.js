@@ -12,81 +12,44 @@ function WebSocketClient(url) {
     // wss NOT supported yet...
 
     // private
-    var FRAME_START = '\x00';
-    var FRAME_END = '\xff';
+    var FRAME_START = String.fromCharCode(0);
+    var FRAME_END = String.fromCharCode(255);
     var SCHEMES = { "wss": [true, 815], "ws": [false, 81] }
-    var HANDSHAKE = [
-        "HTTP/1.1 101 Web Socket Protocol Handshake",
-        "Upgrade: WebSocket",
-        "Connection: Upgrade"
-    ]
+    var STATUS = "HTTP/1.1 101 Web Socket Protocol Handshake";
     var headers = {}
     var reader = new js.io.tools.io.delimiter.Reader();
-    reader.set_delim("\r\n");
-    reader.set_cb(recv);
+    var conn = new js.io.TCPSocket();
     var self = this;
 
-    // public
-    self.CONNECTING = 0;
-    self.OPEN = 1;
-    self.CLOSED = 2;
-    self.onopen = null;
-    self.onmessage = null;
-    self.onclosed = null;
-    self.readyState = self.CONNECTING;
-    self.url = url;
-
-    // host, port, resource, origin
-    var parsedUrl = new js.io.tools.parseurl.Parse(url);
-    if (!parsedUrl.success || ! parsedUrl.scheme in SCHEMES) {
-        error('SYNTAX_ERR', true);
-    }
-    var scheme = parsedUrl.scheme;
-    var secure = SCHEMES[scheme][0];
-    var host = parsedUrl.host;
-    var port = parsedUrl.port || SCHEMES[scheme][1];
-    var resource = parsedUrl.path || "/";
-    if (parsedUrl.query) {
-        resource += "?" + parsedUrl.query;
-    }
-    var origin = scheme + "://" + document.domain;
-    if (document.location.port) {
-        origin += ":" + document.location.port;
+    // all problems end up here
+    var error = function(msg, no_close) {
+        if (! no_close) {
+            self.readyState = self.CLOSED;
+            conn.close();
+        }
+        throw new Error(msg);
     }
 
-    // connect
-    var conn = new js.io.TCPSocket();
-    conn.onread = reader.read;
-    conn.onopen = onOpen;
-    conn.onclose = onClosed;
-    conn.open(host, port, false);
-
+    // conn.onopen callback
     var onOpen = function() {
         // initiate handshake
         conn.send("GET " + resource + " HTTP/1.1\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nHost: " + host + "\r\nOrigin: " + origin + "\r\n\r\n");
     }
 
+    // conn.onclose callback
     var onClosed = function() {
         // connection lost
         if (self.onclosed) { self.onclosed(); }
     }
 
-    var error = function(msg, no_close) {
-        // all problems end up here
-        if (! no_close) { conn.close(); }
-        throw new Error(msg);
-    }
-
     var setHeader = function(line) {
         /******
-        * WebSocket headers complicate things
-        * because there is no "end headers" delimiter.
-        * We just have to be careful...
+        * this function is called by recv
+        * to parse and process headers
         ******/
-        var key = '';
-        var val = '';
-        [key, val] = line.split(":");
-        key = key.toLowerCase();
+        var colSplit = line.indexOf(':');
+        var key = line.slice(0,colSplit).toLowerCase();
+        var val = line.slice(colSplit+1);
         if (val[0] == ' ') {
             val = val.slice(1);
         }
@@ -105,6 +68,12 @@ function WebSocketClient(url) {
         else if (key == "websocket-location" && val != url) {
             error('WRONG_LOCATION_ERR');
         }
+        else if (key == "upgrade" && val != "WebSocket") {
+            error('WRONG_UPGRADE_ERR');
+        }
+        else if (key == "connection" && val != "Upgrade") {
+            error('WRONG_CONNECTION_ERR');
+        }
 
         // implement cookie-setting here
 
@@ -118,27 +87,22 @@ function WebSocketClient(url) {
         *********/
         if (self.readyState == self.CONNECTING) {
             // initialize connection
-            if (HANDSHAKE) {
-                // initial handshake
-                if (data == HANDSHAKE[0]) {
-                    HANDSHAKE = HANDSHAKE.slice(1);
-                }
-                else {
-                    error('HANDSHAKE_ERR');
-                }
+            var lines = data.split("\r\n");
+            var status = lines[0];
+            lines = lines.slice(1);
+            if (status != STATUS) {
+                error('HANDSHAKE_ERR');
+            }
+            for (var n=0; n<lines.length; n++) {
+                setHeader(lines[n]);
+            }
+            if ("websocket-origin" in headers && "websocket-location" in headers && "upgrade" in headers && "connection" in headers) {
+                reader.set_delim(FRAME_END);
+                self.readyState = self.OPEN;
+                if (self.onopen) { self.onopen(); }
             }
             else {
-                // headers
-                setHeader(data);
-                if ("websocket-origin" in headers && "websocket-location" in headers) {
-
-                    // maybe don't jump right into this
-                    // in case of leftover headers...
-
-                    reader.set_delim(FRAME_END);
-                    self.readyState = self.OPEN;
-                    if (self.onopen) { self.onopen(); }
-                }
+                error('MISSING_HEADER_ERR');
             }
         }
         else if (self.readyState == self.OPEN) {
@@ -151,6 +115,37 @@ function WebSocketClient(url) {
             }
         }
     }
+
+    // host, port, resource, origin
+    if (url[url.length-1] != '/') {
+        url += '/';
+    }
+    var parsedUrl = new js.io.tools.parseurl.Parse(url);
+    if (!parsedUrl.success || ! parsedUrl.scheme in SCHEMES) {
+        error('SYNTAX_ERR', true);
+    }
+    var scheme = parsedUrl.scheme;
+    var secure = SCHEMES[scheme][0];
+    var host = parsedUrl.host;
+    var port = parsedUrl.port || SCHEMES[scheme][1];
+    var resource = parsedUrl.path || "/";
+    if (parsedUrl.query) {
+        resource += "?" + parsedUrl.query;
+    }
+    var origin = scheme + "://" + document.domain;
+    if (document.location.port) {
+        origin += ":" + document.location.port;
+    }
+
+    // public
+    self.CONNECTING = 0;
+    self.OPEN = 1;
+    self.CLOSED = 2;
+    self.onopen = null;
+    self.onmessage = null;
+    self.onclosed = null;
+    self.readyState = self.CONNECTING;
+    self.url = url;
 
     self.postMessage = function(data) {
         // send data to the server
@@ -165,6 +160,16 @@ function WebSocketClient(url) {
         conn.close();
         self.readyState = self.CLOSED;
     }
+
+    // initialize reader
+    reader.set_delim("\r\n\r\n");
+    reader.set_cb(recv);
+
+    // initialize connection
+    conn.onread = reader.read;
+    conn.onopen = onOpen;
+    conn.onclose = onClosed;
+    conn.open(host, port, false);
 }
 
 js.io.declare('js.io.protocols.websocket.Client',WebSocketClient,{});

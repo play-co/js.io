@@ -2,10 +2,13 @@
 <html>
  <head>
   <title>WebSocket demo</title>
+  <script src='/static/Orbited.js'></script>
   <script src='../../js.io.js'></script>
   <script src='websocket_demo.js'></script>
  </head>
- <body>
-  
+ <body onload='start();'>
+  <input id=text value="hello there">
+  <button onclick='send();'>send</button>
+  <div id=display></div>
  </body>
 </html>
