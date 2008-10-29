@@ -4,7 +4,7 @@
 *  email: mario.balibrera@gmail.com
 **********************************/
 
-js.io.provide('js.io.tools.ui.stripper');
+js.io.provide('js.io.tools.stripper');
 
 Stripper = function() {
     var self = this;
@@ -51,4 +51,4 @@ Stripper = function() {
     }
 }
 
-js.io.declare('js.io.tools.ui.stripper.Stripper',Stripper,{});
+js.io.declare('js.io.tools.stripper.Stripper',Stripper,{});

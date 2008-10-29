@@ -5,7 +5,7 @@
 **********************************/
 
 js.io.require('js.io.protocols.mics');
-js.io.require('js.io.tools.ui.stripper');
+js.io.require('js.io.tools.stripper');
 
 OPCOL = {'white':'black','black':'white'};
 
@@ -220,7 +220,7 @@ function Chess() {
     var name = null;
     var curr_move = [null, null, null];
     var color = 'white';
-    var stripper = new js.io.tools.ui.stripper.Stripper();
+    var stripper = new js.io.tools.stripper.Stripper();
     var client = new js.io.protocols.mics.Client();
     var clock = new Clock();
     board = new Board();

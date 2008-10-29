@@ -1,0 +1,24 @@
+<html>
+ <head>
+  <title>js.io general test</title>
+  <script src='js.io/js.io.js'></script>
+ </head>
+ <body>
+  <h1>js.io test page</h1>
+  <h4>what is js.io?</h4>
+  <div>
+   The <a href="http://js.io">js.io</a> library at its core is a collection of open protocol implementations and tools for writing socket-based applications for the web.
+  </div>
+  <h4>how do i use js.io?</h4>
+  <div>
+   To use js.io, simply import js.io.js with a &lt;script&gt; tag in the head of your html. At that point, you have access to all the functionality js.io has to offer with js.io.require. In development, "js.io.require( 'js.io.protocols.websocket' )" will see if the websocket protocol is available, and if not, will make an xhr request for websocket.js. In deployment mode, the client will get all necessary functionality in one initial request for a compiled javascript project file.
+  </div>
+  <h4>how do i test js.io?</h4>
+  <ol>
+   <li>get firefox</li>
+   <li>get firebug</li>
+   <li>open this page</li>
+   <li>js.io.require something in the firebug console</li>
+  </ol>
+ </body>
+</html>
