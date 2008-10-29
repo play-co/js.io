@@ -18,6 +18,8 @@ ParseUrl = function(u) {
     [self.hostport, self.path] = self.address.split("/");
     [self.host, self.port] = self.hostport.split(":");
 
+    self.path = self.path || '';
+
     [self.path, self.fragment] = self.path.split("#");
     [self.path, self.query] = self.path.split("?");
 

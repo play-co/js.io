@@ -43,8 +43,7 @@ catch(e) { // dojo does not exist in the global namespace
     * figure out full path
     ********/
     if (!js.io.modPath) {
-        // SHOULD be impossible...
-        throw new Error('cannot determine path to js.io module!');
+        js.io.modPath = '.';
     }
     if (js.io.modPath[0] != '/' && js.io.modPath.indexOf('http:') != 0) {
         var docLocation = String(document.location).split('/');
@@ -58,6 +57,7 @@ dojo.registerModulePath('js.io', js.io.modPath);
 js.io.require = dojo.require;
 js.io.provide = dojo.provide;
 js.io.declare = dojo.declare;
+js.io.registerModulePath = dojo.registerModulePath;
 
 js.io.setSocket = function(/*Socket*/ s) {
     /***************
