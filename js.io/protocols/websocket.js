@@ -169,7 +169,7 @@ function WebSocketClient(url) {
     conn.onread = reader.read;
     conn.onopen = onOpen;
     conn.onclose = onClosed;
-    conn.open(host, port, false);
+    conn.open(host, port, true);
 }
 
 js.io.declare('js.io.protocols.websocket.Client',WebSocketClient,{});
