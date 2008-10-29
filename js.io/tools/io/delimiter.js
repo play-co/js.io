@@ -16,8 +16,9 @@ DelimiterReader = function() {
         if (sep == -1) {
             return;
         }
-        cb(buff.slice(0,sep));
+        var frame = buff.slice(0,sep);
         buff = buff.slice(sep+delim.length);
+        cb(frame);
         separate_events();
     }
     self.set_delim = function(d) {
