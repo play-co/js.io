@@ -1,0 +1,119 @@
+#signin_popup {
+  width:220pt;
+  padding:2em;
+  padding-bottom:3em;
+  text-align:center;
+  background-color: #A4C9D6;
+  color:#0E3541;
+  border: 5pt solid #195263;
+  position:absolute;
+  top:80pt;
+  left:100pt;
+  z-index:2;
+}
+#nickname {
+  width:90pt;
+}
+#absorb_clicks {
+  position:absolute;
+  top:0;
+  left:0;
+  width:300pt;
+  height:200pt;
+}
+
+.chatbox {
+  width:490pt;
+  font: 100% Verdana, sans-serif;
+  background-color:#24758E;
+  padding:5pt;
+  position:relative;
+}
+.chatbox .left_column {
+  width: 360pt;
+}
+.chatbox .chathistory {
+  width:100%;
+  height:217pt;
+  overflow: auto;
+  background-color: white;
+}
+.chatbox .chathistory div {
+  background-color:#ffffee;
+  padding:.2em;
+  padding-left:1.5em;
+  text-indent: -1em;
+  border-bottom: 1px dotted #ccc;
+}
+.chatbox .chathistory .message .user {
+  width:5em;
+  font-weight: bold;
+  color:#DD7200;
+  padding-right:.2em;
+  text-align:right;
+}
+.chatbox .chathistory .message.self .user{
+  color: #B42600;
+}
+.chatbox .chathistory .message.mentioned{
+  background-color: #d5c5ff;
+}
+.chatbox .chathistory .message.private{
+  background-color: #ccc;
+}
+.chatbox .chathistory .message.ctcp {
+  background-color: #f0f;
+}
+.chatbox .chathistory .action,
+.chatbox .chathistory .action .user {
+  color: #D68850;
+  font-style:italic;
+}
+.chatbox .chathistory .action.self,
+.chatbox .chathistory .action.self .user {
+  color: #A94C3B;
+  font-style:italic;
+}
+.chatbox .chathistory .informative {
+  font-size: 85%;
+  font-style: italic;
+  color:#999;
+  text-align:center;
+  padding:.3em;
+}
+
+.chatbox .chatbox_input {
+  width:100%;
+  height:30pt;
+  margin:0;
+  margin-top:3pt;
+  padding:0;
+  border:0;
+  font-family: Verdana, sans-serif;
+}
+
+.chatbox .user_list {
+  float:right;
+  position: absolute;
+  padding:0;
+  margin:0;
+  right:5pt;
+  top:5pt;
+  background-color:white;
+  width:127pt;
+  height:250pt;
+  overflow:auto;
+}
+.chatbox .user_list .user_entry{
+  padding:.2em;
+  padding-left:8pt;
+  border-bottom: 1px dotted #ccc;
+}
+
+#events {
+  visibility:hidden;
+  border:0;
+  width:0;
+  height:0;
+/*  display:none;*/
+}

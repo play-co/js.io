@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Orbited In-browser IRC</title>
+  <link rel="stylesheet" href="chat.css" />
+  <!--script>document.domain = document.domain</script-->
+  <!--script src="/static/log4js.js"></script-->
+  <script src="/static/Orbited.js"></script>
+  <script>
+    TCPSocket = Orbited.TCPSocket
+//    Orbited.settings.hostname = 'www.test.local'; 
+//    Orbited.util.chooseTransport = function() {
+//        return Orbited.CometTransports.LongPoll;
+//    }
+// LOGGING
+// firebug way of doing it
+/*    Orbited.system.enabled = true;
+    Orbited.loggers['Orbited.XSDR'].enabled = false
+    Orbited.loggers['Orbited.CometSession'].enabled = true
+    Orbited.loggers['Orbited.TCPSocket'].enabled = true
+    Orbited.loggers['XSDRBridge'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.LongPoll'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.XHRStream'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.HTMLFile'].enabled = true
+    Orbited.loggers['Orbited.CometTransports.SSE'].enabled = true
+*/
+// Log4js way of doing it    
+//    Orbited.loggers['Orbited.CometTransports.LongPoll'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['Orbited.CometTransports.LongPoll'].addAppender(new Log4js.ConsoleAppender());
+//    Orbited.loggers['Orbited.XSDR'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['Orbited.XSDR'].addAppender(new Log4js.ConsoleAppender());
+//    Orbited.loggers['XSDRBridge'].setLevel(Log4js.Level.ALL);
+//    Orbited.loggers['XSDRBridge'].addAppender(new Log4js.ConsoleAppender());
+
+  </script>
+  <script src="/static/protocols/irc/irc2.js"></script>
+  <script src="chat.js"></script>
+  <script src="/static/demos/lib/jquery.js"></script>
+  <script>
+    //ORBITED_DOMAIN = "www.test.local"
+    ENTER_KEY = 13
+    
+    $(function(){
+      $('#nickname').focus();
+      
+      $('#nickname').keypress( function(e) {
+        var key = e.charCode || e.keyCode || 0
+        if (key == ENTER_KEY) {
+          connect();
+        };
+      });
+      
+      $('#chatbox_input').keypress(function(e) {
+        var key = e.charCode || e.keyCode || 0;
+        if (key == ENTER_KEY) {
+          chat();
+          return false;
+        };
+      });
+//      $('#nickname').val('wooters')
+//      connect();
+    });
+  </script>
+</head>
+<body>
+  <div class="chatbox">
+    <div id="signin_popup">
+      <h2>Sign in to the #orbited chat room.</h2>
+      <label for="nickname">Nickname:</label>
+      <input type="text" id="nickname" maxlength="16" value="" />
+    </div>
+    <div id="absorb_clicks" onclick=""></div>
+    <div class="left_column">
+      <div class="chathistory" id="chathistory">
+      </div>
+      <textarea name="message" class="chatbox_input" id="chatbox_input" rows="2" cols="50"></textarea>
+    </div>
+    <div class="user_list" id="user_list">
+    </div>
+  </div>
+</body>
+</html>

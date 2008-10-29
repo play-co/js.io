@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+    <head>
+        <title>Orbited XMPP Demo</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.5.2/build/reset-fonts/reset-fonts.css" /> 
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.5.2/build/base/base-min.css" />
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.5.2/build/assets/skins/sam/skin.css" /> 
+    <!-- js --> 
+    <script type="text/javascript" src="http://yui.yahooapis.com/2.5.2/build/utilities/utilities.js"></script> 
+    <script type="text/javascript" src="http://yui.yahooapis.com/2.5.2/build/container/container-min.js"></script> 
+    <script type="text/javascript" src="http://yui.yahooapis.com/2.5.2/build/button/button-min.js"></script> 
+    <script type="text/javascript" src="http://yui.yahooapis.com/2.5.2/build/selector/selector-beta-min.js"></script> 
+    <script type="text/javascript" src="http://yui.yahooapis.com/2.5.2/build/resize/resize-beta-min.js"></script> 
+    <script type="text/javascript" src="http://yui.yahooapis.com/2.5.2/build/layout/layout-beta-min.js"></script> 
+    
+    <script src="/static/Orbited.js"></script>
+    <script>TCPSocket = Orbited.TCPSocket</script>
+    <script src="/static/protocols/xmpp/xmpp.js"></script>
+    <script src="chat.js"></script>
+    <script src="userlist.js"></script>
+    <script src="xmpp.js"></script>
+    <link rel="stylesheet" href="xmpp.css" type="text/css" media="screen" title="no title" charset="utf-8">
+    </head>
+    <body class="yui-skin-sam" onUnload="xmpp.quit();">
+    </body>
+</html>

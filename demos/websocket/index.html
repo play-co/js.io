@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>WebSocket demo</title>
+  <style type="text/css">
+      * { margin: 0; padding: 0; font-family: sans-serif;}
+      #shell {height: 300px; overflow-y: scroll; background-color: #ccc;}
+      #input {width:100%;}
+  </style>
+  <script src="/static/WebSocket.js"></script>
+  <script>
+    var conn = null;
+
+    connect = function() {
+        var url = document.getElementById('wsurl').value
+        /* Important Code Here */
+        conn = new WebSocket(url)
+        print("Connecting to: " + url)
+        conn.onread = function(data) { print("RECV: " + data, "blue") }
+        conn.onopen = function() { print("Connection Opened") }
+        conn.onclose = function() { print("Connection Closed")}
+        /* End Important Code */
+    }
+
+    send = function() {
+        var payload = document.getElementById('payload').value
+        /* some additional Important Code */
+        conn.send(payload)
+        print('SEND: ' + payload, "red")
+        /* End additional Important Code */
+    }
+
+
+    var print = function(s) {
+        var shell = document.getElementById('shell')
+        var color = "black"
+        if (typeof(arguments[1]) != undefined)
+            color = arguments[1]
+        shell.innerHTML += "&rarr;<span style='color:"+color+ "'> " + s + "</span><br>"
+        shell.scrollTop = shell.scrollHeight
+    }
+  </script>
+ </head>
+ <body>
+  <h1>WebSocket test</h1>
+  <input type=text id="wsurl" value="http://localhost:9998">
+  <button onclick="connect()">Connect</button><br>
+  <input type=text id="payload" value="Hello World">
+  <button onclick="send()">Send</button><br>
+  <div id="shell"></div> 
+ </body>
+</html>

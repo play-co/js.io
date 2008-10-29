@@ -1,0 +1,392 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>stomp.js unit tests</title>
+        <script type="text/javascript" src="/static/tests/lib/doh/doh.js" djConfig="isDebug:true"></script>
+        <!-- TODO move this include to common place -->
+        <script src="/static/Orbited.js"></script>
+        <script src="/static/protocols/stomp/stomp.js"></script>
+        <script type="text/javascript">
+            dojo.require("doh.runner");
+
+            dojo.addOnLoad(function() {
+                function TCPSocketMock() {
+                    var self = this;
+                    self.data = "";
+                    self.open = function() {};
+                    self.send = function(data) {
+                        self.data += data;
+                    };
+                    self.onopen = null;
+                    self.onread = null;
+                    self.onerror = null;
+                    self.onclose = null;
+                }
+
+                function setUpLineProtocol(t) {
+                    var transport = new TCPSocketMock();
+                    var protocol = new LineProtocol(transport);
+                    t._context = {
+                        transport: transport,
+                        protocol: protocol,
+                        onopenCounter: 0,
+                        oncloseCounter: 0,
+                        lines: [],
+                        raw: [],
+                        errors: []
+                    };
+                    protocol.onopen = function() {
+                        ++t._context.onopenCounter;
+                    };
+                    protocol.onlinereceived = function(line) {
+                        t._context.lines.push(line);
+                    };
+                    protocol.onrawdatareceived = function(data) {
+                        t._context.raw.push(data);
+                    };
+                    protocol.onerror = function(error) {
+                        t._context.errors.push(error);
+                    };
+                    protocol.onclose = function() {
+                        ++t._context.oncloseCounter;
+                    };
+                }
+
+                doh.register("LineProtocolTests",
+                    [
+                        {
+                            name: "LineProtocolBaseline",
+                            setUp: setUpLineProtocol,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                // make sure the protocol sets all the transport callbacks.
+                                t.t(context.transport.onopen !== null);
+                                t.t(context.transport.onread !== null);
+                                t.t(context.transport.onerror !== null);
+                                t.t(context.transport.onclose !== null);
+
+                                // send a full STOMP frame.
+                                context.transport.onopen();
+                                context.transport.onread("MESSAGE\nheader-1:0\n\n\0");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is(["MESSAGE", "header-1:0", ""], context.lines);
+                                t.is([], context.raw);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "partialLines",
+                            setUp: setUpLineProtocol,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onopen();
+                                context.transport.onread("\n");
+                                context.transport.onread("ME");
+                                context.transport.onread("SSAGE");
+                                context.transport.onread("\n");
+                                context.transport.onread("header-1:0");
+                                context.transport.onread("\n\n");
+                                context.transport.onread("\0");
+                                context.transport.onread("\n");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is(["", "MESSAGE", "header-1:0", "", "\0"], context.lines);
+                                t.is([], context.raw);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "partialUTF8",
+                            setUp: setUpLineProtocol,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onopen();
+                                // NB: "á" is UTF-8 encoded as two bytes [195, 161]
+                                var unicode = "olá mundo\n";
+                                t.is(10, unicode.length);
+                                var bytes = Orbited.utf8.encode(unicode);
+                                t.is(11, bytes.length);
+                                context.transport.onread(bytes.slice(0, 3));
+                                context.transport.onread(bytes.slice(3));
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is(["olá mundo"], context.lines);
+                                t.is([], context.raw);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "switchModes",
+                            setUp: setUpLineProtocol,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.protocol.onlinereceived = function(line) {
+                                    if (line == "")
+                                        context.protocol.setRawMode();
+                                    else
+                                        context.lines.push(line);
+                                };
+                                context.protocol.onrawdatareceived = function(data) {
+                                    var end = data.indexOf("\0");
+                                    if (end >= 0) {
+                                        // split into head (bytes) and tail (data).
+                                        var bytes = data.slice(0, end);
+                                        data = data.slice(end + 1, data.length);
+                                        context.raw.push(bytes);
+                                        // let the protocol handle the remaining lines inside data.
+                                        context.protocol.setLineMode(data);
+                                    }
+                                };
+
+                                context.transport.onopen();
+                                context.transport.onread("head\n\nraw\0mooo\n\n\0line\ntail");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is(["head", "mooo", "line"], context.lines);
+                                t.is(["raw", []], context.raw);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+                    ]
+                );
+
+                function setUpSTOMPClientRAW(t) {
+                    var transport = new TCPSocketMock();
+                    var stomp = new STOMPClient();
+                    t._context = {
+                        transport: transport,
+                        stomp: stomp,
+                        protocol: null,
+                        onopenCounter: 0,
+                        oncloseCounter: 0,
+                        frames: [],
+                        errors: []
+                    };
+                    stomp._createProtocol = function(domain, port) {
+                        var protocol = t._context.protocol = new LineProtocol(transport);
+                        return protocol;
+                    };
+                    stomp.onopen = function() {
+                        ++t._context.onopenCounter;
+                    };
+                    stomp.onmessage = function(frame) {
+                        t._context.frames.push(frame);
+                    };
+                    stomp.onerror = function(error) {
+                        t._context.errors.push(error);
+                    };
+                    stomp.onclose = function() {
+                        ++t._context.oncloseCounter;
+                    };
+                }
+                function setUpSTOMPClient(t) {
+                    setUpSTOMPClientRAW(t);
+                    var context = t._context;
+                    context.stomp.connect("example.local", 61613, "user", "password");
+                    context.transport.onopen();
+                    // NB: CONNECTED frames are eated, though, they generate
+                    //     the needed "onopen" event.
+                    context.transport.onread("CONNECTED\n\n\0");
+                    // cleanup the received transport data (we already test it in "baseline")
+                    context.transport.data = [];
+                }
+
+                doh.register("STOMPClientTests",
+                    [
+                        {
+                            name: "baseline",
+                            setUp: setUpSTOMPClientRAW,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                // make sure the stomp client sets all the LineProtocol callbacks.
+                                context.stomp.connect("example.local", 61613, "user", "password");
+                                t.t(context.protocol.onopen !== null);
+                                t.t(context.protocol.onlinereceived !== null);
+                                t.t(context.protocol.onrawdatareceived !== null);
+                                t.t(context.protocol.onerror !== null);
+                                t.t(context.protocol.onclose !== null);
+
+                                // send a full STOMP frame.
+                                context.transport.onopen();
+                                // NB: CONNECTED frames are eated, though, they generate
+                                //     the needed "onopen" event.
+                                context.transport.onread("CONNECTED\n\n\0");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is("CONNECT\nlogin:user\npasscode:password\n\n\0", context.transport.data);
+                                t.is([], context.frames);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "receiveSingleMessage",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread("MESSAGE\nheader-1:0\n\nbody\0");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(1, context.frames.length);
+                                t.is({"header-1": "0"}, context.frames[0].headers);
+                                t.is("body", context.frames[0].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "receiveMultipleMessages",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread("MESSAGE\nheader-1:0\n\nbody 0\0");
+                                context.transport.onread("MESSAGE\nheader-1:1\n\nbody 1\0");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(2, context.frames.length);
+                                t.is({"header-1": "0"}, context.frames[0].headers);
+                                t.is("body 0", context.frames[0].body);
+                                t.is({"header-1": "1"}, context.frames[1].headers);
+                                t.is("body 1", context.frames[1].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "ignoreEmptyLinesBeforeFrameType",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread("\nMESSAGE\nheader-1:0\n\nbody 0\0\n\n");
+                                context.transport.onread("\nMESSAGE\nheader-1:1\n\nbody 1\0\n");
+                                context.transport.onclose();
+
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(2, context.frames.length);
+                                t.is({"header-1": "0"}, context.frames[0].headers);
+                                t.is("body 0", context.frames[0].body);
+                                t.is({"header-1": "1"}, context.frames[1].headers);
+                                t.is("body 1", context.frames[1].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "trimHeaders",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread("MESSAGE\n header-1 :   0 \n\nbody\0");
+                                context.transport.onclose();
+
+                                // make sure we've received a message.
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(1, context.frames.length);
+                                t.is({"header-1": "0"}, context.frames[0].headers);
+                                t.is("body", context.frames[0].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "twoMessagesInSingleRead",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread("MESSAGE\n\na\0MESSAGE\n\nb\0");
+                                context.transport.onclose();
+
+                                // make sure we've received two messages, one with
+                                // an embeded NUL and other without.
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(2, context.frames.length);
+                                t.is({}, context.frames[0].headers);
+                                t.is("a", context.frames[0].body);
+                                t.is({}, context.frames[1].headers);
+                                t.is("b", context.frames[1].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "binaryMessageWithEmbeddedNul",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+
+                                context.transport.onread("MESSAGE\ncontent-length: 3\n\na\0b\0MESSAGE\n\nbody\0");
+                                context.transport.onclose();
+
+                                // make sure we've received two messages, one with
+                                // an embeded NUL and other without.
+                                t.is(1, context.onopenCounter);
+                                t.is([], context.transport.data);
+                                t.is(2, context.frames.length);
+                                t.is({"content-length": "3"}, context.frames[0].headers);
+                                t.is("a\0b", context.frames[0].body);
+                                t.is({}, context.frames[1].headers);
+                                t.is("body", context.frames[1].body);
+                                t.is([], context.errors);
+                                t.is(1, context.oncloseCounter);
+                            }
+                        },
+
+                        {
+                            name: "sendBinaryMessageWithEmbeddedNul",
+                            setUp: setUpSTOMPClient,
+                            runTest: function(t) {
+                                var context = t._context;
+                                context.stomp.send("a\0b", "/topic/NULL");
+                                t.is(
+                                    "SEND\ncontent-type:text/plain\ncontent-encoding:utf-8\ncontent-length:3\ndestination:/topic/NULL\n\na\0b\0",
+                                    context.transport.data
+                                );
+                            }
+                        },
+                    ]
+                );
+                doh.run();
+            })
+        </script>
+    </head>
+    <body>
+        <p>NB: if you're running Firefox with Firebug, look at its console.</p>
+    </body>
+</html>
