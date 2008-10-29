@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <script>document.domain=document.domain</script>
+  <title>MICS Client</title>
+  <link rel='stylesheet' href='mics.css'>
+  <script src="/static/Orbited.js"></script>
+  <script>Orbited.settings.port=8000</script>
+  <script src='../../js.io.js'></script>
+  <script src='mics_client.js'></script>
+ </head>
+ <body onload="play();" onunload="quit();">
+  <div id=right>
+   <div id=clocks>
+    <div id=white></div>
+    <div id=black></div>
+   </div>
+   <input id=input>
+   <button onclick="chess.draw();">draw</button>
+   <button onclick="chess.new_seek();">new</button>
+   <div id=output></div>
+  </div>
+  <table id=board cellspacing=0></table>
+ </body>
+</html>
