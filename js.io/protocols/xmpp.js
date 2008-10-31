@@ -9,7 +9,7 @@ js.io.provide('js.io.protocols.xmpp');
 
 CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"];
 REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</username><password>","</password></query></iq>"];
-LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>Orbited</resource></query></iq>"];
+LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>js.io</resource></query></iq>"];
 ROSTER = ["<iq from='","' type='get'><query xmlns='jabber:iq:roster'/></iq><presence/>"];
 MSG = ["<message from='","' to='","' xml:lang='en' type='chat'><body>","</body></message>"];
 PRESENCE = ["<presence from='","' to='","' type='","'/>"];
@@ -50,7 +50,7 @@ XMPPClient = function() {
         /////////
         // send raw xml to jabber server with this function
         /////////
-        conn.send(Orbited.utf8.encode(s));
+        conn.send(s);
     }
     self.quit = function() {
         self.send(PRESENCE[0] + full_jid + PRESENCE[2] + "unavailable" + PRESENCE[3]);
@@ -61,7 +61,7 @@ XMPPClient = function() {
         failure = f;
         user = nick;
         bare_jid = nick + "@" + domain;
-        full_jid = bare_jid + "/Orbited";
+        full_jid = bare_jid + "/js.io";
         self.send(construct(REGISTER, [user, pass]));
     }
     self.login = function(nick, pass, s, f) {
@@ -70,7 +70,7 @@ XMPPClient = function() {
         failure = f;
         user = nick;
         bare_jid = nick + "@" + domain;
-        full_jid = bare_jid + "/Orbited";
+        full_jid = bare_jid + "/js.io";
         self.send(construct(LOGIN, [user, pass]));
     }
     self.connectServer = function(d, s, f) {
@@ -92,7 +92,7 @@ XMPPClient = function() {
         conn.onopen = self.onSocketConnect;
         conn.onclose = close;
         parser.set_cb(nodeReceived);
-        conn.open(host, port, true);
+        conn.open(host, port, false);
     }
     var nodeReceived = function(node) {
         if (node.nodeName == "message") {
@@ -111,12 +111,7 @@ XMPPClient = function() {
             self.onPresence(ntype, from, to);
         }
     }
-    var read = function(evt) {
-        var s = Orbited.utf8.decode(evt);
-        parser.read(s);
-    }
-    var setDomain = function(evt) {
-        var s = Orbited.utf8.decode(evt);
+    var setDomain = function(s) {
         if (s.indexOf("host-unknown") != -1) {
             if (failure) {failure();}
         }
@@ -124,18 +119,16 @@ XMPPClient = function() {
             if (success) {success();}
         }
     }
-    var regUser = function(evt) {
-        var s = Orbited.utf8.decode(evt);
+    var regUser = function(s) {
         if (s.indexOf("conflict") != -1) {
             if (failure) {failure();}
         }
         else {
-            conn.onread = read;
+            conn.onread = parser.read;
             if (success) {success();}
         }
     }
-    var setUser = function(evt) {
-        var s = Orbited.utf8.decode(evt);
+    var setUser = function(s) {
         if (s.indexOf("not-authorized") != -1) {
             if (failure) {failure();}
         }
