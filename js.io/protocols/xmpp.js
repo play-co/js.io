@@ -133,7 +133,7 @@ XMPPClient = function() {
             if (failure) {failure();}
         }
         else {
-            conn.onread = read;
+            conn.onread = parser.read;
             self.send(construct(ROSTER, [bare_jid]));
             if (success) {success();}
         }
