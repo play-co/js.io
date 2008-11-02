@@ -146,7 +146,7 @@ xmpp.onPresence = function(ntype, from, to) {
 }
 xmpp.onMessage = onMessage;
 xmpp.onSocketConnect = function() {
-    domain = prompt("Domain","marionet");
+    domain = prompt("Domain","yourjabberdomain");
     if (domain) {
         xmpp.connectServer(domain, connectSuccess, connectFailure);
     }
