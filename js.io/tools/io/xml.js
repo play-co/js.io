@@ -8,11 +8,29 @@ js.io.provide('js.io.tools.io.xml');
 
 XMLReader = function() {
     var self = this;
-    var parser = new DOMParser();
+    var parse = null;
     var cb = null;
     var name = null;
     var buff = "";
     var checked = 0;
+    var get_parser = function() {
+        try {
+            var parser = new DOMParser();
+            parse = function(s) {
+                return parser.parseFromString(s, "text/xml");
+            }
+        }
+        catch(e) {
+            try {
+                var parser = new ActiveXObject("Microsoft.XMLDOM");
+                parser.async = "false";
+                parse = parser.loadXML;
+            }
+            catch(e) {
+                alert("can't find suitable XML parser! what kind of crazy browser are you using?");
+            }
+        }
+    }
     var separate_events = function() {
         if (!name) {
             if (!buff) {
@@ -28,7 +46,7 @@ XMLReader = function() {
                 return;
             }
             if (buff[close_index-1] == "/") {
-                var frame = parser.parseFromString(buff.slice(0,close_index+1), "text/xml").firstChild;
+                var frame = parse(buff.slice(0,close_index+1)).firstChild;
                 buff = buff.slice(close_index+1);
                 checked = 0;
                 cb(frame);
@@ -44,7 +62,7 @@ XMLReader = function() {
         var i = buff.indexOf(">", checked);
         while (i != -1) {
             if (buff.slice(i-2-name.length,i+1) == "</"+name+">") {
-                var frame = parser.parseFromString(buff.slice(0, i+1), "text/xml").firstChild;
+                var frame = parse(buff.slice(0, i+1)).firstChild;
                 buff = buff.slice(i+1);
                 checked = 0;
                 name = null;
@@ -64,6 +82,7 @@ XMLReader = function() {
         buff += data;
         separate_events();
     }
+    get_parser();
 }
 
 js.io.declare('js.io.tools.io.xml.Reader',XMLReader,{});
