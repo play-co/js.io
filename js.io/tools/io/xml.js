@@ -62,7 +62,12 @@ XMLReader = function() {
         var i = buff.indexOf(">", checked);
         while (i != -1) {
             if (buff.slice(i-2-name.length,i+1) == "</"+name+">") {
-                var frame = parse(buff.slice(0, i+1)).firstChild;
+                try {
+                    var frame = parse(buff.slice(0, i+1)).firstChild;
+                }
+                catch (e) {
+                    var frame = parse(buff.slice(0, i+1).replace("?","&amp;")).firstChild;
+                }
                 buff = buff.slice(i+1);
                 checked = 0;
                 name = null;
