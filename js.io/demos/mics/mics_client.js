@@ -255,9 +255,6 @@ function Chess() {
         d.innerHTML = n;
         output(d);
     }
-    var clean = function(s, e) {
-        return stripper.strip(stripper.alpha(s, e));
-    }
     var move = function(f, t) {
         p = null;
         if ((t[1] == '1' || t[1] == '8') && board.is_pawn(f)) {
@@ -272,7 +269,7 @@ function Chess() {
     }
     var chat = function(e) {
         e = e || window.event;
-        var str = clean(INPUT.value," ',.");
+        var str = INPUT.value;
         if (name && str && e.keyCode == ENTER_KEY) {
             post_chat(name, str);
             client.chat(str);
@@ -312,7 +309,7 @@ function Chess() {
     }
     self.new_seek = function() {
         if (! name) {
-            name = clean(prompt("Enter name"),' ');
+            name = stripper.strip(stripper.alpha(prompt("Enter name"),' '));
             if (! name) {
                 return alert('invalid name');
             }

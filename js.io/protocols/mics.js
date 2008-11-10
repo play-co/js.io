@@ -19,7 +19,7 @@ function MICSClient() {
             switch (node.nodeName) {
                 case 'chat':
                     var n = node.getAttribute('name');
-                    var m = node.firstChild.data;
+                    var m = node.firstChild.data.replace("&lt;","<").replace("&gt;",">");
                     cb(n, m);
                     break;
                 case 'confirm':
@@ -112,7 +112,7 @@ function MICSClient() {
         reader.read(data);
     }
     self.chat = function(msg) {
-        send("<chat>"+msg+"</chat>");
+        send("<chat>"+msg.replace("<","&lt;").replace(">","&gt;")+"</chat>");
     }
     self.draw = function() {
         send("<draw/>");
