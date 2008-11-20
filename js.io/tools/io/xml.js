@@ -7,6 +7,7 @@
 js.io.provide('js.io.tools.io.xml');
 
 XMLReader = function() {
+    var amp_escape = "__AMP_ESCAPE__";
     var self = this;
     var parse = null;
     var cb = null;
@@ -62,11 +63,9 @@ XMLReader = function() {
         var i = buff.indexOf(">", checked);
         while (i != -1) {
             if (buff.slice(i-2-name.length,i+1) == "</"+name+">") {
-                try {
-                    var frame = parse(buff.slice(0, i+1)).firstChild;
-                }
-                catch (e) {
-                    var frame = parse(buff.slice(0, i+1).replace("?","&amp;")).firstChild;
+                var frame = parse(buff.slice(0, i+1)).firstChild;
+                if (frame.nodeName == "parsererror") {
+                    var frame = parse(buff.slice(0, i+1).replace("&","&amp;")).firstChild;
                 }
                 buff = buff.slice(i+1);
                 checked = 0;
