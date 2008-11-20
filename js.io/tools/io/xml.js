@@ -7,7 +7,6 @@
 js.io.provide('js.io.tools.io.xml');
 
 XMLReader = function() {
-    var amp_escape = "__AMP_ESCAPE__";
     var self = this;
     var parse = null;
     var cb = null;
