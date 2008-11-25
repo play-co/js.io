@@ -23,10 +23,12 @@
  *
  * Frank Salim (frank.salim@gmail.com)
  * ©2008 The Orbited Project
+ * Mario Balibrera (mario.balibrera@gmail.com)
  */
 
 // TODO DRY this by creating a common logging infrastructure (this is also on stomp.js)
 
+js.io.require('js.io.tools.io.delimiter');
 js.io.provide('js.io.protocols.irc');
 
 IRC_DEBUG = false;
@@ -68,7 +70,7 @@ IRCClient = function() {
     var log = getIrcLogger("IRCClient");
     var self = this
     var conn = null
-    var buffer = ""
+    var reader = null
     var ENDL = "\r\n"
 
     self.onopen = function() {};
@@ -76,9 +78,12 @@ IRCClient = function() {
     self.onclose = function() {}
     self.onerror = function(command) {}
     self.onresponse = function(command) {}     // used for numerical replies
-                            
+
     self.connect = function(hostname, port) {
         log.debug("connect");
+	reader = new js.io.tools.io.delimiter.Reader()
+	reader.set_cb(dispatch)
+	reader.set_delim(ENDL)
         conn = self._createTransport();
         conn.onopen = conn_opened
         conn.onclose = conn_closed
@@ -138,23 +143,13 @@ IRCClient = function() {
     var conn_read = function(data) {
         log.debug("data:");
         log.debug(data);
-        buffer += data
-        parse_buffer()
+	reader.read(data)
     }
 
     // Internal Functions
     var send = function(type, payload) {
         log.debug("send: " + payload);
         conn.send(type + " " + payload + ENDL);
-    };
-    var parse_buffer= function() {
-        var commands = buffer.split(ENDL);
-        buffer = commands[commands.length-1];
-        for (var i = 0, l = commands.length - 1; i < l; ++i) {
-            var line = commands[i];
-            if (line.length > 0)
-                dispatch(line);
-        }
     };
     var parse_command = function(s) {
         // See http://tools.ietf.org/html/rfc2812#section-2.3
