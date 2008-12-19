@@ -26,48 +26,13 @@
  * Mario Balibrera (mario.balibrera@gmail.com)
  */
 
-// TODO DRY this by creating a common logging infrastructure (this is also on stomp.js)
-
 js.io.require('js.io.tools.io.delimiter');
 js.io.provide('js.io.protocols.irc');
 
 IRC_DEBUG = false;
 
-if (IRC_DEBUG && typeof(Orbited)) {
-    var getIrcLogger = function(name) {
-        var logger = Orbited.getLogger(name);
-        if (!("dir" in logger)) {
-            logger.dir = function() {};
-        }
-        return logger;
-    }
-}
-else if (IRC_DEBUG && typeof(console)) {
-    var getIrcLogger = function(name) {
-        return {
-            debug: function() {
-                var args = Array.prototype.slice.call(arguments);
-                args.unshift(name, ": ");
-                console.debug.apply(console, args);
-            },
-            dir: function() {
-                console.debug(name, ":");
-                console.dir.apply(console, arguments);
-            }
-        };
-    };
-}
-else {
-    var getIrcLogger = function(name) {
-        return {
-            debug: function() {},
-            dir: function() {}
-        };
-    };
-}
-
 IRCClient = function() {
-    var log = getIrcLogger("IRCClient");
+    var log = js.io.getLogger("IRCClient", IRC_DEBUG);
     var self = this
     var conn = null
     var reader = null

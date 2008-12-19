@@ -57,6 +57,39 @@ dojo.registerModulePath('js.io', js.io.modPath);
 js.io.require = dojo.require;
 js.io.provide = dojo.provide;
 js.io.declare = dojo.declare;
+js.io.DEBUG = false;
+
+js.io.getLogger = function(/*String*/ loggerName, /*bool*/ loggerOn) {
+    if (loggerOn == null) {
+        loggerOn = js.io.DEBUG;
+    }
+    if (loggerOn && typeof(Orbited)) {
+        var logger = Orbited.getLogger(name);
+        if (!("dir" in logger)) {
+            logger.dir = function() {};
+        }
+        return logger;
+    }
+    else if (loggerOn && typeof(console)) {
+        return {
+            debug: function() {
+                var args = Array.prototype.slice.call(arguments);
+                args.unshift(name, ": ");
+                console.debug.apply(console, args);
+            },
+            dir: function() {
+                console.debug(name, ":");
+                console.dir.apply(console, arguments);
+            }
+        };
+    }
+    else {
+        return {
+            debug: function() {},
+            dir: function() {}
+        };
+    }
+}
 
 js.io.setSocket = function(/*Socket*/ s) {
     /***************

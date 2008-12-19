@@ -1,39 +1,16 @@
 /* stomp.js
  *
  * JavaScript implementation of the STOMP (Streaming Text Oriented Protocol)
- *  for use with TCPConnection or a facsimile
+ *  for use with TCPSocket or a facsimile
  *
  * Frank Salim (frank.salim@gmail.com) (c) 2008 Orbited (orbited.org)
  * Rui Lopes (ruilopes.com)
+ * Mario Balibrera (mario.balibrera@gmail.com, mariobalibrera.com)
  */
 
 js.io.provide('js.io.protocols.stomp');
 
 STOMP_DEBUG = false;
-
-if (STOMP_DEBUG) {
-    function getStompLogger(name) {
-        return {
-            debug: function() {
-                var args = Array.prototype.slice.call(arguments);
-                args.unshift(name, ": ");
-                console.debug.apply(console, args);
-            },
-            dir: function() {
-                console.debug(name, ":");
-                console.dir.apply(console, arguments);
-            }
-        };
-    }
-} else {
-    function getStompLogger(name) {
-        return {
-            debug: function() {},
-            dir: function() {}
-        };
-    }
-}
-
 
 // Implement Array.indexOf (needed in IE 7 or lower).
 // NB: This was borrowed from Mozilla.
@@ -45,7 +22,6 @@ if (!Array.prototype.indexOf) {
         from = (from < 0) ? Math.ceil(from) : Math.floor(from);
         if (from < 0)
             from += len;
-        
         for (; from < len; from++) {
             if (from in this && this[from] === elt)
                 return from;
@@ -54,13 +30,12 @@ if (!Array.prototype.indexOf) {
     };
 }
 
-
 // NB: This is loosly based on twisted.protocols.basic.LineReceiver
 //     See http://twistedmatrix.com/documents/8.1.0/api/twisted.protocols.basic.LineReceiver.html
 // XXX this assumes the lines are UTF-8 encoded.
 // XXX this assumes the lines are terminated with a single NL ("\n") character.
 LineProtocol = function(transport) {
-    var log = getStompLogger("LineProtocol");
+    var log = js.io.getLogger("LineProtocol", STOMP_DEBUG);
     var self = this;
     var buffer = null;
     var isLineMode = true;
@@ -258,7 +233,7 @@ LineProtocol = function(transport) {
 //      received a MESSAGE STOMP frame.
 //
 STOMPClient = function() {
-    var log = getStompLogger("STOMPClient");
+    var log = js.io.getLogger("STOMPClient", STOMP_DEBUG);
     var self = this;
     var protocol = null;
     var buffer = "";
