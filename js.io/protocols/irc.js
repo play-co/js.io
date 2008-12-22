@@ -46,9 +46,9 @@ IRCClient = function() {
 
     self.connect = function(hostname, port) {
         log.debug("connect");
-	reader = new js.io.tools.io.delimiter.Reader()
-	reader.set_cb(dispatch)
-	reader.set_delim(ENDL)
+        reader = new js.io.tools.io.delimiter.Reader()
+        reader.set_cb(dispatch)
+        reader.set_delim(ENDL)
         conn = self._createTransport();
         conn.onopen = conn_opened
         conn.onclose = conn_closed
@@ -108,7 +108,7 @@ IRCClient = function() {
     var conn_read = function(data) {
         log.debug("data:");
         log.debug(data);
-	reader.read(data)
+        reader.read(data);
     }
 
     // Internal Functions

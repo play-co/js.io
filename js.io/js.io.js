@@ -91,6 +91,21 @@ js.io.getLogger = function(/*String*/ loggerName, /*bool*/ loggerOn) {
     }
 }
 
+js.io.setWebSocket = function() {
+    /***********
+    * calling this at the beginning of your
+    * websocket application ensures that
+    * your code will utilize native websocket
+    * support in HTML5-compliant browsers,
+    * while still working properly in older
+    * browsers by way of a TCPSocket proxy.
+    ***********/
+    if (!window.WebSocket) {
+        js.io.require("js.io.protocols.websocket");
+        WebSocket = js.io.protocols.websocket.Client;
+    }
+}
+
 js.io.setSocket = function(/*Socket*/ s) {
     /***************
     * shouldn't be necessary to call js.io.setSocket manually
