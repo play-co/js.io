@@ -38,7 +38,7 @@ XMLReader = function() {
             if (!buff) {
                 return;
             }
-            if (buff[0] != "<") {
+            if (buff.slice(0,1) != "<") {
                 checked = 0;
                 buff = buff.slice(1);
                 return separate_events();
