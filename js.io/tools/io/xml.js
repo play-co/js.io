@@ -14,21 +14,23 @@ XMLReader = function() {
     var buff = "";
     var checked = 0;
     var get_parser = function() {
-        try {
-            var parser = new DOMParser();
+        var parser = null;
+        if (window.DOMParser) {
+            parser = new DOMParser();
             parse = function(s) {
                 return parser.parseFromString(s, "text/xml");
             }
-        }
-        catch(e) {
-            try {
-                var parser = new ActiveXObject("Microsoft.XMLDOM");
+	    }
+        else if (window.ActiveXObject) {
+            parse = function(s) {
+                parser = new ActiveXObject("Microsoft.XMLDOM");
                 parser.async = "false";
-                parse = parser.loadXML;
+                parser.loadXML(s);
+                return parser;
             }
-            catch(e) {
-                alert("can't find suitable XML parser! what kind of crazy browser are you using?");
-            }
+        }
+        else {
+            alert("can't find suitable XML parser! what kind of crazy browser are you using?");
         }
     }
     var separate_events = function() {
