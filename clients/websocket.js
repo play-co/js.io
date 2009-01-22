@@ -1,6 +1,6 @@
 /*
  * standalone websocket client
- * js.io 2.3
+ * js.io 2.3.1
  * http://js.io
  */
 

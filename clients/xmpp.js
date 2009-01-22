@@ -1,6 +1,6 @@
 /*
  * standalone xmpp client
- * js.io 2.3
+ * js.io 2.3.1
  * http://js.io
  */
 
@@ -16,11 +16,11 @@ js.io.setSocket = function( s) {if (s) {js.io.TCPSocket = s;}
 else if (js.io.TCPSocket == null) {js.io.TCPSocket = _discoverSocket();}}
 var _discoverSocket = function() {try { return TCPSocket; } catch(e) {}
 try { return Orbited.TCPSocket; } catch(e) {}}
-js.io.setSocket();js.io.tools.io.xml.Reader = function() {var self = this;var parse = null;var cb = null;var name = null;var buff = "";var checked = 0;var get_parser = function() {try {var parser = new DOMParser();parse = function(s) {return parser.parseFromString(s, "text/xml");}}
-catch(e) {try {var parser = new ActiveXObject("Microsoft.XMLDOM");parser.async = "false";parse = parser.loadXML;}
-catch(e) {alert("can't find suitable XML parser! what kind of crazy browser are you using?");}}}
+js.io.setSocket();js.io.tools.io.xml.Reader = function() {var self = this;var parse = null;var cb = null;var name = null;var buff = "";var checked = 0;var get_parser = function() {var parser = null;if (window.DOMParser) {parser = new DOMParser();parse = function(s) {return parser.parseFromString(s, "text/xml");}}
+else if (window.ActiveXObject) {parse = function(s) {parser = new ActiveXObject("Microsoft.XMLDOM");parser.async = "false";parser.loadXML(s);return parser;}}
+else {alert("can't find suitable XML parser! what kind of crazy browser are you using?");}}
 var separate_events = function() {if (!name) {if (!buff) {return;}
-if (buff[0] != "<") {checked = 0;buff = buff.slice(1);return separate_events();}
+if (buff.slice(0,1) != "<") {checked = 0;buff = buff.slice(1);return separate_events();}
 close_index = buff.indexOf(">");if (close_index == -1) {return;}
 if (buff[close_index-1] == "/") {var frame = parse(buff.slice(0,close_index+1)).firstChild;buff = buff.slice(close_index+1);checked = 0;cb(frame);return separate_events();}
 name = buff.slice(1,close_index);var s = name.indexOf(" ");if (s != -1) {name = name.slice(0,s);}
