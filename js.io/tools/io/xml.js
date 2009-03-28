@@ -47,7 +47,7 @@ XMLReader = function() {
             if (close_index == -1) {
                 return;
             }
-            if (buff[close_index-1] == "/") {
+            if (buff.charAt(close_index-1) == "/") {
                 var frame = parse(buff.slice(0,close_index+1)).firstChild;
                 buff = buff.slice(close_index+1);
                 checked = 0;

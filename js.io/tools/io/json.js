@@ -15,11 +15,11 @@ JSONReader = function() {
     var checked = 0;
     var separate_events = function() {
         while (buff.length > checked) {
-            if (unclosed.length > 0 && buff[checked] == unclosed[unclosed.length-1]) {
+            if (unclosed.length > 0 && buff.charAt(checked) == unclosed[unclosed.length-1]) {
                 unclosed.pop();
             }
-            else if (buff[checked] in chars) {
-                unclosed.push(chars[buff[checked]]);
+            else if (buff.charAt(checked) in chars) {
+                unclosed.push(chars[buff.charAt(checked)]);
             }
             checked += 1;
             if (buff && unclosed.length == 0) {
