@@ -19,8 +19,8 @@ Stripper = function() {
         }
         var s = '';
         for (var i=0;i<initial.length;i++) {
-            if (allowed.indexOf(initial[i]) != -1) {
-                s += initial[i];
+            if (allowed.indexOf(initial.charAt(i)) != -1) {
+                s += initial.charAt(i);
             }
         }
         return s;
@@ -41,10 +41,10 @@ Stripper = function() {
         return process(s, ALL, extra);
     }
     self.strip = function(s) {
-        while (s && s[0] == " ") {
+        while (s && s.charAt(0) == " ") {
             s = s.slice(1);
         }
-        while (s && s[s.length-1] == " ") {
+        while (s && s.charAt(s.length-1) == " ") {
             s = s.slice(0, s.length-1);
         }
         return s;
