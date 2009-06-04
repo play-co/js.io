@@ -38,7 +38,7 @@ self.onMessage = function(jid, username, text) {}
 self.onSocketConnect = function() {}
 self.sendSubscribed = function(jid, me_return) {self.send(construct(PRESENCE, [me_return, jid, "subscribed"]));}
 self.connect = function(h, p) {host = h;port = p;reconnect();}
-self.msg = function(to, content) {self.send(construct(MSG, [user, to, content]));}
+self.msg = function(to, content) {self.send(construct(MSG, [full_jid, to, content]));}
 self.unsubscribe = function(buddy) {self.send(construct(PRESENCE, [bare_jid, buddy.slice(0, buddy.indexOf('/')), "unsubscribe"]));}
 self.subscribe = function(buddy) {self.send(construct(PRESENCE, [bare_jid, buddy, "subscribe"]));}
 self.send = function(s) {conn.send(s);}
