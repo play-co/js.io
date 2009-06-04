@@ -38,7 +38,7 @@ XMPPClient = function() {
         reconnect();
     }
     self.msg = function(to, content) {
-        self.send(construct(MSG, [user, to, content]));
+        self.send(construct(MSG, [full_jid, to, content]));
     }
     self.unsubscribe = function(buddy) {
         self.send(construct(PRESENCE, [bare_jid, buddy.slice(0, buddy.indexOf('/')), "unsubscribe"]));
