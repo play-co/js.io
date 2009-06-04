@@ -1,6 +1,6 @@
 /*
  * standalone telnet client
- * js.io 2.3.3
+ * js.io 2.3.4
  * http://js.io
  */
 

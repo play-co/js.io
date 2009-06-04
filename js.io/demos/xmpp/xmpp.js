@@ -188,7 +188,7 @@ function prompt_login() {
     if (u) {
         var p = prompt("Password","pass");
         if (p) {
-            xmpp.login(u, p, loginSuccess, loginFailure);
+            xmpp.login(u, p, "js.io", loginSuccess, loginFailure);
         }
     }
 }
