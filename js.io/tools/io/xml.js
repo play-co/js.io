@@ -20,7 +20,7 @@ XMLReader = function() {
             parse = function(s) {
                 return parser.parseFromString(s, "text/xml");
             }
-	    }
+        }
         else if (window.ActiveXObject) {
             parse = function(s) {
                 parser = new ActiveXObject("Microsoft.XMLDOM");
@@ -79,6 +79,14 @@ XMLReader = function() {
                 i = buff.indexOf(">", checked);
             }
         }
+    }
+    self.text = function(node) {
+        // Vlad Shevchenko's IE patch
+        var t = node.text;
+        if (t == undefined) {
+            t = node.textContent;
+        }
+        return t;
     }
     self.set_cb = function(func) {
         cb = func;

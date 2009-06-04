@@ -100,7 +100,7 @@ XMPPClient = function() {
             var c = node.childNodes;
             for (var i = 0; i < c.length; i++) {
                 if (c[i].nodeName == "body") {
-                    self.onMessage(from, from, c[i].textContent);
+                    self.onMessage(from, from, parser.text(c[i]));
                 }
             }
         }
