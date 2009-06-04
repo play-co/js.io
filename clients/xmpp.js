@@ -1,6 +1,6 @@
 /*
  * standalone xmpp client
- * js.io 2.3.2
+ * js.io 2.3.3
  * http://js.io
  */
 
@@ -28,6 +28,8 @@ checked = close_index+1;}
 var i = buff.indexOf(">", checked);while (i != -1) {if (buff.slice(i-2-name.length,i+1) == "</"+name+">") {var frame = parse(buff.slice(0, i+1)).firstChild;if (frame.nodeName == "parsererror") {var frame = parse(buff.slice(0, i+1).replace("&","&amp;")).firstChild;}
 buff = buff.slice(i+1);checked = 0;name = null;cb(frame);return separate_events();}
 else {checked = i+1;i = buff.indexOf(">", checked);}}}
+self.text = function(node) {var t = node.text;if (t == undefined) {t = node.textContent;}
+return t;}
 self.set_cb = function(func) {cb = func;}
 self.read = function(data) {buff += data;separate_events();}
 get_parser();}
@@ -47,7 +49,7 @@ self.connectServer = function(d, s, f) {success = s;failure = f;domain = d;self.
 var construct = function(list1, list2) {var return_str = "";for (var i = 0; i < list2.length; i++) {return_str += list1[i] + list2[i];}
 return return_str + list1[i];}
 var reconnect = function() {conn = new js.io.TCPSocket();conn.onread = setDomain;conn.onopen = self.onSocketConnect;conn.onclose = close;parser.set_cb(nodeReceived);conn.open(host, port, false);}
-var nodeReceived = function(node) {if (node.nodeName == "message") {var from = node.getAttribute("from");var c = node.childNodes;for (var i = 0; i < c.length; i++) {if (c[i].nodeName == "body") {self.onMessage(from, from, c[i].textContent);}}}
+var nodeReceived = function(node) {if (node.nodeName == "message") {var from = node.getAttribute("from");var c = node.childNodes;for (var i = 0; i < c.length; i++) {if (c[i].nodeName == "body") {self.onMessage(from, from, parser.text(c[i]));}}}
 else if (node.nodeName == "presence") {var ntype = node.getAttribute("type");var from = node.getAttribute("from");var to = node.getAttribute("to");self.onPresence(ntype, from, to);}}
 var setDomain = function(s) {if (s.indexOf("host-unknown") != -1) {if (failure) {failure();}}
 else {if (success) {success();}}}

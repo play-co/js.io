@@ -1,6 +1,6 @@
 /*
  * standalone mics client
- * js.io 2.3.2
+ * js.io 2.3.3
  * http://js.io
  */
 
@@ -28,6 +28,8 @@ checked = close_index+1;}
 var i = buff.indexOf(">", checked);while (i != -1) {if (buff.slice(i-2-name.length,i+1) == "</"+name+">") {var frame = parse(buff.slice(0, i+1)).firstChild;if (frame.nodeName == "parsererror") {var frame = parse(buff.slice(0, i+1).replace("&","&amp;")).firstChild;}
 buff = buff.slice(i+1);checked = 0;name = null;cb(frame);return separate_events();}
 else {checked = i+1;i = buff.indexOf(">", checked);}}}
+self.text = function(node) {var t = node.text;if (t == undefined) {t = node.textContent;}
+return t;}
 self.set_cb = function(func) {cb = func;}
 self.read = function(data) {buff += data;separate_events();}
 get_parser();}

@@ -1,6 +1,6 @@
 /*
  * standalone stomp client
- * js.io 2.3.2
+ * js.io 2.3.3
  * http://js.io
  */
 
