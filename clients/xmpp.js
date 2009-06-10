@@ -1,6 +1,6 @@
 /*
  * standalone xmpp client
- * js.io 2.3.4
+ * js.io 2.3.5
  * http://js.io
  */
 
@@ -33,7 +33,7 @@ return t;}
 self.set_cb = function(func) {cb = func;}
 self.read = function(data) {buff += data;separate_events();}
 get_parser();}
-CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http:REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</username><password>","</password></query></iq>"];LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>","</resource></query></iq>"];ROSTER = ["<iq from='","' type='get'><query xmlns='jabber:iq:roster'/></iq><presence/>"];MSG = ["<message from='","' to='","' xml:lang='en' type='chat'><body>","</body></message>"];GROUPCHAT_MSG = ["<message from='","' to='","' xml:lang='en' type='groupchat'><body>","</body></message>"];PRESENCE = ["<presence from='","' to='","' type='","'/>"];EXT_PRESENCE = ["<presence from='","' to='","' type='","'><show>","</show><status>","</status></presence>"];js.io.protocols.xmpp.Client = function() {var self = this;var host = null;var port = null;var conn = null;var user = null;var domain = null;var bare_jid = null;var full_jid = null;var resource = null;var success = null;var failure = null;var parser = new js.io.tools.io.xml.Reader();self.onPresence = function(ntype, from) {}
+CONNECT = ["<stream:stream to='","' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>"];REGISTER = ["<iq type='set'><query xmlns='jabber:iq:register'><username>","</username><password>","</password></query></iq>"];LOGIN = ["<iq type='set'><query xmlns='jabber:iq:auth'><username>","</username><password>","</password><resource>","</resource></query></iq>"];ROSTER = ["<iq from='","' type='get'><query xmlns='jabber:iq:roster'/></iq><presence/>"];MSG = ["<message from='","' to='","' xml:lang='en' type='chat'><body>","</body></message>"];GROUPCHAT_MSG = ["<message from='","' to='","' xml:lang='en' type='groupchat'><body>","</body></message>"];PRESENCE = ["<presence from='","' to='","' type='","'/>"];EXT_PRESENCE = ["<presence from='","' to='","' type='","'><show>","</show><status>","</status></presence>"];js.io.protocols.xmpp.Client = function() {var self = this;var host = null;var port = null;var conn = null;var user = null;var domain = null;var bare_jid = null;var full_jid = null;var resource = null;var success = null;var failure = null;var parser = new js.io.tools.io.xml.Reader();self.onPresence = function(ntype, from) {}
 self.onMessage = function(jid, username, text) {}
 self.onSocketConnect = function() {}
 self.onUnknownNode = function(node) {}

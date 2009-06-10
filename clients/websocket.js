@@ -1,6 +1,6 @@
 /*
  * standalone websocket client
- * js.io 2.3.4
+ * js.io 2.3.5
  * http://js.io
  */
 
@@ -21,7 +21,7 @@ var frame = buff.slice(0,sep);buff = buff.slice(sep+delim.length);cb(frame);sepa
 self.set_delim = function(d) {delim = d;}
 self.set_cb = function(func) {cb = func;}
 self.read = function(data) {buff += data;separate_events();}}
-js.io.tools.parseurl.Parse = function(u) {var self = this;self.success = false;self.url = u;[self.scheme, self.address] = u.split(":self.scheme = self.scheme.toLowerCase();[self.hostport, self.path] = self.address.split("/");[self.host, self.port] = self.hostport.split(":");self.path = self.path || '';[self.path, self.fragment] = self.path.split("#");[self.path, self.query] = self.path.split("?");if (self.scheme && self.hostport) {self.success = true;}}
+js.io.tools.parseurl.Parse = function(u) {var self = this;self.success = false;self.url = u;[self.scheme, self.address] = u.split("://");self.scheme = self.scheme.toLowerCase();[self.hostport, self.path] = self.address.split("/");[self.host, self.port] = self.hostport.split(":");self.path = self.path || '';[self.path, self.fragment] = self.path.split("#");[self.path, self.query] = self.path.split("?");if (self.scheme && self.hostport) {self.success = true;}}
 function js.io.protocols.websocket.Client(url) {var FRAME_START = String.fromCharCode(0);var FRAME_END = String.fromCharCode(255);var SCHEMES = { "wss": [true, 815], "ws": [false, 81] }
 var STATUS = "HTTP/1.1 101 Web Socket Protocol Handshake";var headers = {}
 var reader = new js.io.tools.io.delimiter.Reader();var conn = new js.io.TCPSocket();var self = this;var error = function(msg, no_close) {if (! no_close) {self.readyState = self.CLOSED;conn.close();}
@@ -46,7 +46,7 @@ if (self.onmessage) {self.onmessage(data.slice(1));}}}
 if (url[url.length-1] != '/') {url += '/';}
 var parsedUrl = new js.io.tools.parseurl.Parse(url);if (!parsedUrl.success || ! parsedUrl.scheme in SCHEMES) {error('SYNTAX_ERR', true);}
 var scheme = parsedUrl.scheme;var secure = SCHEMES[scheme][0];var host = parsedUrl.host;var port = parsedUrl.port || SCHEMES[scheme][1];var resource = parsedUrl.path || "/";if (parsedUrl.query) {resource += "?" + parsedUrl.query;}
-var origin = scheme + ":if (document.location.port) {origin += ":" + document.location.port;}
+var origin = scheme + "://" + document.domain;if (document.location.port) {origin += ":" + document.location.port;}
 self.CONNECTING = 0;self.OPEN = 1;self.CLOSED = 2;self.onopen = null;self.onmessage = null;self.onclosed = null;self.readyState = self.CONNECTING;self.url = url;self.postMessage = function(data) {if (self.readyState != self.OPEN) {error('INVALID_STATE_ERR', true);}
 conn.send(FRAME_START + data + FRAME_END);}
 self.disconnect = function() {conn.close();self.readyState = self.CLOSED;}

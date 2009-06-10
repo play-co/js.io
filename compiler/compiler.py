@@ -6,7 +6,7 @@ REGEX = { 'provide': re.compile(r'js\.io\.provide\(.*\);'),
           'declare': re.compile(r'js\.io\.declare\(.*\);'),
           'require': re.compile(r'js\.io\.require\(.*\);') }
 # from http://ostermiller.org/findcomment.html
-RE_COMMENT = re.compile(r'(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|(//.*)')
+RE_COMMENT = re.compile(r'(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([^:]//.*)')
 SPACES = {';\n':';','\n;':';',':\n':':','\n:':':','{\n':'{','\n{':'{','\n}':'}'}
 
 class File(object):
