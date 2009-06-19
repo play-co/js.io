@@ -137,6 +137,9 @@ function MICSClient() {
     self.timeout = function() {
         send("<timeout/>");
     }
+    self.reset = function() {
+        conn.reset();
+    }
 }
 
 js.io.declare('js.io.protocols.mics.Client',MICSClient,{});

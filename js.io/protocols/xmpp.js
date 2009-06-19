@@ -42,6 +42,9 @@ XMPPClient = function() {
         port = p;
         reconnect();
     }
+    self.reset = function() {
+        conn.reset();
+    }
     self.msg = function(to, content) {
         self.send(construct(MSG, [full_jid, to, content]));
     }

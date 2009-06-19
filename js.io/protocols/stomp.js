@@ -501,6 +501,9 @@ STOMPClient = function() {
     self.ack = function(message_id, transaction_id) {
         // TODO implement
     };
+    self.reset = function() {
+        protocol.reset();
+    }
 }
 
 js.io.declare('js.io.protocols.stomp.Client',STOMPClient,{});

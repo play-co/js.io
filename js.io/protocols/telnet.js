@@ -30,6 +30,9 @@ TelnetClient = function() {
     self.close = function() {
         conn.close()
     }
+    self.reset = function() {
+        conn.reset();
+    }
     self.send = function(s) {
         send(s + ENDL)
     }
