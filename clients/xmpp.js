@@ -1,6 +1,6 @@
 /*
  * standalone xmpp client
- * js.io 2.3.5
+ * js.io 2.3.6
  * http://js.io
  */
 
@@ -39,6 +39,7 @@ self.onSocketConnect = function() {}
 self.onUnknownNode = function(node) {}
 self.sendSubscribed = function(jid, me_return) {self.send(construct(PRESENCE, [me_return, jid, "subscribed"]));}
 self.connect = function(h, p) {host = h;port = p;reconnect();}
+self.reset = function() {conn.reset();}
 self.msg = function(to, content) {self.send(construct(MSG, [full_jid, to, content]));}
 self.unsubscribe = function(buddy) {self.send(construct(PRESENCE, [full_jid, buddy.slice(0, buddy.indexOf('/')), "unsubscribe"]));}
 self.subscribe = function(buddy) {self.send(construct(PRESENCE, [full_jid, buddy, "subscribe"]));}

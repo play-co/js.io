@@ -1,6 +1,6 @@
 /*
  * standalone mics client
- * js.io 2.3.5
+ * js.io 2.3.6
  * http://js.io
  */
 
@@ -54,4 +54,5 @@ self.list = function() {send("<list/>");}
 self.move = function(from, to, promotion) {var m = "<move from='"+from+"' to='"+to+"' gameover='check'";if (promotion) {m += " promotion='"+promotion+"'";}
 m += "/>";send(m);}
 self.seek = function(name, initial, increment) {send("<seek name='"+name+"' initial='"+initial+"' increment='"+increment+"'/>");}
-self.timeout = function() {send("<timeout/>");}}
+self.timeout = function() {send("<timeout/>");}
+self.reset = function() {conn.reset();}}

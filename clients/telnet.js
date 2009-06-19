@@ -1,6 +1,6 @@
 /*
  * standalone telnet client
- * js.io 2.3.5
+ * js.io 2.3.6
  * http://js.io
  */
 
@@ -36,6 +36,7 @@ conn.onclose = close
 conn.onopen = open
 conn.open(host, port);}
 self.close = function() {conn.close()}
+self.reset = function() {conn.reset();}
 self.send = function(s) {send(s + ENDL)}
 var send = function(s) {conn.send(s)}
 var open = function() {self.onopen()}
