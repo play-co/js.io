@@ -4,7 +4,8 @@ from cdata import BATCH_STR
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(BATCH_STR)
-    args = parser.parse_args()[1]
+    parser.add_option("-s", "--soft", action="store_true", dest="soft", default=False, help="soft compile -- compile but don't minify")
+    options, args = parser.parse_args()
     if len(args) != 1:
         print "usage:", BATCH_STR
     else:
@@ -14,4 +15,4 @@ if __name__ == "__main__":
             name = os.path.join('..', 'clients', client)
             title = "standalone %s client"%(client[:-3])
             version = args[0]
-            start(target, name, title, version)
+            start(target, name, title, version, options.soft)

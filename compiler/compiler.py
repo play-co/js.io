@@ -50,7 +50,7 @@ class Minifyer(object):
                 self.data = self.data.replace(before, after)
 
 class Builder(object):
-    def __init__(self, target, name, title, version):
+    def __init__(self, target, name, title, version, soft=False):
         report("Initializing builder")
         if not os.path.isfile(target):
             error("TARGET is not a file")
@@ -82,10 +82,13 @@ class Builder(object):
             body += self.files[f].body
         data = "js = %s%s%s"%(js, BASE_STR, body)
 
-        report("Minifying")
-        mini = Minifyer(data)
-        mini.trim()
-        data = "/*\n * %s\n * js.io %s\n * http://js.io\n */\n\n"%(title, version)+mini.data
+        if not soft:
+            report("Minifying")
+            mini = Minifyer(data)
+            mini.trim()
+            data = mini.data
+
+        data = "/*\n * %s\n * js.io %s\n * http://js.io\n */\n\n"%(title, version)+data
         report("Writing")
         f = open(name, 'w')
         f.write(data)
@@ -120,14 +123,16 @@ def error(msg):
     import sys
     sys.exit()
 
-def start(target, name, title, version):
+def start(target, name, title, version, soft=False):
     global START_TIME
     START_TIME = time.time()
-    Builder(target, name, title, version)
+    Builder(target, name, title, version, soft)
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(HELP_STR)
-    args = parser.parse_args()[1]
+    parser.add_option("-s", "--soft", action="store_true", dest="soft", default=False, help="soft compile -- compile but don't minify")
+    options, args = parser.parse_args()
     if len(args) != 4:
         error("4 arguments required")
+    args.append(options.soft)
     start(*args)

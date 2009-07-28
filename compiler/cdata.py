@@ -1,14 +1,15 @@
 import os
 
 BATCH_STR = """
-batch.py VERSION
+batch.py VERSION [-s]
 
 VERSION: version of js.io
     such as x.y.z
+-s: soft compilation -- compile but don't minify
 """
 
 HELP_STR = """
-compiler.py TARGET NAME TITLE VERSION
+compiler.py TARGET NAME TITLE VERSION [-s]
 
 TARGET: initial javascript file
     such as [some_path]%s[some_protocol].js
@@ -18,6 +19,7 @@ TITLE: title for new code
     such as "Standalone WebSocket Client"
 VERSION: version of js.io
     such as x.y.z
+-s: soft compilation -- compile but don't minify
 """%(os.path.sep, os.path.sep)
 
 BASE_STR = """
