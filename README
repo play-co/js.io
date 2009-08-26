@@ -1,0 +1,24 @@
+NOTES
+
+This new js.io branch is an attempt to implement various twisted 
+constructs/apis for javascript. Most notably missing is a Deferred... but
+expect to see some kind of reasonable concurrency construct soon.
+
+DEPLOYMENt
+You can run your js.io servers on node, and js.io clients in the browser using
+Orbited (or jacob's node port of orbited, or desmaj's erlang port of Orbited,
+or the ape project.)
+
+STEP-BY-STEP
+
+install node
+run: node echoserver.js
+
+install orbited
+run: orbited
+(it will automatically find orbited.cfg)
+Visit in firefox: http://localhost:8000/test
+firebug's console: connect();
+firebug console: c.write('hello world');
+
+

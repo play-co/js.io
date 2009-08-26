@@ -1,7 +1,5 @@
 include('jsio.js')
 
-
-
 onLoad = function() {
     EchoProtocol = jsio.Class(jsio.Protocol, function() {
         this.connectionMade = function() {
@@ -20,5 +18,4 @@ onLoad = function() {
         }
     })
     jsio.listenTCP(jsio.quickServer(EchoProtocol), 5555);
-
 }
