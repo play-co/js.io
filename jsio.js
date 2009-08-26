@@ -102,9 +102,6 @@ var getServerEnvironment = function() {
     return 'node';
 }
 
-
-
-
 jsio.listenTCP = function(server, port, opts) {
     var interface = (opts && opts.interface) || ""
     // Figure out what our server-side api is.
