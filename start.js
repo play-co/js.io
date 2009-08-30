@@ -1,5 +1,5 @@
 include('jsio/jsio.js')
 
-
 jsio.require('jsio.echo')
-jsio.listenTCP(jsio.quickServer(jsio.echo.EchoProtocol), 5555);
+jsio.listen(jsio.quickServer(jsio.echo.EchoProtocol), 'tcp', {port: 5555});
+

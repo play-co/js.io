@@ -1,0 +1,16 @@
+<html>
+ <head>
+  <script src="jsio/jsio.js"></script>
+  <script>
+   jsio.require("jsio.echo")
+  </script>
+ </head>
+ <body>
+  <h1>Jswire test</h1>
+  <div id="gui"></div>
+  <script>
+   var listener = jsio.listen(jsio.quickServer(jsio.echo.EchoProtocol), 'postMessage', {client:"echoClient.html?protocol=postMessage"});
+   document.getElementById('gui').appendChild(listener.getButton());
+  </script>
+ </body>
+</html>

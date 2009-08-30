@@ -20,11 +20,21 @@ if (typeof(node) != 'undefined' && node.version) {
 
 }
 else {
-    jsio.log = console.log;
+    jsio.log = function() {
+    	console.log.apply(console, arguments);
+	}
 }
 
 jsio.exports = function() {
     
+}
+
+var getServerEnvironment = function() {
+    return typeof(node) != 'undefined' ? 'node' : 'browser';
+}
+
+var getEnvironment = function() {
+    return getServerEnvironment();
 }
 
 
@@ -68,110 +78,21 @@ jsio.require = function(path) {
     }
 }
 
-
-jsio.bind = function(context, method/*, arg1, arg2, ... */){
-    var args = Array.prototype.slice.call(arguments, 2);
-    return function(){
-        method = (typeof method == 'string' ? context[method] : method);
-        var invocationArgs = Array.prototype.slice.call(arguments, 0);
-        return method.apply(context, args.concat(invocationArgs))
-    }
-}
-
-jsio.Class = function(parent, proto) {
-    if(!proto) { proto = parent; } 
-    else { proto.prototype = parent.prototype; }    
-    var cls = function() {
-        if(this.init) {
-            this.init.apply(this, arguments);
-        }
-    }
-    cls.prototype = new proto(function(context, method, args) {
-        var args = args || [];
-        while(parent = parent.prototype) {
-            if(parent[method]) {
-                return parent[method].apply(context, args);
-            }
-        }
-        throw new Exception('method ' + method + ' does not exist');
-    });
-    cls.constructor = cls;
-    return cls;
-};
-
-jsio.declare = function(name, parent, proto) {
-    var obj;
-    if (typeof(window) != "undefined") {
-        obj = window;
-    }
-    else if(typeof(process) != "undefined") {
-        obj = process;
-    }
-    var segments = name.split('.');
-    for (var i = 0; i < segments.length -1; ++i) {
-        var segment = segments[i];
-        if (!obj[segment]) {
-            obj[segment] = {}
-        }
-        obj = obj[segment]
-    }
-    obj[segments[segments.length-1]] = jsio.Class(parent, proto);
-}
-
-
-jsio.Singleton = function(proto, parent) {
-    return new (jsio.Class(proto, parent))();
-};
-
-
-// Sort of like a twisted protocol
-
-jsio.declare('jsio.Protocol', jsio.Class(function() {
-
-    this.connectionMade = function() {
-        throw new Error("Not implemented");
-    }
-
-    this.dataReceived = function(data) {
-        throw new Error("Not implemented");
-    }
-
-    this.connectionLost = function(reason) {
-        throw new Error("Not implemented");
-    }
-
-}));
-
-
-
-
-// Sort of like a twisted factory
-jsio.declare('jsio.Server', jsio.Class(function() {
-    this.init = function(protocolClass) {
-        this._protocolClass = protocolClass;
-    }
-
-    this.connectionMade = function(transport) {
-        var p = this.buildProtocol()
-        p.server = this;
-        transport.makeConnection(p);
-    }
-
-    this.buildProtocol = function() {
-        return new this._protocolClass();
-    }
-    
-}));
+jsio.require('jsio.base');
+jsio.require('jsio.interfaces');
 
 jsio.quickServer = function(protocolClass) {
     return new jsio.Server(protocolClass);
 }
 
-
-
 var getClientEnvironment = function() {
+	var match = window.location.search.substring(1).match('^(.*&)?protocol=([^&]*)');
+	if (match && match[2] == 'postMessage') {
+		return 'browser';
+	}
+	
     if (window && window.Orbited) {
-        return 'Orbited';
+        return 'orbited';
     }
     if (window && window.socket) {
         return 'socket';
@@ -180,113 +101,168 @@ var getClientEnvironment = function() {
         return 'node';
     }
 }
-var getServerEnvironment = function() {
-    return typeof(node) != 'undefined' ? 'node' : 'browser';
-}
 
-var getEnvironment = function() {
-    return getServerEnvironment();
-}
-jsio.listenTCP = function(server, port, opts) {
-    var interface = (opts && opts.interface) || ""
-    // Figure out what our server-side api is.
-    var env = getServerEnvironment();
-
-    switch(env) {
-        case 'node':
-            function transport(socket) {
-                socket.setEncoding("utf8");
-                socket.addListener("connect", jsio.bind(this, function() {
-                    var transport = new jsio.transport.NodeTCPTransport(socket);
-                    server.connectionMade(transport);
-                }))
-            }
-            var s = node.tcp.createServer(transport);
-            s.listen(port, interface);
-            // Create a node server.
-            break;
-        default:
-            throw new Error("unrecognized javascript server environment");
-            break;
-    }
-}
-
-jsio.connectTCP = function(protocol, hostname, port) {
-    var env = getClientEnvironment();
-    switch(env) {
-        case 'node':
-            // Make a tcp connection, create a new protocol instance, call makeConnection
-            throw new Error("node client not implemented");
-            break;
-        case 'Orbited':
-            var conn = new Orbited.TCPSocket();
-            p = new protocol();
-            var transport = new jsio.transport.TCPSocketTransport(conn, p);
-            conn.open(hostname, port);                
-            break;
-        case 'socket':
-            throw new Error("socket.js client not implemented");
-            break;
-        default:
-            throw new Error("unrecognized javascript client environment");
-    }
-}
-
-jsio.transport = {};
-
-jsio.transport.Transport = jsio.Class(function() {
-    this.write = function(data, encoding) {
-        throw new Error("Not implemented");
-    }
-    this.getPeer = function() {
-        throw new Error("Not implemented");
-    }
+jsio.declare('jsio.env.node.tcp.Listener', jsio.interfaces.Listener, function(supr) {
+	this.listen = function() {
+    	var s = node.tcp.createServer(jsio.bind(this, function(socket) {
+		    socket.setEncoding("utf8");
+		    socket.addListener("connect", jsio.bind(this, function() {
+           		this.onConnect(new jsio.env.node.tcp.Transport(socket));
+   			}));
+   		}));
+        s.listen(this._opts.port, this._opts.interface || "");
+	}
 });
 
-jsio.transport.TCPSocketTransport = jsio.Class(jsio.transport.Transport, function() {
-    this.init = function(socket, protocol) {
+jsio.declare('jsio.env.browser.postMessage.Listener', jsio.interfaces.Listener, function(supr) {
+	var ID = 0;
+	
+	this.init = function() {
+		supr(this, 'init', arguments);
+		
+		this._clients = {};
+	}
+
+	this.listen = function() {
+		jsio.browser.connect(window, 'message', jsio.bind(this, '_onMessage'));
+		this._button = document.createElement('a');
+		jsio.browser.style(this._button, {display: 'inline-block', border: '1px solid #CCC', background: '#EEE'});
+		this._button.innerHTML = 'new client';
+		jsio.browser.connect(this._button, 'click', jsio.bind(this, function() {
+			window.open(this._opts.client, 'W' + (ID++));
+		}));
+	}
+	
+	this.getButton = function() { return this._button; }
+	
+	this._onMessage = function(evt) {
+		console.log("SERVER RECEIVED", evt.data)
+		var name = evt.source.name;
+		var target = this._clients[name];
+		var data = eval('(' + evt.data + ')');
+		switch (data.type) {
+			case 'open':
+				jsio.log('connection opened');
+				this._clients[name] = new jsio.env.browser.postMessage.Transport(evt.source);
+				evt.source.postMessage('{type:"open"}','*');
+				this.onConnect(this._clients[name]);
+				break;
+			case 'data':
+				target.onData(data.payload);
+				break;
+			case 'close':
+				target.onClose();
+				evt.source.postMessage('{type:"close"}','*');
+				delete this._clients[name];
+				break;
+		}
+	}
+});
+
+jsio.listen = function(server, protocol, opts) {
+	var env = jsio.env[getServerEnvironment()];
+	if(!env[protocol] || !env[protocol].Listener) throw new Error('No listener found for ' + protocol + ' in ' + getServerEnvironment());
+	var listener = new env[protocol].Listener(server, opts);
+	listener.listen();
+	return listener;
+}
+
+jsio.connect = function(protocolClass, protocol, opts) {
+	var env = jsio.env[getClientEnvironment()];
+	if(!env[protocol] || !env[protocol].Connector) throw new Error('No connector found for ' + protocol + ' in ' + getClientEnvironment());
+	var connector = new env[protocol].Connector(protocolClass, opts);
+	connector.connect();
+	return connector;
+}
+
+jsio.declare('jsio.env.orbited.tcp.Connector', jsio.interfaces.Connector, function() {
+	this.connect = function() {
+        var conn = new Orbited.TCPSocket();
+        conn.onopen = jsio.bind(this, function() {
+        	this.onConnect(new jsio.env.orbited.tcp.Transport(conn));
+        });
+        conn.open(this._opts.host, this._opts.port);
+	}
+});
+
+jsio.declare('jsio.env.browser.postMessage.Connector', jsio.interfaces.Connector, function() {
+	jsio.require('jsio.browser');
+
+	this.connect = function() {
+		jsio.browser.connect(window, 'message', jsio.bind(this, '_onMessage'));
+		window.opener.postMessage(JSON.stringify({type:"open"}), '*');
+	}
+	
+	this._onMessage = function(evt) {
+		console.log("CLIENT RECEIVED", evt.data)
+		var data = eval('(' + evt.data + ')');
+		switch(data.type) {
+			case 'open':
+				jsio.log('CLIENT connection opened');
+				this._transport = new jsio.env.browser.postMessage.Transport(evt.source);
+				this.onConnect(this._transport);
+				break;
+			case 'close':
+				jsio.log('CLIENT connection closed');
+				this._transport.onClose();
+				break;
+			case 'data':
+				jsio.log('CLIENT data received:', data.payload);
+				this._transport.onData(data.payload);
+				break;
+		}
+	}
+});
+
+jsio.declare('jsio.env.browser.postMessage.Transport', jsio.interfaces.Transport, function() {
+	this.init = function(win) {
+		this._win = win;
+	}
+	
+	this.makeConnection = function(protocol) {
+		this._protocol = protocol;
+	}
+	
+	this.write = function(data, encoding) {
+		this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
+	}
+	
+	this.loseConnection = function(protocol) {
+		this._win.postMessage(JSON.stringify({type: 'close', code: 301}), '*');
+	}
+	
+	this.onData = function() { this._protocol.dataReceived.apply(this._protocol, arguments); }
+	this.onClose = function() { this._protocol.connectionLost.apply(this._protocol, arguments); }
+});
+
+jsio.declare('jsio.env.orbited.tcp.Transport', jsio.interfaces.Transport, function() {
+    this.init = function(socket) {
         this._socket = socket;
-        this._protocol = protocol;
-        this._socket.onopen = jsio.bind(this, function() {
-            this.makeConnection(this._protocol);
-        });
-        this._socket.onclose = jsio.bind(this, function(code) {
-            this._protocol.connectionLost(code);
-        });
-        this._socket.onread = jsio.bind(this, function(data) {
-            this._protocol.dataReceived(data);
-        });
     };
+    
     this.makeConnection = function(protocol) {
-        protocol.transport = this;
-        protocol.connectionMade();
+        this._socket.onread = jsio.bind(protocol, 'dataReceived');
+        this._socket.onclose = jsio.bind(protocol, 'connectionLost'); // TODO: map error codes
     }
+    
+    this.write = function(data, encoding) {
+        this._socket.send(data);
+    };
 
     this.loseConnection = function() {
         this._socket.close();
     };
 
-    this.write = function(data, encoding) {
-        this._socket.send(data);
-    };
-
 });
 
-jsio.transport.NodeTCPTransport = jsio.Class(jsio.transport.Transport, function() {
+jsio.declare('jsio.env.node.tcp.Transport', jsio.interfaces.Transport, function() {
     this.init = function(socket) {
         this._socket = socket;
     }
 
     this.makeConnection = function(protocol) {
-        this._socket.addListener("receive", jsio.bind(this, function(data) {
-            protocol.dataReceived(data);
-        }));
-
-        this._socket.addListener("close", jsio.bind(this, function(had_error) {
-            protocol.connectionLost(had_error);
-        }));
-        protocol.transport = this;
-        protocol.connectionMade();
+		this._socket.addListener("receive", jsio.bind(protocol, 'dataReceived'));
+		this._socket.addListener("close", jsio.bind(protocol, 'connectionLost')); // TODO: map error codes
     }
 
     this.write = function(data) {
