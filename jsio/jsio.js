@@ -1,7 +1,73 @@
 (function() {
 
-
 jsio = {}
+
+var root = '.'
+
+if (typeof(node) != 'undefined' && node.version) {
+    jsio.log = function() {
+        node.debug([].slice.call(arguments, 0).join(' '));
+
+//        node.debug(new Array(arguments).join(' '));
+    }
+    var ls = node.createChildProcess("pwd");
+    ls.addListener("output", function (data) {
+        node.debug('got output:' + data);
+        if (data) {
+            root += data;
+        }
+    })
+
+}
+else {
+    jsio.log = console.log;
+}
+
+jsio.exports = function() {
+    
+}
+
+
+jsio.require = function(path) {
+    // XXX: Maybe we should keep track of all path's included in an object
+    //      and use that to do our "already loaded" checking... With the current
+    //      implementation if you include a class, but not a module, then later
+    //      include the module, it will think the module is already included.
+    try {
+        if (typeof(eval(path)) != "undefined") {
+            // path exists...
+            return;
+        }
+    } catch(e) { }// do the import...
+    var subPaths = path.split('.')
+    var lastSegment = subPaths[subPaths.length-1];
+    var firstLetter = lastSegment.slice(0,1)
+    var path = null;
+    if (firstLetter == firstLetter.toUpperCase()) {
+        subPaths[subPaths.length-1] += '.js'
+        // file
+    }
+    else {
+        //module
+        subPaths.push(subPaths[subPaths.length-1] + '.js')
+    }
+    switch(getEnvironment()) {
+        case 'node':
+            subPaths.splice(0,0, [node.fs.cwd()])
+            var path = node.path.join.apply(this, subPaths);
+            include(path);
+            break;
+        case 'browser':
+            // ...
+            path = subPaths.join("/")
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET', path, false);
+            xhr.send(null);
+            eval(xhr.responseText);
+            break;
+    }
+}
+
 
 jsio.bind = function(context, method/*, arg1, arg2, ... */){
     var args = Array.prototype.slice.call(arguments, 2);
@@ -33,6 +99,26 @@ jsio.Class = function(parent, proto) {
     return cls;
 };
 
+jsio.declare = function(name, parent, proto) {
+    var obj;
+    if (typeof(window) != "undefined") {
+        obj = window;
+    }
+    else if(typeof(process) != "undefined") {
+        obj = process;
+    }
+    var segments = name.split('.');
+    for (var i = 0; i < segments.length -1; ++i) {
+        var segment = segments[i];
+        if (!obj[segment]) {
+            obj[segment] = {}
+        }
+        obj = obj[segment]
+    }
+    obj[segments[segments.length-1]] = jsio.Class(parent, proto);
+}
+
+
 jsio.Singleton = function(proto, parent) {
     return new (jsio.Class(proto, parent))();
 };
@@ -40,11 +126,12 @@ jsio.Singleton = function(proto, parent) {
 
 // Sort of like a twisted protocol
 
-jsio.Protocol = jsio.Class(function() {
+jsio.declare('jsio.Protocol', jsio.Class(function() {
 
     this.connectionMade = function() {
         throw new Error("Not implemented");
     }
+
     this.dataReceived = function(data) {
         throw new Error("Not implemented");
     }
@@ -52,14 +139,14 @@ jsio.Protocol = jsio.Class(function() {
     this.connectionLost = function(reason) {
         throw new Error("Not implemented");
     }
-});
+
+}));
 
 
 
 
 // Sort of like a twisted factory
-jsio.Server = jsio.Class(function() {
-    this.what = 'hey';
+jsio.declare('jsio.Server', jsio.Class(function() {
     this.init = function(protocolClass) {
         this._protocolClass = protocolClass;
     }
@@ -74,15 +161,10 @@ jsio.Server = jsio.Class(function() {
         return new this._protocolClass();
     }
     
-    this.toString = function() {
-        return "<jsio.Server >";
-    }
-
-})
+}));
 
 jsio.quickServer = function(protocolClass) {
     return new jsio.Server(protocolClass);
-    
 }
 
 
@@ -99,9 +181,12 @@ var getClientEnvironment = function() {
     }
 }
 var getServerEnvironment = function() {
-    return 'node';
+    return typeof(node) != 'undefined' ? 'node' : 'browser';
 }
 
+var getEnvironment = function() {
+    return getServerEnvironment();
+}
 jsio.listenTCP = function(server, port, opts) {
     var interface = (opts && opts.interface) || ""
     // Figure out what our server-side api is.
