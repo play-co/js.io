@@ -53,3 +53,4 @@ jsio.Singleton = function(proto, parent) {
     return new (jsio.Class(proto, parent))();
 };
 
+jsio.assert = function(success) { if(!success) throw new Error('assert failed'); }

@@ -21,7 +21,9 @@ if (typeof(node) != 'undefined' && node.version) {
 }
 else {
     jsio.log = function() {
-    	console.log.apply(console, arguments);
+		if (typeof console != 'undefined' && console.log) {
+			console.log.apply(console, arguments);
+		}
 	}
 }
 
@@ -43,13 +45,16 @@ jsio.require = function(path) {
     //      and use that to do our "already loaded" checking... With the current
     //      implementation if you include a class, but not a module, then later
     //      include the module, it will think the module is already included.
-    try {
-        if (typeof(eval(path)) != "undefined") {
-            // path exists...
-            return;
-        }
-    } catch(e) { }// do the import...
     var subPaths = path.split('.')
+	var parent = window;
+	var found = true;
+	for(var i = 0, part; part = subPaths[i]; ++i) {
+		if(!window[part]) {
+			found = false;
+			break;
+		}
+	}
+	if(found) { return; }
     var lastSegment = subPaths[subPaths.length-1];
     var firstLetter = lastSegment.slice(0,1)
     var path = null;

@@ -2,7 +2,11 @@ jsio.browser = jsio.Singleton(function() {
 	this.style = function(el, style) {
 		for(prop in style) {
 			switch(prop) {
+				case 'float':
+					el.style.styleFloat = el.style.float = style[prop];
+					break;
 				case 'opacity':
+					el.style.opacity = style[prop];
 					break;
 				default:
 					el.style[prop] = style[prop];
