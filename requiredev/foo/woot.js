@@ -1,4 +1,6 @@
 require('foo.bar')
 require('.baz')
-j = z
+//console.log('y is', y);
+j = 3;
 
+console.log('inside woot, j=', j);
