@@ -34,11 +34,20 @@ base.require = function(pathString) {
     var ifr = document.createElement('iframe')
     hideIframe(ifr);
     document.body.appendChild(ifr);
-    ifr.contentWindow.base = parent.base;
+    ifr.contentWindow.require = function(pathString) {
+        var exports = base.require(pathString);
+        for (key in exports) {
+            try {
+                ifr.contentWindow[key] = exports[key];
+            } catch(e) { } // property only had a getter
+        }
+        return exports;
+    }
     var ifrNamespace = {}
     for (k in ifr.contentWindow) {
         ifrNamespace[k] = ifr.contentWindow[k];
     }
+
     ifr.contentDocument.write('<script>' + jsSrc + '</script>');
     ifr.contentDocument.close();
     var exports = {}

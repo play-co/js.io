@@ -1,3 +1,3 @@
-mybar = base.require('foo.bar')
-j = mybar.z
+require('foo.bar')
+j = z
 
