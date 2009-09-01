@@ -42,7 +42,7 @@ function extract_from(exports, from_list) {
     return fromExports;
     
 }
-
+base.singleton = {}
 base.require = function(pathString) {
     var path = pathString.split('.');
     var from_list = [].slice.call(arguments,1);
@@ -57,7 +57,7 @@ base.require = function(pathString) {
         xhr.open('GET', url, false);
         xhr.send(null);
     } catch(e) { failed = true;}
-    if (failed || xhr.status == 404) {
+    if (failed || xhr.status == 404 || xhr.status == -1100) {
     var url = path.join('/') + '.js';
         xhr.open('GET', url, false);
         xhr.send(null);
@@ -69,7 +69,15 @@ base.require = function(pathString) {
     var ifr = document.createElement('iframe')
     hideIframe(ifr);
     document.body.appendChild(ifr);
-    ifr.contentWindow.require = function(subPathString) {
+    if (window.console) {
+        ifr.contentWindow.console = console;
+    }
+    var ifrNamespace = {}
+    for (k in ifr.contentWindow) {
+        ifrNamespace[k] = ifr.contentWindow[k];
+    }
+    
+    base.singleton.require = function(subPathString) {
         var calcPathString = subPathString;
         if (subPathString[0] == '.') {
             var pathArray = pathString.split('.');
@@ -78,28 +86,24 @@ base.require = function(pathString) {
             pathArray.splice.apply(pathArray, args);
             var i;
             while ((i = pathArray.indexOf("")) != -1) {
-                console.log('...');
+//                console.log('...');
                 pathArray.splice(i,1)
             }
             calcPathString = pathArray.join('.')
         }
-        console.log('fetch', calcPathString);
+//        console.log('fetch', calcPathString);
         var exports = base.require(calcPathString);
+//        console.log('got', exports);
         for (key in exports) {
             try {
                 ifr.contentWindow[key] = exports[key];
-            } catch(e) { console.log(key, e); } // property only had a getter
+            } catch(e) { /*console.log(key, e);*/ } // property only had a getter
         }
         return exports;
     }
-    if (window.console) {
-        ifr.contentWindow.console = console;
-    }
-    var ifrNamespace = {}
-    for (k in ifr.contentWindow) {
-        ifrNamespace[k] = ifr.contentWindow[k];
-    }
-//    ifr.contentDocument.write('<script>require=parent.base.require</script>')
+
+
+    ifr.contentDocument.write('<script>require=parent.base.singleton.require</script>');
     ifr.contentDocument.write('<script>' + jsSrc + '</script>');
     ifr.contentDocument.close();
     var from_list = [].slice(arguments,1);
