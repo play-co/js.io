@@ -53,25 +53,42 @@ base.require = function(pathString) {
     var xhr = new XMLHttpRequest()
     var url = path.join('/') + '/__init__.js';
     var failed = false;
+    console.log('loading for first time:', pathString);
     try {
         xhr.open('GET', url, false);
+        console.log('try dir module:', url);
         xhr.send(null);
-    } catch(e) { failed = true;}
-    if (failed || xhr.status == 404 || xhr.status == -1100) {
-    var url = path.join('/') + '.js';
-        xhr.open('GET', url, false);
-        xhr.send(null);
-        if (xhr.status == 404) {
+    } catch(e) {
+        failed = true;
+    }
+    if (failed || // firefox file://
+      xhr.status == 404 || // all browsers, http://
+      xhr.status == -1100 || 
+      (!failed && xhr.status == 0 && !xhr.responseText)) { // opera 
+        xhr = new XMLHttpRequest()
+        var url = path.join('/') + '.js';
+        ABC = url;
+        console.log('dir module, failed. try file module:', url);
+        failed = false;
+        try {
+            xhr.open('GET', url, false);
+            xhr.send(null);
+        } catch(e) { console.log('whoops'); failed = true; }
+        if (failed || xhr.status == 404 || xhr.status == -1100 || (!failed && xhr.status == 0 && !xhr.responseText)) {
+            console.log('failed', failed);
+            console.log('failed with dir and file, xhr.status', xhr.status);
+            
             throw new Error("Module not found");
         }
+    }
+    else {
+        console.log('succeeded with dir module');
+        console.log('xhr.status', xhr.status);
     }
     var jsSrc = xhr.responseText;
     var ifr = document.createElement('iframe')
     hideIframe(ifr);
     document.body.appendChild(ifr);
-    if (window.console) {
-        ifr.contentWindow.console = console;
-    }
     var ifrNamespace = {}
     for (k in ifr.contentWindow) {
         ifrNamespace[k] = ifr.contentWindow[k];
@@ -91,9 +108,9 @@ base.require = function(pathString) {
             }
             calcPathString = pathArray.join('.')
         }
-//        console.log('fetch', calcPathString);
+        console.log('fetch', calcPathString);
         var exports = base.require(calcPathString);
-//        console.log('got', exports);
+        console.log('got', exports);
         for (key in exports) {
             try {
                 ifr.contentWindow[key] = exports[key];
@@ -102,6 +119,9 @@ base.require = function(pathString) {
         return exports;
     }
 
+    if (window.console) {
+        ifr.contentDocument.write('<script>console=parent.console</script>');
+    }
 
     ifr.contentDocument.write('<script>require=parent.base.singleton.require</script>');
     ifr.contentDocument.write('<script>' + jsSrc + '</script>');

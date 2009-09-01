@@ -4,4 +4,3 @@ console.log('j:', j);
 console.log('woot.j:', woot.j);
 require('foo.bar');
 console.log('y:', y);
-
