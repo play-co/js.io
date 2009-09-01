@@ -11,7 +11,13 @@ function hideIframe (ifr) {
     ifr.style.overflow = 'hidden';
     ifr.style.visibility = 'hidden';
 };
+
+function joinPaths(a,b) {
+    return a + '.' + b;
+}
+
 var included = {}
+
 
 base.require = function(pathString) {
     var path = pathString.split('.');
@@ -34,8 +40,14 @@ base.require = function(pathString) {
     var ifr = document.createElement('iframe')
     hideIframe(ifr);
     document.body.appendChild(ifr);
-    ifr.contentWindow.require = function(pathString) {
-        var exports = base.require(pathString);
+    ifr.contentWindow.require = function(subPathString) {
+        var calcPathString = subPathString;
+        if (subPathString[0] == '.') {
+            var origPath = pathString.split('.');
+            origPath.splice(origPath.length-1, 1, subPathString.split('.').slice(1));
+            calcPathString = origPath.join('.')
+        }
+        var exports = base.require(calcPathString);
         for (key in exports) {
             try {
                 ifr.contentWindow[key] = exports[key];
