@@ -2,22 +2,11 @@
 
 jsio = {}
 
-var root = '.'
-
 if (typeof(node) != 'undefined' && node.version) {
     jsio.log = function() {
-        node.debug([].slice.call(arguments, 0).join(' '));
-
-//        node.debug(new Array(arguments).join(' '));
+        node.stdio.writeError([].slice.call(arguments, 0).join(' ') + "\n");
     }
-    var ls = node.createChildProcess("pwd");
-    ls.addListener("output", function (data) {
-        node.debug('got output:' + data);
-        if (data) {
-            root += data;
-        }
-    })
-
+    window = process;
 }
 else {
     jsio.log = function() {
@@ -39,22 +28,12 @@ var getEnvironment = function() {
     return getServerEnvironment();
 }
 
-
+var loaded = [ 'js.io' ];
 jsio.require = function(path) {
-    // XXX: Maybe we should keep track of all path's included in an object
-    //      and use that to do our "already loaded" checking... With the current
-    //      implementation if you include a class, but not a module, then later
-    //      include the module, it will think the module is already included.
+    if (loaded.indexOf(path) != -1) {
+        return;
+    }
     var subPaths = path.split('.')
-	var parent = window;
-	var found = true;
-	for(var i = 0, part; part = subPaths[i]; ++i) {
-		if(!window[part]) {
-			found = false;
-			break;
-		}
-	}
-	if(found) { return; }
     var lastSegment = subPaths[subPaths.length-1];
     var firstLetter = lastSegment.slice(0,1)
     var path = null;
@@ -66,11 +45,17 @@ jsio.require = function(path) {
         //module
         subPaths.push(subPaths[subPaths.length-1] + '.js')
     }
+
+    for (var  i = 0; i < subPaths.length-1; ++i) {
+        var partialPath = subPaths.slice(0,i).join;
+    }
+
     switch(getEnvironment()) {
         case 'node':
             subPaths.splice(0,0, [node.fs.cwd()])
-            var path = node.path.join.apply(this, subPaths);
-            include(path);
+            var path = subPaths.join('/');
+            var content = node.cat(path, "utf8").wait()
+            node.compile(content, subPaths[subPaths.length-1]);
             break;
         case 'browser':
             // ...
