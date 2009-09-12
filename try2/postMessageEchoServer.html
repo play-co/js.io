@@ -1,0 +1,17 @@
+<html>
+ <head>
+  <script src="jsio/jsio.js"></script>
+  <script>
+   jsio.require("jsio.protocols.echo", ["Protocol"]);
+   jsio.require("jsio.interfaces", ["Server"]);
+  </script>
+ </head>
+ <body>
+  <h1>Jswire test</h1>
+  <div id="gui"></div>
+  <script>
+   var listener = jsio.listen(new Server(Protocol), 'postmessage', {client:"echoClient.html?protocol=postmessage"});
+   document.getElementById('gui').appendChild(listener.getButton());
+  </script>
+ </body>
+</html>
