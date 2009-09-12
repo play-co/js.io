@@ -1,0 +1,19 @@
+<html>
+ <head>
+  <script>
+    var payload = '<script>function fib(n) {\n foo();\n return n ? n + fib(n-1) : 0;\n };\n function foo()\n {\n throw new Error("what?");\n }\n<\/script>'
+    window.setTimeout("document.write(payload);", 0);
+//   document.write();
+/*  function fib(n) {
+    foo();
+    return n ? n + fib(n-1) : 0;
+  }
+
+  function foo() {
+    throw new Error("what?")
+
+  }
+*/
+  </script>
+ </head>
+</html>
