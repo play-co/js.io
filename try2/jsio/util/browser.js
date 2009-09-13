@@ -3,6 +3,8 @@ require('.sizzle', {Sizzle: '$'});
 // Browser is a function, and also adds .find, .filter, .selector
 exports.$ = $;
 
+$.id = function(id, win) { return (win || window).document.getElementById(id); }
+
 $.create = function(tag, params) {
 	params = params || {};
 	var doc = (params.win || window).document;
