@@ -14,11 +14,11 @@ exports.Protocol = Class(jsio.interfaces.Protocol, function() {
     this.connectionLost = function() {
         log('conn lost');
     }
-})
+});
 
 exports.Server = Class(jsio.interfaces.Server, function(supr) {
     this.init = function() {
 		supr(this, 'init', [exports.Protocol]);
     }
-})
+});
 
