@@ -1,25 +1,22 @@
 require('jsio', ['Class', 'log', 'bind']);
-require('jsio.util.browser');
-var browser = jsio.util.browser;
+require('jsio.util.browser', '$');
 require('jsio.interfaces');
 
 exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 	var ID = 0;
 	
 	this.init = function() {
-		console.log('in init, calling supr');
-		console.log('this is', this);
 		supr(this, 'init', arguments);
 		
 		this._clients = {};
 	}
 	
 	this.listen = function() {
-		browser.onEvent(window, 'message', bind(this, '_onMessage'));
+		$.onEvent(window, 'message', bind(this, '_onMessage'));
 		this._button = document.createElement('a');
-		browser.style(this._button, {display: 'inline-block', border: '1px solid #CCC', background: '#EEE'});
+		$.style(this._button, {display: 'inline-block', border: '1px solid #CCC', background: '#EEE'});
 		this._button.innerHTML = 'new client';
-		browser.onEvent(this._button, 'click', bind(this, function() {
+		$.onEvent(this._button, 'click', bind(this, function() {
 			window.open(this._opts.client, 'W' + (ID++));
 		}));
 	}
@@ -27,7 +24,7 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 	this.getButton = function() { return this._button; }
 	
 	this._onMessage = function(evt) {
-		console.log("SERVER RECEIVED", evt.data)
+		log("SERVER RECEIVED", evt.data)
 		var name = evt.source.name;
 		var target = this._clients[name];
 		var data = eval('(' + evt.data + ')');
@@ -52,12 +49,12 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 
 exports.Connector = Class(jsio.interfaces.Connector, function() {
 	this.connect = function() {
-		browser.onEvent(window, 'message', bind(this, '_onMessage'));
+		$.onEvent(window, 'message', bind(this, '_onMessage'));
 		window.opener.postMessage(JSON.stringify({type:"open"}), '*');
 	}
 	
 	this._onMessage = function(evt) {
-		console.log("CLIENT RECEIVED", evt.data)
+		log("CLIENT RECEIVED", evt.data)
 		var data = eval('(' + evt.data + ')');
 		switch(data.type) {
 			case 'open':

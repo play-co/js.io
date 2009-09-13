@@ -1,28 +1,16 @@
-require('jsio', ['getEnvironment']);
-exports.getListener = function(transportName, envName) {
-	if (!envName) {
-		envName = getEnvironment();
-	}
-	var path = '.' + envName + '.' + transportName
+require('jsio', ['getEnvironment', 'bind', 'log', 'test']);
+
+function getObj(objectName, transportName, envName) {
+	envName = envName || getEnvironment();
 	try {
-		require(path, ['Listener'])
+		var what = {};
+		what[objectName] = 'result';
+		require('.' + envName + '.' + transportName, what);
 	} catch(e) {
-		throw new Error('No listener found for ' + transportName + ' in ' + envName);
+		throw new Error('No ' + objectName + ' found for ' + transportName + ' in ' + envName);
 	}
-	return Listener;
+	return result;
 }
 
-exports.getConnector = function(transportName, envName) {
-	if (!envName) {
-		envName = getEnvironment();
-	}
-	var path = '.' + envName + '.' + transportName
-	try {
-		require(path, ['Connector'])
-	} catch(e) {
-		throw new Error('No connector found for ' + transportName + ' in ' + envName);
-	}
-	return Connector;
-}
-
-
+exports.getListener = bind(this, getObj, 'Listener');
+exports.getConnector = bind(this, getObj, 'Connector');
