@@ -12,6 +12,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 
     this.connectionMade = function() {
         logger.debug("connectionMade");
+        this.frameId = 0;
     }
     
     var error = function(e) {
@@ -21,6 +22,14 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
     // Inherit and overwrite
     this.defaultFrameReceived = function(id, name, args) {
         logger.debug("defaultFrameReceived:", id, name, args);
+    }
+
+    // Public
+    this.sendFrame = function(name, args) {
+        if (!args) {
+            args = {}
+        }
+        this.transport.write(JSON.stringify([++this.frameId, name, args]) + '\r\n');
     }
 
     this.lineReceived = function(line) {
