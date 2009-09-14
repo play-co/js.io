@@ -37,6 +37,7 @@
 			var args = args || [];
 			var target = parent;
 			while(target = target.prototype) {
+                console.log('target', target, 'method', method);
 				if(target[method]) {
 					return target[method].apply(context, args);
 				}
@@ -72,7 +73,7 @@
 				var cwd = node.cwd() + '/';
 				for (var i = 0, url; url = urls[i]; ++i) {
 					url = cwd + url;
-					console.log(url);
+//					console.log(url);
 					try {
 						return {src: node.fs.cat(url, "utf8").wait(), url: url};						
 					} catch(e) {}
@@ -123,31 +124,31 @@
 	
 	var modules = {jsio: exports};
 	var _require = function(context, path, pkg, what) {
-		console.log('_require!', arguments);
+//		console.log('_require!', arguments);
 		var origPkg = pkg;
 		if(pkg.charAt(0) == '.') {
 			pkg = pkg.slice(1);
 			// resolve relative paths
 			var segments = path.split('.');
-			console.log('segments are (firstly):', segments);
+//			console.log('segments are (firstly):', segments);
 			while(pkg.charAt(0) == '.') {
 				pkg = pkg.slice(1);
 				segments.pop();
 			}
-			console.log('pkg', pkg);
-			console.log('segments', segments);
+//			console.log('pkg', pkg);
+//			console.log('segments', segments);
 			var prefix = segments.join('.');
 			if (prefix) {
 				pkg = segments.join('.') + '.' + pkg;
 			}
-			console.log('pkg is now', pkg);
+//			console.log('pkg is now', pkg);
 		}
 
 		var segments = pkg.split('.');
 		if(!(pkg in modules)) {
 			var result = getModuleSourceAndPath(pkg);
 			var newRelativePath = segments.slice(0, segments.length - (result.url.match('__init__.js$') ? 0 : 1)).join('.');
-			console.log('newRelativePath is', newRelativePath);
+//			console.log('newRelativePath is', newRelativePath);
 			var newContext = {
 				exports: {}
 			};
@@ -195,7 +196,7 @@
 	var jsio = _localContext.jsio;
 	var require = bind(this, _require, _localContext, '');
 	
-	require('jsio.env');	
+	require('jsio.env');
 	exports.listen = function(server, transportName, opts) {
 		var listener = new (jsio.env.getListener(transportName))(server, opts);
 		listener.listen();

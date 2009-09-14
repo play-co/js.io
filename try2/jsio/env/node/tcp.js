@@ -1,5 +1,7 @@
 require('jsio', ['Class', 'log', 'bind']);
 require('jsio.interfaces');
+require('jsio.logging');
+var logger = jsio.logging.getLogger('node.tcp');
 
 var Transport = Class(jsio.interfaces.Transport, function() {
     this.init = function(socket) {
@@ -29,6 +31,9 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
            		this.onConnect(new Transport(socket));
    			}));
    		}));
+        var listenString = (this._opts.interface || "" ) + ":" + this._opts.port;
+        // TODO: Show class name
+        logger.info("Listening tcp@" + listenString);
         s.listen(this._opts.port, this._opts.interface || "");
 	}
 });

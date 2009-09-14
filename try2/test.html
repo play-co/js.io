@@ -1,6 +1,12 @@
 <html>
  <head>
-  <script src="jsio/jsio.js">
+  <script src="jsio/jsio.js"></script>
+  <script src="json2.js"></script>
+  <script src="http://localhost:8000/static/Orbited.js"></script>
+  <script>
+    Orbited.settings.domain = document.domain;
+    Orbited.settings.enableFFPrivileges = true;
+    jsio.require('mino.client', "MinoProtocol");
   </script>
  </head>
 </html>
