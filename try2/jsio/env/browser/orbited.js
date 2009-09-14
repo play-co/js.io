@@ -3,9 +3,6 @@ require('jsio.logging');
 require('jsio.interfaces');
 
 var logger = jsio.logging.getLogger('env.browser.orbited')
-logger.setLevel(jsio.logging.levels.DEBUG);
-
-
 exports.Connector = Class(jsio.interfaces.Connector, function() {
 	this.connect = function() {
         logger.debug('create Orbited.TCPSocket');

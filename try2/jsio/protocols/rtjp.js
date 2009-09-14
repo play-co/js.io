@@ -4,15 +4,14 @@ require('jsio.logging')
 require('jsio.protocols.delimited', ['DelimitedProtocol'])
 
 var logger = jsio.logging.getLogger('RTJPProtocol')
-
 exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
     this.init = function() {
         supr(this, 'init', ['\n']);
+        this.frameId = 0;
     }
 
     this.connectionMade = function() {
         logger.debug("connectionMade");
-        this.frameId = 0;
     }
     
     var error = function(e) {
@@ -20,8 +19,8 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
     }
     
     // Inherit and overwrite
-    this.defaultFrameReceived = function(id, name, args) {
-        logger.debug("defaultFrameReceived:", id, name, args);
+    this.frameReceived = function(id, name, args) {
+        logger.debug("frameReceived:", id, name, args);
     }
 
     // Public
@@ -29,6 +28,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
         if (!args) {
             args = {}
         }
+        logger.debug('sendFrame', name, args);
         this.transport.write(JSON.stringify([++this.frameId, name, args]) + '\r\n');
     }
 
@@ -47,13 +47,15 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
             if (typeof(frame[2]) != "object") {
                 return error.call(this, "Invalid frame args");
             }
-            var f = this['frame_' + frame[1]];
+            this.frameReceived(frame[0], frame[1], frame[2]);
+/*            var f = this['frame_' + frame[1]];
             if (!f) { 
                 this.defaultFrameReceived(frame[0], frame[1], frame[2]); 
             }
             else {
-                f(frame[0], frame[2]);
+                f.call(this, frame[0], frame[2]);
             }
+*/
         } catch(e) {
             error.call(e);
         }
