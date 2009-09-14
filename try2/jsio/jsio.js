@@ -16,6 +16,13 @@ jsio.Class = function(parent, proto) {
 		if(!parent) { throw new Error('parent or prototype not provided'); }
 		if(!proto) { proto = parent; }
 		else { proto.prototype = parent.prototype; }
+		
+		for(var f in proto) {
+			if(typeof proto[f] == 'function') {
+				proto[f].name = f;
+			}
+		}
+		
 		var cls = function() { if(this.init) { this.init.apply(this, arguments); }}
 		cls.prototype = new proto(function(context, method, args) {
 			var args = args || [];
@@ -142,6 +149,7 @@ jsio.Class = function(parent, proto) {
 				exports: {}
 			};
 			newContext.require = jsio.bind(this, _require, newContext, newRelativePath);
+			newContext.jsio = {require: newContext.require};
 			jsio.compile(newContext, result);
 			modules[pkg] = newContext.exports;
 		}
@@ -162,6 +170,7 @@ jsio.Class = function(parent, proto) {
 				c = c[segment]
 			}
 			c[segments[len]] = modules[pkg];
+			
 		} else if(typeof what == 'string') {
 			context[what] = modules[pkg][what];
 		} else if(what.constructor == Object) {
