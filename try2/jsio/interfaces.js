@@ -97,6 +97,6 @@ exports.PubSub = Class(function() {
 	this.subscribe = function(signal) {
 		if(!this._subscribers) { this._subscribers = {}; }
 		if(!this._subscribers[signal]) { this._subscribers[signal] = []; }
-		this._subscribers[signal].push(jsio.bind.apply(jsio, Array.prototype.slice.call(arguments, 1)));
+		this._subscribers[signal].push(bind.apply(jsio, Array.prototype.slice.call(arguments, 1)));
 	}
 });

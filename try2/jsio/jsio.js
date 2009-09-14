@@ -1,18 +1,27 @@
-jsio = {};
-jsio.getEnvironment = function() {
+;(function(){
+	if(typeof exports == 'undefined') {
+		exports = {};
+		jsio = exports;
+	}
+	
+	exports.getEnvironment = function() {
 		if (typeof(node) !== 'undefined' && node.version) {
 			return 'node';
 		}
 		return 'browser';
 	};
-jsio.bind = function(context, method/*, arg1, arg2, ... */){
+
+	exports.bind = function(context, method/*, arg1, arg2, ... */){
 		var args = Array.prototype.slice.call(arguments, 2);
 		return function(){
 			method = (typeof method == 'string' ? context[method] : method);
 			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)))
 		}
 	};
-jsio.Class = function(parent, proto) {
+	
+	var bind = exports.bind;
+	
+	exports.Class = function(parent, proto) {
 		if(!parent) { throw new Error('parent or prototype not provided'); }
 		if(!proto) { proto = parent; }
 		else { proto.prototype = parent.prototype; }
@@ -22,7 +31,7 @@ jsio.Class = function(parent, proto) {
 				proto[f].name = f;
 			}
 		}
-		
+
 		var cls = function() { if(this.init) { this.init.apply(this, arguments); }}
 		cls.prototype = new proto(function(context, method, args) {
 			var args = args || [];
@@ -38,9 +47,7 @@ jsio.Class = function(parent, proto) {
 		return cls;
 	}
 
-;(function(){
-	var getModuleSourceAndPath;
-	function getModulePathPossibilities(pathString) {
+	var getModulePathPossibilities = function(pathString) {
 		var path = pathString.split('.').join('/');
 		return [
 			path + '/__init__.js',
@@ -48,23 +55,19 @@ jsio.Class = function(parent, proto) {
 		];
 	}
 	
-	switch(jsio.getEnvironment()) {
+	switch(exports.getEnvironment()) {
 		case 'node':
-			jsio.log = function() {
+			exports.log = function() {
 				node.stdio.writeError([].slice.call(arguments, 0).join(' ') + "\n");
 			}
-			console = jsio;
-			console.log('case node');	
+			console = {log: exports.log};
 			window = process;
-			
-			jsio.test = function() { jsio.log('hi')}
-			
-			jsio.compile = function(context, args) {
-				var fn = node.compile("function(_){with(_){delete _;" + args.src + "\n}}", args.url);
+			var compile = function(context, args) {
+				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
 				fn(context);
 			}
 			
-			getModuleSourceAndPath = function (pathString) {
+			var getModuleSourceAndPath = function(pathString) {
 				var urls = getModulePathPossibilities(pathString);
 				var cwd = node.cwd() + '/';
 				for (var i = 0, url; url = urls[i]; ++i) {
@@ -78,18 +81,18 @@ jsio.Class = function(parent, proto) {
 			}
 			break;
 		default:
-			jsio.log = function() {
+			exports.log = function() {
 				if (typeof console != 'undefined' && console.log) {
 					console.log.apply(console, arguments);
 				}
 			}
 			
-			jsio.compile = function(context, args) {
-				eval("var fn = function(_){with(_){delete _;" + args.src + "\n}}\n//@ sourceURL=" + args.url);
+			var compile = function(context, args) {
+				eval("var fn = function(_){with(_){delete _;(function(){" + args.src + "\n})()}}\n//@ sourceURL=" + args.url);
 				fn(context);
 			}
 			
-			getModuleSourceAndPath = function (pathString) {
+			var getModuleSourceAndPath = function(pathString) {
 				var urls = getModulePathPossibilities(pathString);
 				for (var i = 0, url; url = urls[i]; ++i) {
 					var xhr = new XMLHttpRequest()
@@ -118,7 +121,7 @@ jsio.Class = function(parent, proto) {
 			break;
 	}
 	
-	var modules = {jsio: jsio};
+	var modules = {jsio: exports};
 	var _require = function(context, path, pkg, what) {
 		console.log('_require!', arguments);
 		var origPkg = pkg;
@@ -148,9 +151,9 @@ jsio.Class = function(parent, proto) {
 			var newContext = {
 				exports: {}
 			};
-			newContext.require = jsio.bind(this, _require, newContext, newRelativePath);
+			newContext.require = bind(this, _require, newContext, newRelativePath);
 			newContext.jsio = {require: newContext.require};
-			jsio.compile(newContext, result);
+			compile(newContext, result);
 			modules[pkg] = newContext.exports;
 		}
 
@@ -184,16 +187,22 @@ jsio.Class = function(parent, proto) {
 		}
 	}
 	
-	jsio.require = jsio.bind(this, _require, window, '');
-	jsio.require('jsio.env');
+	// create the external require function bound to the current context
+	exports.require = bind(this, _require, window, '');
 	
-	jsio.listen = function(server, transportName, opts) {
+	// create the internal require function bound to a local context
+	var _localContext = {jsio: {}};
+	var jsio = _localContext.jsio;
+	var require = bind(this, _require, _localContext, '');
+	
+	require('jsio.env');	
+	exports.listen = function(server, transportName, opts) {
 		var listener = new (jsio.env.getListener(transportName))(server, opts);
 		listener.listen();
 		return listener;
 	}
-
-	jsio.connect = function(protocolInstance, transportName, opts) {
+	
+	exports.connect = function(protocolInstance, transportName, opts) {
 		var connector = new (jsio.env.getConnector(transportName))(protocolInstance, opts);
 		connector.connect();
 		return connector;

@@ -1,5 +1,5 @@
-jsio.require('jsio', ['Class', 'log']);
-jsio.require('jsio.interfaces');
+require('jsio', ['Class', 'log']);
+require('jsio.interfaces');
 
 exports.Protocol = Class(jsio.interfaces.Protocol, function() {
     this.connectionMade = function() {
