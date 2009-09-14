@@ -1,7 +1,7 @@
 ;(function(){
 	if(typeof exports == 'undefined') {
 		exports = {};
-		jsio = exports;
+		window.jsio = exports;
 	}
 	
 	exports.getEnvironment = function() {

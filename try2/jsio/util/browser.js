@@ -70,3 +70,9 @@ $.onEvent = function(el, name, f) {
 		});
 	}
 };
+
+$.stopEvent = function(e) {
+	e.cancelBubble = true;
+	if(e.stopPropagation) e.stopPropagation();
+	if(e.preventDefault) e.preventDefault();
+}
