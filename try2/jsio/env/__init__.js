@@ -1,6 +1,6 @@
 require('jsio', ['getEnvironment', 'log', 'bind', 'test']);
 
-var getObj = function(objectName, transportName, envName) {
+function getObj(objectName, transportName, envName) {
 	envName = envName || getEnvironment();
 	try {
 		var what = {};
