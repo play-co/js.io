@@ -9,7 +9,6 @@ if (typeof(require) != 'undefined' && require.__jsio) {
     require('..base64');
     require('..utf8')
 }
-console.log('base64 is', base64);
 var id = 0;
 csp.readyState = {
     'initial': 0,
@@ -59,25 +58,18 @@ csp.util.isSameDomain = function(urlA, urlB) {
 }
 
 csp.util.chooseTransport = function(url, options) {
-    console.log(location.toString())
     var test = location.toString().match('file://');
     if (test && test.index === 0) {
-      console.log('local file, use jsonp')
       return transports.jsonp // XXX      
     }
-    console.log('choosing');
     if (csp.util.isSameDomain(url, location.toString())) {
-        console.log('same domain, xhr');
         return transports.xhr;
     }
-    console.log('not xhr');
     try {
         if (window.XMLHttpRequest && (new XMLHttpRequest()).withCredentials !== undefined) {
-            console.log('xhr')
             return transports.xhr;
         }
     } catch(e) { }
-    console.log('jsonp');
     return transports.jsonp
 }
 
@@ -230,9 +222,7 @@ var Transport = function(cspId, url) {
     var sendTimer = null;
     var cometTimer = null;
     self.handshakeCb = function(data) {
-        console.log('handshakeCb!');
         if (self.opened) {
-            console.log('do onHandshake');
             self.onHandshake(data);
             backoff = 50;
         }
@@ -308,10 +298,6 @@ transports.xhr = function(cspId, url) {
         var timer = null;
 //        console.log('setting on ready state change');
         xhr.onreadystatechange = function() {
-            console.log('ready state', xhr.readyState)
-            try {
-              console.log('status', xhr.status)
-            } catch (e) {}
             if (aborted) { 
                 //console.log('aborted'); 
                 return eb(); 
@@ -344,7 +330,6 @@ transports.xhr = function(cspId, url) {
         if (timeout) {
             timer = setTimeout(function() { aborted = true; xhr.abort(); }, timeout*1000);
         }
-        console.log('send xhr', payload);
         xhr.send(payload)
 
     }
