@@ -22,12 +22,6 @@ exports.Server = Class(function() {
         this._protocolClass = protocolClass;
     }
 
-    this.connectionMade = function(transport) {
-        var p = this.buildProtocol()
-        p.server = this;
-        transport.makeConnection(p);
-    }
-
     this.buildProtocol = function() {
         return new this._protocolClass();
     }
@@ -52,6 +46,7 @@ exports.Listener = Class(function() {
 	this.onConnect = function(transport) {
 		var p = this._server.buildProtocol();
 		p.transport = transport;
+        p.server = this._server;
 		transport.protocol = p;
 		transport.makeConnection(p);
 		p.connectionMade();

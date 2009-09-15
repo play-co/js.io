@@ -40,6 +40,11 @@ this.UnicodeCodecError.prototype.toString = function () {
   return 'UnicodeCodecError' + (this.message ? ': ' + this.message : '');
 };
 
+var shorten = function (array, number) {
+  // remove 'number' characters from the end of 'array', in place (no return)
+  for (var i = number; i > 0; i--){ array.pop(); };
+};
+
 var decode_map = {};
 for (var i=0, n=alphabet.length; i < n; i++) {
   decode_map[alphabet[i]] = i;
@@ -70,12 +75,13 @@ this.encode = function (bytes) {
       alphabet[(newchars >> 6)  & 077], 
       alphabet[(newchars)       & 077]);      
   };
-  return out_array.slice(0, -padding.length).join('');
+  shorten(out_array, padding.length);
+  return out_array.join('');
 };
 this.decode = function (b64text) {
   b64text = b64text.replace(/\s/g, '') // kill whitespace
   // strip trailing pad characters from input; // XXX maybe some better way?
-  var i = b64text.length; while (b64text[--i] === pad) {}; b64text = b64text.slice(0, i);
+  var i = b64text.length; while (b64text[--i] === pad) {}; b64text = b64text.slice(0, i + 1);
   assertOrBadInput(!alphabet_inverse.test(b64text),
                    'Input contains out-of-range characters.');
   var padding = Array(5 - ((b64text.length % 4) || 4)).join(alphabet[alphabet.length - 1]);
@@ -92,5 +98,6 @@ this.decode = function (b64text) {
       (newchars >> 010) & 0xFF, 
       (newchars)        & 0xFF);
   };
-  return String.fromCharCode.apply(String, out_array.slice(0, -padding.length));
+  shorten(out_array, padding.length);
+  return String.fromCharCode.apply(String, out_array);
 };

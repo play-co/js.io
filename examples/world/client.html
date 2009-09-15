@@ -1,0 +1,15 @@
+<html>
+ <head>
+  <script src="jsio/jsio.js"></script>
+  <script src="json2.js"></script>
+  <script>
+    jsio.require('world.client', 'WorldClient');
+    jsio.require('jsio.logging');
+    jsio.logging.getLogger('world.client').setLevel(0);
+    function go(username) {
+        client = new WorldClient(username || "mcarter"); 
+        jsio.connect(client, 'csp', {url:'http://localhost:5555'})
+    }
+  </script>
+ </head>
+</html>

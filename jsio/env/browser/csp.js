@@ -17,7 +17,7 @@ exports.Connector = Class(jsio.interfaces.Connector, function() {
             logger.debug('conn closed without opening, code:', code);
         })
         logger.debug('open the conection');
-        conn.conn(this._opts.url);
+        conn.connect(this._opts.url);
     }
 });
 
@@ -32,7 +32,7 @@ var Transport = Class(jsio.interfaces.Transport, function() {
     }
     
     this.write = function(data, encoding) {
-        this._conn.send(data);
+        this._conn.write(data);
     }
     
     this.loseConnection = function(protocol) {

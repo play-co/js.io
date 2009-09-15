@@ -9,7 +9,6 @@ if (typeof(require) != 'undefined' && require.__jsio) {
     require('..base64');
     require('..utf8')
 }
-console.log('base64 is', base64);
 var id = 0;
 csp.readyState = {
     'initial': 0,
@@ -59,25 +58,25 @@ csp.util.isSameDomain = function(urlA, urlB) {
 }
 
 csp.util.chooseTransport = function(url, options) {
-    console.log(location.toString())
+//    console.log(location.toString())
     var test = location.toString().match('file://');
     if (test && test.index === 0) {
-      console.log('local file, use jsonp')
+//      console.log('local file, use jsonp')
       return transports.jsonp // XXX      
     }
-    console.log('choosing');
+//    console.log('choosing');
     if (csp.util.isSameDomain(url, location.toString())) {
-        console.log('same domain, xhr');
+//        console.log('same domain, xhr');
         return transports.xhr;
     }
-    console.log('not xhr');
+//    console.log('not xhr');
     try {
         if (window.XMLHttpRequest && (new XMLHttpRequest()).withCredentials !== undefined) {
-            console.log('xhr')
+//            console.log('xhr')
             return transports.xhr;
         }
     } catch(e) { }
-    console.log('jsonp');
+//    console.log('jsonp');
     return transports.jsonp
 }
 
@@ -129,8 +128,11 @@ csp.CometSession = function() {
     }
 
     var transport_onread = function(data) {
-        if (options.encoding == 'plain') {
-            self.onread(ut8.decode(decodedData));
+        if (options.encoding == 'utf8') {
+            self.onread(utf8.decode(data));
+        }
+        else if (options.encoding == 'plain') {
+            self.onread(data);
         }
     }
 
@@ -147,7 +149,7 @@ csp.CometSession = function() {
             self.readyState = csp.readyState.open;
             self.sessionKey = data.session;
             self.write = transport.send;
-            transport.onPacket = self.onread;
+            transport.onPacket = transport_onread;
             transport.resume(self.sessionKey, 0, 0);
             clearTimeout(handshakeTimer);
             self.onopen();
@@ -162,7 +164,7 @@ csp.CometSession = function() {
 }
 
 var Transport = function(cspId, url) {
-    console.log('url', url);
+//    console.log('url', url);
     var self = this;
     self.opened = false;
     self.cspId = cspId;
@@ -197,6 +199,7 @@ var Transport = function(cspId, url) {
                     return;
                 }
             }
+//            console.log('onPacket', data);
             self.onPacket(data);
         }
     }
@@ -230,9 +233,9 @@ var Transport = function(cspId, url) {
     var sendTimer = null;
     var cometTimer = null;
     self.handshakeCb = function(data) {
-        console.log('handshakeCb!');
+//        console.log('handshakeCb!');
         if (self.opened) {
-            console.log('do onHandshake');
+//            console.log('do onHandshake');
             self.onHandshake(data);
             backoff = 50;
         }
@@ -308,9 +311,9 @@ transports.xhr = function(cspId, url) {
         var timer = null;
 //        console.log('setting on ready state change');
         xhr.onreadystatechange = function() {
-            console.log('ready state', xhr.readyState)
+//            console.log('ready state', xhr.readyState)
             try {
-              console.log('status', xhr.status)
+//              console.log('status', xhr.status)
             } catch (e) {}
             if (aborted) { 
                 //console.log('aborted'); 
@@ -344,7 +347,7 @@ transports.xhr = function(cspId, url) {
         if (timeout) {
             timer = setTimeout(function() { aborted = true; xhr.abort(); }, timeout*1000);
         }
-        console.log('send xhr', payload);
+//        console.log('send xhr', payload);
         xhr.send(payload)
 
     }
