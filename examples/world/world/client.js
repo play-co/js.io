@@ -6,9 +6,10 @@ var logger = jsio.logging.getLogger('world.client')
 
 
 exports.WorldClient = Class(RTJPProtocol, function(supr) {
-    this.init = function(username) {
+    this.init = function(username, avatarUrl) {
         supr(this, "init", []);
         this.username = username;
+        this.avatarUrl = avatarUrl;
     }
 
     // Public api
@@ -52,7 +53,7 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
     }
     this.connectionMade = function() {
         logger.debug('connected!');
-        this.sendFrame('LOGIN', {'username':this.username});
+        this.sendFrame('LOGIN', {'username':this.username, url: this.avatarUrl});
     }
     this.connectionLost = function() {
         logger.debug('disconnected!');
