@@ -37,7 +37,6 @@
 			var args = args || [];
 			var target = parent;
 			while(target = target.prototype) {
-                console.log('target', target, 'method', method);
 				if(target[method]) {
 					return target[method].apply(context, args);
 				}
@@ -65,7 +64,7 @@
 			window = process;
 			var compile = function(context, args) {
 				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
-				fn(context);
+				fn.call(context.exports, context);
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
@@ -88,8 +87,8 @@
 			}
 			
 			var compile = function(context, args) {
-				eval("var fn = function(_){with(_){delete _;(function(){" + args.src + "\n})()}}\n//@ sourceURL=" + args.url);
-				fn(context);
+				eval("var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url);
+				fn.call(context.exports, context);
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
@@ -143,9 +142,11 @@
 			var result = getModuleSourceAndPath(pkg);
 			var newRelativePath = segments.slice(0, segments.length - (result.url.match('__init__.js$') ? 0 : 1)).join('.');
 			var newContext = {
-				exports: {}
+				exports: {},
+                global: window
 			};
 			newContext.require = bind(this, _require, newContext, newRelativePath);
+            newContext.require.__jsio = true;
 			newContext.jsio = {require: newContext.require};
 			compile(newContext, result);
 			modules[pkg] = newContext.exports;
