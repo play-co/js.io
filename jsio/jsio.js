@@ -147,6 +147,8 @@
 			};
 			newContext.require = bind(this, _require, newContext, newRelativePath);
             newContext.require.__jsio = true;
+            newContext.require.__dir = newRelativePath.split('.').join('/');
+            newContext.require.__path = result.url;
 			newContext.jsio = {require: newContext.require};
 			compile(newContext, result);
 			modules[pkg] = newContext.exports;

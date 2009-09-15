@@ -26,11 +26,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-// 
-var uuid = process.require('jsio/uuid.js');
-var utf8 = process.require('jsio/utf8.js');
-var base64 = process.require('jsio/base64.js');
-process.include('jsio/env/node/csp/util.js');
+
+ 
+// Make the dependancies work rather or not this file was used as a
+// node module or a jsio module.
+var base = require.__jsio ? (require.__dir + "/") : "";
+var uuid = process.require(base + '../../../uuid.js');
+var utf8 = process.require(base + '../../../utf8.js');
+var base64 = process.require(base + '../../../base64.js');
+process.include(base + 'util.js');
 var csp = this.csp = exports;
 
 ;(function () {
