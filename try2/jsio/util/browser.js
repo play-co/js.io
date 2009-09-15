@@ -5,10 +5,14 @@ exports.$ = $;
 
 $.id = function(id, win) { return (win || window).document.getElementById(id); }
 
-$.create = function(tag, params) {
-	params = params || {};
+$.create = function(params) {
 	var doc = (params.win || window).document;
-	var el = doc.createElement(tag);
+	if(!params) { params = 'div'; }
+	if(typeof params == 'string') {
+		return doc.createElement(params);
+	}
+	
+	var el = doc.createElement(params.tag || 'div');
 	if(params.style) {
 		$.style(el, params.style);
 	}
@@ -23,8 +27,14 @@ $.create = function(tag, params) {
 	if(params.parent) {
 		params.parent.appendChild(el);
 	}
+	if(params.html) {
+		el.innerHTML = params.html;
+	}
 	return el;
 }
+
+$.show = function(el) { el.style.display = 'block'; }
+$.hide = function(el) { el.style.display = 'none'; }
 
 // accepts an array or a space-delimited string of classNames
 $.addClass = function(el, classNames) {
