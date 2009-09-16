@@ -1,0 +1,13 @@
+<html>
+ <head>
+  <script src="js/jsio/jsio.js"></script>
+  <script>
+   jsio.require('simpleecho', 'EchoProtocol')
+   var listener = jsio.listen(jsio.quickServer(EchoProtocol), 'postmessage')
+   onload = function() {
+       document.body.appendChild(listener._button);
+    }
+  </script>
+ </head>
+</html>
+

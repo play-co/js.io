@@ -1,0 +1,87 @@
+js.io: Rapid network application development with Javascript
+
+What is js.io?
+    A Javascript library for...
+        writing network servers 
+        writing network clients
+    Environment emulation for running server code...
+        in the browser
+        v8 server-side (node.js)
+        more to come
+    Swapple Transports for...
+        TCP
+        CSP
+        Postmessage
+
+
+World demo 1
+    The world, running in the browser
+    The server is a tab
+    Clients are other tabs
+    Uses the postmessage transport
+
+World demo 2
+    The world, running on the server
+    Clients are remote browsers
+    Uses the csp transport
+
+World demo 3
+    The world, runniong on the server with tcp as well
+    Clients are remote browsers, OR
+    Clients are mobile/desktop tcp clients
+
+Writing an echo server
+
+    require('jsio', ['Class', 'bind']);
+    require('jsio.interfaces');
+    require('jsio.logging');
+
+    logger = jsio.logging.getLogger('EchoProtocol');
+
+    exports.EchoProtocol = Class(jsio.interfaces.Protocol, function(supr) {
+        this.connectionMade = function() {
+            logger.info('Connection Made');
+            this.transport.write('Welcome \\ jsio/Echo 1.0\r\n');
+        }
+        this.dataReceived = function(data) {
+            this.transport.write('Echo: ' + data);
+        }
+        this.connectionLost = function() {
+            logger.info('Connection Lost');
+        }
+    });
+
+
+Running the echo server in the browser
+TODO: Figure out an easy way to create clients so we don't have to show clientUrl
+
+<html>
+ <head>
+  <script src="jsio/jsio.js"></script>
+  <script>
+   jsio.require('simpleecho', 'EchoProtocol')
+   jsio.listen(jsio.quickServer(EchoProtocol), 'postmessage', {clientUrl: 'client.html'})
+  </script>
+ </head>
+</html>
+
+
+Runing the echo server on node
+
+    jsio = require('jsio/jsio.js')
+    jsio.require('simpleecho', ['EchoProtocol'])
+    jsio.listen(jsio.quickServer(EchoProtocol), 'tcp', { port: 4321 })
+
+
+
+Running the echo server on node and the client in the browser
+
+    jsio = require('jsio/jsio.js')
+    jsio.require('simpleecho', ['EchoProtocol'])
+    jsio.listen(jsio.quickServer(EchoProtocol), 'csp', { port: 4321 })
+
+TODO: client
+
+
+
+
