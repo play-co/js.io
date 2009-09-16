@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<title>Walking Live</title>
+<script type="text/javascript" src="jsio/jsio.js"></script>
+<script src="json2.js"></script>
+<script>
+jsio.require('jsio', 'Class');
+jsio.require('jsio.util.browser', '$');
+jsio.require('world.client', 'WorldClient');
+jsio.require('jsio.logging');
+jsio.logging.getLogger('world.client').setLevel(0);
+
+/* Config
+ *********/
+
+var gWidth = 500;
+var gHeight = 500;
+var gPlayers = [];
+var gMaxDelta = 3;
+var gPlayerDim = 25;
+
+var gKeys = {};
+var gSprite = {
+	up: [165, -5],
+	down: [223, -5],
+	left: [104, -5],
+	right: [283, -38]
+};
+
+var gBoardEl = null;
+
+/* Main loop
+ ************/
+
+window.onload = function() {
+	gBoardEl = $.id('board');
+	$.style(gBoardEl, {width: gWidth + 'px', height: gHeight + 'px'});
+	
+	// TODO: hook these up to some sort of menu
+	var username;
+	var url;
+	client = new WorldClient(username || "mcarter", url || 'http://www.google.com/favicon.ico');
+	jsio.connect(client, 'csp', {url:'http://localhost:5555'})
+	
+	var sayInput = $.id('say');
+	$.onEvent(sayInput, 'keyup', function(e) {
+		if(e.keyCode == 13) {
+			client.say(sayInput.value);
+			sayInput.value = '';
+		}
+	});
+	
+	$.onEvent(gBoardEl, 'click', function(e) {
+		client.move(e.clientX - gBoardEl.offsetLeft, e.clientY - gBoardEl.offsetTop + window.pageYOffset);
+	});
+}
+</script>
+
+
+<style type="text/css" media="screen">
+body, html { margin: 0px; padding: 0px; }
+#board {
+	margin: 50px auto;
+	position: relative;
+	border: 3px solid black;
+}
+
+#board .name {
+	position: absolute;
+	font: 8px Tahoma;
+	z-index: 2;
+	width: 25px;
+	text-align: center;
+}
+
+#board .msg {
+	position: absolute;
+	font: 8px Tahoma;
+	z-index: 1;
+	opacity: 0.5;
+	background: #000;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	padding: 3px;
+	color: #FFF;
+	max-width: 135px;
+}
+
+#board .player {
+	position: absolute;
+	background: url('player-sprite.png');
+}
+
+#say {
+	width: 200px;
+	margin: 10px auto;
+	
+}
+</style>
+	</head>
+	<body>
+		<div id="board"></div>
+		<input type="text" id="say">
+	</body>
+</html>
