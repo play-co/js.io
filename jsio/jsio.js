@@ -84,7 +84,6 @@
 				for (var i = 0, url; url = urls[i]; ++i) {
                     var cachePath = url[1];
                     var url = url[0];
-					url = cwd + url;
 					try {
 						var out = {src: node.fs.cat(url, "utf8").wait(), url: url};
                         if (!(baseMod in modulePathCache)) {
@@ -109,7 +108,8 @@
 			}
 			
 			var compile = function(context, args) {
-				eval("var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url);
+				var code = "var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url;
+				eval(code);
 				fn.call(context.exports, context);
 			}
 			

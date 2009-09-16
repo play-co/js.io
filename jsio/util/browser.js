@@ -30,6 +30,9 @@ $.create = function(params) {
 	if(params.html) {
 		el.innerHTML = params.html;
 	}
+	if(params.text) {
+		$.setText(el, params.text);
+	}
 	return el;
 }
 
@@ -85,4 +88,16 @@ $.stopEvent = function(e) {
 	e.cancelBubble = true;
 	if(e.stopPropagation) e.stopPropagation();
 	if(e.preventDefault) e.preventDefault();
+}
+
+$.setText = function(el, text) {
+	text = String(text);
+    if ('textContent' in el) {
+		el.textContent = text;
+    } else if ('innerText' in el) {
+		el.innerText = text.replace(/\n/g, ' ');
+    } else {
+        el.innerHTML = '';
+        el.appendChild(document.createTextNode(text));
+    }
 }
