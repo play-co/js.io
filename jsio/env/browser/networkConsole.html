@@ -1,0 +1,80 @@
+<html>
+ <head>
+  <script src="../../jsio.js"></script>
+  <script>
+   ConsoleClient = jsio.Class(jsio.interfaces.Protocol, function() {
+   
+	   	var parity = true;
+        this.connectionMade = function() {
+            document.getElementById('con').style.display = 'block';
+            document.getElementById('inputArea').style.display = 'block';
+        }
+        this.connectionLost = function(reason) {
+            console.log('connection lost', reason);
+        }
+        this.dataReceived = function(data) {
+            console.log('data received:', data);
+
+            var line = document.getElementById('con').insertBefore(document.createElement('div'), document.getElementById('con').firstChild);
+            line.innerHTML = data;
+            line.style.backgroundColor = parity ? '#EEE' : '#F5F5F4';
+            parity = !parity;
+        }
+    });
+  </script>
+  <style>
+  	.connectBtn { float: left; }
+  	
+  	#con {
+  		clear: both;
+  		border: 1px solid #CCC;
+  	}
+  </style>
+ </head>
+ <body>
+ 	<div id="wrapper">
+ 		<div id="inputArea" style="display:none; float:left"></div>
+ 	 	<div id="con" style="display:none"><br></div>
+	</div>
+ 	<script>
+ 		var wrapper = document.getElementById('wrapper');
+ 		var inputArea = document.getElementById('inputArea');
+ 		var con = document.getElementById('con');
+ 		var connectBtn = wrapper.insertBefore(document.createElement('button'), inputArea);
+	    connectBtn.innerHTML = 'connect';
+	    connectBtn.onclick = connect;
+	    connectBtn.className = 'connectBtn';
+ 		
+ 		var client;
+ 		function connect() {
+            client = new ConsoleClient();
+			var match = window.location.search.substring(1).match('^(.*&)?protocol=([^&]*)');
+			var protocolNAme = match ? match[2] : 'postmessage';
+		    jsio.connect(client, protocol, {host: "localhost", port: 5555});
+		    connectBtn.innerHTML = 'disconnect';
+		    connectBtn.onclick = disconnect;
+		};
+		
+		function disconnect() {
+		    connect.innerHTML = 'connect';
+		    connect.onclick = connect;
+		    client.transport.loseConnection();
+		}
+		
+		var input = inputArea.appendChild(document.createElement('input'));
+		input.type = 'text';
+		input.onkeypress = function(e) { if((e || event).keyCode == 13) { send(); }}
+
+		var sendBtn = inputArea.appendChild(document.createElement('button'));
+		sendBtn.innerHTML = 'send';
+		sendBtn.onclick = send;
+		
+		function send() {
+			client.transport.write(input.value);
+			input.value = '';
+			input.focus();
+		}
+		
+ 	</script>
+ </body>
+</html>

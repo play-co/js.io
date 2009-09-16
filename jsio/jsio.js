@@ -46,15 +46,25 @@
 		cls.constructor = cls;
 		return cls;
 	}
-
+    var modulePathCache = {}
 	var getModulePathPossibilities = function(pathString) {
-		var path = pathString.split('.').join('/');
-		return [
-			path + '/__init__.js',
-			path + '.js'
-		];
+        var segments = pathString.split('.')
+        var modPath = pathString.split('.').join('/');
+        var isModule = modPath[modPath.length-1] == '/';
+        var out;
+        if (segments[0] in modulePathCache) {
+            out = [[modulePathCache[segments[0]] + '/' + segments.join('/') + (isModule ? '__init__.js' : '.js'), null]]
+        }
+        else {
+            out = [];
+            for (var i = 0, path; path = exports.path[i]; ++i) {
+                out.push([path + '/' + modPath + (isModule ? '__init__.js' : '.js'), path])
+            }
+        }
+        return out;
 	}
 	
+    exports.path = ['.']
 	switch(exports.getEnvironment()) {
 		case 'node':
 			exports.log = function() {
@@ -68,16 +78,28 @@
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
+                var baseMod = pathString.split('.')[0];
 				var urls = getModulePathPossibilities(pathString);
 				var cwd = node.cwd() + '/';
 				for (var i = 0, url; url = urls[i]; ++i) {
+                    var cachePath = url[1];
+                    var url = url[0];
 					url = cwd + url;
 					try {
-						return {src: node.fs.cat(url, "utf8").wait(), url: url};						
+						var out = {src: node.fs.cat(url, "utf8").wait(), url: url};
+                        if (!(baseMod in modulePathCache)) {
+                            modulePathCache[baseMod] = cachePath;
+                        }
+                        return out;
 					} catch(e) {}
 				}
 				throw new Error("Module not found: " + pathString);
 			}
+            var segments = __filename.split('/');
+
+            var jsioPath = segments.slice(0,segments.length-2).join('/');
+            exports.path.push(jsioPath)
+            modulePathCache.jsio = jsioPath;
 			break;
 		default:
 			exports.log = function() {
@@ -92,8 +114,11 @@
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
+                var baseMod = pathString.split('.')[0];
 				var urls = getModulePathPossibilities(pathString);
 				for (var i = 0, url; url = urls[i]; ++i) {
+                    var cachePath = url[1];
+                    var url = url[0];
 					var xhr = new XMLHttpRequest()
 					var failed = false;
 					try {
@@ -113,10 +138,25 @@
 					{
 						continue;
 					}
+                    if (!(baseMod in modulePathCache)) {
+                        modulePathCache[baseMod] = cachePath;
+                    }
 					return {src: xhr.responseText, url: url};
 				}
 				throw new Error("Module not found: " + pathString);
 			}
+            try {
+                var scripts = document.getElementsByTagName('script');
+                for (var i = 0, script; script = scripts[i]; ++i) {
+                    if (script.src.match('jsio/jsio.js$')) {
+                        var segments = script.src.split('/')
+                        var jsioPath = segments.slice(0,segments.length-2).join('/');
+                        exports.path.push(jsioPath);
+                        modulePathCache.jsio = jsioPath;
+                        break;
+                    }
+                }
+            } catch(e) {}
 			break;
 	}
 	
@@ -140,13 +180,14 @@
 		var segments = pkg.split('.');
 		if(!(pkg in modules)) {
 			var result = getModuleSourceAndPath(pkg);
-			var newRelativePath = segments.slice(0, segments.length - (result.url.match('__init__.js$') ? 0 : 1)).join('.');
+			var newRelativePath = segments.slice(0, segments.length - 1).join('.');
 			var newContext = {
 				exports: {},
                 global: window
 			};
 			newContext.require = bind(this, _require, newContext, newRelativePath);
             newContext.require.__jsio = true;
+            // TODO: FIX for "trailing ." case
             newContext.require.__dir = newRelativePath.split('.').join('/');
             newContext.require.__path = result.url;
 			newContext.jsio = {require: newContext.require};
@@ -160,13 +201,17 @@
 			}
 		} else if(!what) {
 			var segments = origPkg.split('.');
+            // Remove trailing dot
+            while (segments[segments.length-1] == "") {
+                segments.pop()
+            }
 			var c = context;
 			var len = segments.length - 1;
-
 			for(var i = 0, segment; (segment = segments[i]) && i < len; ++i) {
 				if(!segment) continue;
-				if (!c[segment])
+				if (!c[segment]) {
 					c[segment] = {};
+                }
 				c = c[segment]
 			}
 			c[segments[len]] = modules[pkg];
@@ -192,7 +237,7 @@
 	var jsio = _localContext.jsio;
 	var require = bind(this, _require, _localContext, '');
 	
-	require('jsio.env');
+	require('jsio.env.');
 	exports.listen = function(server, transportName, opts) {
 		var listener = new (jsio.env.getListener(transportName))(server, opts);
 		listener.listen();
@@ -204,4 +249,9 @@
 		connector.connect();
 		return connector;
 	}
+    exports.quickServer = function(protocolClass) {
+        require('jsio.interfaces');
+        return new jsio.interfaces.Server(protocolClass);
+    }
+
 })();
