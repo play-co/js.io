@@ -8,7 +8,7 @@
     jsio.logging.getLogger('world.client').setLevel(0);
     function go(username, url) {
         client = new WorldClient(username || "mcarter", url || 'http://www.google.com/favicon.ico'); 
-        jsio.connect(client, 'csp', {url:'http://localhost:5555'})
+        jsio.connect(client, 'csp', {url:'http://localhost:5555'});
     }
   </script>
  </head>
