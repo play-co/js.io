@@ -112,7 +112,6 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 
 		this.onJoin(this.username, avatarUrl);
 		this.self = this.players[this.username];
-		this.move(Math.floor(Math.random() * 480) + 10, Math.floor(Math.random() * 480) + 10);
     }
 	
 	this.update = function() {
@@ -122,6 +121,16 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 	}
 	
     // Public api
+
+    this.onWelcome = function(presence) {
+        for(var i = 0, p; p = presence[i]; ++i) {
+            this.onJoin(p.username, p.url);
+            this.onMove(p.username, p.x, p.y);
+            this.onSay(p.username, p.msg);
+        }
+    }
+
+
     this.onMove = function(username, x, y) {
 		this.players[username].move(x, y);
 	}
@@ -161,15 +170,9 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 	this.frameReceived = function(id, name, args) {
 		logger.debug('frameReceived', id, name, args);
 		switch(name) {
-			case 'WELCOME':
-				if(args.presence) {
-					for(var i = 0, p; p = args.presence[i]; ++i) {
-						this.onJoin(p.username, p.url);
-						this.onMove(p.username, p.x, p.y);
-						this.onSay(p.username, p.msg);
-					}
-				}
-				break;
+            case 'WELCOME':
+                this.onWelcome(args.presence);
+                break;
 			case 'SAY':
 				this.onSay(args.username, args.msg);
 				break;
@@ -191,8 +194,10 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 	}
 	
 	this.connectionMade = function() {
-		this.sendFrame('LOGIN', {'username':this.username, url: this.avatarUrl});
-		this.sendFrame('MOVE', {x: this.self.x, y: this.self.y});
+        var x = Math.floor(Math.random() * 480) + 10;
+        var y = Math.floor(Math.random() * 480) + 10;
+		this.sendFrame('LOGIN', {'username':this.username, url: this.avatarUrl, x: x, y:y});
+        this.move(x,y);
 	}
 	
 	this.connectionLost = function() {

@@ -22,11 +22,11 @@ exports.WorldServer = Class(Server, function(supr) {
         }
     };
 
-    this.join = function(conn, username, url) {
+    this.join = function(conn, username, url,x ,y) {
         if (username in this.players) {
             throw new Error("player already taken");
         }
-        this.broadcast('JOIN', {username: username, url:url});
+        this.broadcast('JOIN', {username: username, url:url, x:x, y:y});
         this.players[username] = conn;
     };
 
@@ -61,12 +61,15 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
                     break;
                 }
                 try {
-                    this.server.join(this, args.username, args.url);
+                
+                    this.server.join(this, args.username, args.url, args.x, args.y);
                     this.username = args.username;
+                    this.x = args.x;
+                    this.y = args.y;
                     var presence = []
                     for (var username in this.server.players) {
                         var conn = this.server.players[username];
-                        presence.push({username:username, x:conn.x, y:conn.y, url: conn.url})
+                        presence.push({username:username, x:conn.x, y:conn.y, url: conn.url, msg: conn.msg})
                     }
                     this.sendFrame('WELCOME', {presence:presence})
                 } catch(e) {
@@ -75,6 +78,7 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
                 break;
             case 'SAY':
                 this.server.say(this, args.msg);
+                this.msg = args.msg;
                 break;
             case 'MOVE':
                 if (args.x < kBounds[0][0] || args.x > kBounds[1][0] || args.y < kBounds[0][1] || args.y > kBounds[1][1]) {
