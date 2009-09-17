@@ -81,6 +81,11 @@
 				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
 				fn.call(context.exports, context);
 			}
+
+			var windowCompile = function(context, args) {
+				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n})()}}}", args.url);
+				fn.call(context.exports, context);
+			}
 			
 			var windowCompile = function(context, args) {
 				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n})()}}}", args.url);
@@ -134,6 +139,12 @@
 			var compile = function(context, args) {
 				var code = "var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url;
 				eval(code);
+				fn.call(context.exports, context);
+			}
+
+			var windowCompile = function(context, args) {
+				var f = "var fn = function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}}\n//@ sourceURL=" + args.url;
+				eval(f);
 				fn.call(context.exports, context);
 			}
 			
@@ -225,7 +236,8 @@
 				var tmp = result.url.split('/')
 				newContext.require.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
 				newContext.require.__path = makeRelative(result.url);
-				newContext.jsio = {require: newContext.require};
+				newContext.external = bind(this, _require, true, newContext, newRelativePath);
+				newContext.jsio = {require: newContext.require, external: newContext.external};
 				compile(newContext, result);
 				modules[pkg] = newContext.exports;
 			} else {
@@ -245,7 +257,7 @@
 				modules[pkg] = newContext.window;
 			}
 		}
-		e
+
 		if(what == '*') {
 			for(var i in modules[pkg]) {
 				context[i] = modules[pkg][i];
@@ -287,7 +299,7 @@
 	// create the internal require function bound to a local context
 	var _localContext = {jsio: {}};
 	var jsio = _localContext.jsio;
-	var require = bind(this, _require, _localContext, '');
+	var require = bind(this, _require, false, _localContext, '');
 	
 	require('jsio.env.');
 	exports.listen = function(server, transportName, opts) {
