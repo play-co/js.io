@@ -301,13 +301,17 @@ transports.xhr = function(cspId, url) {
         var xhr;
         if (type == 'send') { xhr = sendXhr; }
         if (type == 'comet') { xhr = cometXhr; }
+        url += '?'
+        for (key in args) {
+            if (key != 'd')
+                url += key + '=' + args[key] + '&';
+        }
+        var payload = "";
+        if (args.d) {
+            payload = args.d;
+        }
         xhr.open('POST', self.url + url, true);
         xhr.setRequestHeader('Content-Type', 'text/plain')
-        var payload = ""
-        for (key in args) {
-            payload += key + '=' + args[key] + '&';
-        }
-        payload = payload.substring(0, payload.length-1)
         var aborted = false;
         var timer = null;
 //        console.log('setting on ready state change');
