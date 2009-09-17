@@ -40,12 +40,18 @@ exports.WorldServer = Class(Server, function(supr) {
     };
     
     this.move = function(conn, x,y) {
-        this.broadcast('MOVE', {username:conn.username, x:x, y:y});
+        this.broadcast('MOVE', {username:conn.username, x:x, y:y}, conn);
     };
 
 })
 
 var WorldConnection = Class(RTJPProtocol, function(supr) {
+
+    this.connectionMade = function() {
+        supr(this, 'connectionMade', []);
+        logger.debug('connectionMade');
+    }
+
     this.frameReceived = function(id, name, args) {
         logger.debug('frameReceived', id, name, JSON.stringify(args));
         switch(name) {  
@@ -57,7 +63,12 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
                 try {
                     this.server.join(this, args.username, args.url);
                     this.username = args.username;
-                    this.sendFrame('WELCOME', {})
+                    var presence = []
+                    for (var username in this.server.players) {
+                        var conn = this.server.players[username];
+                        presence.push({username:username, x:conn.x, y:conn.y, url: conn.url})
+                    }
+                    this.sendFrame('WELCOME', {presence:presence})
                 } catch(e) {
                     this.sendFrame('ERROR', {msg: e.toString()})
                 }

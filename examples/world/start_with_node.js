@@ -4,6 +4,8 @@ jsio.require('jsio.logging')
 //jsio.logging.getLogger('RTJPProtocol').setLevel(0);
 //jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
 jsio.logging.getLogger('world.server').setLevel(0);
+jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
+//jsio.logging.getLogger('world.server').setLevel(0);
 
 jsio.require('world.server', 'WorldServer')
 w = new WorldServer();

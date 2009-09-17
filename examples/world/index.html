@@ -4,6 +4,7 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <title>Walking Live</title>
+<script src="/static/Orbited.js"></script>
 <script type="text/javascript" src="jsio/jsio.js"></script>
 <script src="json2.js"></script>
 <script>
@@ -40,22 +41,23 @@ window.onload = function() {
 	$.style(gBoardEl, {width: gWidth + 'px', height: gHeight + 'px'});
 	
 	// TODO: hook these up to some sort of menu
-	var username;
-	var url;
-	client = new WorldClient(username || "mcarter", url || 'http://www.google.com/favicon.ico');
-	jsio.connect(client, 'csp', {url:'http://localhost:5555'})
-	
-	var sayInput = $.id('say');
-	$.onEvent(sayInput, 'keyup', function(e) {
-		if(e.keyCode == 13) {
-			client.say(sayInput.value);
-			sayInput.value = '';
-		}
-	});
-	
-	$.onEvent(gBoardEl, 'click', function(e) {
-		client.move(e.clientX - gBoardEl.offsetLeft, e.clientY - gBoardEl.offsetTop + window.pageYOffset);
-	});
+    go = function(username) {
+	    var url;
+	    client = new WorldClient(username || "mcarter", url || 'http://www.google.com/favicon.ico');
+//	    jsio.connect(client, 'csp', {url:'http://localhost:5555'})
+	    jsio.connect(client, 'tcp', {port:5556, hostname: "localhost"})
+	    var sayInput = $.id('say');
+	    $.onEvent(sayInput, 'keyup', function(e) {
+		    if(e.keyCode == 13) {
+			    client.say(sayInput.value);
+			    sayInput.value = '';
+		    }
+	    });
+	    
+	    $.onEvent(gBoardEl, 'click', function(e) {
+		    client.move(e.clientX - gBoardEl.offsetLeft, e.clientY - gBoardEl.offsetTop + window.pageYOffset);
+	    });
+    }
 }
 </script>
 
