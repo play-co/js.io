@@ -37,6 +37,8 @@ var base64 = process.require(base + '../../../base64.js');
 process.include(base + 'util.js');
 var csp = this.csp = exports;
 
+
+
 ;(function () {
 
 var sessionDict = {};
@@ -71,6 +73,7 @@ csp.Session = CreateClass({
     this.cometResponse = null;
     this.durationTimer = null;
     this.intervalTimer = null;
+    this.timeoutTimer = null;
     this.outgoingPacketId = 1;
     this.variables = { // set variables to defaults
       'contentType'   : 'text/html',
@@ -87,6 +90,7 @@ csp.Session = CreateClass({
       'gzipOk'        : '',
       'sse'           : '',
     };
+    this.resetTimeoutTimer();
   },
   // send data to the client
   send: function (data) {
@@ -99,10 +103,6 @@ csp.Session = CreateClass({
     if (this.cometResponse) {
       this.sendBatch([packet]);
     }; // else if no comet connection, just keep buffering packets
-  },
-  close: function () {
-    this.send(null);
-    this.connection.readyState = (this.connection.readyState === 'open' ? 'readOnly' : 'closed');
   },
   updateVars: function (params) {
     for (param in params) {
@@ -128,6 +128,30 @@ csp.Session = CreateClass({
   },
   isStreaming: function () {
     return (this.variables.isStreaming === '1') && (parseInt(this.variables.duration) > 0);
+  },
+    close: function (request, response) {
+      if (this.connection.readyState == "closed") {
+        return;
+      }
+      this.connection.readyState = "closed";
+      // Are people depending on eof? Should they be?
+      this.connection.emit('eof');
+      this.connection.emit('close');
+      delete sessionDict[this.key];
+      // This method may be called internally with no arguments
+      if (typeof(request) != 'undefined') {
+          this.renderResponse(response, '"OK"');
+      }
+  },
+  doTimeout: function() {
+    this.close();
+  },
+  resetTimeoutTimer: function() {
+    // Give the client 50% longer than the duration of a comet request before 
+    // we time them out.
+    var duration = 1000 * (parseInt(this.variables.duration) * 1.5);
+    myClearTimeout(this.timeoutTimer);
+    this.timeoutTimer = setTimeout(bind(this, this.doTimeout), duration);
   },
   resetDurationTimer: function () {
     var duration = 1000 * parseInt(this.variables.duration);
@@ -201,6 +225,7 @@ csp.Session = CreateClass({
     };
   },
   receiveAck: function (ackId) {
+    this.resetTimeoutTimer();
     while (this.outgoingPacketBuffer.length && ackId >= this.outgoingPacketBuffer[0][0]) {
       this.outgoingPacketBuffer.shift(); // remove first element
     };
@@ -259,12 +284,7 @@ csp.Session = CreateClass({
       }; // this can leave packets in the buffer, to handled later, in order
       this.renderResponse(response, '"OK"');
     },
-    close: function (request, response) {
-      this.connection.readyState = (this.connection.readyState === 'open' ? 'writeOnly' : 'closed');
-      this.connection.emit('eof');
-      delete sessionDict[this.key];
-      this.renderResponse(response, '"OK"');
-    },
+
     reflect: function (request, response) {
       var body = request.data;
       this.sendHeaders(response, body.length);
@@ -284,7 +304,7 @@ csp.Connection = function (session) {
   var _encoding = 'utf8';
   this._emitReceive = function (data) {
     data = (_encoding === 'utf8') ? utf8.decode(data) : bytes_to_raw(data);
-    this.emit('receive', [data]);
+    this.emit('receive', data);
   };
   var known_encodings = set('utf8', 'raw');
   this.setEncoding = function (encoding) {
@@ -292,6 +312,9 @@ csp.Connection = function (session) {
     _encoding = encoding;
   };
   this.send = function (data, encoding) {
+   if (this.readyState != 'open' && this.readyState != 'writeOnly') {
+        throw new Error("Socket is not writable in readyState: " + this.readyState);
+   }
     encoding = encoding || 'utf8';
     assert(encoding in known_encodings, 'unrecognized encoding');
     data = (encoding === 'utf8') ? utf8.encode(data) : raw_to_bytes(data);
@@ -345,7 +368,7 @@ csp.Server = function () {
     var promise = new node.Promise();
     if (request.method === 'GET') {
       reschedule(function () {
-        promise.emitSuccess([raw_to_bytes(null)]);
+        promise.emitSuccess(raw_to_bytes(null));
       });
     } else {
       var body = [];
@@ -355,7 +378,7 @@ csp.Server = function () {
           body.push.apply(body, chunk); // body += chunk
         })
         .addListener('complete', function () {
-          promise.emitSuccess([raw_to_bytes(body)]);
+          promise.emitSuccess(raw_to_bytes(body));
         });
     };
     return promise;
@@ -380,8 +403,7 @@ csp.Server = function () {
         assertOrRenderError((relpath.length == 1) && (resource in resources),
                             'Invalid resource, ' + relpath, 404);
         var params = request.uri.params;
-        // 'data' is either the POST body if it exists, or the 'd' variable
-        request.data = body || params.d || null;
+            request.data = body || params.d || null;
         if (resource === 'handshake') {
           assertOrRenderError(!params.s, 'Handshake cannot have session', 400);
           try {
@@ -394,8 +416,8 @@ csp.Server = function () {
           var session = new csp.Session();
           var connection = new csp.Connection(session);
           session.connection = connection;
-          self.emit('connection', [connection]);
-          connection.emit('connect', [])
+          self.emit('connection', connection);
+          connection.emit('connect')
         } else {
           var session = sessionDict[params.s];
           assertOrRenderError(session, 'Invalid or missing session', 400);

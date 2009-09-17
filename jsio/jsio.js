@@ -68,6 +68,11 @@
 	switch(exports.getEnvironment()) {
 		case 'node':
 			exports.log = function() {
+            for (var i = 0, item; item=arguments[i]; ++i) {
+                if (typeof(item) == 'object') {
+                    arguments[i] = JSON.stringify(arguments[i]);
+                }
+            }
 				node.stdio.writeError([].slice.call(arguments, 0).join(' ') + "\n");
 			}
 			console = {log: exports.log};
@@ -76,7 +81,15 @@
 				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
 				fn.call(context.exports, context);
 			}
-			
+            var cwd = node.cwd();
+			var makeRelative = function(path) {
+                var i = path.match('^' + cwd);
+                if (i && i[0] == cwd) {
+                    var offset = path[cwd.length] == '/' ? 1 : 0
+                    return path.slice(cwd.length + offset);
+                }
+                return path;
+            }
 			var getModuleSourceAndPath = function(pathString) {
                 var baseMod = pathString.split('.')[0];
 				var urls = getModulePathPossibilities(pathString);
@@ -117,6 +130,10 @@
 				eval(code);
 				fn.call(context.exports, context);
 			}
+
+            var makeRelative = function(path) {
+                return path;
+            }
 			
 			var getModuleSourceAndPath = function(pathString) {
                 var baseMod = pathString.split('.')[0];
@@ -194,8 +211,8 @@
             newContext.require.__jsio = true;
             // TODO: FIX for "trailing ." case
             var tmp = result.url.split('/')
-            newContext.require.__dir = tmp.slice(0,tmp.length-1).join('/');
-            newContext.require.__path = result.url;
+            newContext.require.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
+            newContext.require.__path = makeRelative(result.url);
 			newContext.jsio = {require: newContext.require};
 			compile(newContext, result);
 			modules[pkg] = newContext.exports;

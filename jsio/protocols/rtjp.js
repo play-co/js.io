@@ -20,7 +20,6 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
     
     // Inherit and overwrite
     this.frameReceived = function(id, name, args) {
-        logger.debug("frameReceived:", id, name, args);
     }
 
     // Public
@@ -33,7 +32,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
     }
 
     this.lineReceived = function(line) {
-        logger.debug("lineReceived", line);
+//        logger.debug("lineReceived", line);
         try {
             var frame = JSON.parse(line);
             if (frame.length != 3) {
@@ -48,17 +47,10 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
             if (typeof(frame[2]) != "object") {
                 return error.call(this, "Invalid frame args");
             }
+            logger.debug("frameReceived:", frame[0], frame[1], frame[2]);
             this.frameReceived(frame[0], frame[1], frame[2]);
-/*            var f = this['frame_' + frame[1]];
-            if (!f) { 
-                this.defaultFrameReceived(frame[0], frame[1], frame[2]); 
-            }
-            else {
-                f.call(this, frame[0], frame[2]);
-            }
-*/
         } catch(e) {
-            error.call(e);
+            error.call(this, e);
         }
     }
 

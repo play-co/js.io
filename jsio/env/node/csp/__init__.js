@@ -15,7 +15,8 @@ var Transport = Class(jsio.interfaces.Transport, function() {
         this._socket.addListener("receive", bind(protocol, 'dataReceived'));
 //            function(data) { logger.debug("receive; data:", data); });
 
-        this._socket.addListener("eof", bind(protocol, 'connectionLost')); // TODO: map error codes
+        this._socket.addListener("eof", this._socket.close);
+        this._socket.addListener("close", bind(protocol, 'connectionLost')); // TODO: map error codes
         // this._socket.addListener("close", bind(protocol, 'connectionLost')); // TODO: map error codes
     }
 
@@ -32,6 +33,7 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
     this.listen = function() {
         var s = createServer(bind(this, function(socket) {
             logger.info("Incoming connection");
+            logger.info('socket is', JSON.stringify(socket));
             socket.setEncoding("utf8");
             socket.addListener("connect", bind(this, function() {
                 logger.debug('connect event');
