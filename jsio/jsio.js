@@ -183,7 +183,7 @@
 	}
 	exports.basePath = exports.path[exports.path.length-1];
 	var modules = {jsio: exports};
-	var _require = function(context, path, pkg, what) {
+	var _require = function(external, context, path, pkg, what) {
 		var origPkg = pkg;
 		if(pkg.charAt(0) == '.') {
 			pkg = pkg.slice(1);
@@ -203,21 +203,37 @@
 		if(!(pkg in modules)) {
 			var result = getModuleSourceAndPath(pkg);
 			var newRelativePath = segments.slice(0, segments.length - 1).join('.');
-			var newContext = {
-				exports: {},
-                global: window
-			};
-			newContext.require = bind(this, _require, newContext, newRelativePath);
-            newContext.require.__jsio = true;
-            // TODO: FIX for "trailing ." case
-            var tmp = result.url.split('/')
-            newContext.require.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
-            newContext.require.__path = makeRelative(result.url);
-			newContext.jsio = {require: newContext.require};
-			compile(newContext, result);
-			modules[pkg] = newContext.exports;
+			var newContext = {};
+			if(!external) {
+				newContext.exports = {};
+				newContext.global = window;
+				newContext.require = bind(this, _require, false, newContext, newRelativePath);
+	            newContext.require.__jsio = true;
+	            // TODO: FIX for "trailing ." case
+	            var tmp = result.url.split('/')
+	            newContext.require.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
+	            newContext.require.__path = makeRelative(result.url);
+				newContext.jsio = {require: newContext.require};
+				compile(newContext, result);
+				modules[pkg] = newContext.exports;
+			} else {
+				newContext['window'] = {};
+				if(what instanceof Array) {
+					for(var i = 0, key; key = what[i]; ++i) {
+						newContext['window'][key] = null;
+					}
+				} else if(what instanceof Object) {
+					for(var key in what) {
+						newContext['window'][key] = null;
+					}
+				} else {
+					newContext['window'][what] = null;
+				}
+				windowCompile(newContext, result);
+				modules[pkg] = newContext.window;
+			}
 		}
-
+		e
 		if(what == '*') {
 			for(var i in modules[pkg]) {
 				context[i] = modules[pkg][i];
@@ -253,7 +269,8 @@
 	}
 	
 	// create the external require function bound to the current context
-	exports.require = bind(this, _require, window, '');
+	exports.require = bind(this, _require, false, window, '');
+	exports.external = bind(this, _require, true, window, '');
 	
 	// create the internal require function bound to a local context
 	var _localContext = {jsio: {}};

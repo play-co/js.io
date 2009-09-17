@@ -1,7 +1,6 @@
-require('.sizzle', {Sizzle: '$'});
+external('.sizzle', 'Sizzle');
 
-// Browser is a function, and also adds .find, .filter, .selector
-exports.$ = $;
+var $ = exports.$ = Sizzle;
 
 $.id = function(id, win) { return (win || window).document.getElementById(id); }
 
