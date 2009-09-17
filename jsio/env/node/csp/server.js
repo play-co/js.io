@@ -212,9 +212,13 @@ csp.Session = CreateClass({
       this.resetIntervalTimer();
     } else {
       var body = (this.variables.prebuffer + this.variables.preamble + batch);
-      this.sendHeaders(this.cometResponse, body.length)
-      this.cometResponse.sendBody(body);
-      this.cometResponse.finish();
+      // This currently throws an error, occasionally, if not in a try catch b/c
+      // sometimes this.cometResponse is undefined...
+      try {
+          this.sendHeaders(this.cometResponse, body.length)
+          this.cometResponse.sendBody(body);
+          this.cometResponse.finish();
+      } catch(e) { }
       this.cometResponse = null;
       myClearTimeout(this.durationTimer);
     };
