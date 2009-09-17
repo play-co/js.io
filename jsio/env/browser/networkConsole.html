@@ -2,6 +2,7 @@
  <head>
   <script src="../../jsio.js"></script>
   <script>
+   jsio.require('jsio.interfaces');
    ConsoleClient = jsio.Class(jsio.interfaces.Protocol, function() {
    
 	   	var parity = true;
@@ -49,8 +50,8 @@
  		function connect() {
             client = new ConsoleClient();
 			var match = window.location.search.substring(1).match('^(.*&)?protocol=([^&]*)');
-			var protocolNAme = match ? match[2] : 'postmessage';
-		    jsio.connect(client, protocol, {host: "localhost", port: 5555});
+			var protocolName = match ? match[2] : 'postmessage';
+		    jsio.connect(client, protocolName, {host: "localhost", port: 5555});
 		    connectBtn.innerHTML = 'disconnect';
 		    connectBtn.onclick = disconnect;
 		};

@@ -9,6 +9,7 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
         supr(this, 'init', arguments);
         this._clients = {};
         if (!this._opts.clientUrl) {
+            console.log(require.__dir);
             this._opts.clientUrl = require.__dir + '/networkConsole.html';
         }
     }
@@ -87,6 +88,7 @@ exports.Transport = Class(jsio.interfaces.Transport, function() {
     }
     
     this.write = function(data, encoding) {
+        console.log('write', data);
         this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
     }
     

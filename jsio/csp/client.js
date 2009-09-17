@@ -146,6 +146,7 @@ csp.CometSession = function() {
         transport = new (csp.util.chooseTransport(url, options))(self.id, url, options);
         var handshakeTimer = window.setTimeout(self.close, timeout);
         transport.onHandshake = function(data) {
+            console.log('onHandshake');
             self.readyState = csp.readyState.open;
             self.sessionKey = data.session;
             self.write = transport.send;
@@ -154,6 +155,7 @@ csp.CometSession = function() {
             clearTimeout(handshakeTimer);
             self.onopen();
         }
+        console.log('send handshake');
         transport.handshake();
     }
     self.close = function() {
@@ -233,17 +235,18 @@ var Transport = function(cspId, url) {
     var sendTimer = null;
     var cometTimer = null;
     self.handshakeCb = function(data) {
-//        console.log('handshakeCb!');
+        console.log('handshakeCb!');
         if (self.opened) {
-//            console.log('do onHandshake');
+            console.log('do onHandshake');
             self.onHandshake(data);
             backoff = 50;
         }
     }
     self.handshakeErr = function() {
+        console.log('handshake err');
         if (self.opened) {
-//            handshakeTimer = setTimeout(self.handshake, backoff);
-//            backoff *= 2;
+            handshakeTimer = setTimeout(self.handshake, backoff);
+            backoff *= 2;
         }
     }
     self.sendCb = function() {
@@ -425,14 +428,15 @@ transports.jsonp = function(cspId, url) {
     var rId = 0;
     var makeRequest = function(rType, url, args, cb, eb, timeout) {
 //        console.log('makeRequest', rType, url, args, cb, eb, timeout);
-
+        args.n = Math.random();
         window.setTimeout(function() {
             var temp = ifr[rType];
             // IE6+ uses contentWindow.document, the others use temp.contentDocument.
-            var doc = temp.contentDocument || temp.contentWindow.document || temp.document;
-            var head = doc.getElementsByTagName('head')[0];
+            doc = temp.contentDocument || temp.contentWindow.document || temp.document;
+            head = doc.getElementsByTagName('head')[0];
             var errorSuppressed = false;
             function errback(isIe) {
+                console.log('errback!');
                 if (!isIe) {
                     var scripts = doc.getElementsByTagName('script');
                     var s1 = doc.getElementsByTagName('script')[0]; 
@@ -446,12 +450,13 @@ transports.jsonp = function(cspId, url) {
                 }
             }
             function callback() {
+                console.log('in callback', arguments);
                 errorSuppressed = true;
                 if (self.opened) {
                     cb.apply(null, arguments);
                 }
                 else {
-//                    console.log('suppressing callback', rType, url, args, cb, eb, timeout);
+                    console.log('suppressing callback', rType, url, args, cb, eb, timeout);
                 }
             }
             var jsonpId = setJsonpCallbacks(callback, errback);
@@ -465,9 +470,12 @@ transports.jsonp = function(cspId, url) {
             else if (rType == "comet") {
                 url += 'bs=;&bp=' + getJsonpCallbackPath(jsonpId);
             }
-            var s = doc.createElement("script");
+            s = doc.createElement("script");
             s.src = self.url + url;
+            console.log('appending...');
             head.appendChild(s);
+            console.log(head.childNodes);
+            M = head.childNodes;
 
             if (s.onreadystatechange === null) { // IE
                 // TODO: I suspect that if IE gets half of an HTTP body when
@@ -484,9 +492,9 @@ transports.jsonp = function(cspId, url) {
                 }
             }
             else {
-                var s = doc.createElement("script");
-                s.innerHTML = getJsonpErrbackPath(jsonpId) + '(false);'
-                head.appendChild(s);
+                s2 = doc.createElement("script");
+                s2.innerHTML = getJsonpErrbackPath(jsonpId) + '(false);'
+                head.appendChild(s2);
                 killLoadingBar();
             }
         }, 0);
