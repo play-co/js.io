@@ -4,9 +4,7 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <title>Walking Live</title>
-<script src="/static/Orbited.js"></script>
 <script type="text/javascript" src="jsio/jsio.js"></script>
-<script src="json2.js"></script>
 <script>
 jsio.require('jsio', 'Class');
 jsio.require('jsio.util.browser', '$');
@@ -56,7 +54,7 @@ window.onload = function() {
 		if(!joinInput.value.length) { return; }
 
 		client = new WorldClient(joinInput.value, url || 'http://www.google.com/favicon.ico');
-	    jsio.connect(client, 'tcp', {port:5556, hostname: "localhost"});
+	    jsio.connect(client, 'csp', {url:"http://" + document.domain + ":5555"});
 
 		sayBtn.style.display = 'inline';
 		sayInput.style.display = 'inline';

@@ -1,0 +1,25 @@
+The Walking Live Demo is brought to you by
+
+Martin Hunt (mghunt@gmail.com)
+Marcus Westin (marcus.westin@gmail.com)
+Michael Carter (CarterMichael@gmail.com)
+
+
+To Run:
+
+1) install node.js
+    http://tinyclouds.org/node/
+
+2) Make sure that the jsio symbol link in this directory is correct (that is, it points at the jsio library)
+
+3) run node start_with_node.js
+
+4) serve the index.html file somehow
+    Keep in mind that firefox (and others?) will not work with XHR + symbolic links, so you 
+    actually have to serve index.html from some webserver. You can, of course, replace the 
+    jsio symbolic link with an actual copy of the jsio library and you can skip even having
+    a webserver.
+
+5) navigate to index.html
+
+Enjoy!

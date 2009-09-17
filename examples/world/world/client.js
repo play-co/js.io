@@ -3,6 +3,7 @@ require('jsio.protocols.rtjp', ['RTJPProtocol'])
 require('jsio.logging')
 
 var logger = jsio.logging.getLogger('world.client')
+logger.setLevel(0)
 
 var Player = Class(function() {
 	this.init = function(username, x, y) {
@@ -97,7 +98,9 @@ var Player = Class(function() {
 	this.destroy = function() {
 		// TODO: fade out
 		if(this.el.parentNode) {
-			this.el.parentNode.removeElement(this.el);
+			this.el.parentNode.removeChild(this.el);
+            this.name.parentNode.removeChild(this.name);
+            this.text.parentNode.removeChild(this.text);
 		}
 	}
 });
@@ -124,16 +127,12 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
     // Public api
 
     this.onWelcome = function(presence) {
-	try {
         for(var i = 0, p; p = presence[i]; ++i) {
             this.onJoin(p.username, p.url);
             this.onMove(p.username, p.x, p.y);
             this.onSay(p.username, p.msg);
         }
-	} catch(e) { }
-	this.timer = setInterval(bind(this, this.beat), 10000);
     }
-
 
     this.onMove = function(username, x, y) {
 		this.players[username].move(x, y);
@@ -150,6 +149,7 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 	}
 	
 	this.onLeave = function(username) {
+
 		this.players[username].destroy();
 		delete this.players[username];
 	}
@@ -170,9 +170,6 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 		} catch(e) {}
 	}
 	
-        this.beat = function() {
-	    this.sendFrame('BEAT', {});
-        }
 
 	// Callbacks
 	this.frameReceived = function(id, name, args) {
@@ -210,6 +207,5 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 	
 	this.connectionLost = function() {
 		logger.debug('disconnected!');
-		clearInterval(this.timer);
 	}
 });

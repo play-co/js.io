@@ -99,11 +99,12 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 		this.y = args.y;
                 break;
             default:
-            this.sendFrame(name, args);
+                break;
         }
     }
 
     this.connectionLost = function() {
+        logger.info('connectionLost!', this.username);
         if (this.username) {
             this.server.leave(this);
         }
