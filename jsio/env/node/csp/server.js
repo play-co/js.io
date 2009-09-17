@@ -167,11 +167,14 @@ csp.Session = CreateClass({
     this.intervalTimer = setTimeout(bind(this, this.sendBatch), interval);
   },
   sendHeaders: function (response, contentLength) {
+
     if (contentLength === 'stream') {
       response.sendHeader(200, [
         ['Content-Type', this.variables.contentType],
         ['Cache-Control', 'no-cache, must-revalidate'],
         ['Transfer-Encoding', 'chunked'],
+        // XXX: Make Access-Control configurable
+        ['Access-Control-Allow-Origin', '*'],
       ]);
     }
     else if (contentLength >= 0) {
@@ -179,6 +182,8 @@ csp.Session = CreateClass({
         ['Content-Type', this.variables.contentType],
         ['Cache-Control', 'no-cache, must-revalidate'],
         ['Content-Length', contentLength],
+        // XXX: Make Access-Control configurable
+        ['Access-Control-Allow-Origin', '*'],
       ]);
     }
     else {
