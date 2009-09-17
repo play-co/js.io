@@ -14,19 +14,11 @@ exports.WorldServer = Class(Server, function(supr) {
         this.players = {}
     };
 
-    this.broadcast = function(fName, fArgs, omit) {
-        var leavers = [];
+    this.broadcast = function(fName, fArgs, sender) {
         for (name in this.players) {
             var conn = this.players[name];
-            if (conn === omit) { continue }
-	    try {
-		conn.sendFrame(fName, fArgs);
-	    } catch(e) {
-		leavers.push(conn);
-	    }
-	    for (var i = 0, leaver; leaver=leavers[i]; ++i) {
-		this.leave(leaver);
-	    }
+            if (conn === sender) { continue }
+            conn.sendFrame(fName, fArgs);
         }
     };
 
