@@ -34,6 +34,7 @@ var Player = Class(function() {
 	}
 	
 	this.say = function(text) {
+	    if(!text) { text = ''; }
 		if(text.length > 140) {
 			text = text.substring(0, 140) + '...';
 		}
@@ -123,11 +124,14 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
     // Public api
 
     this.onWelcome = function(presence) {
+	try {
         for(var i = 0, p; p = presence[i]; ++i) {
             this.onJoin(p.username, p.url);
             this.onMove(p.username, p.x, p.y);
             this.onSay(p.username, p.msg);
         }
+	} catch(e) { }
+	this.timer = setInterval(bind(this, this.beat), 10000);
     }
 
 
@@ -166,6 +170,10 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 		} catch(e) {}
 	}
 	
+        this.beat = function() {
+	    this.sendFrame('BEAT', {});
+        }
+
 	// Callbacks
 	this.frameReceived = function(id, name, args) {
 		logger.debug('frameReceived', id, name, args);
@@ -202,5 +210,6 @@ exports.WorldClient = Class(RTJPProtocol, function(supr) {
 	
 	this.connectionLost = function() {
 		logger.debug('disconnected!');
+		clearInterval(this.timer);
 	}
 });

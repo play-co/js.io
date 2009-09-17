@@ -5,7 +5,7 @@ require('jsio.logging')
 
 var logger = jsio.logging.getLogger('world.server')
 
-var kBounds = [[0,0], [500,500]];
+var kBounds = [[0,0], [640,480]];
 
 
 exports.WorldServer = Class(Server, function(supr) {
@@ -15,10 +15,18 @@ exports.WorldServer = Class(Server, function(supr) {
     };
 
     this.broadcast = function(fName, fArgs, omit) {
+        var leavers = [];
         for (name in this.players) {
             var conn = this.players[name];
             if (conn === omit) { continue }
-            conn.sendFrame(fName, fArgs);
+	    try {
+		conn.sendFrame(fName, fArgs);
+	    } catch(e) {
+		leavers.push(conn);
+	    }
+	    for (var i = 0, leaver; leaver=leavers[i]; ++i) {
+		this.leave(leaver);
+	    }
         }
     };
 
@@ -71,10 +79,11 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
                         var conn = this.server.players[username];
                         presence.push({username:username, x:conn.x, y:conn.y, url: conn.url, msg: conn.msg})
                     }
-                    this.sendFrame('WELCOME', {presence:presence})
+		    this.sendFrame('WELCOME', {presence:presence})
                 } catch(e) {
                     this.sendFrame('ERROR', {msg: e.toString()})
                 }
+
                 break;
             case 'SAY':
                 this.server.say(this, args.msg);
@@ -86,6 +95,8 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
                     break;
                 }
                 this.server.move(this, args.x, args.y);
+		this.x = args.x;
+		this.y = args.y;
                 break;
             default:
             this.sendFrame(name, args);
