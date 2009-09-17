@@ -40,34 +40,72 @@ window.onload = function() {
 	gBoardEl = $.id('board');
 	$.style(gBoardEl, {width: gWidth + 'px', height: gHeight + 'px'});
 	
-	// TODO: hook these up to some sort of menu
-    go = function(username) {
-	    var url;
-	    client = new WorldClient(username || "mcarter", url || 'http://www.google.com/favicon.ico');
-//	    jsio.connect(client, 'csp', {url:'http://localhost:5555'})
-	    jsio.connect(client, 'tcp', {port:5556, hostname: "localhost"})
-	    var sayInput = $.id('say');
-	    $.onEvent(sayInput, 'keyup', function(e) {
-		    if(e.keyCode == 13) {
-			    client.say(sayInput.value);
-			    sayInput.value = '';
-		    }
-	    });
-	    
-	    $.onEvent(gBoardEl, 'click', function(e) {
-		    client.move(e.clientX - gBoardEl.offsetLeft, e.clientY - gBoardEl.offsetTop + window.pageYOffset);
-	    });
-    }
+	var url;
+	
+	var joinInput = $.id('join');
+	var sayInput = $.id('say');
+	var wrapper = $.id('wrapper');	
+	var joinBtn = $.id('joinBtn');
+	var sayBtn = $.id('sayBtn');
+	
+	$.hide(sayBtn); $.hide(sayInput);
+	$.onEvent(joinInput, 'keyup', function(e) { if(e.keyCode == 13) { join(); }});
+	$.onEvent(joinBtn, 'click', join);
+	
+	function join() {
+		if(!joinInput.value.length) { return; }
+
+		client = new WorldClient(joinInput.value, url || 'http://www.google.com/favicon.ico');
+	    jsio.connect(client, 'tcp', {port:5556, hostname: "localhost"});
+
+		sayBtn.style.display = 'inline';
+		sayInput.style.display = 'inline';
+		$.hide(joinBtn);
+		$.hide(joinInput);
+
+		sayInput.value = '';
+		sayInput.focus();
+		var say = function() {
+			client.say(sayInput.value);
+			sayInput.value = '';
+			sayInput.focus();
+		}
+		$.onEvent(sayInput, 'keyup', function(e) { if(e.keyCode == 13) { say(); }});
+		$.onEvent(sayBtn, 'click', say);
+
+		$.onEvent(document.body, 'mousedown', $.stopEvent);
+		$.onEvent(gBoardEl, 'mousedown', function(e) {
+			$.stopEvent(e);
+			sayInput.focus();
+			client.move(e.clientX - wrapper.offsetLeft - 22, e.clientY - wrapper.offsetTop + window.pageYOffset - 22);
+		});
+	}
 }
 </script>
 
 
 <style type="text/css" media="screen">
-body, html { margin: 0px; padding: 0px; }
-#board {
-	margin: 50px auto;
+body, html { margin: 0px; padding: 0px; background: color: #FFF;
+background: #222; }
+
+#wrapper {
+	margin: 50px auto 0px auto;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	width: 500px;
+	height: 530px;
 	position: relative;
-	border: 3px solid black;
+	background: #888;
+	padding: 10px;
+}
+
+#board {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	background: #CCC;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
 }
 
 #board .name {
@@ -96,15 +134,27 @@ body, html { margin: 0px; padding: 0px; }
 	background: url('player-sprite.png');
 }
 
-#say {
+#console {
+	position: absolute;
+	bottom: 0px;
+	width: 500px;
+	text-align: center;
+}
+#say, #join {
 	width: 200px;
 	margin: 10px auto;
-	
 }
 </style>
 	</head>
 	<body>
-		<div id="board"></div>
-		<input type="text" id="say">
+		<div id="wrapper">
+			<div id="board"></div>
+			<div id="console">
+				<input type="text" id="join">
+				<button id="joinBtn">join</button>
+				<input type="text" id="say">
+				<button id="sayBtn">say</button>
+			</div>
+		</div>
 	</body>
 </html>
