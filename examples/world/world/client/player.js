@@ -7,8 +7,7 @@ exports.WorldPlayer = Class(PubSub, function() {
 		if(!params) { params = {}; }
 		this.historyEl = params.history;
 		this.username = params.username || '';
-		this.x = params.x || 0;
-		this.y = params.y || 0;
+		this.x = this.y = null;
 		this._x = this._y = null;
 		this.dir = 'down';
 		
@@ -35,7 +34,6 @@ exports.WorldPlayer = Class(PubSub, function() {
 	
 	this.say = function(text, ts) {
 		if(!text) { text = ''; }
-		this.publish('say', text, ts);
 
 		if(text.length > 140) {
 			text = text.substring(0, 140) + '\u2026';

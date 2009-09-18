@@ -66,6 +66,7 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
 
 	this.say = function(msg) {
 		this.self.say(msg);
+		this.publish('say', {username: this.username, msg: msg, ts: +new Date()})
 		try {
 			this.sendFrame('SAY', {msg: msg});
 		} catch(e) {}
@@ -82,6 +83,7 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
                 break;
 			case 'SAY':
 				this.onSay(args.username, args.msg, args.ts);
+				this.publish('say', args);
 				break;
 			case 'MOVE':
 				this.onMove(args.username, args.x, args.y);
