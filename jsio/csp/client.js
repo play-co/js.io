@@ -434,7 +434,7 @@ transports.jsonp = function(cspId, url) {
             var temp = ifr[rType];
             // IE6+ uses contentWindow.document, the others use temp.contentDocument.
             var doc = temp.contentDocument || temp.contentWindow.document || temp.document;
-            var head = doc.getElementsByTagName('head')[0];
+            var head = doc.getElementsByTagName('head')[0] || doc.getElementsByTagName('body')[0];
             var errorSuppressed = false;
             function errback(isIe) {
                 if (!isIe) {
