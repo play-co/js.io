@@ -2,19 +2,15 @@ external('.sizzle', 'Sizzle');
 
 var $ = exports.$ = Sizzle;
 
-$.id = function(id, win) { return (win || window).document.getElementById(id); }
+$.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
 
 $.create = function(params) {
 	var doc = (params.win || window).document;
 	if(!params) { params = 'div'; }
-	if(typeof params == 'string') {
-		return doc.createElement(params);
-	}
+	if(typeof params == 'string') { return doc.createElement(params); }
 	
 	var el = doc.createElement(params.tag || 'div');
-	if(params.style) {
-		$.style(el, params.style);
-	}
+	if(params.style) { $.style(el, params.style); }
 	if(params.attrs) {
 		for(attr in params.attrs) {
 			el.setAttribute(attr, params.attrs[attr]);
@@ -23,20 +19,14 @@ $.create = function(params) {
 	if(params['class'] || params['className']) {
 		el.className = params['class'] || params['className'];
 	}
-	if(params.parent) {
-		params.parent.appendChild(el);
-	}
-	if(params.html) {
-		el.innerHTML = params.html;
-	}
-	if(params.text) {
-		$.setText(el, params.text);
-	}
+	if(params.parent) { params.parent.appendChild(el); }
+	if(params.html) { el.innerHTML = params.html; }
+	if(params.text) { $.setText(el, params.text); }
 	return el;
 }
 
-$.show = function(el) { el.style.display = 'block'; }
-$.hide = function(el) { el.style.display = 'none'; }
+$.show = function(el, how) { $.id(el).style.display = how || 'block'; }
+$.hide = function(el) { $.id(el).style.display = 'none'; }
 
 // accepts an array or a space-delimited string of classNames
 $.addClass = function(el, classNames) {
@@ -56,6 +46,12 @@ $.addClass = function(el, classNames) {
 }
 
 $.style = function(el, style) {
+	if(el instanceof Array) {
+		for(var i = 0, o; o = el[i]; ++i) { $.style(o, style); }
+		return;
+	}
+	
+	el = $.id(el);
 	for(prop in style) {
 		switch(prop) {
 			case 'float':
@@ -72,6 +68,7 @@ $.style = function(el, style) {
 };
 
 $.onEvent = function(el, name, f) {
+	el = $.id(el);
 	if(el.addEventListener) { 
 		el.addEventListener(name, f, false);
 	} else {
@@ -90,6 +87,7 @@ $.stopEvent = function(e) {
 }
 
 $.setText = function(el, text) {
+	el = $.id(el);
 	text = String(text);
     if ('textContent' in el) {
 		el.textContent = text;
@@ -99,4 +97,11 @@ $.setText = function(el, text) {
         el.innerHTML = '';
         el.appendChild(document.createTextNode(text));
     }
+}
+
+$.remove = function(el) {
+	el = $.id(el);
+	if(el && el.parentNode) {
+		el.parentNode.removeChild(el);
+	}
 }
