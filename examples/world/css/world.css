@@ -1,0 +1,73 @@
+body, html { margin: 0px; padding: 0px; background: color: #FFF;
+background: #222; }
+
+#wrapper {
+	margin: 50px auto 0px auto;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	position: relative;
+	background: #888;
+	padding: 10px;
+}
+
+#background, #board, #history {
+	position: absolute;
+	top: 10px;
+	left: 10px;	
+}
+
+#background {
+	background: #CCC;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+}
+
+#history {
+	overflow: auto;
+	z-index: 1;
+	padding: 10px;
+	font: 11px Tahoma;
+	opacity: 0.1;
+}
+
+#board {
+	z-index: 2;
+}
+
+#board .name {
+	position: absolute;
+	font: 8px Tahoma;
+	z-index: 5;
+	width: 25px;
+	text-align: center;
+}
+
+#board .msg {
+	position: absolute;
+	font: 8px Tahoma;
+	z-index: 1;
+	opacity: 0.5;
+	background: #000;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	padding: 3px;
+	color: #FFF;
+	max-width: 135px;
+}
+
+#board .player {
+	position: absolute;
+	background: url('../images/player-sprite.png');
+}
+
+#console {
+	position: absolute;
+	bottom: 10px;
+	width: 640px;
+	text-align: center;
+}
+
+#say, #join {
+	width: 200px;
+	margin: 10px auto;
+}
