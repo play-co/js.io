@@ -6,153 +6,139 @@
 <title>Walking Live</title>
 <script type="text/javascript" src="jsio/jsio.js"></script>
 <script>
-jsio.require('jsio', 'Class');
+jsio.require('jsio', ['Class', 'bind']);
 jsio.require('jsio.util.browser', '$');
-jsio.require('world.client', 'WorldClient');
+jsio.require('world.client.', ['WorldPlayer', 'WorldClient']);
 jsio.require('jsio.logging');
+jsio.require('world.constants', '*');
 jsio.logging.getLogger('world.client').setLevel(0);
 
-/* Config
- *********/
+function addToHistory(params) {
+	if(!params || !params.msg) { return; }
 
-var gWidth = 640;
-var gHeight = 480;
-var gPlayers = [];
-var gMaxDelta = 3;
-var gPlayerDim = 25;
+	var history = $.id('history');
+	var date = new Date(params.ts);postfix
+	var h = date.getHours(), m = date.getMinutes();
+	var postfix = h >= 12 ? 'pm' : 'am';
+	if(m < 10) { m = '0' + m; }
+	if(h > 12) { h -= 12; }
 
-var gKeys = {};
-var gSprite = {
-	up: [165, -5],
-	down: [223, -5],
-	left: [104, -5],
-	right: [283, -38]
-};
+	history.insertBefore($.create({
+		text: h + ':' + m + postfix + ' - ' 
+			+ params.username + ': ' + params.msg
+	}), history.firstChild);
+}
 
-var gBoardEl = null;
+var historyToggled = true;
+function toggleHistory() {
+	historyToggled = !historyToggled;
+	$.style('history', {opacity: historyToggled ? 1 : 0.1, zIndex: historyToggled ? 5 : 1});
+	$.style('board', {opacity: historyToggled ? 0.1 : 1});
+	$.id('toggleHistoryBtn').innerHTML = historyToggled ? 'walk' : 'history';
+}
 
-/* Main loop
- ************/
-
-window.onload = function() {
-	gBoardEl = $.id('board');
-	$.style(gBoardEl, {width: gWidth + 'px', height: gHeight + 'px'});
+function onConnect(presence, history) {
+	// hide the history
+	toggleHistory();
 	
-	var url;
+	// restore the history from server data
+	for(var i = 0, line; line = history[i]; ++i) {
+		addToHistory(line);
+	}
 	
-	var joinInput = $.id('join');
-	var sayInput = $.id('say');
-	var wrapper = $.id('wrapper');	
-	var joinBtn = $.id('joinBtn');
-	var sayBtn = $.id('sayBtn');
+	// show the game UI
+	$.hide('joinBtn'); $.hide('joinInput');
+	$.show('sayBtn', 'inline'); $.show('sayInput', 'inline');
+	$.show('toggleHistoryBtn', 'inline');
+	var sayInput = $.id('sayInput');
+	sayInput.value = '';
+	sayInput.focus();
 	
-	$.hide(sayBtn); $.hide(sayInput);
-	$.onEvent(joinInput, 'keyup', function(e) { if(e.keyCode == 13) { join(); }});
-	$.onEvent(joinBtn, 'click', join);
+	// connect some events
+	$.onEvent('toggleHistoryBtn', 'click', toggleHistory);
 	
-	function join() {
-		if(!joinInput.value.length) { return; }
-
-		client = new WorldClient(joinInput.value, url || 'http://www.google.com/favicon.ico');
-	    jsio.connect(client, 'csp', {url:"http://" + document.domain + ":5555"});
-
-		sayBtn.style.display = 'inline';
-		sayInput.style.display = 'inline';
-		$.hide(joinBtn);
-		$.hide(joinInput);
-
+	var say = function() {
+		client.say(sayInput.value);
 		sayInput.value = '';
 		sayInput.focus();
-		var say = function() {
-			client.say(sayInput.value);
-			sayInput.value = '';
-			sayInput.focus();
-		}
-		$.onEvent(sayInput, 'keyup', function(e) { if(e.keyCode == 13) { say(); }});
-		$.onEvent(sayBtn, 'click', say);
+	}
+	$.onEvent(sayInput, 'keyup', function(e) { if(e.keyCode == 13) { say(); }});
+	$.onEvent('sayBtn', 'click', say);
 
-		$.onEvent(document.body, 'mousedown', $.stopEvent);
-		$.onEvent(gBoardEl, 'mousedown', function(e) {
-			$.stopEvent(e);
-			sayInput.focus();
-			client.move(e.clientX - wrapper.offsetLeft - 22, e.clientY - wrapper.offsetTop + window.pageYOffset - 22);
-		});
+	$.onEvent(document.body, 'mousedown', $.stopEvent);
+	
+	$.onEvent('board', 'mousedown', function(e) {
+		var wrapper = $.id('wrapper');
+		$.stopEvent(e);
+		sayInput.focus();
+		client.move(e.clientX - wrapper.offsetLeft - 22, e.clientY - wrapper.offsetTop + window.pageYOffset - 22);
+	});
+}
+
+window.onload = function() {
+	$.style('wrapper', {
+		width: kGameWidth + 'px',
+		height: kGameHeight + 30 + 'px'
+	});
+	
+	$.style('history', {
+		width: kGameWidth - 20 + 'px',
+		height: kGameHeight - 20 + 'px'
+	});
+	
+	$.style(['board', 'background'], {
+		width: kGameWidth + 'px',
+		height: kGameHeight + 'px'
+	});
+
+	var url;
+	
+	$.hide('sayBtn'); $.hide('sayInput'); $.hide('toggleHistoryBtn');
+	$.onEvent('joinInput', 'keyup', function(e) { if(e.keyCode == 13) { join(); }});
+	$.onEvent('joinBtn', 'click', join);
+
+	var joinInput = $.id('joinInput');
+	var sayInput = $.id('sayInput');
+	function join() {
+		if(!joinInput.value.length) { return; }		
+		var uiPlayerFactory = function(username) {
+			var player = new WorldPlayer({
+				parent: $.id('board'),
+				history: $.id('history'),
+				username: username
+			});
+			
+			player.subscribe('say', this, function(msg, ts) {
+				window.addToHistory({
+					username: username,
+					msg: msg,
+					ts: ts || +new Date()
+				});
+			});
+			
+			return player;
+		}
+
+		window.client = new WorldClient(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
+		client.subscribe('welcome', window, 'onConnect');
+		jsio.connect(client, 'csp', {url:"http://" + document.domain + ":5555"});
 	}
 }
 </script>
-
-
-<style type="text/css" media="screen">
-body, html { margin: 0px; padding: 0px; background: color: #FFF;
-background: #222; }
-
-#wrapper {
-	margin: 50px auto 0px auto;
-	-moz-border-radius: 6px;
-	-webkit-border-radius: 6px;
-	width: 640px;
-	height: 510px;
-	position: relative;
-	background: #888;
-	padding: 10px;
-}
-
-#board {
-	position: absolute;
-	top: 10px;
-	left: 10px;
-	background: #CCC;
-	-moz-border-radius: 6px;
-	-webkit-border-radius: 6px;
-}
-
-#board .name {
-	position: absolute;
-	font: 8px Tahoma;
-	z-index: 2;
-	width: 25px;
-	text-align: center;
-}
-
-#board .msg {
-	position: absolute;
-	font: 8px Tahoma;
-	z-index: 1;
-	opacity: 0.5;
-	background: #000;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	padding: 3px;
-	color: #FFF;
-	max-width: 135px;
-}
-
-#board .player {
-	position: absolute;
-	background: url('player-sprite.png');
-}
-
-#console {
-	position: absolute;
-	bottom: 0px;
-	width: 640px;
-	text-align: center;
-}
-#say, #join {
-	width: 200px;
-	margin: 10px auto;
-}
-</style>
-	</head>
-	<body>
-		<div id="wrapper">
-			<div id="board"></div>
-			<div id="console">
-				<input type="text" id="join">
-				<button id="joinBtn">join</button>
-				<input type="text" id="say">
-				<button id="sayBtn">say</button>
-			</div>
+<link type="text/css" rel="stylesheet" href="css/world.css" />
+</head>
+<body>
+	<div id="wrapper">
+		<div id="background"></div>
+		<div id="history"></div>
+		<div id="board"></div>
+		<div id="console">
+			<input type="text" id="joinInput">
+			<button id="joinBtn">join</button>
+			<input type="text" id="sayInput">
+			<button id="sayBtn">say</button>
+			<button id="toggleHistoryBtn">history</button>
 		</div>
-	</body>
+	</div>
+</body>
 </html>
