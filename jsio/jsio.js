@@ -24,14 +24,20 @@
 	exports.Class = function(parent, proto) {
 		if(!parent) { throw new Error('parent or prototype not provided'); }
 		if(!proto) { proto = parent; }
-		else { proto.prototype = parent.prototype; }
-		
-		for(var f in proto) {
-			if(typeof proto[f] == 'function') {
-				proto[f].name = f;
+		else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
+			proto.prototype = {};
+			for(var i = 0, p; p = parent[i]; ++i) {
+				for(var item in p.prototype) {
+					if(!(item in proto.prototype)) {
+						proto.prototype[item] = p.prototype[item];
+					}
+				}
 			}
+			parent = parent[0]; 
+		} else { 
+			proto.prototype = parent.prototype;
 		}
-
+		
 		var cls = function() { if(this.init) { this.init.apply(this, arguments); }}
 		cls.prototype = new proto(function(context, method, args) {
 			var args = args || [];
@@ -43,7 +49,7 @@
 			}
 			throw new Error('method ' + method + ' does not exist');
 		});
-		cls.constructor = cls;
+		cls.prototype.constructor = cls;
 		return cls;
 	}
 	var modulePathCache = {}
