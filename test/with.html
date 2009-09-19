@@ -1,0 +1,74 @@
+<html>
+ <head>
+  <script>
+function log() {
+    d= document.createElement('div')
+    d.innerHTML = [].join.call(arguments, " ");
+    document.body.appendChild(d);
+}
+
+
+function time(f, i) {
+    var start = new Date()
+    for (var j = 0; j < i; ++j) {
+        f();
+    }
+    log(f.name, new Date() - start);
+}
+
+
+function simpleWith() {
+   with({x: 3}) {
+   var y = x;
+   }
+}
+
+function simple() {
+    var y = 3;
+}
+
+var enclosedSimple = (function() {
+    return function enclosedSimple() {
+        var y = 3;
+    }
+})()
+
+function unusedWith() {
+   with({x: 3}) {
+      var y = 3;
+   }
+}
+
+function noopWith() {
+   with({}) {
+   }
+}
+
+function noop() {
+
+}
+
+var enclosedNoop = (function() {
+    return function enclosedNoop() {
+
+    }
+})()
+
+
+
+onload = function() {
+  time(simple, 10000);
+  time(simpleWith, 10000);
+  time(enclosedSimple, 10000);
+  time(unusedWith, 10000);
+  time(noop, 10000);
+  time(noopWith, 10000);
+  time(enclosedNoop, 10000);
+}
+
+</script>
+</head>
+<body>
+ <h1>Time with execution</h1>
+</body>
+</html>
