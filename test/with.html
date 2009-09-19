@@ -9,11 +9,15 @@ function log() {
 
 
 function time(f, i) {
-    var start = new Date()
-    for (var j = 0; j < i; ++j) {
-        f();
-    }
-    log(f.name, new Date() - start);
+    window.setTimeout(function() {
+      var start = new Date()
+      for (var j = 0; j < i; ++j) {
+          f();
+      }
+      var end = new Date()
+      var total = end - start;
+      log(f.name, '(' + i + ' iterations),', total);
+    }, 0);
 }
 
 
@@ -114,6 +118,18 @@ onload = function() {
   time(noopWith, 10000);
   time(enclosedNoop, 10000);
   time(withEnclosedNoop, 10000);
+  time(simpleWithInnerLooped, 10);
+  time(simpleWithInnerLooped, 100);
+  time(simpleWithInnerLooped, 1000);
+  time(simpleWithInnerLooped, 10000);
+  time(simpleWithInnerLooped, 100000);
+  time(simpleWithInnerLooped, 200000);
+  time(simpleWithInnerLooped, 400000);
+  time(simpleWithOuterLooped, 10);
+  time(simpleWithOuterLooped, 100);
+  time(simpleWithOuterLooped, 1000);
+  time(simpleWithOuterLooped, 10000);
+  time(simpleWithOuterLooped, 100000);
 }
 
 </script>
