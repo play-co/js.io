@@ -2,16 +2,17 @@
 require('jsio', ['Class'])
 
 exports.Protocol = Class(function() {
-    this.connectionMade = function() {
-        throw new Error("Not implemented");
+    this.connectionMade = function(isReconnect) {
     }
 
     this.dataReceived = function(data) {
-        throw new Error("Not implemented");
     }
 
     this.connectionLost = function(reason) {
-        throw new Error("Not implemented");
+    }
+    
+    this.connectionFailed = function() {
+
     }
 
 });
