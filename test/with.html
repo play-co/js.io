@@ -67,21 +67,53 @@ with({x: 3}) {
   (function() {
     simpleWithEnclosed = function simpleWithEnclosed() {
         var y = x;
+        var i;
     }
   })();
 }
 
+function simpleWithInnerLooped() {
+   with({x: 3}) {
+     for (var i = 0; i < 10; ++i) {
+        var y = x;
+     }
+   }
+}
+
+function simpleWithOuterLooped() {
+   for (var i = 0; i < 10; ++i) {
+     with({x: 3}) {
+        var y = x;
+     }
+   }
+}
+
+var simpleWithEnclosedInnerLooped;
+with({x: 3}) {
+  (function() {
+    simpleWithEnclosedInnerLooped = function simpleWithEnclosedInnerLooped() {
+      for (var i = 0; i < 10; ++i) {
+        var y = x;
+      }
+  }
+  })();
+};
+
+
 
 onload = function() {
-  time(simple, 100000);
-  time(simpleWith, 100000);
-  time(enclosedSimple, 100000);
-  time(simpleWithEnclosed, 100000);
-  time(unusedWith, 100000);
-  time(noop, 100000);
-  time(noopWith, 100000);
-  time(enclosedNoop, 100000);
-  time(withEnclosedNoop, 100000);
+  time(simple, 10000);
+  time(simpleWith, 10000);
+  time(enclosedSimple, 10000);
+  time(simpleWithEnclosed, 10000);
+  time(simpleWithEnclosedInnerLooped, 10000);
+  time(simpleWithInnerLooped, 100000);
+  time(simpleWithOuterLooped, 100000);
+  time(unusedWith, 10000);
+  time(noop, 10000);
+  time(noopWith, 10000);
+  time(enclosedNoop, 10000);
+  time(withEnclosedNoop, 10000);
 }
 
 </script>
