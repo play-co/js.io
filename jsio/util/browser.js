@@ -30,6 +30,7 @@ $.hide = function(el) { $.id(el).style.display = 'none'; }
 
 // accepts an array or a space-delimited string of classNames
 $.addClass = function(el, classNames) {
+	var el = $.id(el);
 	if(typeof classNames == "string") {
 		classNames = classNames.split(' ');
 	}
@@ -43,6 +44,15 @@ $.addClass = function(el, classNames) {
 	
 	el.className = current;
 	return $;
+}
+
+$.removeClass = function(el, classNames) {
+	var el = $.id(el);
+	el.className = (' ' + el.className + ' ')
+		.replace(' ', '  ')
+		.replace(new RegExp('( ' + classNames.replace(' ', ' | ') + ' )', 'g'), '')
+		.replace('\s', ' ')
+		.replace(/^\s+|\s+%/, '');
 }
 
 $.style = function(el, style) {
