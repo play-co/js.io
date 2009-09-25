@@ -100,15 +100,15 @@ csp.CometSession = function() {
     var buffer = "";
     self.write = function() { throw new Error("invalid readyState"); }
     self.onopen = function() {
-        console.log('onopen', self.sessionKey);
+	//               console.log('onopen', self.sessionKey);
     }
 
     self.onclose = function(code) {
-        console.log('onclose', code);
+	//        console.log('onclose', code);
     }
 
     self.onread = function(data) {
-        console.log('onread', data);
+	//        console.log('onread', data);
     }
 
     self.setEncoding = function(encoding) {
@@ -233,15 +233,15 @@ var Transport = function(cspId, url) {
     var sendTimer = null;
     var cometTimer = null;
     self.handshakeCb = function(data) {
-        console.log('handshakeCb!');
+	//        console.log('handshakeCb!');
         if (self.opened) {
-            console.log('do onHandshake');
+	    //            console.log('do onHandshake');
             self.onHandshake(data);
             backoff = 50;
         }
     }
     self.handshakeErr = function() {
-        console.log('handshake err');
+	//        console.log('handshake err');
         if (self.opened) {
             handshakeTimer = setTimeout(self.handshake, backoff);
             backoff *= 2;
@@ -341,7 +341,7 @@ transports.xhr = function(cspId, url) {
 	                } catch(e) {
 						// use a timeout to get proper tracebacks
 						setTimeout(function() {
-							console.log(e);
+							//		console.log(e);
 							throw e;
 						}, 0);
 	                }
