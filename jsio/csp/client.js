@@ -330,17 +330,24 @@ transports.xhr = function(cspId, url) {
                         clearTimeout(timer);
                         // XXX: maybe the spec shouldn't wrap ALL responses in ( ).
                         //      -mcarter 8/11/09
-                        var data = xhr.responseText.substring(1, xhr.responseText.length-1)
-//                        console.log('data', xhr.responseText);
-                        cb(JSON.parse(data));
-//                        cb(eval(xhr.responseText));
-                        return;
-                    }
-///                    console.log('status', xhr.status);
-                } catch(e) { 
-                    //console.log('exception', e);
-                }
-//                console.log('ready state 4, no exception, status != 200')
+                        var data = JSON.parse(xhr.responseText.substring(1, xhr.responseText.length-1));
+					}
+				} catch(e) {}
+				
+				if(data) {
+			        try {
+	                    // try-catch the callback since we parsed the response
+	                    cb(data);
+	                } catch(e) {
+						// use a timeout to get proper tracebacks
+						setTimeout(function() {
+							console.log(e);
+							throw e;
+						}, 0);
+	                }
+					return;
+				}
+
                 try {
 //                    console.log('xhr.responseText', xhr.responseText);
                 } catch(e) { 
