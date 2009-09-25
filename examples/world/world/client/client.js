@@ -11,42 +11,49 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
         supr(this, 'init');
 		this.playerFactory = playerFactory;
         this.username = username;
+        
         this.avatarUrl = avatarUrl;
 		this.players = {};
 
-		setInterval(bind(this, 'update'), 25);
-
-		this.onJoin(this.username, avatarUrl);
+		this.onJoin({
+			username: this.username,
+			url: avatarUrl
+		});
 		this.self = this.players[this.username];
+		this._update = bind(this, 'update');
     }
 	
 	this.update = function() {
+		var again = false;
 		for(var username in this.players) {
-			this.players[username].update();
+			again |= this.players[username].update();
 		}
+		this.interval = again ? setTimeout(this._update, 25) : null;
 	}
 	
     // Public api
 
     this.onWelcome = function(presence, history) {
         for(var i = 0, p; p = presence[i]; ++i) {
-            this.onJoin(p.username, p.url);
-            this.onMove(p.username, p.x, p.y);
-            this.onSay(p.username, p.msg);
+            this.onJoin(p);
         }
+		if(!this.interval) { this.update(); }
     }
 
     this.onMove = function(username, x, y) {
 		this.players[username].move(x, y);
+		if(!this.interval) { this.update(); }
 	}
 	
-    this.onSay = function(username, msg, ts) {
-		this.players[username].say(msg, ts);
+    this.onSay = function(params) {
+		this.players[params.username].say(params.msg, params.ts);
+		this.publish('say', params, this.players[params.username].color);
 	}
 	
-	this.onJoin = function(username, url) {
-		if(!(username in this.players)) {
-			this.players[username] = this.playerFactory(username);
+	this.onJoin = function(params) {
+		if(!(params.username in this.players)) {
+			this.players[params.username] = this.playerFactory(params);
+			if(!this.interval) { this.update(); }
 		}
 	}
 	
@@ -59,6 +66,8 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
 	
 	this.move = function(x,y) {
 		this.self.move(x, y);
+		if(!this.interval) { this.update(); }
+		
 		try {
 			this.sendFrame('MOVE', {x:x, y:y});
 		} catch(e) {}
@@ -66,7 +75,7 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
 
 	this.say = function(msg) {
 		this.self.say(msg);
-		this.publish('say', {username: this.username, msg: msg, ts: +new Date()})
+		this.publish('say', {username: this.username, msg: msg, ts: +new Date(), color: this.self.color})
 		try {
 			this.sendFrame('SAY', {msg: msg});
 		} catch(e) {}
@@ -82,14 +91,13 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
 				this.publish('welcome', args.presence, args.history);
                 break;
 			case 'SAY':
-				this.onSay(args.username, args.msg, args.ts);
-				this.publish('say', args);
+				this.onSay(args);
 				break;
 			case 'MOVE':
 				this.onMove(args.username, args.x, args.y);
 				break;
 			case 'JOIN':
-				this.onJoin(args.username, args.url);
+				this.onJoin(args);
 				break;
 			case 'LEAVE':
 				this.onLeave(args.username);
@@ -103,16 +111,13 @@ exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
 	}
 	
 	this.connectionMade = function() {
-        var x = Math.floor(Math.random() * (kGameWidth - 20)) + 10;
-        var y = Math.floor(Math.random() * (kGameHeight - 20)) + 10;
 		this.sendFrame('LOGIN', {
-			'username': this.username,
+			username: this.username,
 			url: this.avatarUrl,
-			x: x,
-			y: y
+			x: this.self.x,
+			y: this.self.y,
+			color: this.self.color
 		});
-		
-        this.move(x,y);
 	}
 	
 	this.connectionLost = function() {

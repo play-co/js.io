@@ -13,7 +13,7 @@ jsio.require('jsio.logging');
 jsio.require('world.constants', '*');
 jsio.logging.getLogger('world.client').setLevel(0);
 
-function addToHistory(params) {
+function addToHistory(params, color) {
 	if(!params || !params.msg) { return; }
 
 	var history = $.id('history');
@@ -22,17 +22,22 @@ function addToHistory(params) {
 	var postfix = h >= 12 ? 'pm' : 'am';
 	if(m < 10) { m = '0' + m; }
 	if(h > 12) { h -= 12; }
+	
+	if(!color) {
+		color = client.players[params.username] && client.players[params.username].color || {r: 128, b: 128, g: 128};
+	}
 
 	history.insertBefore($.create({
 		text: h + ':' + m + postfix + ' - ' 
 			+ params.username + ': ' + params.msg
-	}), history.firstChild);
+	}), history.firstChild).style.color = 'rgb(' + color.r + ',' + color.g + ',' + color.b + ')';
 }
 
 var historyToggled = true;
 function toggleHistory() {
 	historyToggled = !historyToggled;
-	$.style('history', {opacity: historyToggled ? 1 : 0.1, zIndex: historyToggled ? 5 : 1});
+	$.style('history', {opacity: historyToggled ? 1 : 0.1});
+	(historyToggled ? $.removeClass : $.addClass)('history', 'history-hidden');
 	$.style('board', {opacity: historyToggled ? 0.1 : 1});
 	$.id('toggleHistoryBtn').innerHTML = historyToggled ? 'walk' : 'history';
 }
@@ -65,7 +70,11 @@ function onConnect(presence, history) {
 	$.onEvent(sayInput, 'keyup', function(e) { if(e.keyCode == 13) { say(); }});
 	$.onEvent('sayBtn', 'click', say);
 
-	$.onEvent(document.body, 'mousedown', $.stopEvent);
+	$.onEvent(document.body, 'mousedown', function(e) {
+		var target = e.target || e.srcElement;
+		while((target = target.parentNode) && target.id != 'console') {}
+		if(!target) { $.stopEvent(e); }
+	});
 	
 	$.onEvent('board', 'mousedown', function(e) {
 		var wrapper = $.id('wrapper');
@@ -100,13 +109,11 @@ window.onload = function() {
 	var joinInput = $.id('joinInput');
 	var sayInput = $.id('sayInput');
 	function join() {
-		if(!joinInput.value.length) { return; }		
-		var uiPlayerFactory = function(username) {
-			return new WorldPlayer({
-				parent: $.id('board'),
-				history: $.id('history'),
-				username: username
-			});
+		if(!joinInput.value.length) { return; }
+		var uiPlayerFactory = function(params) {
+			params.parent = $.id('board');
+			params.history = $.id('history');
+			return new WorldPlayer(params);
 		}
 
 		window.client = new WorldClient(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');

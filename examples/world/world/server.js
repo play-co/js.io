@@ -21,11 +21,11 @@ exports.WorldServer = Class(Server, function(supr) {
 		}
 	};
 
-	this.join = function(conn, username, url,x ,y) {
+	this.join = function(conn, username) {
 		if (username in this.players) {
 			throw new Error("player already taken");
 		}
-		this.broadcast('JOIN', {username: username, url:url, x:x, y:y});
+		this.broadcast('JOIN', params);
 		this.players[username] = conn;
 	};
 
@@ -66,28 +66,26 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 			}
 
 			try {
-				this.server.join(this, args.username, args.url, args.x, args.y);
+				this.params = {
+					username: args.username,
+					url: args.url,
+					x: args.x,
+					y: args.y,
+					color: args.color
+				};
 				this.username = args.username;
-				this.x = args.x;
-				this.y = args.y;
 				
 				var presence = [];
 				for (var username in this.server.players) {
-					var conn = this.server.players[username];
-					presence.push({
-						username: username,
-						x: conn.x,
-						y: conn.y,
-						url: conn.url,
-						msg: conn.msg
-					});
+					presence.push(this.server.players[username].params);
 				}
 				
+				this.server.join(this, this.username);
+
 				this.sendFrame('WELCOME', {
 					presence: presence,
 					history: this.server.history
 				});
-				
 			} catch(e) {
 				this.sendFrame('ERROR', {msg: e.toString()});
 			}

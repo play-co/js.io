@@ -7,8 +7,15 @@ exports.WorldPlayer = Class(PubSub, function() {
 		if(!params) { params = {}; }
 		this.historyEl = params.history;
 		this.username = params.username || '';
-		this.x = this.y = null;
-		this._x = this._y = null;
+		this.color = params.color || {
+			r: Math.floor(Math.random() * 128) + 128,
+			g: Math.floor(Math.random() * 128) + 128,
+			b: Math.floor(Math.random() * 128) + 128
+		};
+		
+		this._x = this.x = params.x || Math.floor(Math.random() * (kGameWidth - 20)) + 10;
+        this._y = this.y = params.y || Math.floor(Math.random() * (kGameHeight - 20)) + 10;
+		
 		this.dir = 'down';
 		
 		this.el = $.create({
@@ -22,7 +29,11 @@ exports.WorldPlayer = Class(PubSub, function() {
 		
 		this.text = $.create({
 			className: 'msg',
-			parent: params.parent
+			parent: params.parent,
+			text: params.msg || '',
+			style: {
+				color: 'rgb(' + this.color.r + ',' + this.color.g + ',' + this.color.b + ')'
+			}
 		});
 		
 		this.name = $.create({
@@ -97,6 +108,8 @@ exports.WorldPlayer = Class(PubSub, function() {
 			top: this._y + 20 + 'px',
 			left: this._x + 'px'
 		});
+		
+		return this._x != this.x || this._y != this.y;
 	}
 	
 	this.destroy = function() {

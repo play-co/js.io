@@ -24,10 +24,19 @@ background: #222; }
 
 #history {
 	overflow: auto;
-	z-index: 1;
+	z-index: 5;
 	padding: 10px;
 	font: 11px Tahoma;
 	opacity: 0.1;
+	word-wrap: break-word;
+}
+
+.history-hidden {
+	z-index: 1 !important;
+}
+
+.history-hidden div {
+	color: #000 !important;
 }
 
 #board {
@@ -53,6 +62,7 @@ background: #222; }
 	padding: 3px;
 	color: #FFF;
 	max-width: 135px;
+	word-wrap: break-word;
 }
 
 #board .player {
