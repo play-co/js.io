@@ -1,6 +1,6 @@
 require('jsio', ['Class', 'bind']);
-require('jsio.logging')
-require('jsio.protocols.buffered', ['BufferedProtocol'])
+require('jsio.logging');
+require('jsio.protocols.buffered', ['BufferedProtocol']);
 require('jsio.util.sprintf', 'sprintf');
 
 var logger = jsio.logging.getLogger('StompProtocol');
@@ -53,7 +53,8 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
             switch(this.state) {
                 case 'peek':
                     if (this.buffer.peekBytes(1) == '\n') {
-                        this.buffer.consumeBytes(1);
+                        logger.debug('consuming a single \n byte')
+                        this.buffer.consumeBytes(1)
                     }
                     this.state = 'method';
                     /* FALL THROUGH */
@@ -64,7 +65,7 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
                         return;
                     this._frame = new StompFrame();
                     var method = this.buffer.consumeLine();
-                    logger.debug('method is', method);
+                    logger.debug('method is', JSON.stringify(method));
                     this._frame.setMethod(method);
                     this.state = 'headers';
                     /* FALL THROUGH */
@@ -91,9 +92,11 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
                     /* FALL THROUGH */
                 case 'body':
                     if (this._frame.getBodyMode() == 'length') {
-                        if (!this.buffer.hasBytes(this._frame.getContentLength()))
+                        if (!this.buffer.hasBytes(this._frame.getContentLength()+1))
                             return
                         this._frame.setBody(this.buffer.consumeBytes(this._frame.getContentLength()))
+                        // Remove trailing \x00
+                        this.buffer.consumeBytes(1)
                     }
                     else {
                         if (!this.buffer.hasLine('\x00'))
@@ -102,7 +105,7 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
                     }
                     this.frameReceived(this._frame);
                     this._frame = null;
-                    this.state = 'method';
+                    this.state = 'peek';
                     /* FALL THROUGH and LOOP */
             }
         }

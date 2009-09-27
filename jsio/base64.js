@@ -31,6 +31,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
+
+(function() {
+
 var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef' +
                'ghijklmnopqrstuvwxyz0123456789-_';
 var pad = '=';
@@ -101,3 +104,4 @@ this.decode = function (b64text) {
   shorten(out_array, padding.length);
   return String.fromCharCode.apply(String, out_array);
 };
+}).call(typeof(exports) != 'undefined' ? exports : (function() { window.base64 = {}; return base64; })())

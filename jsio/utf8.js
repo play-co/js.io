@@ -34,7 +34,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-
+(function() {
 var UnicodeCodecError = this.UnicodeCodecError = function (message) { this.message = message; };
 this.UnicodeCodecError.prototype.toString = function () {
   return 'UnicodeCodecError' + (this.message ? ': ' + this.message : '');
@@ -64,3 +64,4 @@ this.decode = function (bytes) {
     throw new UnicodeCodecError('invalid utf-8 bytes');
   };
 };
+}).call(typeof(exports) != 'undefined' ? exports : (function() { window.utf8 = {}; return utf8; })())

@@ -1,10 +1,9 @@
-;(function() {
-
-if (typeof(exports) == 'undefined') {
-    csp = {}
-} else {
-    var csp = exports;
+;(function(global) {
+if (!global.csp) {
+    // For jsonp callbacks
+    global.csp = {}
 }
+var csp = this;
 if (typeof(require) != 'undefined' && require.__jsio) {
     require('..base64');
     require('..utf8')
@@ -18,7 +17,7 @@ csp.readyState = {
     'closed':  4
 };
 csp.util = {};
-
+console.log('csp is', csp);
 // Add useful url parsing library to socket.util
 (function() {
 // parseUri 1.2.2
@@ -96,7 +95,7 @@ csp.CometSession = function() {
     self.readyState = csp.readyState.initial;
     self.sessionKey = null;
     var transport = null;
-    var options = _;
+    var options = null;
     var buffer = "";
     self.write = function() { throw new Error("invalid readyState"); }
     self.onopen = function() {
@@ -387,8 +386,12 @@ transports.xhr = function(cspId, url) {
         return payload
     }
 }
-
-global.csp = {}
+console.log('csp is', csp);
+console.log('global.csp is', global.csp);
+if (!global.csp) {
+    console.log('obliterate csp', global.csp);
+    global.csp = {}
+}
 global.csp._jsonp = {}
 var _jsonpId = 0;
 function setJsonpCallbacks(cb, eb) {
@@ -533,6 +536,4 @@ transports.jsonp = function(cspId, url) {
     document.body.appendChild(ifr.comet);
     killLoadingBar();
 }
-
-
-})()
+}).call(typeof(exports) != 'undefined' ? exports : (function() { window.csp = {}; return csp; })(), typeof(global) == 'undefined' ? window : global)
