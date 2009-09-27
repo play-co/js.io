@@ -1,4 +1,7 @@
 ;(function(global) {
+
+var BACKOFF = 50;
+
 if (!global.csp) {
     // For jsonp callbacks
     global.csp = {}
@@ -226,21 +229,21 @@ var Transport = function(cspId, url) {
         clearTimeout(sendTimer);
         clearTimeout(handshakeTimer);
     }
-    var cometBackoff = 50; // msg
-    var backoff = 50;
+    var cometBackoff = BACKOFF; // msg
+    var backoff = BACKOFF;
     var handshakeTimer = null;
     var sendTimer = null;
     var cometTimer = null;
     self.handshakeCb = function(data) {
-	//        console.log('handshakeCb!');
         if (self.opened) {
-	    //            console.log('do onHandshake');
             self.onHandshake(data);
-            backoff = 50;
+            backoff = BACKOFF;
         }
     }
     self.handshakeErr = function() {
-	//        console.log('handshake err');
+        if (Math.round(Math.log(backoff) / Math.log(BACKOFF)) == 7) {
+            return self.close()
+        }
         if (self.opened) {
             handshakeTimer = setTimeout(self.handshake, backoff);
             backoff *= 2;
@@ -248,7 +251,7 @@ var Transport = function(cspId, url) {
     }
     self.sendCb = function() {
         self.packetsInFlight = null;
-        backoff = 50;
+        backoff = BACKOFF;
         if (self.opened) {
             if (self.buffer) {
                 self.doSend();
@@ -256,9 +259,12 @@ var Transport = function(cspId, url) {
         }
     }
     self.sendErr = function() {
+        if (Math.round(Math.log(backoff) / Math.log(BACKOFF)) == 7) {
+            return self.close()
+        }
         if (self.opened) {
             sendTimer = setTimeout(self.doSend, backoff);
-            backoff *= 50;
+            backoff *= BACKOFF;
         }
     }
     self.cometCb = function(data) {
@@ -268,6 +274,9 @@ var Transport = function(cspId, url) {
         }
     }
     self.cometErr = function() {
+        if (Math.round(Math.log(cometBackoff) / Math.log(BACKOFF)) == 7) {
+            return self.close()
+        }
         if (self.opened) {
             cometTimer = setTimeout(self.reconnect, cometBackoff);
             cometBackoff *= 2;
