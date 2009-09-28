@@ -34,27 +34,27 @@ var myClearTimeout = this.myClearTimeout = function (timer) {
 var bind = exports.bind = function(context, method/*, arg1, arg2, ... */){
 	var args = Array.prototype.slice.call(arguments, 2);
 	return function(){
-		method = (typeof method == 'string' ? context[method] : method);
-		return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)))
-	}
+		method = (typeof method === 'string' ? context[method] : method);
+		return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
+	};
 };
 
 var Class = exports.Class = function(parent, proto) {
-	if(!parent) { throw new Error('parent or prototype not provided'); }
-	if(!proto) { proto = parent; }
+	if(!parent) { throw new Error('parent or prototype not provided'); };
+	if(!proto) { proto = parent; };
 	else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
 		proto.prototype = {};
 		for(var i = 0, p; p = parent[i]; ++i) {
 			for(var item in p.prototype) {
 				if(!(item in proto.prototype)) {
 					proto.prototype[item] = p.prototype[item];
-				}
-			}
-		}
+				};
+			};
+		};
 		parent = parent[0]; 
-	} else { 
+	} else {
 		proto.prototype = parent.prototype;
-	}
+	};
 	
 	var cls = function() { if(this.init) { this.init.apply(this, arguments); }}
 	cls.prototype = new proto(function(context, method, args) {
@@ -130,7 +130,7 @@ var raw_to_bytes = this.raw_to_bytes = function (raw) {
 
 var bytes_to_raw = this.bytes_to_raw = function (bytes) {
 	assert_or_error(!(/[^\x00-\xFF]/.test(bytes)), CodecError,
-                  'out-of-range input characters')
+	                'out-of-range input characters')
 	raw = [];
 	for (var i=0, n=bytes.length; i < n; i++) {
 		raw.push(bytes.charCodeAt(i));

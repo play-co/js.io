@@ -433,7 +433,7 @@ csp.Server = Class(node.EventEmitter, function () {
 					var session = sessionDict[params.s];
 					assertOrRenderError(session, 'Invalid or missing session', 400);
 					// 'ackId' is either the 'Last-Event-Id' header, or the 'a' variable
-					var ackId = parseInt(request.headers['Last-Event-Id']) || parseInt(params.a) || -1
+					var ackId = parseInt(request.headers['Last-Event-Id']) || parseInt(params.a) || -1;
 					session.receiveAck(ackId);
 				};
 				session.updateVars(params);
