@@ -129,6 +129,9 @@ csp.CometSession = function() {
         options.encoding = encoding;
     }
 
+    // XXX: transport_onread and self.write both need to use an incremental
+    //      utf8 codec.
+
     var transport_onread = function(data) {
         if (options.encoding == 'utf8') {
             // XXX buffer remainder from incremental utf-8 decoding
@@ -136,6 +139,17 @@ csp.CometSession = function() {
         }
         else if (options.encoding == 'plain') {
             self.onread(data);
+        }
+    }
+
+    self.write = function(data) {
+        switch(options.encoding) {
+            case 'plain':
+                transport.send(data);
+                break;
+            case 'utf8':
+                transport.send(utf8.encode(data));
+                break;
         }
     }
 
@@ -151,7 +165,6 @@ csp.CometSession = function() {
         transport.onHandshake = function(data) {
             self.readyState = csp.readyState.open;
             self.sessionKey = data.session;
-            self.write = transport.send;
             transport.onPacket = transport_onread;
             transport.resume(self.sessionKey, 0, 0);
             clearTimeout(handshakeTimer);
@@ -202,7 +215,6 @@ var Transport = function(cspId, url) {
                     return;
                 }
             }
-//            console.log('onPacket', data);
             self.onPacket(data);
         }
     }

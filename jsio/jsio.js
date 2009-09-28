@@ -1,4 +1,13 @@
 ;(function(){
+
+    var preloaded_source = {
+        // Insert pre-loaded modules here...
+    };
+
+    var pre_require = [
+        // Insert pre-require dependancies here
+    ];
+
 	if(typeof exports == 'undefined') {
 		exports = {};
 		window.jsio = exports;
@@ -165,6 +174,9 @@
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
+                if (preloaded_source[pathString]) {
+                    return preloaded_source[pathString];
+                }
 				var baseMod = pathString.split('.')[0];
 				var urls = getModulePathPossibilities(pathString);
 				for (var i = 0, url; url = urls[i]; ++i) {
@@ -323,6 +335,11 @@
 		require('jsio.interfaces');
 		return new jsio.interfaces.Server(protocolClass);
 	}
+
+    for (var i =0, target; target=pre_require[i]; ++i) {
+        exports.require(target);    
+    }
+    
 
 })();
 
@@ -810,3 +827,4 @@ replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
 		};
 	}
 }());
+

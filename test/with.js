@@ -26,7 +26,7 @@ function time(f, i) {
 }
 
 
-var simpleWith = function() {
+var simpleWith = function simpleWith() {
    with({x: 3}) {
    var y = x;
    }
@@ -94,6 +94,7 @@ with({x: 3}) {
     simpleWithFunction = simpleWithFunction_;
 }
 simpleWithFunction.name = "simpleWithFunction";
+
 function noopWith() {
    with({}) {
    }

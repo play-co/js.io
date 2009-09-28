@@ -10,7 +10,7 @@ To Run:
 1) install node.js
     http://tinyclouds.org/node/
 
-2) Make sure that the jsio symbol link in this directory is correct (that is, it points at the jsio library)
+2) Make sure that the jsio symbolic link in this directory is correct (that is, it points at the jsio library)
 
 3) run node start_with_node.js
 
