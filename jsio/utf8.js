@@ -50,12 +50,12 @@ utf8.encode = function (unicode_string) {
 	// Unicode encoder: Given an arbitrary unicode string, returns a string
 	// of characters with code points in range 0x00 - 0xFF corresponding to
 	// the bytes of the utf-8 representation of those characters.
-  try {
-    return unescape(encodeURIComponent(unicode_string));
-  }
-  catch (err) {
-    throw new UnicodeCodecError('invalid input string');
-  };
+	try {
+		return unescape(encodeURIComponent(unicode_string));
+	}
+	catch (err) {
+		throw new UnicodeCodecError('invalid input string');
+	};
 };
 utf8.decode = function (bytes) {
 	// Unicode decoder: Given a string of characters with code points in
@@ -93,7 +93,7 @@ utf8.decode = function (bytes) {
 	};
 	try {
 		return [decodeURIComponent(escape(bytes.slice(0, len_parsed))),
-						len_parsed];
+		        len_parsed];
 	}
 	catch (err) {
 		throw new UnicodeCodecError('invalid utf-8 bytes');
