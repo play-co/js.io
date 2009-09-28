@@ -75,19 +75,19 @@ csp.Session = Class(function() {
 		this.timeoutTimer = null;
 		this.outgoingPacketId = 1;
 		this.variables = { // set variables to defaults
-			'contentType'		: 'text/html',
+			'contentType'   : 'text/html',
 			// 'prebufferSize' : '0', // result stored in 'prebuffer' variable.
-			'prebuffer'			: '',
-			'preamble'			: '',
+			'prebuffer'     : '',
+			'preamble'      : '',
 			'requestPrefix' : '',
 			'requestSuffix' : '',
-			'batchPrefix'		: '',
-			'batchSuffix'		: '',
-			'interval'			: '0',
-			'duration'			: '30',
-			'isStreaming'		: '0',
-			'gzipOk'				: '',
-			'sse'						: '',
+			'batchPrefix'   : '',
+			'batchSuffix'   : '',
+			'interval'      : '0',
+			'duration'      : '30',
+			'isStreaming'   : '0',
+			'gzipOk'        : '',
+			'sse'           : '',
 		};
 		this.resetTimeoutTimer();
 	};
@@ -185,7 +185,7 @@ csp.Session = Class(function() {
 		var preamble = this.variables.prebuffer + this.variables.preamble;
 		if (preamble) {
 			this.cometResponse.sendBody(preamble);
-		}
+		};
 		this.resetIntervalTimer();
 	};
 	this.sendBatch = function (packetArray) {
@@ -269,7 +269,7 @@ csp.Session = Class(function() {
 				} else {
 					debug('BAD PACKET ENCODING,', encoding, '... dropping packet');
 					break; // XXX probably should end connection here.
-				}
+				};
 				this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] = packetContent;
 			};
 			while (this.incomingPacketBuffer[0] !== undefined) {
@@ -303,22 +303,19 @@ csp.Connection = Class(node.EventEmitter, function() {
 		this._utf8buffer = '';
 	};
 	this._emitReceive = function (data) {
-		// XXX make sure to do incremental utf-8 decoding, and buffer any
-		// left-over bytes in connection for the next time we emit data.
 		if (this._encoding === 'utf8') {
 			this._utf8buffer += data;
-			var output = utf8.decode(this._utf8buffer),
-					data = output[0],
-					len_parsed = output[1];
-			this._utf8buffer = this._utf8buffer.slice(len_parsed)
-		}
+			// data, len_parsed = utf8.decode(this._utf8buffer)
+			var x = utf8.decode(this._utf8buffer), data = x[0], len_parsed = x[1];
+			this._utf8buffer = this._utf8buffer.slice(len_parsed) // buffer unparsed bytes
+		};
 		this.emit('receive', data);
 	};
 	var known_encodings = Set('utf8', 'binary');
 	this.setEncoding = function (encoding) {
 		assert(encoding in known_encodings, 'unrecognized encoding');
 		if (encoding !== 'utf8') {
-			assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer')
+			assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer');
 		};
 		this._encoding = encoding;
 	};
@@ -326,8 +323,8 @@ csp.Connection = Class(node.EventEmitter, function() {
 		if (!(this.readyState in Set('writeOnly', 'open'))) {
 			// XXX make error type for this
 			throw new Error("Socket is not writable in readyState: " + this.readyState);
-		}
-		encoding = encoding || 'binary';
+		};
+		encoding = encoding || 'binary'; // default to 'binary'
 		assert(encoding in known_encodings, 'unrecognized encoding');
 		data = (encoding === 'utf8') ? utf8.encode(data) : data;
 		session.send(data);
@@ -421,6 +418,7 @@ csp.Server = Class(node.EventEmitter, function () {
 					assertOrRenderError(!params.s, 'Handshake cannot have session', 400);
 					try {
 						var dict = JSON.parse(request.data);
+						// make sure our json dict is an object literal
 						assert((dict instanceof Object) && !(dict instanceof Array));
 					} catch (err) {
 						debug(['INVALID HANDSHAKE, ', request]);
