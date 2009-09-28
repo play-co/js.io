@@ -178,9 +178,6 @@ csp.Session = Class(function() {
 				// XXX: Make Access-Control configurable
 				['Access-Control-Allow-Origin', '*']
 			]);
-		}
-		else {
-			debug('INVALID USE OF sendHeaders FUNCTION')
 		};
 	};
 	this.startStream = function () {
@@ -303,16 +300,26 @@ csp.Connection = Class(node.EventEmitter, function() {
 		this.remoteAddress = null; // XXX get remote address from requests
 		this.readyState = 'open';
 		this._encoding = 'utf8';
+		this._utf8buffer = '';
 	};
 	this._emitReceive = function (data) {
 		// XXX make sure to do incremental utf-8 decoding, and buffer any
 		// left-over bytes in connection for the next time we emit data.
-		data = (this._encoding === 'utf8') ? utf8.decode(data) : bytes_to_raw(data);
+		if (this._encoding === 'utf8') {
+			this._utf8buffer += data;
+			var output = utf8.decode(this._utf8buffer),
+					data = output[0],
+					len_parsed = output[1];
+			this._utf8buffer = this._utf8buffer.slice(len_parsed)
+		}
 		this.emit('receive', data);
 	};
 	var known_encodings = Set('utf8', 'raw');
 	this.setEncoding = function (encoding) {
 		assert(encoding in known_encodings, 'unrecognized encoding');
+		if (encoding !== 'utf8') {
+			assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer')
+		};
 		this._encoding = encoding;
 	};
 	this.send = function (data, encoding) {
@@ -335,9 +342,7 @@ csp.createServer = function (connection_listener) {
 };
 
 csp.Server = Class(node.EventEmitter, function () {
-	this.init () {
-		// pass
-	};
+	this.init () { /* pass */ };
 	var session_url = ''; // XXX this could be changed or made into a parameter
 	var CSPError = function (message, code) {
 		this.message = message; this.code = code;
@@ -346,13 +351,13 @@ csp.Server = Class(node.EventEmitter, function () {
 	var assertOrRenderError = function (exp, message, code) {
 		if (!exp) { throw new CSPError(message, code); };
 	};
-	this._renderError = function (response, code, message) {
+	renderError = function (response, code, message) {
 		response.sendHeader(code, [['Content-Type', 'text/plain'],
 															 ['Content-Length', message.length]]);
 		response.sendBody(message);
 		response.finish();
 	};
-	this._sendStatic = function (path, response) {
+	sendStatic = function (path, response) {
 		debug('SEND STATIC', path, response)
 		staticFile(path.join('/'))	// defined in util.js
 			.addCallback(function(content){
@@ -362,12 +367,12 @@ csp.Server = Class(node.EventEmitter, function () {
 				response.finish();
 			})
 			.addErrback(function(){
-				this._renderError(response, 404, 'No such file, ' + path);
+				renderError(response, 404, 'No such file, ' + path);
 			});
 	};
 	// returns a request which fires with the whole post body as bytes, or
 	// immediately with null for GET requests
-	this._getRequestBody = function (request) {
+	var getRequestBody = function (request) {
 		var promise = new node.Promise();
 		if (request.method === 'GET') {
 			reschedule(function () {
@@ -391,7 +396,7 @@ csp.Server = Class(node.EventEmitter, function () {
 	var resources = Set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
-		this._getRequestBody(request).addCallback(bind(this, function(body) {
+		getRequestBody(request).addCallback(bind(this, function(body) {
 			try {
 				assertOrRenderError(startswith(request.uri.path, session_url + '/'),
 														'Request to invalid session URL', 404);
@@ -400,7 +405,7 @@ csp.Server = Class(node.EventEmitter, function () {
 				var relpath = request.uri.path.slice(session_url.length + 1).split('/');
 				var resource = relpath[0];
 				if (resource === 'static') {
-					this._sendStatic(relpath, response);
+					sendStatic(relpath, response);
 					return;
 				};
 				assertOrRenderError((relpath.length == 1) && (resource in resources),
