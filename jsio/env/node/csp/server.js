@@ -383,10 +383,10 @@ csp.Server = Class(node.EventEmitter, function () {
 			request.setBodyEncoding('binary');
 			request
 				.addListener('body', function (chunk) {
-					body.push.apply(body, chunk); // body += chunk
+					body.push(chunk); // body += chunk
 				})
 				.addListener('complete', function () {
-					promise.emitSuccess(body);
+					promise.emitSuccess(body.join(''));
 				});
 		};
 		return promise;
