@@ -339,10 +339,9 @@ csp.createServer = function (connection_listener) {
 };
 
 csp.Server = Class(node.EventEmitter, function () {
-	this.init () {
+	this.init = function () {
 		this._session_url = ''; // XXX this could be changed or made into a parameter
 	};
-	
 	var CSPError = Class(AssertionError, function (supr) {
 		this.init = function (message, code) {
 			this.code = code;
@@ -352,13 +351,13 @@ csp.Server = Class(node.EventEmitter, function () {
 	var assertOrRenderError = function (exp, message, code) {
 		return assert_or_error(exp, CSPError, message, code);
 	};
-	renderError = function (response, code, message) {
+	var renderError = function (response, code, message) {
 		response.sendHeader(code, [['Content-Type', 'text/plain'],
 		                           ['Content-Length', message.length]]);
 		response.sendBody(message);
 		response.finish();
 	};
-	sendStatic = function (path, response) {
+	var sendStatic = function (path, response) {
 		debug('SEND STATIC', path, response)
 		staticFile(path.join('/'))	// defined in util.js
 			.addCallback(function(content){
@@ -466,6 +465,6 @@ function start_echo_server () {
 		});
 	});
 	server.listen(8000);
-	puts('CSP-based echo server running.')
+	puts('CSP-based echo server running.');
 };
 // start_echo_server();		// un-comment to run echo server when this file runs
