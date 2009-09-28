@@ -119,7 +119,7 @@ var raw_to_bytes = this.raw_to_bytes = function (raw) {
 
 var bytes_to_raw = this.bytes_to_raw = function (bytes) {
 	assert_or_error(!(/[^\x00-\xFF]/.test(bytes)), CodecError,
-									'out-of-range input characters')
+                  'out-of-range input characters')
 	raw = [];
 	for (var i=0, n=bytes.length; i < n; i++) {
 		raw.push(bytes.charCodeAt(i));

@@ -353,7 +353,7 @@ csp.Server = Class(node.EventEmitter, function () {
 	};
 	renderError = function (response, code, message) {
 		response.sendHeader(code, [['Content-Type', 'text/plain'],
-															 ['Content-Length', message.length]]);
+		                           ['Content-Length', message.length]]);
 		response.sendBody(message);
 		response.finish();
 	};
@@ -362,7 +362,7 @@ csp.Server = Class(node.EventEmitter, function () {
 		staticFile(path.join('/'))	// defined in util.js
 			.addCallback(function(content){
 				response.sendHeader(200, [['Content-Type', 'text/plain'],
-																	['Content-Length', content.length]]);
+				                          ['Content-Length', content.length]]);
 				response.sendBody(content);
 				response.finish();
 			})
@@ -399,9 +399,9 @@ csp.Server = Class(node.EventEmitter, function () {
 		getRequestBody(request).addCallback(bind(this, function(body) {
 			try {
 				assertOrRenderError(startswith(request.uri.path, session_url + '/'),
-														'Request to invalid session URL', 404);
+				                    'Request to invalid session URL', 404);
 				assertOrRenderError(request.method in methods,
-														'Invalid HTTP method, ' + request.method, 405);
+				                    'Invalid HTTP method, ' + request.method, 405);
 				var relpath = request.uri.path.slice(session_url.length + 1).split('/');
 				var resource = relpath[0];
 				if (resource === 'static') {
@@ -409,7 +409,7 @@ csp.Server = Class(node.EventEmitter, function () {
 					return;
 				};
 				assertOrRenderError((relpath.length == 1) && (resource in resources),
-														'Invalid resource, ' + relpath, 404);
+				                    'Invalid resource, ' + relpath, 404);
 				var params = request.uri.params;
 				// 'data' is either the POST body if it exists, or the 'd' variable
 				request.data = body || params.d || null;
