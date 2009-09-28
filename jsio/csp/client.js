@@ -131,7 +131,8 @@ csp.CometSession = function() {
 
     var transport_onread = function(data) {
         if (options.encoding == 'utf8') {
-            self.onread(utf8.decode(data));
+            // XXX buffer remainder from incremental utf-8 decoding
+            self.onread(utf8.decode(data)[0]);
         }
         else if (options.encoding == 'plain') {
             self.onread(data);
