@@ -71,14 +71,6 @@ var Class = exports.Class = function(parent, proto) {
 	return cls;
 }
 
-var inherits = this.inherits = function (ctor, superCtor) {
-	var tempCtor = function(){};
-	tempCtor.prototype = superCtor.prototype;
-	ctor.super_ = superCtor.prototype;
-	ctor.prototype = new tempCtor();
-	ctor.prototype.constructor = ctor;
-};
-
 var debug = this.debug = function () {
 	var message = [];
 	for (var i=0; i < arguments.length; i++) {
