@@ -95,21 +95,32 @@ var startswith = this.startswith = function (str1, str2) {
 	return str1.slice(0, str2.length) == str2;
 };
 
-var assert_or_error = this.assert_or_error = function (exp, error, message) {
-	if (!exp) { throw new error(message)}
-}
-var AssertionError = this.AssertionError = function (message) { this.message = message; };
-AssertionError.prototype.toString = function () {
-	return 'AssertionError' + (this.message ? ': ' + this.message : '');
+var assert_or_error = this.assert_or_error = function (exp, error/*, arg1, arg2, ... */) {
+	if (!exp) {
+		var args = Array.prototype.slice.call(arguments, 2);
+		throw error.apply(new error, args)
+	};
 };
+var AssertionError = this.AssertionError = Class(Error, function () {
+	this.init = function (message) {
+		this.message = message;
+	}
+	this.toString = function () {
+		return 'AssertionError' + (this.message ? ': ' + this.message : '');
+	};
+});
 var assert = this.assert = function (exp, message) {
 	return assert_or_error(exp, AssertionError, message)
 };
 
-var CodecError = this.CodecError = function (message) { this.message = message; };
-CodecError.prototype.toString = function () {
-	return 'CodecError' + (this.message ? ': ' + this.message : '');
-};
+var CodecError = this.CodecError = Class(Error, function () {
+	this.init = function (message) {
+		this.message = message;
+	}
+	this.toString = function () {
+		return 'CodecError' + (this.message ? ': ' + this.message : '');
+	};
+});
 
 // note that 'bytes' are actually just encoded using the lower byte of a
 // each 16-bit-unit of a JS String, while 'raw' means an array of integers.

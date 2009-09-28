@@ -342,14 +342,18 @@ csp.createServer = function (connection_listener) {
 };
 
 csp.Server = Class(node.EventEmitter, function () {
-	this.init () { /* pass */ };
-	var session_url = ''; // XXX this could be changed or made into a parameter
-	var CSPError = function (message, code) {
-		this.message = message; this.code = code;
+	this.init () {
+		this._session_url = ''; // XXX this could be changed or made into a parameter
 	};
-	CSPError.prototype = AssertionError.prototype;
+	
+	var CSPError = Class(AssertionError, function (supr) {
+		this.init = function (message, code) {
+			this.code = code;
+			return supr.init(message);
+		};
+	});
 	var assertOrRenderError = function (exp, message, code) {
-		if (!exp) { throw new CSPError(message, code); };
+		return assert_or_error(exp, CSPError, message, code);
 	};
 	renderError = function (response, code, message) {
 		response.sendHeader(code, [['Content-Type', 'text/plain'],
@@ -398,11 +402,11 @@ csp.Server = Class(node.EventEmitter, function () {
 	this._handleRequest = function (request, response) {
 		getRequestBody(request).addCallback(bind(this, function(body) {
 			try {
-				assertOrRenderError(startswith(request.uri.path, session_url + '/'),
+				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
 				                    'Request to invalid session URL', 404);
 				assertOrRenderError(request.method in methods,
 				                    'Invalid HTTP method, ' + request.method, 405);
-				var relpath = request.uri.path.slice(session_url.length + 1).split('/');
+				var relpath = request.uri.path.slice(this._session_url.length + 1).split('/');
 				var resource = relpath[0];
 				if (resource === 'static') {
 					sendStatic(relpath, response);
@@ -451,7 +455,7 @@ csp.Server = Class(node.EventEmitter, function () {
 		var server = node.http.createServer(this._handleRequest);
 		server.listen(port, host);
 		hoststring = host ? host : 'localhost';
-		puts('CSP running at http://' + hoststring + ':' + port + session_url + '/');
+		puts('CSP running at http://' + hoststring + ':' + port + this._session_url + '/');
 	};
 });
 
