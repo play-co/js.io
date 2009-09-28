@@ -299,7 +299,7 @@ csp.Connection = Class(node.EventEmitter, function() {
 	this.init = function (session) {
 		this.remoteAddress = null; // XXX get remote address from requests
 		this.readyState = 'open';
-		this._encoding = 'utf8';
+		this._encoding = 'binary';
 		this._utf8buffer = '';
 	};
 	this._emitReceive = function (data) {
@@ -314,7 +314,7 @@ csp.Connection = Class(node.EventEmitter, function() {
 		}
 		this.emit('receive', data);
 	};
-	var known_encodings = Set('utf8', 'raw');
+	var known_encodings = Set('utf8', 'binary');
 	this.setEncoding = function (encoding) {
 		assert(encoding in known_encodings, 'unrecognized encoding');
 		if (encoding !== 'utf8') {
@@ -327,9 +327,9 @@ csp.Connection = Class(node.EventEmitter, function() {
 			// XXX make error type for this
 			throw new Error("Socket is not writable in readyState: " + this.readyState);
 		}
-		encoding = encoding || 'utf8';
+		encoding = encoding || 'binary';
 		assert(encoding in known_encodings, 'unrecognized encoding');
-		data = (encoding === 'utf8') ? utf8.encode(data) : raw_to_bytes(data);
+		data = (encoding === 'utf8') ? utf8.encode(data) : data;
 		session.send(data);
 	};
 	this.close = function () {
@@ -376,17 +376,17 @@ csp.Server = Class(node.EventEmitter, function () {
 		var promise = new node.Promise();
 		if (request.method === 'GET') {
 			reschedule(function () {
-				promise.emitSuccess(raw_to_bytes(null));
+				promise.emitSuccess('');
 			});
 		} else {
 			var body = [];
-			request.setBodyEncoding('raw');
+			request.setBodyEncoding('binary');
 			request
 				.addListener('body', function (chunk) {
 					body.push.apply(body, chunk); // body += chunk
 				})
 				.addListener('complete', function () {
-					promise.emitSuccess(raw_to_bytes(body));
+					promise.emitSuccess(body);
 				});
 		};
 		return promise;
