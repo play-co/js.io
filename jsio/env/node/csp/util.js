@@ -88,8 +88,8 @@ var debug = this.debug = function () {
 };
 
 // helper to make a hash table from the arguments for membership testing
-// Use like: 'a' in set('a', 'b', 'c')
-var set = this.set = function () {
+// Use like: 'a' in Set('a', 'b', 'c')
+var Set = this.Set = function () {
   var set = {};
   var len = arguments.length;
   for (var i=0; i < len; i++) {

@@ -59,8 +59,9 @@ var varNames = {
   // 'd'  : 'data',
   // 'n'  : 'noCache',
 };
-csp.Session = CreateClass({
-  init: function () {
+
+csp.Session = Class(function() {
+  this.init = function () {
     // this.lastAck = 0; // 'a' variable
     this.key = uuid.uuid(8);       // generate 8-character base-62 UUID
     sessionDict[this.key] = this;  // Add session to sessions dictionary
@@ -89,16 +90,16 @@ csp.Session = CreateClass({
       'sse'           : '',
     };
     this.resetTimeoutTimer();
-  },
-  teardownSession: function () {
+  };
+  this.teardownSession = function () {
     this.connection.readyState = (this.connection.readyState === 'open' ? 'writeOnly' : 'closed');
     this.connection.emit('eof');
     // XXX when the client calls close, do we want to allow the server to
     // keep sending them stuff, write only? And what about when they time out?
     delete sessionDict[this.key];
-  }
+  };
   // send data to the client
-  send: function (data) {
+  this.send = function (data) {
     // base64-encode any string data with control characters or non-ASCII
     var packet = (typeof data === 'string' && (/[^\r\n\t\x32-\x7E]/).test(data)) ?
       [this.outgoingPacketId, 1, base64.encode(data)] :
@@ -108,21 +109,21 @@ csp.Session = CreateClass({
     if (this.cometResponse) {
       this.sendBatch([packet]);
     }; // else if no comet connection, just keep buffering packets
-  },
-  close: function () {
+  };
+  this.close = function () {
     // call this to close a comet connection, and stop writing to it.
     // any remaining incoming packets will still fire 'receive' events.
     this.send(null);
     this.connection.readyState = (this.connection.readyState === 'open' ? 'readOnly' : 'closed');
-  },
-  updateVars: function (params) {
+  };
+  this.updateVars = function (params) {
     for (param in params) {
       var key = varNames[param];
       if (!key) continue;
       var value = params[param];
       // if gzipOk or contentType changes value, finish up any comet response
       // with the previous values
-      if (key in set('gzipOk', 'contentType') && value != this.variables[key] && this.cometResponse) {
+      if (key in Set('gzipOk', 'contentType') && value != this.variables[key] && this.cometResponse) {
         this.completeResponse();
       };
       if (key in this.variables) {
@@ -136,31 +137,30 @@ csp.Session = CreateClass({
         };
       };      
     };
-  },
-  isStreaming: function () {
+  };
+  this.isStreaming = function () {
     return (this.variables.isStreaming === '1') && (parseInt(this.variables.duration) > 0);
-  },
-  resetDurationTimer: function () {
+  };
+  this.resetDurationTimer = function () {
     var duration = 1000 * parseInt(this.variables.duration);
-    var self = this;
     this.durationTimer = setTimeout(bind(this, this.completeResponse), duration);
-  },
-  resetIntervalTimer: function () {
+  };
+  this.resetIntervalTimer = function () {
     myClearTimeout(this.intervalTimer);
     if (this.variables.interval === '0') {
       return;
     };
     var interval = 1000 * parseInt(this.variables.interval);
     this.intervalTimer = setTimeout(bind(this, this.sendBatch), interval);
-  },
-  resetTimeoutTimer: function () {
+  };
+  this.resetTimeoutTimer = function () {
     myClearTimeout(this.timeoutTimer);
     // Give the client 50% longer than the duration of a comet request before 
     // we time them out.
     var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
     this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
-  },
-  sendHeaders: function (response, contentLength) {
+  };
+  this.sendHeaders = function (response, contentLength) {
     if (contentLength === 'stream') {
       response.sendHeader(200, [
         ['Content-Type', this.variables.contentType],
@@ -181,17 +181,17 @@ csp.Session = CreateClass({
     }
     else {
       debug('INVALID USE OF sendHeaders FUNCTION')
-    }  
-  },
-  startStream: function () {
+    };
+  };
+  this.startStream = function () {
     this.sendHeaders(this.cometResponse, 'stream');
     var preamble = this.variables.prebuffer + this.variables.preamble;
     if (preamble) {
       this.cometResponse.sendBody(preamble);
     }
     this.resetIntervalTimer();
-  },
-  sendBatch: function (packetArray) {
+  };
+  this.sendBatch = function (packetArray) {
     if (!packetArray) { packetArray = []; }; // default value
     var prefix = this.variables.batchPrefix + '(';
     var suffix = ')' + this.variables.batchSuffix;
@@ -211,8 +211,8 @@ csp.Session = CreateClass({
       this.cometResponse = null;
       myClearTimeout(this.durationTimer);
     };
-  },
-  completeResponse: function() {
+  };
+  this.completeResponse = function() {
     if (this.isStreaming()) {
       this.cometResponse.finish(); // close a stream
       this.cometResponse = null;
@@ -221,24 +221,24 @@ csp.Session = CreateClass({
     } else {
       this.sendBatch() // send empty batch to poll/longpoll
     };
-  },
-  receiveAck: function (ackId) {
+  };
+  this.receiveAck = function (ackId) {
     this.resetTimeoutTimer();
     while (this.outgoingPacketBuffer.length && ackId >= this.outgoingPacketBuffer[0][0]) {
       this.outgoingPacketBuffer.shift(); // remove first element
     };
-  },
+  };
   // used for handshake, send, and close (not comet or reflect)
-  renderResponse: function (response, body) {
+  this.renderResponse = function (response, body) {
     var prefix = this.variables.requestPrefix + '(';
     var suffix = ')' + this.variables.requestSuffix;
     body = prefix + body + suffix;
     this.sendHeaders(response, body.length);
     response.sendBody(body);
     response.finish();
-  },
+  };
   // a csp.Server instance dispatches resources to this object's functions
-  dispatch: {
+  this.dispatch = {
     handshake: function (request, response) {
       var body = JSON.stringify( {'session': this.key})
       this.renderResponse(response, body);
@@ -295,27 +295,28 @@ csp.Session = CreateClass({
     streamtest: function (request, response) {
       debug('streamtest'); // XXX who knows what this does...?
     },
-  },
+  };
 });
 
-csp.Connection = function (session) {
-  node.EventEmitter.call(this);
-  this.remoteAddress = null; // XXX get remote address from requests
-  this.readyState = 'open';
-  var _encoding = 'utf8';
+csp.Connection = Class(node.EventEmitter, function() {
+  this.init = function (session) {
+    this.remoteAddress = null; // XXX get remote address from requests
+    this.readyState = 'open';
+    this._encoding = 'utf8';
+  };
   this._emitReceive = function (data) {
     // XXX make sure to do incremental utf-8 decoding, and buffer any
     // left-over bytes in connection for the next time we emit data.
-    data = (_encoding === 'utf8') ? utf8.decode(data) : bytes_to_raw(data);
+    data = (this._encoding === 'utf8') ? utf8.decode(data) : bytes_to_raw(data);
     this.emit('receive', data);
   };
-  var known_encodings = set('utf8', 'raw');
+  var known_encodings = Set('utf8', 'raw');
   this.setEncoding = function (encoding) {
     assert(encoding in known_encodings, 'unrecognized encoding');
-    _encoding = encoding;
+    this._encoding = encoding;
   };
   this.send = function (data, encoding) {
-    if (!(this.readyState in set('writeOnly', 'open'))) {
+    if (!(this.readyState in Set('writeOnly', 'open'))) {
       // XXX make error type for this
       throw new Error("Socket is not writable in readyState: " + this.readyState);
     }
@@ -326,20 +327,21 @@ csp.Connection = function (session) {
   };
   this.close = function () {
     session.close();
-  };  
-};
-inherits(csp.Connection, node.EventEmitter);
+  };
+});
+
 
 csp.createServer = function (connection_listener) {
   return new csp.Server().addListener('connection', connection_listener);
 };
 
-// Class. Create one with 'new'
-csp.Server = function () {
-  node.EventEmitter.call(this);
-  var self = this;
-  var session_url = ''; // XXX this could be changed or made into a parameter
 
+
+csp.Server = Class(node.EventEmitter, function () {
+  this.init () {
+    // pass
+  };
+  var session_url = ''; // XXX this could be changed or made into a parameter
   var CSPError = function (message, code) {
     this.message = message; this.code = code;
   };
@@ -347,13 +349,13 @@ csp.Server = function () {
   var assertOrRenderError = function (exp, message, code) {
     if (!exp) { throw new CSPError(message, code); };
   };
-  var renderError = function (response, code, message) {
+  this._renderError = function (response, code, message) {
     response.sendHeader(code, [['Content-Type', 'text/plain'],
                                ['Content-Length', message.length]]);
     response.sendBody(message);
     response.finish();
   };
-  var sendStatic = function (path, response) {
+  this._sendStatic = function (path, response) {
     debug('SEND STATIC', path, response)
     staticFile(path.join('/'))  // defined in util.js
       .addCallback(function(content){
@@ -363,12 +365,12 @@ csp.Server = function () {
         response.finish();
       })
       .addErrback(function(){
-        renderError(response, 404, 'No such file, ' + path);
+        this._renderError(response, 404, 'No such file, ' + path);
       });
   };
   // returns a request which fires with the whole post body as bytes, or
   // immediately with null for GET requests
-  var getRequestBody = function (request) {
+  this._getRequestBody = function (request) {
     var promise = new node.Promise();
     if (request.method === 'GET') {
       reschedule(function () {
@@ -389,10 +391,10 @@ csp.Server = function () {
   };
   // The logic of the server goes in the 'handleRequest' function, which is
   // called every time a new request comes in.
-  var resources = set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
-  var methods = set('GET', 'POST');
-  var handleRequest = function (request, response) {
-    getRequestBody(request).addCallback(function(body) {
+  var resources = Set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
+  var methods = Set('GET', 'POST');
+  this._handleRequest = function (request, response) {
+    this._getRequestBody(request).addCallback(bind(this, function(body) {
       try {
         assertOrRenderError(startswith(request.uri.path, session_url + '/'),
                             'Request to invalid session URL', 404);
@@ -401,7 +403,7 @@ csp.Server = function () {
         var relpath = request.uri.path.slice(session_url.length + 1).split('/');
         var resource = relpath[0];
         if (resource === 'static') {
-          sendStatic(relpath, response);
+          this._sendStatic(relpath, response);
           return;
         };
         assertOrRenderError((relpath.length == 1) && (resource in resources),
@@ -421,7 +423,7 @@ csp.Server = function () {
           var session = new csp.Session();
           var connection = new csp.Connection(session);
           session.connection = connection;
-          self.emit('connection', connection);
+          this.emit('connection', connection);
           connection.emit('connect');
         } else {
           var session = sessionDict[params.s];
@@ -435,22 +437,21 @@ csp.Server = function () {
       }
       catch (err) {
         if (err instanceof CSPError) {
-          renderError(response, err.code, err.message);          
+          this._renderError(response, err.code, err.message);          
         } else {
           debug('Unexpected Error: ', err.message);
-          renderError(response, 500, 'Unknown Server error');
+          this._renderError(response, 500, 'Unknown Server error');
         };
       };
-    });
+    }));
   };
   this.listen = function (port, host) {
-    var server = node.http.createServer(handleRequest);
+    var server = node.http.createServer(this._handleRequest);
     server.listen(port, host);
     hoststring = host ? host : 'localhost';
     puts('CSP running at http://' + hoststring + ':' + port + session_url + '/');
   };
-}
-inherits(csp.Server, node.EventEmitter);
+});
 
 })(); // end closure w/ code for csp
 
