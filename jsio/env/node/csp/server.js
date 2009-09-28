@@ -439,10 +439,10 @@ csp.Server = Class(node.EventEmitter, function () {
 			}
 			catch (err) {
 				if (err instanceof CSPError) {
-					this._renderError(response, err.code, err.message);					 
+					renderError(response, err.code, err.message);					 
 				} else {
 					debug('Unexpected Error: ', err.message);
-					this._renderError(response, 500, 'Unknown Server error');
+					renderError(response, 500, 'Unknown Server error');
 				};
 			};
 		}));
