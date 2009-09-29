@@ -341,14 +341,16 @@ csp.Server = Class(node.EventEmitter, function () {
 	this.init = function () {
 		this._session_url = ''; // XXX this could be changed or made into a parameter
 	};
-	var CSPError = Class(AssertionError, function (supr) {
-		this.init = function (message, code) {
+	var CSPError = this.CSPError = Class(AssertionError, function (supr) {
+		this.name = 'CSPError'
+		this.init = function (code/*, other args */) {
+			supr(this, 'init', args);
 			this.code = code;
-			return supr.init(message);
+			var args = Array.prototype.slice.call(arguments, 1);
 		};
 	});
 	var assertOrRenderError = function (exp, message, code) {
-		return assert_or_error(exp, CSPError, message, code);
+		if (!exp) { throw new CSPError(message, code) };
 	};
 	var renderError = function (response, code, message) {
 		response.sendHeader(code, {'Content-Type'   : 'text/plain',
@@ -466,4 +468,4 @@ function start_echo_server () {
 	server.listen(8000);
 	puts('CSP-based echo server running.');
 };
-// start_echo_server();		// un-comment to run echo server when this file runs
+start_echo_server(); // un-comment to run echo server when this file runs

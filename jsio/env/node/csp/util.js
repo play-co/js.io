@@ -31,22 +31,32 @@ var myClearTimeout = this.myClearTimeout = function (timer) {
 	return timer ? clearTimeout(timer) : null;
 };
 
+var debug = this.debug = function () {
+	var message = [];
+	for (var i=0; i < arguments.length; i++) {
+		message.push(JSON.stringify(arguments[i]));
+	};
+	node.stdio.writeError(message.join(' ') + '\n');
+};
+
+
 var bind = exports.bind = function(context, method/*, arg1, arg2, ... */){
 	var args = Array.prototype.slice.call(arguments, 2);
-	return function(){
+	return function() {
 		method = (typeof method === 'string' ? context[method] : method);
 		return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
 	};
 };
 
 var Class = exports.Class = function(parent, proto) {
-	if(!parent) { throw new Error('parent or prototype not provided'); };
-	if(!proto) { proto = parent; };
-	else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
+	if (!parent) { throw new Error('parent or prototype not provided'); };
+	if (!proto) {
+		proto = parent;
+	} else if (parent instanceof Array) { // multiple inheritance, use at your own risk =)
 		proto.prototype = {};
-		for(var i = 0, p; p = parent[i]; ++i) {
-			for(var item in p.prototype) {
-				if(!(item in proto.prototype)) {
+		for (var i = 0, p; p = parent[i]; ++i) {
+			for (var item in p.prototype) {
+				if (!(item in proto.prototype)) {
 					proto.prototype[item] = p.prototype[item];
 				};
 			};
@@ -71,14 +81,6 @@ var Class = exports.Class = function(parent, proto) {
 	return cls;
 }
 
-var debug = this.debug = function () {
-	var message = [];
-	for (var i=0; i < arguments.length; i++) {
-		message.push(JSON.stringify(arguments[i]));
-	};
-	node.stdio.writeError(message.join(' ') + '\n');
-};
-
 // helper to make a hash table from the arguments for membership testing
 // Use like: 'a' in Set('a', 'b', 'c')
 var Set = this.Set = function () {
@@ -95,31 +97,30 @@ var startswith = this.startswith = function (str1, str2) {
 	return str1.slice(0, str2.length) == str2;
 };
 
-var assert_or_error = this.assert_or_error = function (exp, error/*, arg1, arg2, ... */) {
-	if (!exp) {
-		var args = Array.prototype.slice.call(arguments, 2);
-		throw error.apply(new error, args)
+var JSIOError = this.JSIOError = Class(Error, function () {
+	this.name = 'JSIOError';
+	this.toString = Error.prototype.toString;
+	this.init = function (message, fileName, lineNumber) {
+		this.name = this.name; // promote class property to instance
+    this.message = message || '';
+		this.fileName = fileName || '«filename»'; // location.href; // XXX what should go here?
+		this.lineNumber = isNaN(+lineNumber) ? 0 : +lineNumber
 	};
-};
-var AssertionError = this.AssertionError = Class(Error, function () {
-	this.init = function (message) {
-		this.message = message;
-	}
-	this.toString = function () {
-		return 'AssertionError' + (this.message ? ': ' + this.message : '');
-	};
+})
+
+var AssertionError = this.AssertionError = Class(JSIOError, function (supr) {
+	this.name = 'AssertionError'
+	this.init = function () {supr(this, 'init', arguments)}
 });
 var assert = this.assert = function (exp, message) {
-	return assert_or_error(exp, AssertionError, message)
+	if (!exp) {
+		throw new AssertionError(message)
+	};
 };
 
-var CodecError = this.CodecError = Class(Error, function () {
-	this.init = function (message) {
-		this.message = message;
-	}
-	this.toString = function () {
-		return 'CodecError' + (this.message ? ': ' + this.message : '');
-	};
+var CodecError = this.CodecError = Class(JSIOError, function (supr) {
+	this.name = 'CodecError'
+	this.init = function () {supr(this, 'init', arguments)}
 });
 
 // note that 'bytes' are actually just encoded using the lower byte of a
