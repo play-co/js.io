@@ -64,7 +64,7 @@ csp.util.chooseTransport = function(url, options) {
     var test = location.toString().match('file://');
     if (test && test.index === 0) {
 //      console.log('local file, use jsonp')
-      return transports.jsonp // XXX      
+      return transports.jsonp // XXX
     }
 //    console.log('choosing');
     if (csp.util.isSameDomain(url, location.toString())) {
@@ -190,7 +190,7 @@ var Transport = function(cspId, url) {
     self.sending = false;
     self.sessionKey = null;
     self.lastEventId = null;
-    
+
     this.handshake = function() {
         self.opened = true;
     }
@@ -322,11 +322,14 @@ transports.xhr = function(cspId, url) {
         var xhr;
         if (type == 'send') { xhr = sendXhr; }
         if (type == 'comet') { xhr = cometXhr; }
-        url += '?'
-        for (key in args) {
-            if (key != 'd')
-                url += key + '=' + args[key] + '&';
-        }
+	url += "?";
+	for (key in args) {
+            if (key != 'd') {
+	      url += key + '=' + args[key] + '&';
+	    }
+	}
+	if (url.match('\\?$'))
+	  { url = url.slice(0, url.length-1); }
         var payload = "";
         if (args.d) {
             payload = args.d;
@@ -341,20 +344,26 @@ transports.xhr = function(cspId, url) {
             try {
 //              console.log('status', xhr.status)
             } catch (e) {}
-            if (aborted) { 
-                //console.log('aborted'); 
-                return eb(); 
+            if (aborted) {
+//                console.log('aborted');
+                return eb();
             }
             if (xhr.readyState == 4) {
                 try {
-                    if (xhr.status == 200) {
+		    // xhr.status will be 0 for localhost requests.
+		    // this is probably ok. - desmaj 2009-28-09
+                    if (xhr.status == 200 || xhr.status == 0) {
+//		      console.log("clearing timer");
                         clearTimeout(timer);
                         // XXX: maybe the spec shouldn't wrap ALL responses in ( ).
                         //      -mcarter 8/11/09
+//		      console.log("parsing data");
+//		      console.log("length: " + xhr.responseText.length);
                         var data = JSON.parse(xhr.responseText.substring(1, xhr.responseText.length-1));
+//		      console.log("parsed data");
 					}
 				} catch(e) {}
-				
+
 				if(data) {
 			        try {
 	                    // try-catch the callback since we parsed the response
@@ -371,8 +380,8 @@ transports.xhr = function(cspId, url) {
 
                 try {
 //                    console.log('xhr.responseText', xhr.responseText);
-                } catch(e) { 
-                    //console.log('ex'); 
+                } catch(e) {
+                    //console.log('ex');
                 }
                 return eb();
             }
@@ -471,8 +480,8 @@ transports.jsonp = function(cspId, url) {
             function errback(isIe) {
                 if (!isIe) {
                     var scripts = doc.getElementsByTagName('script');
-                    var s1 = doc.getElementsByTagName('script')[0]; 
-                    var s2 = doc.getElementsByTagName('script')[1]; 
+                    var s1 = doc.getElementsByTagName('script')[0];
+                    var s2 = doc.getElementsByTagName('script')[1];
                     s1.parentNode.removeChild(s1);
                     s2.parentNode.removeChild(s2);
                 }
