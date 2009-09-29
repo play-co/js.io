@@ -32,12 +32,12 @@ def main(argv=None):
         argv = sys.argv[1:]
     parser = make_option_parser()
     (options, args) = parser.parse_args(argv)
-    print options, args
     if len(args) != 1:
         print "Invalid position arguments"
         parser.print_help()
         sys.exit(1)
     INPUT = args[0]
+    BASEDIR = os.path.dirname(INPUT)
     OUTPUT = options.output
 
 
@@ -47,29 +47,34 @@ def main(argv=None):
 
     if INPUT.endswith('.pkg'):
         pkg_data = json.loads(open(INPUT).read())
-        target = pkg_data['root'] + '.js'
-        output = compile_source(target, options, extras=[pkg_data['root']])
+        pkg_data['root'] = str(pkg_data['root'])
+        target = os.path.join(BASEDIR, pkg_data['root'] + '.js')
+        output = compile_source(target, options, BASEDIR, extras=[pkg_data['root']])
         output += '\njsio.require("%s");\ndelete jsio;\n' % (pkg_data['root'])
     else:
-        output = compile_source(INPUT, options)
+        output = compile_source(INPUT, options, BASEDIR)
 
-    import StringIO
-    jsm = JavascriptMinify()
-    f = open(OUTPUT, 'w')
     if options.minify:
         print "Minifying"
-        o = StringIO.StringIO()
-        jsm.minify(StringIO.StringIO(output), o)
-        output = o.getvalue()
+        output = minify(output)
     else:
         print "Skipping minify"
     print "Writing output", OUTPUT
+    f = open(OUTPUT, 'w')
     f.write(output)
     f.close()
     
-def compile_source(target, options, extras=[]):
-    print 'options are', options
-    orig_source = open(target).read()
+def minify(src):
+    import StringIO
+    jsm = JavascriptMinify()
+    o = StringIO.StringIO()
+    jsm.minify(StringIO.StringIO(src), o)
+    return o.getvalue()
+    
+    
+
+def compile_source(target, options, BASEDIR='.', extras=[]):
+    orig_source = open(os.path.join(BASEDIR, target)).read()
     if target.endswith('.html'):
         soup = Soup(orig_source)
         orig_source = ""
@@ -82,8 +87,7 @@ def compile_source(target, options, extras=[]):
     env_path = 'jsio.env.' + options.environment + '.' + options.transport
     checked = ['jsio', 'jsio.env.', env_path]
     dependancies = map(lambda x: (x, ''), (extract_dependancies(target_source) + extras))
-    env = remove_comments(open('jsio/env/' + options.environment + '/' + options.transport + '.js').read())
-    print extract_dependancies(env)
+    env = remove_comments(open(os.path.join(BASEDIR, 'jsio/env/' + options.environment + '/' + options.transport + '.js')).read())
     dependancies.extend(map(lambda x: (x, 'jsio.env.browser.'), extract_dependancies(env)))
     while dependancies:
         pkg, path = dependancies.pop(0)
@@ -91,25 +95,24 @@ def compile_source(target, options, extras=[]):
         if full_path in checked:
             continue
         target = path_for_module(full_path)
-        src = remove_comments(open(target).read())
+        src = remove_comments(open(os.path.join(BASEDIR, target)).read())
         depends = map(lambda x: (x, full_path), extract_dependancies(src))
         dependancies.extend(depends)
         checked.append(full_path)
         
-    src_template = "(function(_){with(_){delete _;(function(){ %s}).call(this)}})\n//@ sourceURL=%s";
     sources = {}
-    
+    print 'checked is', checked
     for full_path in checked:
-        print "Loading dependancy", full_path
         if full_path == 'jsio':
             continue
+        print "Loading dependancy", full_path
         filename = path_for_module(full_path)
-        src= open(filename).read()
+        src= open(os.path.join(BASEDIR, filename)).read()
             
-        sources[full_path] = {'src': src, 'url': filename, }
+        sources[full_path] = {'src': minify(src), 'url': filename, }
         
     out = ',\n'.join([ repr(key) + ": " + json.dumps(val) for (key, val) in sources.items() ])
-    jsio_src = open('jsio/jsio.js').read()
+    jsio_src = open(os.path.join(BASEDIR, 'jsio/jsio.js')).read()
     final_output = jsio_src.replace("        // Insert pre-loaded modules here...", out)
     return final_output
 
