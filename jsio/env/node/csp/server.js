@@ -255,7 +255,7 @@ csp.Session = Class(function() {
 			};
 		},
 		send: function (request, response) {
-			node.stdio.writeError('raw request data: ' + request.data + '\n')
+			// node.stdio.writeError('raw request data: ' + request.data + '\n')
 			var batch = JSON.parse(request.data);
 			while (batch[0] != undefined) {
 				// packetId, encoding, content = batch.shift()
@@ -400,12 +400,8 @@ csp.Server = Class(node.EventEmitter, function () {
 	var resources = Set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
-		debug('this:', this)
 		getRequestBody(request).addCallback(bind(this, function(body) {
-			debug('this:', this)
-			node.stdio.writeError('session url: ' + this._session_url + '\n')
 			try {
-				node.stdio.writeError('request path: ' + request.uri.path + '\nsession_url: ' + this._session_url + '/\n' )
 				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
 				                    'Request to invalid session URL', 404);
 				assertOrRenderError(request.method in methods,
