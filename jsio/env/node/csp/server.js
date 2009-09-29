@@ -274,7 +274,7 @@ csp.Session = Class(function() {
 			while (this.incomingPacketBuffer[0] !== undefined) {
 				var nextPacketPayload = this.incomingPacketBuffer.shift();
 				this.lastSequentialIncomingId += 1;
-				this.connection._emitReceive(nextPacketPayload);
+				this.connection._receive(nextPacketPayload);
 			}; // this can leave packets in the buffer, to handled later, in order
 			this.renderResponse(response, '"OK"');
 		},
@@ -298,10 +298,11 @@ csp.Connection = Class(node.EventEmitter, function() {
 	this.init = function (session) {
 		this.remoteAddress = null; // XXX get remote address from requests
 		this.readyState = 'open';
+		this._session = session;
 		this._encoding = 'binary';
 		this._utf8buffer = '';
 	};
-	this._emitReceive = function (data) {
+	this._receive = function (data) {
 		if (this._encoding === 'utf8') {
 			this._utf8buffer += data;
 			// data, len_parsed = utf8.decode(this._utf8buffer)
@@ -326,10 +327,10 @@ csp.Connection = Class(node.EventEmitter, function() {
 		encoding = encoding || 'binary'; // default to 'binary'
 		assert(encoding in known_encodings, 'unrecognized encoding');
 		data = (encoding === 'utf8') ? utf8.encode(data) : data;
-		session.send(data);
+		this._session.send(data);
 	};
 	this.close = function () {
-		session.close();
+		this._session.close();
 	};
 });
 
@@ -339,7 +340,9 @@ csp.createServer = function (connection_listener) {
 
 csp.Server = Class(node.EventEmitter, function () {
 	this.init = function () {
+		node.EventEmitter.call(this);
 		this._session_url = ''; // XXX this could be changed or made into a parameter
+		debug('starting server, session url is:', this._session_url)
 	};
 	var CSPError = this.CSPError = Class(AssertionError, function (supr) {
 		this.name = 'CSPError'
@@ -397,8 +400,12 @@ csp.Server = Class(node.EventEmitter, function () {
 	var resources = Set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
+		debug('this:', this)
 		getRequestBody(request).addCallback(bind(this, function(body) {
+			debug('this:', this)
+			node.stdio.writeError('session url: ' + this._session_url + '\n')
 			try {
+				node.stdio.writeError('request path: ' + request.uri.path + '\nsession_url: ' + this._session_url + '/\n' )
 				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
 				                    'Request to invalid session URL', 404);
 				assertOrRenderError(request.method in methods,
@@ -450,7 +457,7 @@ csp.Server = Class(node.EventEmitter, function () {
 		}));
 	};
 	this.listen = function (port, host) {
-		var server = node.http.createServer(this._handleRequest);
+		var server = node.http.createServer(bind(this, this._handleRequest));
 		server.listen(port, host);
 		hoststring = host ? host : 'localhost';
 		puts('CSP running at http://' + hoststring + ':' + port + this._session_url + '/');

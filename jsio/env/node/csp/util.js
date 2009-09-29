@@ -79,7 +79,7 @@ var Class = exports.Class = function(parent, proto) {
 	});
 	cls.prototype.constructor = cls;
 	return cls;
-}
+};
 
 // helper to make a hash table from the arguments for membership testing
 // Use like: 'a' in Set('a', 'b', 'c')
@@ -90,7 +90,7 @@ var Set = this.Set = function () {
 		set[arguments[i]] = true;
 	};
 	return set;
-}
+};
 
 // helper to test if string 2 is at the beginning of string 1
 var startswith = this.startswith = function (str1, str2) {
