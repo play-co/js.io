@@ -161,23 +161,22 @@ csp.Session = Class(function() {
 		this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
 	};
 	this.sendHeaders = function (response, contentLength) {
+		var allowOrigin = '*'; // XXX: Make Access-Control configurable
 		if (contentLength === 'stream') {
-			response.sendHeader(200, [
-				['Content-Type', this.variables.contentType],
-				['Cache-Control', 'no-cache, must-revalidate'],
-				['Transfer-Encoding', 'chunked'],
-				// XXX: Make Access-Control configurable
-				['Access-Control-Allow-Origin', '*']
-			]);
+			response.sendHeader(200, {
+				'Content-Type'                : this.variables.contentType,
+				'Cache-Control'               : 'no-cache, must-revalidate',
+				'Transfer-Encoding'           : 'chunked',
+				'Access-Control-Allow-Origin' : allowOrigin
+			});
 		}
 		else if (contentLength >= 0) {
-			response.sendHeader(200, [
-				['Content-Type', this.variables.contentType],
-				['Cache-Control', 'no-cache, must-revalidate'],
-				['Content-Length', contentLength],
-				// XXX: Make Access-Control configurable
-				['Access-Control-Allow-Origin', '*']
-			]);
+			response.sendHeader(200, {
+				'Content-Type'                : this.variables.contentType,
+				'Cache-Control'               : 'no-cache, must-revalidate',
+				'Content-Length'              : contentLength,
+				'Access-Control-Allow-Origin' : allowOrigin
+			});
 		};
 	};
 	this.startStream = function () {
@@ -352,8 +351,8 @@ csp.Server = Class(node.EventEmitter, function () {
 		return assert_or_error(exp, CSPError, message, code);
 	};
 	var renderError = function (response, code, message) {
-		response.sendHeader(code, [['Content-Type', 'text/plain'],
-		                           ['Content-Length', message.length]]);
+		response.sendHeader(code, {'Content-Type'   : 'text/plain',
+		                           'Content-Length' : message.length});
 		response.sendBody(message);
 		response.finish();
 	};
@@ -361,8 +360,8 @@ csp.Server = Class(node.EventEmitter, function () {
 		debug('SEND STATIC', path, response)
 		staticFile(path.join('/'))	// defined in util.js
 			.addCallback(function(content){
-				response.sendHeader(200, [['Content-Type', 'text/plain'],
-				                          ['Content-Length', content.length]]);
+				response.sendHeader(200, {'Content-Type'   : 'text/plain',
+				                          'Content-Length' : content.length});
 				response.sendBody(content);
 				response.finish();
 			})
