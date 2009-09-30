@@ -352,8 +352,8 @@ csp.Server = Class(node.EventEmitter, function () {
 			var args = Array.prototype.slice.call(arguments, 1);
 		};
 	});
-	var assertOrRenderError = function (exp, message, code) {
-		if (!exp) { throw new CSPError(message, code) };
+	var assertOrRenderError = function (exp, code, message) {
+		if (!exp) { throw new CSPError(code, message) };
 	};
 	var renderError = function (response, code, message) {
 		response.sendHeader(code, {'Content-Type'   : 'text/plain',
@@ -403,9 +403,9 @@ csp.Server = Class(node.EventEmitter, function () {
 		getRequestBody(request).addCallback(bind(this, function(body) {
 			try {
 				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
-				                    'Request to invalid session URL', 404);
+				                    404, 'Request to invalid session URL');
 				assertOrRenderError(request.method in methods,
-				                    'Invalid HTTP method, ' + request.method, 405);
+				                    405, 'Invalid HTTP method, ' + request.method);
 				var relpath = request.uri.path.slice(this._session_url.length + 1).split('/');
 				var resource = relpath[0];
 				if (resource === 'static') {
@@ -413,19 +413,19 @@ csp.Server = Class(node.EventEmitter, function () {
 					return;
 				};
 				assertOrRenderError((relpath.length == 1) && (resource in resources),
-				                    'Invalid resource, ' + relpath, 404);
+				                    404, 'Invalid resource, ' + relpath);
 				var params = request.uri.params;
 				// 'data' is either the POST body if it exists, or the 'd' variable
 				request.data = body || params.d || null;
 				if (resource === 'handshake') {
-					assertOrRenderError(!params.s, 'Handshake cannot have session', 400);
+					assertOrRenderError(!params.s, 400, 'Handshake cannot have session');
 					try {
 						var dict = JSON.parse(request.data);
 						// make sure our json dict is an object literal
 						assert((dict instanceof Object) && !(dict instanceof Array));
 					} catch (err) {
 						debug(['INVALID HANDSHAKE, ', request]);
-						throw new CSPError('Invalid data parameter for handshake', 400);
+						throw new CSPError(400, 'Invalid data parameter for handshake');
 					};
 					var session = new csp.Session();
 					var connection = new csp.Connection(session);
@@ -434,7 +434,7 @@ csp.Server = Class(node.EventEmitter, function () {
 					connection.emit('connect');
 				} else {
 					var session = sessionDict[params.s];
-					assertOrRenderError(session, 'Invalid or missing session', 400);
+					assertOrRenderError(session, 400, 'Invalid or missing session');
 					// 'ackId' is either the 'Last-Event-Id' header, or the 'a' variable
 					var ackId = parseInt(request.headers['Last-Event-Id']) || parseInt(params.a) || -1;
 					session.receiveAck(ackId);
