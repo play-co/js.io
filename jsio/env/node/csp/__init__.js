@@ -33,7 +33,6 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
     this.listen = function() {
         var s = createServer(bind(this, function(socket) {
             logger.info("Incoming connection");
-            logger.info('socket is', JSON.stringify(socket));
             socket.setEncoding("utf8");
             socket.addListener("connect", bind(this, function() {
                 logger.debug('connect event');
