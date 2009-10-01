@@ -1,4 +1,4 @@
-require('jsio', ['getEnvironment', 'log', 'bind', 'test']);
+require('jsio', ['getEnvironment', 'log', 'bind']);
 
 function getObj(objectName, transportName, envName) {
 	envName = envName || getEnvironment();
