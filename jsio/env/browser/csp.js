@@ -3,11 +3,10 @@ require('jsio.logging');
 require('jsio.interfaces');
 require('jsio.csp.client', 'CometSession');
 
-var logger = jsio.logging.getLogger('env.browser.csp')
+var logger = jsio.logging.getLogger('env.browser.csp');
 
 exports.Connector = Class(jsio.interfaces.Connector, function() {
     this.connect = function() {
-        logger.debug('create Orbited.TCPSocket');
         var conn = new CometSession();
         conn.onopen = bind(this, function() {
             logger.debug('conn has opened');
@@ -15,7 +14,7 @@ exports.Connector = Class(jsio.interfaces.Connector, function() {
         });
         conn.onclose = bind(this, function(code) {
             logger.debug('conn closed without opening, code:', code);
-        })
+        });
         logger.debug('open the conection');
         conn.connect(this._opts.url, {encoding: 'plain'});
     }
@@ -30,7 +29,7 @@ var Transport = Class(jsio.interfaces.Transport, function() {
         this._conn.onread = bind(protocol, 'dataReceived');
         this._conn.onclose = bind(protocol, 'connectionLost'); // TODO: map error codes
     }
-    
+	
     this.write = function(data, encoding) {
         this._conn.write(data);
     }
