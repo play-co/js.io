@@ -10,7 +10,9 @@
 	jsio.require('world.server', 'WorldServer')
 	worldServer = new WorldServer();
 
-	var listener = jsio.listen(worldServer, 'postmessage')
+	var listener = jsio.listen(worldServer, 'postmessage', {
+		clientUrl: 'index.html?transport=postmessage'
+	})
 	onload = function() {
 		document.body.appendChild(listener._button);
 	}

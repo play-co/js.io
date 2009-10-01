@@ -22,7 +22,7 @@ function addToHistory(params, color) {
 	var postfix = h >= 12 ? 'pm' : 'am';
 	if(m < 10) { m = '0' + m; }
 	if(h > 12) { h -= 12; }
-	
+		
 	if(!color) {
 		color = client.players[params.username] && client.players[params.username].color || {r: 128, b: 128, g: 128};
 	}
@@ -106,6 +106,13 @@ window.onload = function() {
 	$.onEvent('joinInput', 'keyup', function(e) { if(e.keyCode == 13) { join(); }});
 	$.onEvent('joinBtn', 'click', join);
 
+	var queryParts = document.location.search.substr(1).split('&')
+	var clientParams = {};
+	for (var i=0, part; part = queryParts[i]; i++) { 
+		var kvp = part.split('=');
+		clientParams[decodeURIComponent(kvp[0])] = decodeURIComponent(kvp[1]); 
+	}
+
 	var joinInput = $.id('joinInput');
 	var sayInput = $.id('sayInput');
 	function join() {
@@ -119,7 +126,8 @@ window.onload = function() {
 		window.client = new WorldClient(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
 		client.subscribe('welcome', window, 'onConnect');
 		client.subscribe('say', window, 'addToHistory');
-		jsio.connect(client, 'csp', {url:"http://" + document.domain + ":5555"});
+		
+		jsio.connect(client, clientParams.transport || 'csp', { url: "http://" + document.domain + ":5555" });
 	}
 }
 </script>

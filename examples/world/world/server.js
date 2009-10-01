@@ -21,12 +21,12 @@ exports.WorldServer = Class(Server, function(supr) {
 		}
 	};
 
-	this.join = function(conn, username) {
-		if (username in this.players) {
+	this.join = function(conn, params) {
+		if (params.username in this.players) {
 			throw new Error("player already taken");
 		}
 		this.broadcast('JOIN', params);
-		this.players[username] = conn;
+		this.players[params.username] = conn;
 	};
 
 	this.leave = function(conn) {
@@ -62,7 +62,7 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 		if(name == 'LOGIN') {
 			if (this.username) {
 				this.sendFrame('ERROR', {msg: 'Already logged in'});
-				break;
+				return;
 			}
 
 			try {
@@ -80,7 +80,7 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 					presence.push(this.server.players[username].params);
 				}
 				
-				this.server.join(this, this.username);
+				this.server.join(this, this.params);
 
 				this.sendFrame('WELCOME', {
 					presence: presence,
