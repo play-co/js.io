@@ -2,6 +2,12 @@
 
 var BACKOFF = 50;
 
+var log = function() {
+	if(typeof console != 'undefined' && console.log) {
+		console.log.apply(console, arguments);
+	}
+}
+
 if (!global.csp) {
     // For jsonp callbacks
     global.csp = {}
@@ -20,7 +26,7 @@ csp.readyState = {
     'closed':  4
 };
 csp.util = {};
-console.log('csp is', csp);
+log('csp is', csp);
 // Add useful url parsing library to socket.util
 (function() {
 // parseUri 1.2.2
@@ -60,25 +66,25 @@ csp.util.isSameDomain = function(urlA, urlB) {
 }
 
 csp.util.chooseTransport = function(url, options) {
-//    console.log(location.toString())
+//    log(location.toString())
     var test = location.toString().match('file://');
     if (test && test.index === 0) {
-//      console.log('local file, use jsonp')
+//      log('local file, use jsonp')
       return transports.jsonp // XXX
     }
-//    console.log('choosing');
+//    log('choosing');
     if (csp.util.isSameDomain(url, location.toString())) {
-//        console.log('same domain, xhr');
+//        log('same domain, xhr');
         return transports.xhr;
     }
-//    console.log('not xhr');
+//    log('not xhr');
     try {
         if (window.XMLHttpRequest && (new XMLHttpRequest()).withCredentials !== undefined) {
-//            console.log('xhr')
+//            log('xhr')
             return transports.xhr;
         }
     } catch(e) { }
-//    console.log('jsonp');
+//    log('jsonp');
     return transports.jsonp
 }
 
@@ -102,15 +108,15 @@ csp.CometSession = function() {
     var buffer = "";
     self.write = function() { throw new Error("invalid readyState"); }
     self.onopen = function() {
-	//               console.log('onopen', self.sessionKey);
+	//               log('onopen', self.sessionKey);
     }
 
     self.onclose = function(code) {
-	//        console.log('onclose', code);
+	//        log('onclose', code);
     }
 
     self.onread = function(data) {
-	//        console.log('onread', data);
+	//        log('onread', data);
     }
 
     self.setEncoding = function(encoding) {
@@ -180,7 +186,7 @@ csp.CometSession = function() {
 }
 
 var Transport = function(cspId, url) {
-//    console.log('url', url);
+//    log('url', url);
     var self = this;
     self.opened = false;
     self.cspId = cspId;
@@ -344,14 +350,14 @@ transports.xhr = function(cspId, url) {
         xhr.setRequestHeader('Content-Type', 'text/plain')
         var aborted = false;
         var timer = null;
-//        console.log('setting on ready state change');
+//        log('setting on ready state change');
         xhr.onreadystatechange = function() {
-//            console.log('ready state', xhr.readyState)
+//            log('ready state', xhr.readyState)
             try {
-//              console.log('status', xhr.status)
+//              log('status', xhr.status)
             } catch (e) {}
             if (aborted) {
-//                console.log('aborted');
+//                log('aborted');
                 return eb();
             }
             if (xhr.readyState == 4) {
@@ -359,14 +365,14 @@ transports.xhr = function(cspId, url) {
 		    // xhr.status will be 0 for localhost requests.
 		    // this is probably ok. - desmaj 2009-28-09
                     if (xhr.status == 200 || xhr.status == 0) {
-//		      console.log("clearing timer");
+//		      log("clearing timer");
                         clearTimeout(timer);
                         // XXX: maybe the spec shouldn't wrap ALL responses in ( ).
                         //      -mcarter 8/11/09
-//		      console.log("parsing data");
-//		      console.log("length: " + xhr.responseText.length);
+//		      log("parsing data");
+//		      log("length: " + xhr.responseText.length);
                         var data = JSON.parse(xhr.responseText.substring(1, xhr.responseText.length-1));
-//		      console.log("parsed data");
+//		      log("parsed data");
 					}
 				} catch(e) {}
 
@@ -377,7 +383,7 @@ transports.xhr = function(cspId, url) {
 	                } catch(e) {
 						// use a timeout to get proper tracebacks
 						setTimeout(function() {
-							//		console.log(e);
+							//		log(e);
 							throw e;
 						}, 0);
 	                }
@@ -385,9 +391,9 @@ transports.xhr = function(cspId, url) {
 				}
 
                 try {
-//                    console.log('xhr.responseText', xhr.responseText);
+//                    log('xhr.responseText', xhr.responseText);
                 } catch(e) {
-                    //console.log('ex');
+                    //log('ex');
                 }
                 return eb();
             }
@@ -395,7 +401,7 @@ transports.xhr = function(cspId, url) {
         if (timeout) {
             timer = setTimeout(function() { aborted = true; xhr.abort(); }, timeout*1000);
         }
-//        console.log('send xhr', payload);
+//        log('send xhr', payload);
         xhr.send(payload)
 
     }
@@ -423,10 +429,10 @@ transports.xhr = function(cspId, url) {
         return payload
     }
 }
-console.log('csp is', csp);
-console.log('global.csp is', global.csp);
+log('csp is', csp);
+log('global.csp is', global.csp);
 if (!global.csp) {
-    console.log('obliterate csp', global.csp);
+    log('obliterate csp', global.csp);
     global.csp = {}
 }
 global.csp._jsonp = {}
@@ -502,7 +508,7 @@ transports.jsonp = function(cspId, url) {
                     cb.apply(null, arguments);
                 }
                 else {
-//                    console.log('suppressing callback', rType, url, args, cb, eb, timeout);
+//                    log('suppressing callback', rType, url, args, cb, eb, timeout);
                 }
             }
             var jsonpId = setJsonpCallbacks(callback, errback);
