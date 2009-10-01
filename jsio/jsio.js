@@ -63,14 +63,13 @@
 	}
 	var modulePathCache = {}
 	var getModulePathPossibilities = function(pathString) {
+		var isModule = pathString.charAt(pathString.length-1) == '.';
 		var segments = pathString.split('.')
-		var modPath = pathString.split('.').join('/');
-		var isModule = modPath[modPath.length-1] == '/';
+		var modPath = segments.join('/');
 		var out;
 		if (segments[0] in modulePathCache) {
-			out = [[modulePathCache[segments[0]] + '/' + segments.join('/') + (isModule ? '__init__.js' : '.js'), null]]
-		}
-		else {
+			out = [[modulePathCache[segments[0]] + '/' + modPath + (isModule ? '__init__.js' : '.js'), null]]
+		} else {
 			out = [];
 			for (var i = 0, path; path = exports.path[i]; ++i) {
 				out.push([path + '/' + modPath + (isModule ? '__init__.js' : '.js'), path])
@@ -79,29 +78,24 @@
 		return out;
 	}
 	
-	exports.path = ['.']
+	exports.path = ['.'];
 	switch(exports.getEnvironment()) {
 		case 'node':
 			exports.log = function() {
-			for (var i = 0, item; item=arguments[i]; ++i) {
-				if (typeof(item) == 'object') {
-					arguments[i] = JSON.stringify(arguments[i]);
+				for (var i = 0, item; item=arguments[i]; ++i) {
+					if (typeof(item) == 'object') {
+						arguments[i] = JSON.stringify(arguments[i]);
+					}
 				}
-			}
 				node.stdio.writeError([].slice.call(arguments, 0).join(' ') + "\n");
 			}
-			console = {log: exports.log};
+			
 			window = process;
 			var compile = function(context, args) {
 				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
 				fn.call(context.exports, context);
 			}
 
-			var windowCompile = function(context, args) {
-				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n})()}}}", args.url);
-				fn.call(context.exports, context);
-			}
-			
 			var windowCompile = function(context, args) {
 				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n})()}}}", args.url);
 				fn.call(context.exports, context);
@@ -116,6 +110,7 @@
 				}
 				return path;
 			}
+			
 			var getModuleSourceAndPath = function(pathString) {
 				var baseMod = pathString.split('.')[0];
 				var urls = getModulePathPossibilities(pathString);
@@ -137,10 +132,9 @@
 
 			var jsioPath = segments.slice(0,segments.length-2).join('/');
 			if (jsioPath) {
-				exports.path.push(jsioPath)
+				exports.path.push(jsioPath);
 				modulePathCache.jsio = jsioPath;
-			}
-			else {
+			} else {
 				modulePathCache.jsio = '.';
 			}
 			break;
@@ -163,14 +157,14 @@
 				fn.call(context.exports, context);
 			}
 			
-			var windowCompile = function(context, args) {
-				var f = "var fn = function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}}\n//@ sourceURL=" + args.url;
-				eval(f);
-				fn.call(context.exports, context);
-			}
-			
 			var makeRelative = function(path) {
 				return path;
+			}
+			
+			var createXHR = function() {
+				return window.XMLHttpRequest ? new XMLHttpRequest() 
+					: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
+					: null;
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
@@ -182,10 +176,9 @@
 				for (var i = 0, url; url = urls[i]; ++i) {
 					var cachePath = url[1];
 					var url = url[0];
-					var xhr = new XMLHttpRequest()
+					var xhr = createXHR();
 					var failed = false;
 					try {
-						var xhr = new XMLHttpRequest()
 						xhr.open('GET', url, false);
 						xhr.send(null);
 					} catch(e) {
@@ -208,12 +201,13 @@
 				}
 				throw new Error("Module not found: " + pathString);
 			}
+			
 			try {
 				var scripts = document.getElementsByTagName('script');
 				for (var i = 0, script; script = scripts[i]; ++i) {
-					if (script.src.match('jsio/jsio.js$')) {
-						var segments = script.src.split('/')
-						var jsioPath = segments.slice(0,segments.length-2).join('/');
+					if(/jsio\/jsio\.js$/.test(script.src)) {
+						var segments = script.src.split('/');
+						var jsioPath = segments.slice(0,segments.length-2).join('/') || '.';
 						exports.path.push(jsioPath);
 						modulePathCache.jsio = jsioPath;
 						break;
