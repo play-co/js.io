@@ -118,27 +118,6 @@ var assert = this.assert = function (exp, message) {
 	};
 };
 
-var CodecError = this.CodecError = Class(JSIOError, function (supr) {
-	this.name = 'CodecError'
-	this.init = function () {supr(this, 'init', arguments)}
-});
-
-// note that 'bytes' are actually just encoded using the lower byte of a
-// each 16-bit-unit of a JS String, while 'raw' means an array of integers.
-var raw_to_bytes = this.raw_to_bytes = function (raw) {
-	return String.fromCharCode.apply(String, raw);
-};
-
-var bytes_to_raw = this.bytes_to_raw = function (bytes) {
-	assert_or_error(!(/[^\x00-\xFF]/.test(bytes)), CodecError,
-	                'out-of-range input characters')
-	raw = [];
-	for (var i=0, n=bytes.length; i < n; i++) {
-		raw.push(bytes.charCodeAt(i));
-	};
-	return raw;
-};
-
 // schedule a callback to run at the next available moment,
 // equivalent to setTimeout(callback, 0)
 var reschedule = this.reschedule = function (callback) {
