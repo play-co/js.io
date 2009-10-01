@@ -471,4 +471,4 @@ function start_echo_server () {
 	server.listen(8000);
 	puts('CSP-based echo server running.');
 };
-start_echo_server(); // un-comment to run echo server when this file runs
+// start_echo_server(); // un-comment to run echo server when this file runs
