@@ -306,8 +306,14 @@ transports.xhr = function(cspId, url) {
         if (window.XDomainRequest) {
             return new XDomainRequest();
         }
-        // TODO: use XDomainRequest where available.
-        return new XMLHttpRequest();
+		if(window.XMLHttpRequest) {
+			return new XMLHttpRequest();
+		}
+		if(window.ActiveXObject) {
+			return new ActiveXObject("Msxml2.XMLHTTP");
+		}
+		
+		throw new Error("XHR is not supported in this environment");
     }
     var sendXhr = makeXhr();
     var cometXhr = makeXhr();
