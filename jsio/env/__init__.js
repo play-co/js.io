@@ -2,7 +2,7 @@ jsio('import log, bind');
 jsio('from jsio import getEnvironment');
 
 function getObj(objectName, transportName, envName) {
-	jsio('import .' + (envName || getEnvironment()) + '.' + transportName + ' as result');
+	jsio('from .' + (envName || getEnvironment()) + '.' + transportName + ' import ' + objectName + ' as result');
 	return result;
 }
 

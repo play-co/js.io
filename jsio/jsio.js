@@ -75,7 +75,6 @@
 				out.push([path + '/' + modPath + (isModule ? '__init__.js' : '.js'), path])
 			}
 		}
-		log(out);
 		return out;
 	}
 	
@@ -224,7 +223,7 @@
 	var modules = {jsio: exports, bind: bind, Class: Class, log: log};
 	
 	function copyToContext(context, pkg, as) {
-		var segments = item.from.split('.');
+		var segments = pkg.split('.');
 		
 		// Remove any trailing dot(s)
 		while (segments[segments.length-1] == "") { segments.pop(); }
@@ -232,12 +231,27 @@
 		var len = segments.length - 1;
 		for(var i = 0, segment; (segment = segments[i]) && i < len; ++i) {
 			if(!segment) continue;
-			if (!c[segment]) {
-				c[segment] = {};
-			}
-			c = c[segment]
+			if (!c[segment]) { c[segment] = {}; }
+			c = c[segment];
 		}
 		c[segments[len]] = modules[pkg];
+	}
+	
+	function resolveRelativePath(pkg, path) {
+		if(pkg.charAt(0) == '.') {
+			pkg = pkg.substring(1);
+			var segments = path.split('.');
+			while(pkg.charAt(0) == '.') {
+				pkg = pkg.slice(1);
+				segments.pop();
+			}
+			
+			var prefix = segments.join('.');
+			if (prefix) {
+				return prefix + '.' + pkg;
+			}
+		}
+		return pkg;
 	}
 	
 	function _require(context, path, what) {
@@ -245,36 +259,28 @@
 		var match, imports = [];
 		if((match = what.match(/^from\s+([\w.]+)\s+import\s+(.*)$/))) {
 			imports[0] = {from: match[1], import: {}};
-			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(a, b, c) {
-				imports[0].import[b] = c || b;
+			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(_, pkg, as) {
+				pkg = resolveRelativePath(pkg, path);
+				imports[0].import[pkg] = as || pkg;
 			});
 		} else if((match = what.match(/^import\s+(.*)$/))) {
-			match[1].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?,?/g, function(a, b, c) {
-				imports[imports.length] = c ? {from: b, as: c} : {from: b};
+			match[1].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?,?/g, function(_, pkg, as) {
+				pkg = resolveRelativePath(pkg, path);
+				imports[imports.length] = as ? {from: pkg, as: as} : {from: pkg};
 			});
 		} else if((match = what.match(/^external\s+(.*)$/))) {
 			imports[0] = {from: match[1], external: true, import: {}};
-			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(a, b, c) {
-				imports[0].import[b] = c || b;
+			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(_, pkg, as) {
+				pkg = resolveRelativePath(pkg, path);
+				imports[0].import[pkg] = as || pkg;
 			});
 		}
 		
+		log(what, imports);
+
 		// import each item in the what statement
-		for(var i = 0, len = imports.length; (item = imports[i]) || i < len; ++i) {
+		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
-			
-			// resolve relative paths
-			if(pkg.charAt(0) == '.') {
-				pkg = pkg.substring(1);
-				var segments = path.split('.');
-				while(pkg.charAt(0) == '.') {
-					pkg = pkg.slice(1);
-					segments.pop();
-				}
-				
-				var prefix = segments.join('.');
-				if (prefix) { pkg = prefix + '.' + pkg; }
-			}
 			
 			// eval any packages that we don't know about already
 			var segments = pkg.split('.');
@@ -282,6 +288,7 @@
 				var result = getModuleSourceAndPath(pkg);
 				var newRelativePath = segments.slice(0, segments.length - 1).join('.');
 				var newContext = {};
+				log('external?', item.external);
 				if(!item.external) {
 					newContext.exports = {};
 					newContext.global = window;
@@ -303,7 +310,7 @@
 					modules[pkg] = newContext.window;
 				}
 			}
-			
+
 			if(item.as) {
 				copyToContext(context, pkg, item.as);
 			} else if(item.import) {
@@ -313,16 +320,17 @@
 					for(var j in item.import) { context[item.import[j]] = modules[pkg][j]; }
 				}
 			} else {
+				log('>>', pkg, item.from);
 				copyToContext(context, pkg, item.from);
 			}
 		}
 	}
 	
 	// create the internal require function bound to a local context
-	var _localContext = {jsio: bind(this, _require, _localContext, '')};
+	var _localContext = {jsio: bind(this, _require, _localContext, 'jsio')};
 	var jsio = _localContext.jsio;
 	
-	jsio('import .env');
+	jsio('import .env.');
 	exports.listen = function(server, transportName, opts) {
 		var listener = new (jsio.env.getListener(transportName))(server, opts);
 		listener.listen();
