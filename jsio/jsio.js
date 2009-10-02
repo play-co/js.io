@@ -128,6 +128,7 @@
 				}
 				throw new Error("Module not found: " + pathString);
 			}
+			
 			var segments = __filename.split('/');
 
 			var jsioPath = segments.slice(0,segments.length-2).join('/');
@@ -241,16 +242,16 @@
 	function _require(context, path, what) {
 		// parse the what statement
 		var match, imports = [];
-		if((match = def.match(/^from\s+([\w.]+)\s+import\s+(.*)$/))) {
+		if((match = what.match(/^from\s+([\w.]+)\s+import\s+(.*)$/))) {
 			imports[0] = {from: match[1], import: {}};
 			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(a, b, c) {
 				imports[0].import[b] = c || b;
 			});
-		} else if((match = def.match(/^import\s+(.*)$/))) {
+		} else if((match = what.match(/^import\s+(.*)$/))) {
 			match[1].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?,?/g, function(a, b, c) {
 				imports[imports.length] = c ? {from: b, as: c} : {from: b};
 			});
-		} else if((match = def.match(/^external\s+(.*)$/))) {
+		} else if((match = what.match(/^external\s+(.*)$/))) {
 			imports[0] = {from: match[1], external: true, import: {}};
 			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(a, b, c) {
 				imports[0].import[b] = c || b;
@@ -280,7 +281,7 @@
 				var result = getModuleSourceAndPath(pkg);
 				var newRelativePath = segments.slice(0, segments.length - 1).join('.');
 				var newContext = {};
-				if(!external) {
+				if(!item.external) {
 					newContext.exports = {};
 					newContext.global = window;
 					newContext.jsio = bind(this, _require, newContext, newRelativePath);
@@ -294,16 +295,8 @@
 					modules[pkg] = newContext.exports;
 				} else {
 					newContext['window'] = {};
-					if(what instanceof Array) {
-						for(var i = 0, key; key = what[i]; ++i) {
-							newContext['window'][key] = null;
-						}
-					} else if(what instanceof Object) {
-						for(var key in what) {
-							newContext['window'][key] = null;
-						}
-					} else {
-						newContext['window'][what] = null;
+					for(var j in item.import) {
+						newContext['window'][j] = null;
 					}
 					windowCompile(newContext, result);
 					modules[pkg] = newContext.window;
