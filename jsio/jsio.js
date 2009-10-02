@@ -276,8 +276,6 @@
 			});
 		}
 		
-		log(what, imports);
-
 		// import each item in the what statement
 		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
@@ -288,7 +286,6 @@
 				var result = getModuleSourceAndPath(pkg);
 				var newRelativePath = segments.slice(0, segments.length - 1).join('.');
 				var newContext = {};
-				log('external?', item.external);
 				if(!item.external) {
 					newContext.exports = {};
 					newContext.global = window;
@@ -320,15 +317,14 @@
 					for(var j in item.import) { context[item.import[j]] = modules[pkg][j]; }
 				}
 			} else {
-				log('>>', pkg, item.from);
 				copyToContext(context, pkg, item.from);
 			}
 		}
 	}
 	
 	// create the internal require function bound to a local context
-	var _localContext = {jsio: bind(this, _require, _localContext, 'jsio')};
-	var jsio = _localContext.jsio;
+	var _localContext = {};
+	var jsio = _localContext.jsio = bind(this, _require, _localContext, 'jsio')
 	
 	jsio('import .env.');
 	exports.listen = function(server, transportName, opts) {
