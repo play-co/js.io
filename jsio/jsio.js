@@ -75,6 +75,7 @@
 				out.push([path + '/' + modPath + (isModule ? '__init__.js' : '.js'), path])
 			}
 		}
+		log(out);
 		return out;
 	}
 	
