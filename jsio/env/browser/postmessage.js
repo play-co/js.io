@@ -1,6 +1,5 @@
-require('jsio', ['Class', 'log', 'bind']);
-require('jsio.util.browser', '$');
-require('jsio.interfaces');
+jsio('import Class, log, bind, jsio.interfaces');
+jsio('from jsio.util.browser import $');
 
 exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
     var ID = 0;

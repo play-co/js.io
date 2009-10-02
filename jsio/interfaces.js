@@ -1,5 +1,5 @@
 // Sort of like a twisted protocol
-require('jsio', ['Class'])
+jsio('import Class, bind');
 
 exports.Protocol = Class(function() {
     this.connectionMade = function(isReconnect) {

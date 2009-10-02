@@ -7,10 +7,11 @@
     var pre_require = [
         // Insert pre-require dependancies here
     ];
-
+	
+	var exportJsio = false;
 	if(typeof exports == 'undefined') {
-		exports = {};
-		window.jsio = exports;
+		window.jsio = bind(this, _require, window, '');
+		exports = window.jsio;
 	}
 	
 	exports.getEnvironment = function() {
@@ -19,8 +20,8 @@
 		}
 		return 'browser';
 	};
-
-	exports.bind = function(context, method/*, arg1, arg2, ... */){
+	
+	function bind(context, method/*, arg1, arg2, ... */){
 		var args = Array.prototype.slice.call(arguments, 2);
 		return function(){
 			method = (typeof method == 'string' ? context[method] : method);
@@ -28,9 +29,7 @@
 		}
 	};
 	
-	var bind = exports.bind;
-	
-	exports.Class = function(parent, proto) {
+	function Class(parent, proto) {
 		if(!parent) { throw new Error('parent or prototype not provided'); }
 		if(!proto) { proto = parent; }
 		else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
@@ -46,7 +45,7 @@
 		} else { 
 			proto.prototype = parent.prototype;
 		}
-		
+
 		var cls = function() { if(this.init) { this.init.apply(this, arguments); }}
 		cls.prototype = new proto(function(context, method, args) {
 			var args = args || [];
@@ -61,6 +60,7 @@
 		cls.prototype.constructor = cls;
 		return cls;
 	}
+	
 	var modulePathCache = {}
 	var getModulePathPossibilities = function(pathString) {
 		var isModule = pathString.charAt(pathString.length-1) == '.';
@@ -81,7 +81,7 @@
 	exports.path = ['.'];
 	switch(exports.getEnvironment()) {
 		case 'node':
-			exports.log = function() {
+			var log = function() {
 				for (var i = 0, item; item=arguments[i]; ++i) {
 					if (typeof(item) == 'object') {
 						arguments[i] = JSON.stringify(arguments[i]);
@@ -139,7 +139,7 @@
 			}
 			break;
 		default:
-			exports.log = function() {
+			var log = function() {
 				if (typeof console != 'undefined' && console.log) {
 					console.log.apply(console, arguments);
 				}
@@ -148,7 +148,9 @@
 			var compile = function(context, args) {
 				var code = "var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url;
 				eval(code);
-				fn.call(context.exports, context);
+				try {
+					fn.call(context.exports, context);
+				} catch(e) {}
 			}
 
 			var windowCompile = function(context, args) {
@@ -217,103 +219,116 @@
 			break;
 	}
 	exports.basePath = exports.path[exports.path.length-1];
-	var modules = {jsio: exports};
-	var _require = function(external, context, path, pkg, what) {
-		var origPkg = pkg;
-		if(pkg.charAt(0) == '.') {
-			pkg = pkg.slice(1);
-			// resolve relative paths
-			var segments = path.split('.');
-			while(pkg.charAt(0) == '.') {
-				pkg = pkg.slice(1);
-				segments.pop();
+	var modules = {jsio: exports, bind: bind, Class: Class, log: log};
+	
+	function copyToContext(context, pkg, as) {
+		var segments = item.from.split('.');
+		
+		// Remove any trailing dot(s)
+		while (segments[segments.length-1] == "") { segments.pop(); }
+		var c = context;
+		var len = segments.length - 1;
+		for(var i = 0, segment; (segment = segments[i]) && i < len; ++i) {
+			if(!segment) continue;
+			if (!c[segment]) {
+				c[segment] = {};
 			}
-			var prefix = segments.join('.');
-			if (prefix) {
-				pkg = segments.join('.') + '.' + pkg;
-			}
+			c = c[segment]
 		}
-
-		var segments = pkg.split('.');
-		if(!(pkg in modules)) {
-			var result = getModuleSourceAndPath(pkg);
-			var newRelativePath = segments.slice(0, segments.length - 1).join('.');
-			var newContext = {};
-			if(!external) {
-				newContext.exports = {};
-				newContext.global = window;
-				newContext.require = bind(this, _require, false, newContext, newRelativePath);
-				newContext.require.__jsio = true;
-				// TODO: FIX for "trailing ." case
-				var tmp = result.url.split('/')
-				newContext.require.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
-				newContext.require.__path = makeRelative(result.url);
-				newContext.external = bind(this, _require, true, newContext, newRelativePath);
-				newContext.jsio = {require: newContext.require, external: newContext.external};
-				compile(newContext, result);
-				modules[pkg] = newContext.exports;
-			} else {
-				newContext['window'] = {};
-				if(what instanceof Array) {
-					for(var i = 0, key; key = what[i]; ++i) {
-						newContext['window'][key] = null;
-					}
-				} else if(what instanceof Object) {
-					for(var key in what) {
-						newContext['window'][key] = null;
-					}
-				} else {
-					newContext['window'][what] = null;
-				}
-				windowCompile(newContext, result);
-				modules[pkg] = newContext.window;
-			}
+		c[segments[len]] = modules[pkg];
+	}
+	
+	function _require(context, path, what) {
+		// parse the what statement
+		var match, imports = [];
+		if((match = def.match(/^from\s+([\w.]+)\s+import\s+(.*)$/))) {
+			imports[0] = {from: match[1], import: {}};
+			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(a, b, c) {
+				imports[0].import[b] = c || b;
+			});
+		} else if((match = def.match(/^import\s+(.*)$/))) {
+			match[1].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?,?/g, function(a, b, c) {
+				imports[imports.length] = c ? {from: b, as: c} : {from: b};
+			});
+		} else if((match = def.match(/^external\s+(.*)$/))) {
+			imports[0] = {from: match[1], external: true, import: {}};
+			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(a, b, c) {
+				imports[0].import[b] = c || b;
+			});
 		}
-
-		if(what == '*') {
-			for(var i in modules[pkg]) {
-				context[i] = modules[pkg][i];
-			}
-		} else if(!what) {
-			var segments = origPkg.split('.');
-			// Remove trailing dot
-			while (segments[segments.length-1] == "") {
-				segments.pop()
-			}
-			var c = context;
-			var len = segments.length - 1;
-			for(var i = 0, segment; (segment = segments[i]) && i < len; ++i) {
-				if(!segment) continue;
-				if (!c[segment]) {
-					c[segment] = {};
-				}
-				c = c[segment]
-			}
-			c[segments[len]] = modules[pkg];
+		
+		// import each item in the what statement
+		for(var i = 0, len = imports.length; (item = imports[i]) || i < len; ++i) {
+			var pkg = item.from;
 			
-		} else if(typeof what == 'string') {
-			context[what] = modules[pkg][what];
-		} else if(what.constructor == Object) {
-			for(var item in what) {
-				context[what[item]] = modules[pkg][item];
+			// resolve relative paths
+			if(pkg.charAt(0) == '.') {
+				pkg = pkg.substring(1);
+				var segments = path.split('.');
+				while(pkg.charAt(0) == '.') {
+					pkg = pkg.slice(1);
+					segments.pop();
+				}
+				
+				var prefix = segments.join('.');
+				if (prefix) { pkg = prefix + '.' + pkg; }
 			}
-		} else {
-			for(var i = 0, item; item = what[i]; ++i) {
-				context[item] = modules[pkg][item];
+			
+			// eval any packages that we don't know about already
+			var segments = pkg.split('.');
+			if(!(pkg in modules)) {
+				var result = getModuleSourceAndPath(pkg);
+				var newRelativePath = segments.slice(0, segments.length - 1).join('.');
+				var newContext = {};
+				if(!external) {
+					newContext.exports = {};
+					newContext.global = window;
+					newContext.jsio = bind(this, _require, newContext, newRelativePath);
+
+					// TODO: FIX for "trailing ." case
+					var tmp = result.url.split('/')
+					newContext.jsio.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
+					newContext.jsio.__path = makeRelative(result.url);
+					
+					compile(newContext, result);
+					modules[pkg] = newContext.exports;
+				} else {
+					newContext['window'] = {};
+					if(what instanceof Array) {
+						for(var i = 0, key; key = what[i]; ++i) {
+							newContext['window'][key] = null;
+						}
+					} else if(what instanceof Object) {
+						for(var key in what) {
+							newContext['window'][key] = null;
+						}
+					} else {
+						newContext['window'][what] = null;
+					}
+					windowCompile(newContext, result);
+					modules[pkg] = newContext.window;
+				}
+			}
+			
+			if(item.as) {
+				copyToContext(context, pkg, item.as);
+			} else if(item.import) {
+				if(item.import['*']) {
+					for(var i in modules[pkg]) { context[i] = modules[pkg][i]; }
+				} else {
+					for(var j in item.import) { context[item.import[j]] = modules[pkg][j]; }
+				}
+			} else {
+				copyToContext(context, pkg, item.from);
 			}
 		}
 	}
 	
-	// create the external require function bound to the current context
-	exports.require = bind(this, _require, false, window, '');
-	exports.external = bind(this, _require, true, window, '');
-	
 	// create the internal require function bound to a local context
-	var _localContext = {jsio: {}};
+	var _localContext = {jsio: bind(this, _require, _localContext, '')};
 	var jsio = _localContext.jsio;
-	var require = bind(this, _require, false, _localContext, '');
 	
-	require('jsio.env.');
+	jsio('import .env');
 	exports.listen = function(server, transportName, opts) {
 		var listener = new (jsio.env.getListener(transportName))(server, opts);
 		listener.listen();
@@ -326,15 +341,13 @@
 		return connector;
 	}
 	exports.quickServer = function(protocolClass) {
-		require('jsio.interfaces');
+		jsio('import .interfaces');
 		return new jsio.interfaces.Server(protocolClass);
 	}
-
+	
     for (var i =0, target; target=pre_require[i]; ++i) {
         exports.require(target);    
     }
-    
-
 })();
 
 

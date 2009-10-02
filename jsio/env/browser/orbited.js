@@ -1,6 +1,4 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.logging');
-require('jsio.interfaces');
+jsio('import Class, bind, jsio.logging, jsio.interfaces')
 
 var logger = jsio.logging.getLogger('env.browser.orbited')
 exports.Connector = Class(jsio.interfaces.Connector, function() {

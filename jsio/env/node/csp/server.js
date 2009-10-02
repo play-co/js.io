@@ -424,7 +424,7 @@ csp.Server = Class(node.EventEmitter, function () {
 						// make sure our json dict is an object literal
 						assert((dict instanceof Object) && !(dict instanceof Array));
 					} catch (err) {
-						debug(['INVALID HANDSHAKE, ', request]);
+						debug(['INVALID HANDSHAKE, ', request, err]);
 						throw new CSPError(400, 'Invalid data parameter for handshake');
 					};
 					var session = new csp.Session();

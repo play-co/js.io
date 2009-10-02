@@ -1,14 +1,8 @@
-require('jsio', ['getEnvironment', 'log', 'bind']);
+jsio('import log, bind');
+jsio('from jsio import getEnvironment');
 
 function getObj(objectName, transportName, envName) {
-	envName = envName || getEnvironment();
-	try {
-		var what = {};
-		what[objectName] = 'result';
-		require('.' + envName + '.' + transportName, what);
-	} catch(e) {
-		throw new Error('No ' + objectName + ' found for ' + transportName + ' in ' + envName);
-	}
+	jsio('import .' + (envName || getEnvironment()) + '.' + transportName + ' as result');
 	return result;
 }
 
