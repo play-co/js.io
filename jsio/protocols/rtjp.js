@@ -15,6 +15,9 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
     }
     
     var error = function(e) {
+        setTimeout(function() {
+            throw e;
+        }, 0);
         // TODO: send back an error?
     }
     
@@ -29,6 +32,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
         }
         logger.debug('sendFrame', name, args);
         this.transport.write(JSON.stringify([++this.frameId, name, args]) + '\r\n');
+        return this.frameId;
     }
 
     this.lineReceived = function(line) {
