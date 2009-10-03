@@ -4,14 +4,14 @@
         // Insert pre-loaded modules here...
     };
 
-    var pre_require = [
+    var pre_jsioImport = [
         // Insert pre-require dependancies here
     ];
 	
 	if(typeof exports == 'undefined') {
-		var jsio = window.jsio = bind(this, _require, window, '');
+		var jsio = window.jsio = bind(this, _jsioImport, window, '');
 	} else {
-		var jsio = process.jsio = bind(this, _require, process, '');
+		var jsio = process.jsio = bind(this, _jsioImport, process, '');
 	}
 	
 	var __env = typeof(node) !== 'undefined' && node.version ? 'node' : 'browser';
@@ -260,7 +260,6 @@
 	}
 	
 	function resolveRelativePath(pkg, path) {
-		log('resolving ', pkg, path)
 		if(pkg.charAt(0) == '.') {
 			pkg = pkg.substring(1);
 			var segments = path.split('.');
@@ -274,23 +273,28 @@
 				return prefix + '.' + pkg;
 			}
 		}
-		log(pkg);
 		return pkg;
 	}
 	
-	function _require(context, path, what) {
+	function _jsioImport(context, path, what) {
 		// parse the what statement
 		var match, imports = [];
-		if((match = what.match(/^(from|external)\s+([\w.]+)\s+import\s+(.*)$/))) {
+		if((match = what.match(/^(from|external)\s+([\w.$]+)\s+import\s+(.*)$/))) {
 			imports[0] = {from: resolveRelativePath(match[2], path), external: match[1] == 'external', import: {}};
-			match[3].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(_, item, as) {
+			match[3].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
 				imports[0].import[item] = as || item;
 			});
 		} else if((match = what.match(/^import\s+(.*)$/))) {
-			match[1].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?,?/g, function(_, pkg, as) {
+			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
 				pkg = resolveRelativePath(pkg, path);
 				imports[imports.length] = as ? {from: pkg, as: as} : {from: pkg};
 			});
+		} else {
+			if(SyntaxError) {
+				throw new SyntaxError(what);
+			} else {
+				throw new Error("Syntax error: " + what);
+			}
 		}
 		
 		log(what, ' >> ', JSON.stringify(imports));
@@ -308,7 +312,7 @@
 				if(!item.external) {
 					newContext.exports = {};
 					newContext.global = window;
-					newContext.jsio = bind(this, _require, newContext, newRelativePath);
+					newContext.jsio = bind(this, _jsioImport, newContext, newRelativePath);
 
 					// TODO: FIX for "trailing ." case
 					var tmp = result.url.split('/')
@@ -344,7 +348,7 @@
 	
 	// create the internal require function bound to a local context
 	var _localContext = {};
-	var _jsio = _localContext.jsio = bind(this, _require, _localContext, 'jsio');
+	var _jsio = _localContext.jsio = bind(this, _jsioImport, _localContext, 'jsio');
 	_jsio.__env = __env;
 	
 	_jsio('import .env.');
@@ -364,7 +368,7 @@
 		return new jsio.interfaces.Server(protocolClass);
 	}
 	
-    for (var i =0, target; target=pre_require[i]; ++i) {
+    for (var i =0, target; target=pre_jsioImport[i]; ++i) {
         jsio.require(target);    
     }
 })();
