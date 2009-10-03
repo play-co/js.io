@@ -154,10 +154,12 @@
 					fn.call(context.exports, context);
 				} catch(e) {
 					log('error when loading ' + args.url);
-					var el = document.body.appendChild(document.createElement('iframe'));
-					with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden' }
-					el.src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + args.url + '\'"></scr"+"ipt>")';
-					return e;
+					if(e instanceof SyntaxError && document.body) {
+						var el = document.body.appendChild(document.createElement('iframe'));
+						with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden' }
+						el.src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + args.url + '\'"></scr"+"ipt>")';
+					}
+					throw e;
 				}
 				return true;
 			}
@@ -246,6 +248,7 @@
 	}
 	
 	function resolveRelativePath(pkg, path) {
+		log('resolving ', pkg, path)
 		if(pkg.charAt(0) == '.') {
 			pkg = pkg.substring(1);
 			var segments = path.split('.');
@@ -259,28 +262,22 @@
 				return prefix + '.' + pkg;
 			}
 		}
+		log(pkg);
 		return pkg;
 	}
 	
 	function _require(context, path, what) {
 		// parse the what statement
 		var match, imports = [];
-		if((match = what.match(/^from\s+([\w.]+)\s+import\s+(.*)$/))) {
-			imports[0] = {from: match[1], import: {}};
-			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(_, pkg, as) {
-				pkg = resolveRelativePath(pkg, path);
-				imports[0].import[pkg] = as || pkg;
+		if((match = what.match(/^(from|external)\s+([\w.]+)\s+import\s+(.*)$/))) {
+			imports[0] = {from: resolveRelativePath(match[2], path), external: match[1] == 'external', import: {}};
+			match[3].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(_, item, as) {
+				imports[0].import[item] = as || item;
 			});
 		} else if((match = what.match(/^import\s+(.*)$/))) {
 			match[1].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?,?/g, function(_, pkg, as) {
 				pkg = resolveRelativePath(pkg, path);
 				imports[imports.length] = as ? {from: pkg, as: as} : {from: pkg};
-			});
-		} else if((match = what.match(/^external\s+(.*)$/))) {
-			imports[0] = {from: match[1], external: true, import: {}};
-			match[2].replace(/\s*([\w.]+)(?:\s+as\s+([\w.]+))?/g, function(_, pkg, as) {
-				pkg = resolveRelativePath(pkg, path);
-				imports[0].import[pkg] = as || pkg;
 			});
 		}
 		
