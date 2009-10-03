@@ -149,16 +149,28 @@
 			
 			var compile = function(context, args) {
 				var code = "var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url;
-				eval(code);
+				try { eval(code); } catch(e) {
+					if(e instanceof SyntaxError) {
+						var src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + args.url + '\'></scr"+"ipt>")';
+						var callback = function() {
+							var el = document.createElement('iframe');
+							with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden'; }
+							el.src = src;
+							setTimeout(function() {
+								document.body.appendChild(el);
+							}, 0);
+						}
+						
+						if(document.body) { callback(); }
+						else { window.addEventListener('load', callback, false); }
+						throw new Error("forcing halt on load of " + args.url);
+					}
+					throw e;
+				}
 				try {
 					fn.call(context.exports, context);
 				} catch(e) {
 					log('error when loading ' + args.url);
-					if(e instanceof SyntaxError && document.body) {
-						var el = document.body.appendChild(document.createElement('iframe'));
-						with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden' }
-						el.src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + args.url + '\'"></scr"+"ipt>")';
-					}
 					throw e;
 				}
 				return true;
