@@ -228,7 +228,7 @@
 			break;
 	}
 	jsio.basePath = jsio.path[jsio.path.length-1];
-	var modules = {jsio: exports, bind: bind, Class: Class, log: log};
+	var modules = {jsio: null, bind: bind, Class: Class, log: log};
 	
 	function copyToContext(context, pkg, as) {
 		var segments = pkg.split('.');
