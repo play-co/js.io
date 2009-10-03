@@ -1,6 +1,6 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.interfaces', 'PubSub');
-require('..constants', '*');
+jsio('import Class, bind');
+jsio('from jsio.interfaces import PubSub');
+jsio('from ..constants import *');
 
 exports.WorldPlayer = Class(PubSub, function() {
 	this.init = function(params) {

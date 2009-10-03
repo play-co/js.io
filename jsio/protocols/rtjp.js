@@ -1,7 +1,5 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.interfaces');
-require('jsio.logging')
-require('jsio.protocols.delimited', ['DelimitedProtocol'])
+jsio('import Class, bind, jsio.interfaces, jsio.logging');
+jsio('from jsio.protocols.delimited from DelimitedProtocol');
 
 var logger = jsio.logging.getLogger('RTJPProtocol')
 exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {

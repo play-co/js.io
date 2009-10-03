@@ -1,6 +1,5 @@
-require('jsio', ['Class', 'log']);
-require('jsio.interfaces');
-require('jsio.logging');
+jsio('import Class, log, jsio.interfaces, jsio.logging');
+
 var logger = jsio.logging.getLogger('EchoProtocol');
 logger.setLevel(0);
 

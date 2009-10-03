@@ -1,8 +1,8 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.interfaces', ['Server']);
-require('jsio.protocols.rtjp', ['RTJPProtocol']);
-require('jsio.logging');
-require('.constants', '*');
+jsio('import Class, bind');
+jsio('import jsio.logging');
+jsio('from jsio.interfaces import Server');
+jsio('from jsio.protocols.rtjp import RTJPProtocol');
+jsio('from .constants import *');
 
 var logger = jsio.logging.getLogger('world.server');
 

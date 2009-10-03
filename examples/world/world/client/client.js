@@ -1,7 +1,7 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.protocols.rtjp', ['RTJPProtocol']);
-require('jsio.logging');
-require('jsio.interfaces', 'PubSub');
+jsio('import Class, bind');
+jsio('import jsio.logging');
+jsio('from jsio.interfaces import PubSub');
+jsio('from jsio.protocols.rtjp import RTJPProtocol');
 
 var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
