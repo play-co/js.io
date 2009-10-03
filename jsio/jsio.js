@@ -8,18 +8,13 @@
         // Insert pre-require dependancies here
     ];
 	
-	var exportJsio = false;
 	if(typeof exports == 'undefined') {
-		window.jsio = bind(this, _require, window, '');
-		exports = window.jsio;
+		var jsio = window.jsio = bind(this, _require, window, '');
+	} else {
+		var jsio = process.jsio = bind(this, _require, process, '');
 	}
 	
-	exports.getEnvironment = function() {
-		if (typeof(node) !== 'undefined' && node.version) {
-			return 'node';
-		}
-		return 'browser';
-	};
+	var __env = typeof(node) !== 'undefined' && node.version ? 'node' : 'browser';
 	
 	function bind(context, method/*, arg1, arg2, ... */){
 		var args = Array.prototype.slice.call(arguments, 2);
@@ -71,15 +66,15 @@
 			out = [[modulePathCache[segments[0]] + '/' + modPath + (isModule ? '__init__.js' : '.js'), null]]
 		} else {
 			out = [];
-			for (var i = 0, path; path = exports.path[i]; ++i) {
+			for (var i = 0, path; path = jsio.path[i]; ++i) {
 				out.push([path + '/' + modPath + (isModule ? '__init__.js' : '.js'), path])
 			}
 		}
 		return out;
 	}
 	
-	exports.path = ['.'];
-	switch(exports.getEnvironment()) {
+	jsio.path = ['.'];
+	switch(__env) {
 		case 'node':
 			var log = function() {
 				for (var i = 0, item; item=arguments[i]; ++i) {
@@ -93,7 +88,13 @@
 			window = process;
 			var compile = function(context, args) {
 				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
-				fn.call(context.exports, context);
+				try {
+					fn.call(context.exports, context);
+				} catch(e) {
+					log("error when loading " + args.url);
+					throw e;
+				}
+				return true;
 			}
 
 			var windowCompile = function(context, args) {
@@ -133,7 +134,7 @@
 
 			var jsioPath = segments.slice(0,segments.length-2).join('/');
 			if (jsioPath) {
-				exports.path.push(jsioPath);
+				jsio.path.push(jsioPath);
 				modulePathCache.jsio = jsioPath;
 			} else {
 				modulePathCache.jsio = '.';
@@ -151,7 +152,14 @@
 				eval(code);
 				try {
 					fn.call(context.exports, context);
-				} catch(e) {}
+				} catch(e) {
+					log('error when loading ' + args.url);
+					var el = document.body.appendChild(document.createElement('iframe'));
+					with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden' }
+					el.src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + args.url + '\'"></scr"+"ipt>")';
+					return e;
+				}
+				return true;
 			}
 
 			var windowCompile = function(context, args) {
@@ -211,7 +219,7 @@
 					if(/jsio\/jsio\.js$/.test(script.src)) {
 						var segments = script.src.split('/');
 						var jsioPath = segments.slice(0,segments.length-2).join('/') || '.';
-						exports.path.push(jsioPath);
+						jsio.path.push(jsioPath);
 						modulePathCache.jsio = jsioPath;
 						break;
 					}
@@ -219,7 +227,7 @@
 			} catch(e) {}
 			break;
 	}
-	exports.basePath = exports.path[exports.path.length-1];
+	jsio.basePath = jsio.path[jsio.path.length-1];
 	var modules = {jsio: exports, bind: bind, Class: Class, log: log};
 	
 	function copyToContext(context, pkg, as) {
@@ -276,6 +284,8 @@
 			});
 		}
 		
+		log(what, ' >> ', JSON.stringify(imports));
+		
 		// import each item in the what statement
 		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
@@ -295,6 +305,7 @@
 					var tmp = result.url.split('/')
 					newContext.jsio.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
 					newContext.jsio.__path = makeRelative(result.url);
+					newContext.jsio.__env = __env;
 					
 					compile(newContext, result);
 					modules[pkg] = newContext.exports;
@@ -324,27 +335,28 @@
 	
 	// create the internal require function bound to a local context
 	var _localContext = {};
-	var jsio = _localContext.jsio = bind(this, _require, _localContext, 'jsio')
+	var _jsio = _localContext.jsio = bind(this, _require, _localContext, 'jsio');
+	_jsio.__env = __env;
 	
-	jsio('import .env.');
-	exports.listen = function(server, transportName, opts) {
-		var listener = new (jsio.env.getListener(transportName))(server, opts);
+	_jsio('import .env.');
+	jsio.listen = function(server, transportName, opts) {
+		var listener = new (_jsio.env.getListener(transportName))(server, opts);
 		listener.listen();
 		return listener;
 	}
 	
-	exports.connect = function(protocolInstance, transportName, opts) {
-		var connector = new (jsio.env.getConnector(transportName))(protocolInstance, opts);
+	jsio.connect = function(protocolInstance, transportName, opts) {
+		var connector = new (_jsio.env.getConnector(transportName))(protocolInstance, opts);
 		connector.connect();
 		return connector;
 	}
-	exports.quickServer = function(protocolClass) {
-		jsio('import .interfaces');
+	jsio.quickServer = function(protocolClass) {
+		_jsio('import .interfaces');
 		return new jsio.interfaces.Server(protocolClass);
 	}
 	
     for (var i =0, target; target=pre_require[i]; ++i) {
-        exports.require(target);    
+        jsio.require(target);    
     }
 })();
 

@@ -6,11 +6,11 @@
 <title>Walking Live</title>
 <script type="text/javascript" src="jsio/jsio.js"></script>
 <script>
-jsio.require('jsio', ['Class', 'bind']);
-jsio.require('jsio.util.browser', '$');
-jsio.require('world.client.', ['WorldPlayer', 'WorldClient']);
-jsio.require('jsio.logging');
-jsio.require('world.constants', '*');
+jsio('import Class, bind, jsio.logging');
+jsio('from jsio.util.browser import $');
+jsio('from world.constants import *');
+jsio('from world.client. import WorldPlayer, WorldClient');
+
 jsio.logging.getLogger('world.client').setLevel(0);
 
 function addToHistory(params, color) {
