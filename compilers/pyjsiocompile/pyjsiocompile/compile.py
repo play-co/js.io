@@ -50,7 +50,7 @@ def main(argv=None):
         pkg_data['root'] = str(pkg_data['root'])
         target = os.path.join(BASEDIR, pkg_data['root'] + '.js')
         output = compile_source(target, options, BASEDIR, extras=[pkg_data['root']])
-        output += '\njsio.require("%s");\ndelete jsio;\n' % (pkg_data['root'])
+        output += '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
     else:
         output = compile_source(INPUT, options, BASEDIR)
 
@@ -85,7 +85,7 @@ def compile_source(target, options, BASEDIR='.', extras=[]):
     
     target_source = remove_comments(target)
     env_path = 'jsio.env.' + options.environment + '.' + options.transport
-    checked = ['jsio', 'jsio.env.', env_path]
+    checked = ['jsio', 'jsio.env', env_path, 'log', 'Class', 'bind']
     dependancies = map(lambda x: (x, ''), (extract_dependancies(target_source) + extras))
     env = remove_comments(open(os.path.join(BASEDIR, 'jsio/env/' + options.environment + '/' + options.transport + '.js')).read())
     dependancies.extend(map(lambda x: (x, 'jsio.env.browser.'), extract_dependancies(env)))
@@ -103,7 +103,7 @@ def compile_source(target, options, BASEDIR='.', extras=[]):
     sources = {}
     print 'checked is', checked
     for full_path in checked:
-        if full_path == 'jsio':
+        if full_path in ('jsio', 'log', 'Class', 'bind'):
             continue
         print "Loading dependancy", full_path
         filename = path_for_module(full_path)
@@ -120,12 +120,7 @@ def compile_source(target, options, BASEDIR='.', extras=[]):
 def path_for_module(full_path):
     if full_path == 'jsio':
         return 'jsio/jsio.js'
-    target = os.path.join(*full_path.split('.'))
-    if target.endswith('/'):
-        target = os.path.join(target, '__init__.js')
-    else:
-        target = target + '.js'
-    return target
+    return os.path.join(*full_path.split('.')) + '.js'
 
 def joinModulePath(a, b):
     if b[0] != '.':
@@ -138,23 +133,20 @@ def joinModulePath(a, b):
     if output[0] == '.':
         output = output[1:]
     return output
-    
+
 def extract_dependancies(src):
     dependancies = []
-    i = 0
-    while True:
-        j = src.find('require(', i)
-        if j == -1:
-            break
-        k = src.find(')', j)
-        if k == -1:
-            break
-        try:
-            args = eval(src[j+7:k] + ',)')
-            dependancies.append(args[0])
-        except:
-            continue
-        i = k+1
+    re1 = re.compile("jsio\(\s*['\"]\s*(from|external)\s+([\w.$]+)\s+import\s+(.*?)\s*['\"]\s*\)")  
+    for item in re1.finditer(src):
+        dependancies.append(item.groups()[1])
+    re2 = re.compile("jsio\(\s*['\"]\s*import\s+(.*?)\s*['\"]\s*\)")
+    re3 = re.compile("\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?")
+    for item in re2.finditer(src):
+        print item.groups()
+        for listItem in re3.finditer(item.groups()[0]):
+            dependancies.append(listItem.groups()[0])
+
+    print dependancies
     return dependancies
     
 def remove_comments(src):

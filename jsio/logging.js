@@ -1,4 +1,4 @@
-require('jsio', ['Class', 'log']);
+jsio('import Class, bind, log');
 
 var loggers = {}
 var levels = exports.levels = {
@@ -28,11 +28,9 @@ exports.Logger = Class(function() {
         this.level = level;
     }
     function makeLogFunction(level, type) {
-        var a = [];
         return function() {
             if (level < this.level) return;
-            a.splice.call(arguments,0,0,type, this.name)
-            log.apply(log, arguments);
+            log.apply(log, [type, this.name].concat(Array.prototype.slice.call(arguments, 0)));
         }
     }
 

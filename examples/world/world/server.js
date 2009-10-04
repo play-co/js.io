@@ -1,8 +1,8 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.interfaces', ['Server']);
-require('jsio.protocols.rtjp', ['RTJPProtocol']);
-require('jsio.logging');
-require('.constants', '*');
+jsio('import Class, bind');
+jsio('import jsio.logging');
+jsio('from jsio.interfaces import Server');
+jsio('from jsio.protocols.rtjp import RTJPProtocol');
+jsio('from .constants import *');
 
 var logger = jsio.logging.getLogger('world.server');
 
@@ -43,7 +43,13 @@ exports.WorldServer = Class(Server, function(supr) {
 		this.broadcast('SAY', line, conn);
 	};
 	
-	this.move = function(conn, x,y) {
+	this.move = function(conn, x, y) {
+		
+		// update the server x, y of a player so that when people join, they see
+		// everyone at their current location rather than their starting location
+		var player = this.players[conn.username];
+		player.params.x = x;
+		player.params.y = y;
 		this.broadcast('MOVE', {username:conn.username, x:x, y:y}, conn);
 	};
 });

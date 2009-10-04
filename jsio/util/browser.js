@@ -1,4 +1,4 @@
-external('.sizzle', 'Sizzle');
+jsio('external .sizzle import Sizzle');
 
 var $ = exports.$ = Sizzle;
 

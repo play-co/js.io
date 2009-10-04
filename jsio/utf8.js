@@ -37,16 +37,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-var utf8 = this.utf8 = exports;
-
-;(function () {
+//var utf8 = this.utf8 = exports;
 
 var UnicodeCodecError = function (message) { this.message = message; };
 UnicodeCodecError.prototype.toString = function () {
 	return 'UnicodeCodecError' + (this.message ? ': ' + this.message : '');
 };
 
-utf8.encode = function (unicode_string) {
+exports.encode = function (unicode_string) {
 	// Unicode encoder: Given an arbitrary unicode string, returns a string
 	// of characters with code points in range 0x00 - 0xFF corresponding to
 	// the bytes of the utf-8 representation of those characters.
@@ -57,7 +55,7 @@ utf8.encode = function (unicode_string) {
 		throw new UnicodeCodecError('invalid input string');
 	};
 };
-utf8.decode = function (bytes) {
+exports.decode = function (bytes) {
 	// Unicode decoder: Given a string of characters with code points in
 	// range 0x00 - 0xFF, which, when interpreted as bytes, are valid UTF-8,
 	// returns the corresponding Unicode string, along with the number of
@@ -99,5 +97,3 @@ utf8.decode = function (bytes) {
 		throw new UnicodeCodecError('invalid utf-8 bytes');
 	};
 };
-
-});

@@ -1,7 +1,7 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.logging');
-require('jsio.interfaces', ['Protocol']);
-require('jsio.buffer', ['Buffer']);
+jsio('import Class, bind, jsio.logging');
+jsio('from jsio.interfaces import Protocol');
+jsio('from jsio.buffer import Buffer');
+
 var logger = jsio.logging.getLogger('Buffered');
 
 

@@ -1,7 +1,5 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.logging');
-require('jsio.interfaces');
-require('jsio.csp.client', 'CometSession');
+jsio('import Class, bind, jsio.logging, jsio.interfaces');
+jsio('from jsio.csp.client import CometSession');
 
 var logger = jsio.logging.getLogger('env.browser.csp');
 

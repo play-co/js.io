@@ -1,6 +1,6 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.interfaces', 'PubSub');
-require('..constants', '*');
+jsio('import Class, bind');
+jsio('from jsio.interfaces import PubSub');
+jsio('from ..constants import *');
 
 exports.WorldPlayer = Class(PubSub, function() {
 	this.init = function(params) {
@@ -14,7 +14,7 @@ exports.WorldPlayer = Class(PubSub, function() {
 		};
 		
 		this._x = this.x = params.x || Math.floor(Math.random() * (kGameWidth - 20)) + 10;
-        this._y = this.y = params.y || Math.floor(Math.random() * (kGameHeight - 20)) + 10;
+		this._y = this.y = params.y || Math.floor(Math.random() * (kGameHeight - 20)) + 10;
 		
 		this.dir = 'down';
 		

@@ -1,4 +1,4 @@
-require('jsio', ['Class', 'bind'])
+jsio('import Class, bind');
 exports.Later = Class(function() {
     this.init = function() {
         this.cb = null

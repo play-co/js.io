@@ -1,6 +1,4 @@
-require('jsio', ['Class', 'log']);
-require('jsio.logging');
-require('jsio.interfaces');
+jsio('import Class, log, jsio.logging, jsio.interfaces');
 
 var logger = jsio.logging.getLogger('DelimitedProtocol')
 exports.DelimitedProtocol = Class(jsio.interfaces.Protocol, function(supr) {

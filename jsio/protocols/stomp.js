@@ -1,7 +1,6 @@
-require('jsio', ['Class', 'bind']);
-require('jsio.logging');
-require('jsio.protocols.buffered', ['BufferedProtocol']);
-require('jsio.util.sprintf', 'sprintf');
+jsio('import Class, bind, jsio.logging');
+jsio('from jsio.protocols.buffered import BufferedProtocol');
+jsio('from jsio.util.sprintf import sprintf');
 
 var logger = jsio.logging.getLogger('StompProtocol');
 
