@@ -13,10 +13,10 @@ if (!global.csp) {
     global.csp = {}
 }
 var csp = this;
-if (typeof(require) != 'undefined' && require.__jsio) {
-    require('..base64');
-    require('..utf8')
+if(typeof jsio != 'undefined') {
+	jsio('import ..base64, ..utf8');
 }
+
 var id = 0;
 csp.readyState = {
     'initial': 0,
@@ -365,14 +365,12 @@ transports.xhr = function(cspId, url) {
 		    // xhr.status will be 0 for localhost requests.
 		    // this is probably ok. - desmaj 2009-28-09
                     if (xhr.status == 200 || xhr.status == 0) {
-//		      log("clearing timer");
                         clearTimeout(timer);
                         // XXX: maybe the spec shouldn't wrap ALL responses in ( ).
                         //      -mcarter 8/11/09
-//		      log("parsing data");
-//		      log("length: " + xhr.responseText.length);
-                        var data = JSON.parse(xhr.responseText.substring(1, xhr.responseText.length-1));
-//		      log("parsed data");
+						if(xhr.responseText.length) {
+                        	var data = JSON.parse(xhr.responseText.substring(1, xhr.responseText.length-1));
+						}
 					}
 				} catch(e) {}
 

@@ -14,7 +14,7 @@
 		var jsio = process.jsio = bind(this, _jsioImport, process, '');
 	}
 	
-	var __env = typeof(node) !== 'undefined' && node.version ? 'node' : 'browser';
+	jsio.__env = typeof(node) !== 'undefined' && node.version ? 'node' : 'browser';
 	
 	function bind(context, method/*, arg1, arg2, ... */){
 		var args = Array.prototype.slice.call(arguments, 2);
@@ -58,47 +58,87 @@
 	
 	var modulePathCache = {}
 	var getModulePathPossibilities = function(pathString) {
-		var isModule = pathString.charAt(pathString.length-1) == '.';
 		var segments = pathString.split('.')
 		var modPath = segments.join('/');
 		var out;
 		if (segments[0] in modulePathCache) {
-			out = [[modulePathCache[segments[0]] + '/' + modPath + (isModule ? '__init__.js' : '.js'), null]]
+			out = [[modulePathCache[segments[0]] + '/' + modPath + '.js', null]];
 		} else {
 			out = [];
 			for (var i = 0, path; path = jsio.path[i]; ++i) {
-				out.push([path + '/' + modPath + (isModule ? '__init__.js' : '.js'), path])
+				out.push([path + '/' + modPath + '.js', path]);
 			}
 		}
 		return out;
 	}
 	
+	var strDuplicate = function(str, num) {
+		return new Array(num + 1).join(str);
+	}
+	
 	jsio.path = ['.'];
-	switch(__env) {
+	switch(jsio.__env) {
 		case 'node':
-			var log = function() {
-				for (var i = 0, item; item=arguments[i]; ++i) {
-					if (typeof(item) == 'object') {
-						arguments[i] = JSON.stringify(arguments[i]);
+			var nodeWrapper = {
+				require: require,
+				include: include
+			};
+			
+			var stringifyPretty = function(item) { return _stringify(true, item, 1); }
+			var stringify = function(item) { return _stringify(false, item); }
+			var _stringify = function(pretty, item, tab) {
+				if(item instanceof Array) {
+					var str = [];
+					for(var i = 0, len = item.length; i < len; ++i) {
+						str.push(_stringify(pretty, item[i]));
+					}
+					return '[' + str.join(',') + ']';
+				} else if (typeof(item) == 'object') {
+					var str = [];
+					for(var key in item) {
+						var value = key+':' + (pretty?' ':'');
+						if(typeof item[key] == 'function') {
+							var def = item[key].toString();
+							var match = def.match(/^function\s+\((.*?)\)/);
+							value += match ? 'f(' + match[1] + ') {...}' : '[Function]';
+						} else {
+							value += _stringify(pretty, item[key], tab + 1);
+						}
+						str.push(value);
+					}
+					
+					if(pretty && str.length > 1) {
+						var spacer = strDuplicate('\t', tab);
+						return '{\n' + spacer + str.join(',\n' + spacer) + '\n' + strDuplicate('\t', tab - 1) + '}';
+					} else {
+						return '{' + str.join(',') + '}';
 					}
 				}
-				node.stdio.writeError([].slice.call(arguments, 0).join(' ') + "\n");
+				return item + "";
+			}
+			
+			var log = function() {
+				node.stdio.writeError(Array.prototype.slice.call(arguments, 0).map(stringifyPretty).join(' ') + "\n");
 			}
 			
 			window = process;
 			var compile = function(context, args) {
-				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n})()}}", args.url);
+				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}", args.url);
 				try {
 					fn.call(context.exports, context);
 				} catch(e) {
-					log("error when loading " + args.url);
+					if(e.type == "stack_overflow") {
+						log("Stack overflow in", args.url, e);
+					} else {
+						log("error when loading", args.url);
+					}
 					throw e;
 				}
 				return true;
 			}
 
 			var windowCompile = function(context, args) {
-				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n})()}}}", args.url);
+				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}}", args.url);
 				fn.call(context.exports, context);
 			}
 			
@@ -127,7 +167,7 @@
 						return out;
 					} catch(e) {}
 				}
-				throw new Error("Module not found: " + pathString);
+				throw new Error("Module not found: " + pathString + "\n(looked in " + urls + ")");
 			}
 			
 			var segments = __filename.split('/');
@@ -139,6 +179,8 @@
 			} else {
 				modulePathCache.jsio = '.';
 			}
+			
+			jsio.__path = makeRelative(process.ARGV[1]);
 			break;
 		default:
 			var log = function() {
@@ -182,10 +224,6 @@
 				fn.call(context.exports, context);
 			}
 			
-			var makeRelative = function(path) {
-				return path;
-			}
-			
 			var createXHR = function() {
 				return window.XMLHttpRequest ? new XMLHttpRequest() 
 					: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
@@ -224,7 +262,7 @@
 					}
 					return {src: xhr.responseText, url: url};
 				}
-				throw new Error("Module not found: " + pathString);
+				throw new Error("Module not found: " + pathString + " (looked in " + urls.join(', ') + ")");
 			}
 			
 			try {
@@ -239,25 +277,18 @@
 					}
 				}
 			} catch(e) {}
+			
+			var cwd = jsio.path[jsio.path.length - 1];
+			var makeRelative = function(path) {
+				return path.replace(cwd + '/', '').replace(cwd, '');
+			}
+			
+			jsio.__path = makeRelative(window.location.toString());
+			
 			break;
 	}
 	jsio.basePath = jsio.path[jsio.path.length-1];
-	var modules = {jsio: null, bind: bind, Class: Class, log: log};
-	
-	function copyToContext(context, pkg, as) {
-		var segments = pkg.split('.');
-		
-		// Remove any trailing dot(s)
-		while (segments[segments.length-1] == "") { segments.pop(); }
-		var c = context;
-		var len = segments.length - 1;
-		for(var i = 0, segment; (segment = segments[i]) && i < len; ++i) {
-			if(!segment) continue;
-			if (!c[segment]) { c[segment] = {}; }
-			c = c[segment];
-		}
-		c[segments[len]] = modules[pkg];
-	}
+	var modules = {bind: bind, Class: Class, log: log, jsio:jsio};
 	
 	function resolveRelativePath(pkg, path) {
 		if(pkg.charAt(0) == '.') {
@@ -286,8 +317,8 @@
 			});
 		} else if((match = what.match(/^import\s+(.*)$/))) {
 			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
-				pkg = resolveRelativePath(pkg, path);
-				imports[imports.length] = as ? {from: pkg, as: as} : {from: pkg};
+				fullPkg = resolveRelativePath(pkg, path);
+				imports[imports.length] = as ? {from: fullPkg, as: as} : {from: fullPkg, as: pkg};
 			});
 		} else {
 			if(SyntaxError) {
@@ -296,9 +327,7 @@
 				throw new Error("Syntax error: " + what);
 			}
 		}
-		
-		log(what, ' >> ', JSON.stringify(imports));
-		
+				
 		// import each item in the what statement
 		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
@@ -306,20 +335,25 @@
 			// eval any packages that we don't know about already
 			var segments = pkg.split('.');
 			if(!(pkg in modules)) {
-				var result = getModuleSourceAndPath(pkg);
+				try {
+					var result = getModuleSourceAndPath(pkg);
+				} catch(e) {
+					log('Error:', context.jsio.__path, 'could not execute: "' + what + '"');
+					throw e;
+				}
 				var newRelativePath = segments.slice(0, segments.length - 1).join('.');
 				var newContext = {};
 				if(!item.external) {
 					newContext.exports = {};
 					newContext.global = window;
 					newContext.jsio = bind(this, _jsioImport, newContext, newRelativePath);
-
+					
 					// TODO: FIX for "trailing ." case
-					var tmp = result.url.split('/')
+					var tmp = result.url.split('/');
 					newContext.jsio.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
 					newContext.jsio.__path = makeRelative(result.url);
-					newContext.jsio.__env = __env;
-					
+					newContext.jsio.__env = jsio.__env;
+					newContext.jsio.node = nodeWrapper;
 					compile(newContext, result);
 					modules[pkg] = newContext.exports;
 				} else {
@@ -333,15 +367,26 @@
 			}
 
 			if(item.as) {
-				copyToContext(context, pkg, item.as);
+				// remove trailing/leading dots
+				var segments = item.as.match(/^\.*(.*?)\.*$/)[1].split('.');
+				var c = context;
+				for(var k = 0, len = segments.length - 1, segment; (segment = segments[k]) && k < len; ++k) {
+					if(!segment) continue;
+					if (!c[segment]) { c[segment] = {}; }
+					c = c[segment];
+				}
+				c[segments[len]] = modules[pkg];
 			} else if(item.import) {
 				if(item.import['*']) {
 					for(var i in modules[pkg]) { context[i] = modules[pkg][i]; }
 				} else {
-					for(var j in item.import) { context[item.import[j]] = modules[pkg][j]; }
+					try {
+						for(var j in item.import) { context[item.import[j]] = modules[pkg][j]; }
+					} catch(e) {
+						log('module: ', modules);
+						throw e;
+					}
 				}
-			} else {
-				copyToContext(context, pkg, item.from);
 			}
 		}
 	}
@@ -349,11 +394,11 @@
 	// create the internal require function bound to a local context
 	var _localContext = {};
 	var _jsio = _localContext.jsio = bind(this, _jsioImport, _localContext, 'jsio');
-	_jsio.__env = __env;
-	
-	_jsio('import .env.');
+
+	_jsio('import jsio.env');	
 	jsio.listen = function(server, transportName, opts) {
-		var listener = new (_jsio.env.getListener(transportName))(server, opts);
+		var listenerClass = _jsio.env.getListener(transportName);
+		var listener = new listenerClass(server, opts);
 		listener.listen();
 		return listener;
 	}

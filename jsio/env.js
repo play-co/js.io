@@ -1,7 +1,7 @@
 jsio('import log, bind');
 
 function getObj(objectName, transportName, envName) {
-	jsio('from .' + (envName || jsio.__env) + '.' + transportName + ' import ' + objectName + ' as result');
+	jsio('from .env.' + (envName || jsio.__env) + '.' + transportName + ' import ' + objectName + ' as result');
 	return result;
 }
 

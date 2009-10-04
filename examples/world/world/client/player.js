@@ -14,7 +14,7 @@ exports.WorldPlayer = Class(PubSub, function() {
 		};
 		
 		this._x = this.x = params.x || Math.floor(Math.random() * (kGameWidth - 20)) + 10;
-        this._y = this.y = params.y || Math.floor(Math.random() * (kGameHeight - 20)) + 10;
+		this._y = this.y = params.y || Math.floor(Math.random() * (kGameHeight - 20)) + 10;
 		
 		this.dir = 'down';
 		

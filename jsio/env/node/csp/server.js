@@ -26,15 +26,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-
  
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
-var base = require.__jsio ? (require.__dir + "/") : "";
-var uuid = process.require(base + '../../../uuid.js');
-var utf8 = process.require(base + '../../../utf8.js');
-var base64 = process.require(base + '../../../base64.js');
-process.include(base + 'util.js');
+
+jsio('import log, Class, bind, ....uuid, ....utf8, ....base64');
+jsio('from .util import *');
+
+var http = jsio.node.require('/http.js');
+
 var csp = this.csp = exports;
 
 ;(function () {
@@ -135,7 +135,7 @@ csp.Session = Class(function() {
 					// string of spaces of length prebufferSize
 					this.variables.prebuffer = (new Array(prebufferSize+1)).join(' ');
 				};
-			};			
+			};	
 		};
 	};
 	this.isStreaming = function () {
@@ -342,7 +342,7 @@ csp.Server = Class(node.EventEmitter, function () {
 	this.init = function () {
 		node.EventEmitter.call(this);
 		this._session_url = ''; // XXX this could be changed or made into a parameter
-		debug('starting server, session url is:', this._session_url)
+		log('starting server, session url is <' + this._session_url + '>');
 	};
 	var CSPError = this.CSPError = Class(AssertionError, function (supr) {
 		this.name = 'CSPError'
@@ -453,15 +453,17 @@ csp.Server = Class(node.EventEmitter, function () {
 		}));
 	};
 	this.listen = function (port, host) {
-		var server = node.http.createServer(bind(this, this._handleRequest));
+		var server = http.createServer(bind(this, this._handleRequest));
 		server.listen(port, host);
 		hoststring = host ? host : 'localhost';
-		puts('CSP running at http://' + hoststring + ':' + port + this._session_url + '/');
 	};
 });
 
 })(); // end closure w/ code for csp
 
+/* // un-comment to run echo server when this file runs
+
+jsio.node.include('/utils.js');
 function start_echo_server () {
 	var server = csp.createServer(function(connection) {
 		connection.addListener('receive', function (data) {
@@ -471,4 +473,6 @@ function start_echo_server () {
 	server.listen(8000);
 	puts('CSP-based echo server running.');
 };
-// start_echo_server(); // un-comment to run echo server when this file runs
+
+start_echo_server();
+*/

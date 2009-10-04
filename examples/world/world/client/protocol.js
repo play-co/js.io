@@ -6,7 +6,7 @@ jsio('from jsio.protocols.rtjp import RTJPProtocol');
 var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
 
-exports.WorldClient = Class([RTJPProtocol, PubSub], function(supr) {
+exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
     this.init = function(playerFactory, username, avatarUrl) {
         supr(this, 'init');
 		this.playerFactory = playerFactory;

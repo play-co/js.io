@@ -9,7 +9,7 @@
 jsio('import Class, bind, jsio.logging');
 jsio('from jsio.util.browser import $');
 jsio('from world.constants import *');
-jsio('from world.client. import WorldPlayer, WorldClient');
+jsio('from world.client import *');
 
 jsio.logging.getLogger('world.client').setLevel(0);
 
@@ -79,8 +79,7 @@ function onConnect(presence, history) {
 	$.onEvent('board', 'mousedown', function(e) {
 		var wrapper = $.id('wrapper');
 		$.stopEvent(e);
-		sayInput.focus();
-		client.move(e.clientX - wrapper.offsetLeft - 22, e.clientY - wrapper.offsetTop + window.pageYOffset - 22);
+ss		client.move(e.clientX - wrapper.offsetLeft - 22, e.clientY - wrapper.offsetTop + window.pageYOffset - 22);
 	});
 }
 
@@ -123,7 +122,7 @@ window.onload = function() {
 			return new WorldPlayer(params);
 		}
 
-		window.client = new WorldClient(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
+		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
 		client.subscribe('welcome', window, 'onConnect');
 		client.subscribe('say', window, 'addToHistory');
 		
