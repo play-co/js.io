@@ -30,7 +30,7 @@ exports.Logger = Class(function() {
     function makeLogFunction(level, type) {
         return function() {
             if (level < this.level) return;
-            log.apply(log, Array.prototype.slice.call(arguments, 0).concat([type, this.name]));
+            log.apply(log, [type, this.name].concat(Array.prototype.slice.call(arguments, 0)));
         }
     }
 
