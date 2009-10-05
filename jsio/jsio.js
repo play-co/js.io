@@ -347,6 +347,9 @@
 					newContext.exports = {};
 					newContext.global = window;
 					newContext.jsio = bind(this, _jsioImport, newContext, newRelativePath);
+					for(var j in modules.jsio) {
+					    newContext.jsio[j] = modules.jsio[j];
+					}
 					
 					// TODO: FIX for "trailing ." case
 					var tmp = result.url.split('/');
