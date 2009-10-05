@@ -6,7 +6,7 @@ import os, sys
 
 setup(
     name='pyjsiocompile',
-    version='0.1a3',
+    version='0.1a4',
     author='Michael Carter',
     author_email='CarterMichael@gmail.com',
     license='MIT License',
