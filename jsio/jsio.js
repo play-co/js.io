@@ -73,15 +73,23 @@
 	}
 	
 	var strDuplicate = function(str, num) {
-		return new Array(num + 1).join(str);
+	    var out = "";
+	    for (var i = 0; i < num; ++ i) {
+		out += str;
+	    }
+	    return out;
+
+
+	    // Doesn't work in node correctly.
+	    //		return new Array(num + 1).join(str);
 	}
 	
 	jsio.path = ['.'];
 	switch(jsio.__env) {
 		case 'node':
 			var nodeWrapper = {
-				require: require,
-				include: include
+//				include: include,
+				require: require
 			};
 			
 			var stringifyPretty = function(item) { return _stringify(true, item, 1); }

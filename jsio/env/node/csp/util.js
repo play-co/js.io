@@ -34,6 +34,7 @@ var myClearTimeout = this.myClearTimeout = function (timer) {
 var debug = this.debug = function () {
 	var message = [];
 	for (var i=0; i < arguments.length; i++) {
+	    node.stdio.writeError('get ready to stringify: ' + arguments[i] + '\n');
 		message.push(JSON.stringify(arguments[i]));
 	};
 	node.stdio.writeError(message.join(' ') + '\n');

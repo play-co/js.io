@@ -97,6 +97,7 @@ csp.Session = Class(function() {
 		// XXX when the client calls close, do we want to allow the server to
 		// keep sending them stuff, write only? And what about when they time out?
 		delete sessionDict[this.key];
+		myClearTimeout(this.durationTimer);
 	};
 	// send data to the client
 	this.send = function (data) {
@@ -236,7 +237,9 @@ csp.Session = Class(function() {
 	// a csp.Server instance dispatches resources to this object's functions
 	this.dispatch = {
 		handshake: function (request, response) {
+		debug('calling stringify');
 			var body = JSON.stringify( {'session': this.key})
+		debug('stringify called');
 			this.renderResponse(response, body);
 		},
 		comet: function (request, response) {

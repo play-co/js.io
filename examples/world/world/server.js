@@ -17,7 +17,13 @@ exports.WorldServer = Class(Server, function(supr) {
 		for (name in this.players) {
 			var conn = this.players[name];
 			if (conn === sender) { continue; }
-			conn.sendFrame(fName, fArgs);
+			try {
+			    conn.sendFrame(fName, fArgs);
+			}
+			catch(e) {
+			    logger.warn('Forcing close on disconnected csp connection. FIXME');
+			    conn.connectionLost();
+			}
 		}
 	};
 
