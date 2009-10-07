@@ -4,7 +4,8 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <title>Walking Live</title>
-<script type="text/javascript" src="jsio/jsio.js"></script>
+<!--script type="text/javascript" src="jsio/jsio.js"></script-->
+<script type="text/javascript" src="build/world_client.js"></script>
 <script>
 jsio('import Class, bind, jsio.logging');
 jsio('from jsio.util.browser import $');
@@ -125,8 +126,8 @@ window.onload = function() {
 		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
 		client.subscribe('welcome', window, 'onConnect');
 		client.subscribe('say', window, 'addToHistory');
-		
-		jsio.connect(client, clientParams.transport || 'csp', { url: "http://" + document.domain + ":5555" });
+		var domain = document.domain || "127.0.0.1";
+		jsio.connect(client, clientParams.transport || 'csp', { url: "http://" + domain + ":5555" });
 	}
 }
 </script>
