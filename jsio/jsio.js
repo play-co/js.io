@@ -319,9 +319,9 @@
 		// parse the what statement
 		var match, imports = [];
 		if((match = what.match(/^(from|external)\s+([\w.$]+)\s+import\s+(.*)$/))) {
-			imports[0] = {from: resolveRelativePath(match[2], path), external: match[1] == 'external', import: {}};
+			imports[0] = {from: resolveRelativePath(match[2], path), external: match[1] == 'external', "import": {}};
 			match[3].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
-				imports[0].import[item] = as || item;
+				imports[0]["import"][item] = as || item;
 			});
 		} else if((match = what.match(/^import\s+(.*)$/))) {
 			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
@@ -369,7 +369,7 @@
 					modules[pkg] = newContext.exports;
 				} else {
 					newContext['window'] = {};
-					for(var j in item.import) {
+					for(var j in item["import"]) {
 						newContext['window'][j] = null;
 					}
 					windowCompile(newContext, result);
@@ -387,12 +387,12 @@
 					c = c[segment];
 				}
 				c[segments[len]] = modules[pkg];
-			} else if(item.import) {
-				if(item.import['*']) {
+			} else if(item["import"]) {
+				if(item["import"]['*']) {
 					for(var i in modules[pkg]) { context[i] = modules[pkg][i]; }
 				} else {
 					try {
-						for(var j in item.import) { context[item.import[j]] = modules[pkg][j]; }
+						for(var j in item["import"]) { context[item["import"][j]] = modules[pkg][j]; }
 					} catch(e) {
 						log('module: ', modules);
 						throw e;
