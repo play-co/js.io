@@ -1,5 +1,9 @@
-import sys
+import logging
 import os
+import sys
+from urllib2 import urlopen
+fileopen = open
+
 from BeautifulSoup import BeautifulSoup as Soup
 
 try:
@@ -7,24 +11,36 @@ try:
 except:
     import simplejson as json
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.WARN)
+log.addHandler(logging.StreamHandler())
+
 def make_option_parser():
     from optparse import OptionParser
     parser = OptionParser("usage: %prog [options] inputfile")
-    parser.add_option("-j", "--jsio-path", dest="jsio", type="string", default="./jsio",
+    parser.add_option("-j", "--jsio-path", 
+                      dest="jsio", type="string", 
+                      default="http://js.io/svn/js.io/trunk/jsio",
                       help="jsio source path")
-    parser.add_option("-o", "--output", dest="output", type="string", default="output.js",
+    parser.add_option("-o", "--output", 
+                      dest="output", type="string", 
+                      default="output.js",
                       help="output FILENAME", metavar="FILENAME")
-    parser.add_option("-i", "--input", dest="input", type="string",
-                      help="input FILENAME; must end in .js or .html", metavar="FILENAME")
-    parser.add_option("-e", "--environment", dest="environment", type="string", default="browser",
+    parser.add_option("-e", "--environment", 
+                      dest="environment", type="string", default="browser",
                       help="target environment (e.g. browser or node)")
-    parser.add_option("-t", "--transport", dest="transport", type="string", default="csp",
+    parser.add_option("-t", "--transport", 
+                      dest="transport", type="string", 
+                      default="csp",
                       help="target transport (e.g. csp or tcp)")
-    parser.add_option("-v", action="store_true", dest="verbose")
-
-    parser.add_option("-d", "--dont-compress", action="store_false", dest="minify", default=True,
+    parser.add_option("--v", 
+                      action="store_const", const=logging.INFO, dest="verbose")
+    parser.add_option("--vv", 
+                      action="store_const", const=logging.DEBUG, dest="verbose")
+    parser.add_option("-d", "--dont-compress", 
+                      action="store_false", dest="minify", default=True,
                       help="Don't minify the output")
-                      
+    
     return parser  
     
 def main(argv=None):
@@ -32,49 +48,64 @@ def main(argv=None):
         argv = sys.argv[1:]
     parser = make_option_parser()
     (options, args) = parser.parse_args(argv)
+    log.debug(options)
+    log.setLevel(options.verbose or logging.WARN)
+    
     if len(args) != 1:
         print "Invalid position arguments"
         parser.print_help()
         sys.exit(1)
+    
     INPUT = args[0]
-    BASEDIR = os.path.dirname(INPUT)
     OUTPUT = options.output
-
+    BASEDIR = os.path.dirname(INPUT)
 
     if INPUT.split('.')[-1] not in ('html', 'js', 'pkg'):
         print "Invalid input file; jsio_compile only operats on .js and .html files"
         sys.exit(1)
 
     if INPUT.endswith('.pkg'):
-        pkg_data = json.loads(open(INPUT).read())
+        pkg_data = json.loads(get_source(INPUT))
         pkg_data['root'] = str(pkg_data['root'])
-        target = os.path.join(BASEDIR, pkg_data['root'] + '.js')
-        output = compile_source(target, options, BASEDIR, extras=[pkg_data['root']])
+        target = join_paths(BASEDIR, pkg_data['root'] + '.js')
+        output = compile_source(target, options, extras=[pkg_data['root']])
         output += '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
     else:
-        output = compile_source(INPUT, options, BASEDIR)
+        output = compile_source(INPUT, options)
 
     if options.minify:
-        print "Minifying"
+        log.info("Minifying")
         output = minify(output)
     else:
-        print "Skipping minify"
-    print "Writing output", OUTPUT
-    f = open(OUTPUT, 'w')
+        log.info("Skipping minify")
+    print "Writing output %s" % OUTPUT
+    f = fileopen(OUTPUT, 'w')
     f.write(output)
     f.close()
-    
+
+def join_paths(*paths):
+    if '://' in paths[0]:
+        return '/'.join(paths)
+    else:
+        return os.path.join(*paths)
+
 def minify(src):
     import StringIO
     jsm = JavascriptMinify()
     o = StringIO.StringIO()
     jsm.minify(StringIO.StringIO(src), o)
     return o.getvalue()
-    
-    
 
-def compile_source(target, options, BASEDIR='.', extras=[]):
-    orig_source = open(os.path.join(BASEDIR, target)).read()
+def get_source(target):
+    log.debug('fetching source from %s', target)
+    if '://' in target:
+        return urlopen(target).read()
+    else:
+        return fileopen(target).read()
+
+def compile_source(target, options, extras=[]):
+    log.info('compiling %s', target)
+    orig_source = get_source(target)
     if target.endswith('.html'):
         soup = Soup(orig_source)
         orig_source = ""
@@ -84,43 +115,62 @@ def compile_source(target, options, BASEDIR='.', extras=[]):
             target += script.contents[0]
     
     target_source = remove_comments(target)
+    target_module = os.path.relpath(target).split('/')[-1].split('.')[0]
     env_path = 'jsio.env.' + options.environment + '.' + options.transport
-    checked = ['jsio', 'jsio.env', env_path, 'log', 'Class', 'bind']
-    dependancies = map(lambda x: (x, ''), (extract_dependancies(target_source) + extras))
-    env = remove_comments(open(os.path.join(BASEDIR, 'jsio/env/' + options.environment + '/' + options.transport + '.js')).read())
-    dependancies.extend(map(lambda x: (x, 'jsio.env.browser.'), extract_dependancies(env)))
+    checked = [target_module, 
+               'jsio', 'jsio.env', env_path, 
+               'log', 'Class', 'bind']
+    dependancies = map(lambda x: (x, ''), 
+                       (extract_dependancies(target_source) + extras))
+    env = remove_comments(get_source(join_paths(options.jsio, 'env',
+                                                  options.environment,
+                                                  options.transport + '.js')))
+    dependancies.extend(map(lambda x: \
+                                (x, 'jsio.env.%s.' % options.environment), 
+                            extract_dependancies(env)))
+    log.debug('checked is %s', checked)
     while dependancies:
         pkg, path = dependancies.pop(0)
         full_path = joinModulePath(path, pkg)
+        log.debug('full_path: %s', full_path)
         if full_path in checked:
             continue
-        target = path_for_module(full_path)
-        src = remove_comments(open(os.path.join(BASEDIR, target)).read())
+        log.debug('checking dependancy %s', full_path)
+        target = path_for_module(full_path, prefix=options.jsio)
+        src = remove_comments(get_source(target))
         depends = map(lambda x: (x, full_path), extract_dependancies(src))
         dependancies.extend(depends)
         checked.append(full_path)
         
     sources = {}
-    print 'checked is', checked
+    log.debug('checked is %s', checked)
     for full_path in checked:
-        if full_path in ('jsio', 'log', 'Class', 'bind'):
+        if full_path in (target_module, 'jsio', # 'jsio.env',
+                         'log', 'Class', 'bind'):
             continue
-        print "Loading dependancy", full_path
-        filename = path_for_module(full_path)
-        src= open(os.path.join(BASEDIR, filename)).read()
+        log.info("Loading dependancy %s", full_path)
+        filename = path_for_module(full_path, prefix=options.jsio)
+        src = get_source(filename)
+        virtual_filename = path_for_module(full_path, prefix='jsio')
+        log.debug(virtual_filename)
             
-        sources[full_path] = {'src': minify(src), 'url': filename, }
+        sources[full_path] = {'src': minify(src), 'url': virtual_filename, }
         
-    out = ',\n'.join([ repr(key) + ": " + json.dumps(val) for (key, val) in sources.items() ])
-    jsio_src = open(os.path.join(BASEDIR, 'jsio/jsio.js')).read()
-    final_output = jsio_src.replace("        // Insert pre-loaded modules here...", out)
+    out = ',\n'.join([ repr(key) + ": " + json.dumps(val)
+                       for (key, val) in sources.items() ])
+    jsio_src = get_source(join_paths(options.jsio, 'jsio.js'))
+    final_output = \
+        jsio_src.replace("        // Insert pre-loaded modules here...", out)
     return final_output
 
-
-def path_for_module(full_path):
+def path_for_module(full_path, prefix):
+    path_components = full_path.split('.')
     if full_path == 'jsio':
-        return 'jsio/jsio.js'
-    return os.path.join(*full_path.split('.')) + '.js'
+        path_components = [prefix, full_path]
+    elif (path_components[0] == 'jsio'):
+        path_components[0] = prefix
+    log.debug(path_components)
+    return join_paths(*path_components) + '.js'
 
 def joinModulePath(a, b):
     if b[0] != '.':
@@ -142,11 +192,9 @@ def extract_dependancies(src):
     re2 = re.compile("jsio\(\s*['\"]\s*import\s+(.*?)\s*['\"]\s*\)")
     re3 = re.compile("\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?")
     for item in re2.finditer(src):
-        print item.groups()
         for listItem in re3.finditer(item.groups()[0]):
             dependancies.append(listItem.groups()[0])
 
-    print dependancies
     return dependancies
     
 def remove_comments(src):
@@ -170,11 +218,8 @@ def remove_comments(src):
         if line:
             output2 += line + '\n'            
     return output2
-        
-        
 
-
-
+            
 """
 soupselect.py
 
@@ -340,14 +385,14 @@ def unmonkeypatch(BeautifulSoupClass=None):
 
 from StringIO import StringIO
 
-def jsmin(js):
-    ins = StringIO(js)
-    outs = StringIO()
-    JavascriptMinify().minify(ins, outs)
-    str = outs.getvalue()
-    if len(str) > 0 and str[0] == '\n':
-        str = str[1:]
-    return str
+# def jsmin(js):
+#     ins = StringIO(js)
+#     outs = StringIO()
+#     JavascriptMinify().minify(ins, outs)
+#     str = outs.getvalue()
+#     if len(str) > 0 and str[0] == '\n':
+#         str = str[1:]
+#     return str
 
 def isAlphanum(c):
     """return true if the character is a letter, digit, underscore,

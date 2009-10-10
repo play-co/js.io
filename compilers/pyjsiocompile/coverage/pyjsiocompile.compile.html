@@ -1,0 +1,585 @@
+<html>
+<head>
+<title>pyjsiocompile.compile</title>
+</head>
+<body>
+pyjsiocompile.compile
+<style>
+.coverage pre {float: left; margin: 0px 1em; border: none;
+               padding: 0px; }
+.num pre { margin: 0px }
+.nocov, .nocov pre {background-color: #faa}
+.cov, .cov pre {background-color: #cfc}
+div.coverage div { clear: both; height: 1.1em}
+</style>
+<div class="stats">
+Covered: 267 lines<br/>
+Missed: 167 lines<br/>
+Skipped 126 lines<br/>
+Percent: 61 %<br/>
+
+</div>
+<div class="coverage">
+<div class="cov"><span class="num"><pre>  1</pre></span><pre>import logging</pre></div>
+<div class="cov"><span class="num"><pre>  2</pre></span><pre>import os</pre></div>
+<div class="cov"><span class="num"><pre>  3</pre></span><pre>import sys</pre></div>
+<div class="cov"><span class="num"><pre>  4</pre></span><pre>from urllib2 import urlopen</pre></div>
+<div class="cov"><span class="num"><pre>  5</pre></span><pre>fileopen = __builtins__['open']</pre></div>
+<div class="skip"><span class="num"><pre>  6</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>  7</pre></span><pre>from BeautifulSoup import BeautifulSoup as Soup</pre></div>
+<div class="skip"><span class="num"><pre>  8</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>  9</pre></span><pre>try:</pre></div>
+<div class="cov"><span class="num"><pre> 10</pre></span><pre>    import json</pre></div>
+<div class="nocov"><span class="num"><pre> 11</pre></span><pre>except:</pre></div>
+<div class="nocov"><span class="num"><pre> 12</pre></span><pre>    import simplejson as json</pre></div>
+<div class="skip"><span class="num"><pre> 13</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 14</pre></span><pre>log = logging.getLogger(__name__)</pre></div>
+<div class="cov"><span class="num"><pre> 15</pre></span><pre>log.setLevel(logging.WARN)</pre></div>
+<div class="cov"><span class="num"><pre> 16</pre></span><pre>log.addHandler(logging.StreamHandler())</pre></div>
+<div class="skip"><span class="num"><pre> 17</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 18</pre></span><pre>def make_option_parser():</pre></div>
+<div class="cov"><span class="num"><pre> 19</pre></span><pre>    from optparse import OptionParser</pre></div>
+<div class="cov"><span class="num"><pre> 20</pre></span><pre>    parser = OptionParser(&quot;usage: %prog [options] inputfile&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 21</pre></span><pre>    parser.add_option(&quot;-j&quot;, &quot;--jsio-path&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 22</pre></span><pre>                      dest=&quot;jsio&quot;, type=&quot;string&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 23</pre></span><pre>                      default=&quot;http://js.io/svn/js.io/trunk/jsio&quot;,</pre></div>
+<div class="cov"><span class="num"><pre> 24</pre></span><pre>                      help=&quot;jsio source path&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 25</pre></span><pre>    parser.add_option(&quot;-o&quot;, &quot;--output&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 26</pre></span><pre>                      dest=&quot;output&quot;, type=&quot;string&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 27</pre></span><pre>                      default=&quot;output.js&quot;,</pre></div>
+<div class="cov"><span class="num"><pre> 28</pre></span><pre>                      help=&quot;output FILENAME&quot;, metavar=&quot;FILENAME&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 29</pre></span><pre>    parser.add_option(&quot;-e&quot;, &quot;--environment&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 30</pre></span><pre>                      dest=&quot;environment&quot;, type=&quot;string&quot;, default=&quot;browser&quot;,</pre></div>
+<div class="cov"><span class="num"><pre> 31</pre></span><pre>                      help=&quot;target environment (e.g. browser or node)&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 32</pre></span><pre>    parser.add_option(&quot;-t&quot;, &quot;--transport&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 33</pre></span><pre>                      dest=&quot;transport&quot;, type=&quot;string&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 34</pre></span><pre>                      default=&quot;csp&quot;,</pre></div>
+<div class="cov"><span class="num"><pre> 35</pre></span><pre>                      help=&quot;target transport (e.g. csp or tcp)&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 36</pre></span><pre>    parser.add_option(&quot;--v&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 37</pre></span><pre>                      action=&quot;store_const&quot;, const=logging.INFO, dest=&quot;verbose&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 38</pre></span><pre>    parser.add_option(&quot;--vv&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 39</pre></span><pre>                      action=&quot;store_const&quot;, const=logging.DEBUG, dest=&quot;verbose&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 40</pre></span><pre>    parser.add_option(&quot;-d&quot;, &quot;--dont-compress&quot;, </pre></div>
+<div class="cov"><span class="num"><pre> 41</pre></span><pre>                      action=&quot;store_false&quot;, dest=&quot;minify&quot;, default=True,</pre></div>
+<div class="cov"><span class="num"><pre> 42</pre></span><pre>                      help=&quot;Don't minify the output&quot;)</pre></div>
+<div class="skip"><span class="num"><pre> 43</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre> 44</pre></span><pre>    return parser  </pre></div>
+<div class="skip"><span class="num"><pre> 45</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre> 46</pre></span><pre>def main(argv=None):</pre></div>
+<div class="cov"><span class="num"><pre> 47</pre></span><pre>    if argv == None:</pre></div>
+<div class="nocov"><span class="num"><pre> 48</pre></span><pre>        argv = sys.argv[1:]</pre></div>
+<div class="cov"><span class="num"><pre> 49</pre></span><pre>    parser = make_option_parser()</pre></div>
+<div class="cov"><span class="num"><pre> 50</pre></span><pre>    (options, args) = parser.parse_args(argv)</pre></div>
+<div class="skip"><span class="num"><pre> 51</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 52</pre></span><pre>    log.setLevel(options.verbose or logging.WARN)</pre></div>
+<div class="skip"><span class="num"><pre> 53</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre> 54</pre></span><pre>    if len(args) != 1:</pre></div>
+<div class="cov"><span class="num"><pre> 55</pre></span><pre>        print &quot;Invalid position arguments&quot;</pre></div>
+<div class="cov"><span class="num"><pre> 56</pre></span><pre>        parser.print_help()</pre></div>
+<div class="cov"><span class="num"><pre> 57</pre></span><pre>        sys.exit(1)</pre></div>
+<div class="skip"><span class="num"><pre> 58</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre> 59</pre></span><pre>    INPUT = args[0]</pre></div>
+<div class="cov"><span class="num"><pre> 60</pre></span><pre>    OUTPUT = options.output</pre></div>
+<div class="cov"><span class="num"><pre> 61</pre></span><pre>    BASEDIR = os.path.dirname(INPUT) or '.'</pre></div>
+<div class="skip"><span class="num"><pre> 62</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 63</pre></span><pre>    if INPUT.split('.')[-1] not in ('html', 'js', 'pkg'):</pre></div>
+<div class="nocov"><span class="num"><pre> 64</pre></span><pre>        print &quot;Invalid input file; jsio_compile only operats on .js and .html files&quot;</pre></div>
+<div class="nocov"><span class="num"><pre> 65</pre></span><pre>        sys.exit(1)</pre></div>
+<div class="skip"><span class="num"><pre> 66</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 67</pre></span><pre>    if INPUT.endswith('.pkg'):</pre></div>
+<div class="cov"><span class="num"><pre> 68</pre></span><pre>        pkg_data = json.loads(get_source(INPUT))</pre></div>
+<div class="cov"><span class="num"><pre> 69</pre></span><pre>        pkg_data['root'] = str(pkg_data['root'])</pre></div>
+<div class="cov"><span class="num"><pre> 70</pre></span><pre>        target = os.path.join(BASEDIR, pkg_data['root'] + '.js')</pre></div>
+<div class="cov"><span class="num"><pre> 71</pre></span><pre>        output = compile_source(target, options, extras=[pkg_data['root']])</pre></div>
+<div class="cov"><span class="num"><pre> 72</pre></span><pre>        output += '\njsio(&quot;import %s&quot;);\ndelete jsio;\n' % (pkg_data['root'])</pre></div>
+<div class="nocov"><span class="num"><pre> 73</pre></span><pre>    else:</pre></div>
+<div class="nocov"><span class="num"><pre> 74</pre></span><pre>        output = compile_source(INPUT, options)</pre></div>
+<div class="skip"><span class="num"><pre> 75</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 76</pre></span><pre>    if options.minify:</pre></div>
+<div class="cov"><span class="num"><pre> 77</pre></span><pre>        log.info(&quot;Minifying&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 78</pre></span><pre>        output = minify(output)</pre></div>
+<div class="nocov"><span class="num"><pre> 79</pre></span><pre>    else:</pre></div>
+<div class="nocov"><span class="num"><pre> 80</pre></span><pre>        log.info(&quot;Skipping minify&quot;)</pre></div>
+<div class="cov"><span class="num"><pre> 81</pre></span><pre>    print &quot;Writing output %s&quot; % OUTPUT</pre></div>
+<div class="cov"><span class="num"><pre> 82</pre></span><pre>    f = fileopen(OUTPUT, 'w')</pre></div>
+<div class="cov"><span class="num"><pre> 83</pre></span><pre>    f.write(output)</pre></div>
+<div class="cov"><span class="num"><pre> 84</pre></span><pre>    f.close()</pre></div>
+<div class="skip"><span class="num"><pre> 85</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre> 86</pre></span><pre>def minify(src):</pre></div>
+<div class="cov"><span class="num"><pre> 87</pre></span><pre>    import StringIO</pre></div>
+<div class="cov"><span class="num"><pre> 88</pre></span><pre>    jsm = JavascriptMinify()</pre></div>
+<div class="cov"><span class="num"><pre> 89</pre></span><pre>    o = StringIO.StringIO()</pre></div>
+<div class="cov"><span class="num"><pre> 90</pre></span><pre>    jsm.minify(StringIO.StringIO(src), o)</pre></div>
+<div class="cov"><span class="num"><pre> 91</pre></span><pre>    return o.getvalue()</pre></div>
+<div class="skip"><span class="num"><pre> 92</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 93</pre></span><pre>def get_source(target):</pre></div>
+<div class="cov"><span class="num"><pre> 94</pre></span><pre>    log.debug('fetching source from %s', target)</pre></div>
+<div class="cov"><span class="num"><pre> 95</pre></span><pre>    if '://' in target:</pre></div>
+<div class="cov"><span class="num"><pre> 96</pre></span><pre>        return urlopen(target).read()</pre></div>
+<div class="cov"><span class="num"><pre> 97</pre></span><pre>    else:</pre></div>
+<div class="cov"><span class="num"><pre> 98</pre></span><pre>        return fileopen(target).read()</pre></div>
+<div class="skip"><span class="num"><pre> 99</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>100</pre></span><pre>def compile_source(target, options, extras=[]):</pre></div>
+<div class="nocov"><span class="num"><pre>101</pre></span><pre>    log.info('compiling %s', target)</pre></div>
+<div class="nocov"><span class="num"><pre>102</pre></span><pre>    orig_source = get_source(target)</pre></div>
+<div class="nocov"><span class="num"><pre>103</pre></span><pre>    if target.endswith('.html'):</pre></div>
+<div class="nocov"><span class="num"><pre>104</pre></span><pre>        soup = Soup(orig_source)</pre></div>
+<div class="nocov"><span class="num"><pre>105</pre></span><pre>        orig_source = &quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>106</pre></span><pre>        for script in select(soup, 'script'):</pre></div>
+<div class="nocov"><span class="num"><pre>107</pre></span><pre>            if 'src' in dict(script.attrs):</pre></div>
+<div class="nocov"><span class="num"><pre>108</pre></span><pre>                continue</pre></div>
+<div class="nocov"><span class="num"><pre>109</pre></span><pre>            target += script.contents[0]</pre></div>
+<div class="skip"><span class="num"><pre>110</pre></span><pre>    </pre></div>
+<div class="nocov"><span class="num"><pre>111</pre></span><pre>    target_source = remove_comments(target)</pre></div>
+<div class="nocov"><span class="num"><pre>112</pre></span><pre>    target_module = os.path.relpath(target).split('.')[0]</pre></div>
+<div class="nocov"><span class="num"><pre>113</pre></span><pre>    env_path = 'jsio.env.' + options.environment + '.' + options.transport</pre></div>
+<div class="nocov"><span class="num"><pre>114</pre></span><pre>    checked = [target_module, </pre></div>
+<div class="nocov"><span class="num"><pre>115</pre></span><pre>               'jsio', 'jsio.env', env_path, </pre></div>
+<div class="nocov"><span class="num"><pre>116</pre></span><pre>               'log', 'Class', 'bind']</pre></div>
+<div class="nocov"><span class="num"><pre>117</pre></span><pre>    dependancies = map(lambda x: (x, ''), </pre></div>
+<div class="nocov"><span class="num"><pre>118</pre></span><pre>                       (extract_dependancies(target_source) + extras))</pre></div>
+<div class="nocov"><span class="num"><pre>119</pre></span><pre>    env = remove_comments(get_source(os.path.join(options.jsio, 'env',</pre></div>
+<div class="nocov"><span class="num"><pre>120</pre></span><pre>                                                  options.environment,</pre></div>
+<div class="nocov"><span class="num"><pre>121</pre></span><pre>                                                  options.transport + '.js')))</pre></div>
+<div class="nocov"><span class="num"><pre>122</pre></span><pre>    dependancies.extend(map(lambda x: (x, 'jsio.env.browser.'), </pre></div>
+<div class="nocov"><span class="num"><pre>123</pre></span><pre>                            extract_dependancies(env)))</pre></div>
+<div class="nocov"><span class="num"><pre>124</pre></span><pre>    log.debug('checked is %s', checked)</pre></div>
+<div class="nocov"><span class="num"><pre>125</pre></span><pre>    while dependancies:</pre></div>
+<div class="nocov"><span class="num"><pre>126</pre></span><pre>        pkg, path = dependancies.pop(0)</pre></div>
+<div class="nocov"><span class="num"><pre>127</pre></span><pre>        full_path = joinModulePath(path, pkg)</pre></div>
+<div class="nocov"><span class="num"><pre>128</pre></span><pre>        log.debug('full_path: %s', full_path)</pre></div>
+<div class="nocov"><span class="num"><pre>129</pre></span><pre>        if full_path in checked:</pre></div>
+<div class="nocov"><span class="num"><pre>130</pre></span><pre>            continue</pre></div>
+<div class="nocov"><span class="num"><pre>131</pre></span><pre>        log.debug('checking dependancy %s', full_path)</pre></div>
+<div class="nocov"><span class="num"><pre>132</pre></span><pre>        target = path_for_module(full_path, options)</pre></div>
+<div class="nocov"><span class="num"><pre>133</pre></span><pre>        src = remove_comments(get_source(target))</pre></div>
+<div class="nocov"><span class="num"><pre>134</pre></span><pre>        depends = map(lambda x: (x, full_path), extract_dependancies(src))</pre></div>
+<div class="nocov"><span class="num"><pre>135</pre></span><pre>        dependancies.extend(depends)</pre></div>
+<div class="nocov"><span class="num"><pre>136</pre></span><pre>        checked.append(full_path)</pre></div>
+<div class="skip"><span class="num"><pre>137</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>138</pre></span><pre>    sources = {}</pre></div>
+<div class="nocov"><span class="num"><pre>139</pre></span><pre>    log.debug('checked is %s', checked)</pre></div>
+<div class="nocov"><span class="num"><pre>140</pre></span><pre>    for full_path in checked:</pre></div>
+<div class="nocov"><span class="num"><pre>141</pre></span><pre>        if full_path in ('jsio', 'jsio.env', 'log', 'Class', 'bind'):</pre></div>
+<div class="nocov"><span class="num"><pre>142</pre></span><pre>            continue</pre></div>
+<div class="nocov"><span class="num"><pre>143</pre></span><pre>        log.info(&quot;Loading dependancy %s&quot;, full_path)</pre></div>
+<div class="nocov"><span class="num"><pre>144</pre></span><pre>        filename = path_for_module(full_path, options)</pre></div>
+<div class="nocov"><span class="num"><pre>145</pre></span><pre>        src = get_source(filename)</pre></div>
+<div class="skip"><span class="num"><pre>146</pre></span><pre>            </pre></div>
+<div class="nocov"><span class="num"><pre>147</pre></span><pre>        sources[full_path] = {'src': minify(src), 'url': filename, }</pre></div>
+<div class="skip"><span class="num"><pre>148</pre></span><pre>        </pre></div>
+<div class="nocov"><span class="num"><pre>149</pre></span><pre>    out = ',\n'.join([ repr(key) + &quot;: &quot; + json.dumps(val)</pre></div>
+<div class="nocov"><span class="num"><pre>150</pre></span><pre>                       for (key, val) in sources.items() ])</pre></div>
+<div class="nocov"><span class="num"><pre>151</pre></span><pre>    jsio_src = get_source(os.path.join(options.jsio, 'jsio.js'))</pre></div>
+<div class="nocov"><span class="num"><pre>152</pre></span><pre>    final_output = \</pre></div>
+<div class="nocov"><span class="num"><pre>153</pre></span><pre>        jsio_src.replace(&quot;        // Insert pre-loaded modules here...&quot;, out)</pre></div>
+<div class="nocov"><span class="num"><pre>154</pre></span><pre>    return final_output</pre></div>
+<div class="skip"><span class="num"><pre>155</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>156</pre></span><pre>def path_for_module(full_path, options):</pre></div>
+<div class="cov"><span class="num"><pre>157</pre></span><pre>    path_components = full_path.split('.')</pre></div>
+<div class="cov"><span class="num"><pre>158</pre></span><pre>    if full_path == 'jsio':</pre></div>
+<div class="cov"><span class="num"><pre>159</pre></span><pre>        path_components = [options.jsio, full_path]</pre></div>
+<div class="cov"><span class="num"><pre>160</pre></span><pre>    elif (path_components[0] == 'jsio'):</pre></div>
+<div class="cov"><span class="num"><pre>161</pre></span><pre>        path_components[0] = options.jsio</pre></div>
+<div class="cov"><span class="num"><pre>162</pre></span><pre>    return os.path.join(*path_components) + '.js'</pre></div>
+<div class="skip"><span class="num"><pre>163</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>164</pre></span><pre>def joinModulePath(a, b):</pre></div>
+<div class="cov"><span class="num"><pre>165</pre></span><pre>    if b[0] != '.':</pre></div>
+<div class="cov"><span class="num"><pre>166</pre></span><pre>        return b</pre></div>
+<div class="cov"><span class="num"><pre>167</pre></span><pre>    segments = a.split('.')</pre></div>
+<div class="cov"><span class="num"><pre>168</pre></span><pre>    while b[0] == '.':</pre></div>
+<div class="cov"><span class="num"><pre>169</pre></span><pre>        b = b[1:]</pre></div>
+<div class="cov"><span class="num"><pre>170</pre></span><pre>        segments.pop()</pre></div>
+<div class="cov"><span class="num"><pre>171</pre></span><pre>    output = '.'.join(segments) + '.' + b</pre></div>
+<div class="cov"><span class="num"><pre>172</pre></span><pre>    if output[0] == '.':</pre></div>
+<div class="nocov"><span class="num"><pre>173</pre></span><pre>        output = output[1:]</pre></div>
+<div class="cov"><span class="num"><pre>174</pre></span><pre>    return output</pre></div>
+<div class="skip"><span class="num"><pre>175</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>176</pre></span><pre>def extract_dependancies(src):</pre></div>
+<div class="nocov"><span class="num"><pre>177</pre></span><pre>    dependancies = []</pre></div>
+<div class="nocov"><span class="num"><pre>178</pre></span><pre>    re1 = re.compile(&quot;jsio\(\s*['\&quot;]\s*(from|external)\s+([\w.$]+)\s+import\s+(.*?)\s*['\&quot;]\s*\)&quot;)  </pre></div>
+<div class="nocov"><span class="num"><pre>179</pre></span><pre>    for item in re1.finditer(src):</pre></div>
+<div class="nocov"><span class="num"><pre>180</pre></span><pre>        dependancies.append(item.groups()[1])</pre></div>
+<div class="nocov"><span class="num"><pre>181</pre></span><pre>    re2 = re.compile(&quot;jsio\(\s*['\&quot;]\s*import\s+(.*?)\s*['\&quot;]\s*\)&quot;)</pre></div>
+<div class="nocov"><span class="num"><pre>182</pre></span><pre>    re3 = re.compile(&quot;\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?&quot;)</pre></div>
+<div class="nocov"><span class="num"><pre>183</pre></span><pre>    for item in re2.finditer(src):</pre></div>
+<div class="nocov"><span class="num"><pre>184</pre></span><pre>        for listItem in re3.finditer(item.groups()[0]):</pre></div>
+<div class="nocov"><span class="num"><pre>185</pre></span><pre>            dependancies.append(listItem.groups()[0])</pre></div>
+<div class="skip"><span class="num"><pre>186</pre></span><pre></pre></div>
+<div class="nocov"><span class="num"><pre>187</pre></span><pre>    return dependancies</pre></div>
+<div class="skip"><span class="num"><pre>188</pre></span><pre>    </pre></div>
+<div class="cov"><span class="num"><pre>189</pre></span><pre>def remove_comments(src):</pre></div>
+<div class="nocov"><span class="num"><pre>190</pre></span><pre>    output = &quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>191</pre></span><pre>    i = 0</pre></div>
+<div class="nocov"><span class="num"><pre>192</pre></span><pre>    while True:</pre></div>
+<div class="nocov"><span class="num"><pre>193</pre></span><pre>        j = src.find('/*', i)</pre></div>
+<div class="nocov"><span class="num"><pre>194</pre></span><pre>        if j == -1:</pre></div>
+<div class="nocov"><span class="num"><pre>195</pre></span><pre>            output += src[i:]</pre></div>
+<div class="nocov"><span class="num"><pre>196</pre></span><pre>            break</pre></div>
+<div class="nocov"><span class="num"><pre>197</pre></span><pre>        output += src[i:j]</pre></div>
+<div class="nocov"><span class="num"><pre>198</pre></span><pre>        k = src.find('*/', i)</pre></div>
+<div class="nocov"><span class="num"><pre>199</pre></span><pre>        if k == -1:</pre></div>
+<div class="nocov"><span class="num"><pre>200</pre></span><pre>            print 'unterminated comment detected'</pre></div>
+<div class="nocov"><span class="num"><pre>201</pre></span><pre>            sys.exit(0)</pre></div>
+<div class="nocov"><span class="num"><pre>202</pre></span><pre>        i = k+2</pre></div>
+<div class="nocov"><span class="num"><pre>203</pre></span><pre>    output2 = &quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>204</pre></span><pre>    for line in output.split('\n'):</pre></div>
+<div class="skip"><span class="num"><pre>205</pre></span><pre>        # XXX: Won't quite work with strings...</pre></div>
+<div class="nocov"><span class="num"><pre>206</pre></span><pre>        line = line.split('//')[0]</pre></div>
+<div class="nocov"><span class="num"><pre>207</pre></span><pre>        if line:</pre></div>
+<div class="nocov"><span class="num"><pre>208</pre></span><pre>            output2 += line + '\n'            </pre></div>
+<div class="nocov"><span class="num"><pre>209</pre></span><pre>    return output2</pre></div>
+<div class="skip"><span class="num"><pre>210</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>211</pre></span><pre>            </pre></div>
+<div class="nocov"><span class="num"><pre>212</pre></span><pre>&quot;&quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>213</pre></span><pre>soupselect.py</pre></div>
+<div class="skip"><span class="num"><pre>214</pre></span><pre></pre></div>
+<div class="nocov"><span class="num"><pre>215</pre></span><pre>CSS selector support for BeautifulSoup.</pre></div>
+<div class="skip"><span class="num"><pre>216</pre></span><pre></pre></div>
+<div class="nocov"><span class="num"><pre>217</pre></span><pre>soup = BeautifulSoup('&lt;html&gt;...')</pre></div>
+<div class="nocov"><span class="num"><pre>218</pre></span><pre>select(soup, 'div')</pre></div>
+<div class="nocov"><span class="num"><pre>219</pre></span><pre>- returns a list of div elements</pre></div>
+<div class="skip"><span class="num"><pre>220</pre></span><pre></pre></div>
+<div class="nocov"><span class="num"><pre>221</pre></span><pre>select(soup, 'div#main ul a')</pre></div>
+<div class="nocov"><span class="num"><pre>222</pre></span><pre>- returns a list of links inside a ul inside div#main</pre></div>
+<div class="skip"><span class="num"><pre>223</pre></span><pre></pre></div>
+<div class="nocov"><span class="num"><pre>224</pre></span><pre>&quot;&quot;&quot;</pre></div>
+<div class="skip"><span class="num"><pre>225</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>226</pre></span><pre>import re</pre></div>
+<div class="skip"><span class="num"><pre>227</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>228</pre></span><pre>tag_re = re.compile('^[a-z0-9]+$')</pre></div>
+<div class="skip"><span class="num"><pre>229</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>230</pre></span><pre>attribselect_re = re.compile(</pre></div>
+<div class="cov"><span class="num"><pre>231</pre></span><pre>    r'^(?P&lt;tag&gt;\w+)?\[(?P&lt;attribute&gt;\w+)(?P&lt;operator&gt;[=~\|\^\$\*]?)' + </pre></div>
+<div class="cov"><span class="num"><pre>232</pre></span><pre>    r'=?&quot;?(?P&lt;value&gt;[^\]&quot;]*)&quot;?\]$'</pre></div>
+<div class="cov"><span class="num"><pre>233</pre></span><pre>)</pre></div>
+<div class="skip"><span class="num"><pre>234</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>235</pre></span><pre># /^(\w+)\[(\w+)([=~\|\^\$\*]?)=?&quot;?([^\]&quot;]*)&quot;?\]$/</pre></div>
+<div class="skip"><span class="num"><pre>236</pre></span><pre>#   \---/  \---/\-------------/    \-------/</pre></div>
+<div class="skip"><span class="num"><pre>237</pre></span><pre>#     |      |         |               |</pre></div>
+<div class="skip"><span class="num"><pre>238</pre></span><pre>#     |      |         |           The value</pre></div>
+<div class="skip"><span class="num"><pre>239</pre></span><pre>#     |      |    ~,|,^,$,* or =</pre></div>
+<div class="skip"><span class="num"><pre>240</pre></span><pre>#     |   Attribute </pre></div>
+<div class="skip"><span class="num"><pre>241</pre></span><pre>#    Tag</pre></div>
+<div class="skip"><span class="num"><pre>242</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>243</pre></span><pre>def attribute_checker(operator, attribute, value=''):</pre></div>
+<div class="cov"><span class="num"><pre>244</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>245</pre></span><pre>    Takes an operator, attribute and optional value; returns a function that</pre></div>
+<div class="cov"><span class="num"><pre>246</pre></span><pre>    will return True for elements that match that combination.</pre></div>
+<div class="cov"><span class="num"><pre>247</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>248</pre></span><pre>    return {</pre></div>
+<div class="nocov"><span class="num"><pre>249</pre></span><pre>        '=': lambda el: el.get(attribute) == value,</pre></div>
+<div class="skip"><span class="num"><pre>250</pre></span><pre>        # attribute includes value as one of a set of space separated tokens</pre></div>
+<div class="nocov"><span class="num"><pre>251</pre></span><pre>        '~': lambda el: value in el.get(attribute, '').split(),</pre></div>
+<div class="skip"><span class="num"><pre>252</pre></span><pre>        # attribute starts with value</pre></div>
+<div class="nocov"><span class="num"><pre>253</pre></span><pre>        '^': lambda el: el.get(attribute, '').startswith(value),</pre></div>
+<div class="skip"><span class="num"><pre>254</pre></span><pre>        # attribute ends with value</pre></div>
+<div class="nocov"><span class="num"><pre>255</pre></span><pre>        '$': lambda el: el.get(attribute, '').endswith(value),</pre></div>
+<div class="skip"><span class="num"><pre>256</pre></span><pre>        # attribute contains value</pre></div>
+<div class="nocov"><span class="num"><pre>257</pre></span><pre>        '*': lambda el: value in el.get(attribute, ''),</pre></div>
+<div class="skip"><span class="num"><pre>258</pre></span><pre>        # attribute is either exactly value or starts with value-</pre></div>
+<div class="nocov"><span class="num"><pre>259</pre></span><pre>        '|': lambda el: el.get(attribute, '') == value \</pre></div>
+<div class="nocov"><span class="num"><pre>260</pre></span><pre>            or el.get(attribute, '').startswith('%s-' % value),</pre></div>
+<div class="nocov"><span class="num"><pre>261</pre></span><pre>    }.get(operator, lambda el: el.has_key(attribute))</pre></div>
+<div class="skip"><span class="num"><pre>262</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>263</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>264</pre></span><pre>def select(soup, selector):</pre></div>
+<div class="cov"><span class="num"><pre>265</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>266</pre></span><pre>    soup should be a BeautifulSoup instance; selector is a CSS selector </pre></div>
+<div class="cov"><span class="num"><pre>267</pre></span><pre>    specifying the elements you want to retrieve.</pre></div>
+<div class="cov"><span class="num"><pre>268</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>269</pre></span><pre>    tokens = selector.split()</pre></div>
+<div class="nocov"><span class="num"><pre>270</pre></span><pre>    current_context = [soup]</pre></div>
+<div class="nocov"><span class="num"><pre>271</pre></span><pre>    for token in tokens:</pre></div>
+<div class="nocov"><span class="num"><pre>272</pre></span><pre>        m = attribselect_re.match(token)</pre></div>
+<div class="nocov"><span class="num"><pre>273</pre></span><pre>        if m:</pre></div>
+<div class="skip"><span class="num"><pre>274</pre></span><pre>            # Attribute selector</pre></div>
+<div class="nocov"><span class="num"><pre>275</pre></span><pre>            tag, attribute, operator, value = m.groups()</pre></div>
+<div class="nocov"><span class="num"><pre>276</pre></span><pre>            if not tag:</pre></div>
+<div class="nocov"><span class="num"><pre>277</pre></span><pre>                tag = True</pre></div>
+<div class="nocov"><span class="num"><pre>278</pre></span><pre>            checker = attribute_checker(operator, attribute, value)</pre></div>
+<div class="nocov"><span class="num"><pre>279</pre></span><pre>            found = []</pre></div>
+<div class="nocov"><span class="num"><pre>280</pre></span><pre>            for context in current_context:</pre></div>
+<div class="nocov"><span class="num"><pre>281</pre></span><pre>                found.extend([el for el in context.findAll(tag) if checker(el)])</pre></div>
+<div class="nocov"><span class="num"><pre>282</pre></span><pre>            current_context = found</pre></div>
+<div class="nocov"><span class="num"><pre>283</pre></span><pre>            continue</pre></div>
+<div class="nocov"><span class="num"><pre>284</pre></span><pre>        if '#' in token:</pre></div>
+<div class="skip"><span class="num"><pre>285</pre></span><pre>            # ID selector</pre></div>
+<div class="nocov"><span class="num"><pre>286</pre></span><pre>            tag, id = token.split('#', 1)</pre></div>
+<div class="nocov"><span class="num"><pre>287</pre></span><pre>            if not tag:</pre></div>
+<div class="nocov"><span class="num"><pre>288</pre></span><pre>                tag = True</pre></div>
+<div class="nocov"><span class="num"><pre>289</pre></span><pre>            el = current_context[0].find(tag, {'id': id})</pre></div>
+<div class="nocov"><span class="num"><pre>290</pre></span><pre>            if not el:</pre></div>
+<div class="nocov"><span class="num"><pre>291</pre></span><pre>                return [] # No match</pre></div>
+<div class="nocov"><span class="num"><pre>292</pre></span><pre>            current_context = [el]</pre></div>
+<div class="nocov"><span class="num"><pre>293</pre></span><pre>            continue</pre></div>
+<div class="nocov"><span class="num"><pre>294</pre></span><pre>        if '.' in token:</pre></div>
+<div class="skip"><span class="num"><pre>295</pre></span><pre>            # Class selector</pre></div>
+<div class="nocov"><span class="num"><pre>296</pre></span><pre>            tag, klass = token.split('.', 1)</pre></div>
+<div class="nocov"><span class="num"><pre>297</pre></span><pre>            if not tag:</pre></div>
+<div class="nocov"><span class="num"><pre>298</pre></span><pre>                tag = True</pre></div>
+<div class="nocov"><span class="num"><pre>299</pre></span><pre>            found = []</pre></div>
+<div class="nocov"><span class="num"><pre>300</pre></span><pre>            for context in current_context:</pre></div>
+<div class="nocov"><span class="num"><pre>301</pre></span><pre>                found.extend(</pre></div>
+<div class="nocov"><span class="num"><pre>302</pre></span><pre>                    context.findAll(tag,</pre></div>
+<div class="nocov"><span class="num"><pre>303</pre></span><pre>                        {'class': lambda attr: attr and klass in attr.split()}</pre></div>
+<div class="nocov"><span class="num"><pre>304</pre></span><pre>                    )</pre></div>
+<div class="nocov"><span class="num"><pre>305</pre></span><pre>                )</pre></div>
+<div class="nocov"><span class="num"><pre>306</pre></span><pre>            current_context = found</pre></div>
+<div class="nocov"><span class="num"><pre>307</pre></span><pre>            continue</pre></div>
+<div class="nocov"><span class="num"><pre>308</pre></span><pre>        if token == '*':</pre></div>
+<div class="skip"><span class="num"><pre>309</pre></span><pre>            # Star selector</pre></div>
+<div class="nocov"><span class="num"><pre>310</pre></span><pre>            found = []</pre></div>
+<div class="nocov"><span class="num"><pre>311</pre></span><pre>            for context in current_context:</pre></div>
+<div class="nocov"><span class="num"><pre>312</pre></span><pre>                found.extend(context.findAll(True))</pre></div>
+<div class="nocov"><span class="num"><pre>313</pre></span><pre>            current_context = found</pre></div>
+<div class="nocov"><span class="num"><pre>314</pre></span><pre>            continue</pre></div>
+<div class="skip"><span class="num"><pre>315</pre></span><pre>        # Here we should just have a regular tag</pre></div>
+<div class="nocov"><span class="num"><pre>316</pre></span><pre>        if not tag_re.match(token):</pre></div>
+<div class="nocov"><span class="num"><pre>317</pre></span><pre>            return []</pre></div>
+<div class="nocov"><span class="num"><pre>318</pre></span><pre>        found = []</pre></div>
+<div class="nocov"><span class="num"><pre>319</pre></span><pre>        for context in current_context:</pre></div>
+<div class="nocov"><span class="num"><pre>320</pre></span><pre>            found.extend(context.findAll(token))</pre></div>
+<div class="nocov"><span class="num"><pre>321</pre></span><pre>        current_context = found</pre></div>
+<div class="nocov"><span class="num"><pre>322</pre></span><pre>    return current_context</pre></div>
+<div class="skip"><span class="num"><pre>323</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>324</pre></span><pre>def monkeypatch(BeautifulSoupClass=None):</pre></div>
+<div class="cov"><span class="num"><pre>325</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>326</pre></span><pre>    If you don't explicitly state the class to patch, defaults to the most </pre></div>
+<div class="cov"><span class="num"><pre>327</pre></span><pre>    common import location for BeautifulSoup.</pre></div>
+<div class="cov"><span class="num"><pre>328</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="nocov"><span class="num"><pre>329</pre></span><pre>    if not BeautifulSoupClass:</pre></div>
+<div class="nocov"><span class="num"><pre>330</pre></span><pre>        from BeautifulSoup import BeautifulSoup as BeautifulSoupClass</pre></div>
+<div class="nocov"><span class="num"><pre>331</pre></span><pre>    BeautifulSoupClass.findSelect = select</pre></div>
+<div class="skip"><span class="num"><pre>332</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>333</pre></span><pre>def unmonkeypatch(BeautifulSoupClass=None):</pre></div>
+<div class="nocov"><span class="num"><pre>334</pre></span><pre>    if not BeautifulSoupClass:</pre></div>
+<div class="nocov"><span class="num"><pre>335</pre></span><pre>        from BeautifulSoup import BeautifulSoup as BeautifulSoupClass</pre></div>
+<div class="nocov"><span class="num"><pre>336</pre></span><pre>    delattr(BeautifulSoupClass, 'findSelect')</pre></div>
+<div class="skip"><span class="num"><pre>337</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>338</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>339</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>340</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>341</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>342</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>343</pre></span><pre>#!/usr/bin/python</pre></div>
+<div class="skip"><span class="num"><pre>344</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>345</pre></span><pre># This code is original from jsmin by Douglas Crockford, it was translated to</pre></div>
+<div class="skip"><span class="num"><pre>346</pre></span><pre># Python by Baruch Even. The original code had the following copyright and</pre></div>
+<div class="skip"><span class="num"><pre>347</pre></span><pre># license.</pre></div>
+<div class="skip"><span class="num"><pre>348</pre></span><pre>#</pre></div>
+<div class="skip"><span class="num"><pre>349</pre></span><pre># /* jsmin.c</pre></div>
+<div class="skip"><span class="num"><pre>350</pre></span><pre>#    2007-05-22</pre></div>
+<div class="skip"><span class="num"><pre>351</pre></span><pre>#</pre></div>
+<div class="skip"><span class="num"><pre>352</pre></span><pre># Copyright (c) 2002 Douglas Crockford  (www.crockford.com)</pre></div>
+<div class="skip"><span class="num"><pre>353</pre></span><pre>#</pre></div>
+<div class="skip"><span class="num"><pre>354</pre></span><pre># Permission is hereby granted, free of charge, to any person obtaining a copy of</pre></div>
+<div class="skip"><span class="num"><pre>355</pre></span><pre># this software and associated documentation files (the &quot;Software&quot;), to deal in</pre></div>
+<div class="skip"><span class="num"><pre>356</pre></span><pre># the Software without restriction, including without limitation the rights to</pre></div>
+<div class="skip"><span class="num"><pre>357</pre></span><pre># use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies</pre></div>
+<div class="skip"><span class="num"><pre>358</pre></span><pre># of the Software, and to permit persons to whom the Software is furnished to do</pre></div>
+<div class="skip"><span class="num"><pre>359</pre></span><pre># so, subject to the following conditions:</pre></div>
+<div class="skip"><span class="num"><pre>360</pre></span><pre>#</pre></div>
+<div class="skip"><span class="num"><pre>361</pre></span><pre># The above copyright notice and this permission notice shall be included in all</pre></div>
+<div class="skip"><span class="num"><pre>362</pre></span><pre># copies or substantial portions of the Software.</pre></div>
+<div class="skip"><span class="num"><pre>363</pre></span><pre>#</pre></div>
+<div class="skip"><span class="num"><pre>364</pre></span><pre># The Software shall be used for Good, not Evil.</pre></div>
+<div class="skip"><span class="num"><pre>365</pre></span><pre>#</pre></div>
+<div class="skip"><span class="num"><pre>366</pre></span><pre># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</pre></div>
+<div class="skip"><span class="num"><pre>367</pre></span><pre># IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</pre></div>
+<div class="skip"><span class="num"><pre>368</pre></span><pre># FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</pre></div>
+<div class="skip"><span class="num"><pre>369</pre></span><pre># AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</pre></div>
+<div class="skip"><span class="num"><pre>370</pre></span><pre># LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</pre></div>
+<div class="skip"><span class="num"><pre>371</pre></span><pre># OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</pre></div>
+<div class="skip"><span class="num"><pre>372</pre></span><pre># SOFTWARE.</pre></div>
+<div class="skip"><span class="num"><pre>373</pre></span><pre># */</pre></div>
+<div class="skip"><span class="num"><pre>374</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>375</pre></span><pre>from StringIO import StringIO</pre></div>
+<div class="skip"><span class="num"><pre>376</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>377</pre></span><pre># def jsmin(js):</pre></div>
+<div class="skip"><span class="num"><pre>378</pre></span><pre>#     ins = StringIO(js)</pre></div>
+<div class="skip"><span class="num"><pre>379</pre></span><pre>#     outs = StringIO()</pre></div>
+<div class="skip"><span class="num"><pre>380</pre></span><pre>#     JavascriptMinify().minify(ins, outs)</pre></div>
+<div class="skip"><span class="num"><pre>381</pre></span><pre>#     str = outs.getvalue()</pre></div>
+<div class="skip"><span class="num"><pre>382</pre></span><pre>#     if len(str) &gt; 0 and str[0] == '\n':</pre></div>
+<div class="skip"><span class="num"><pre>383</pre></span><pre>#         str = str[1:]</pre></div>
+<div class="skip"><span class="num"><pre>384</pre></span><pre>#     return str</pre></div>
+<div class="skip"><span class="num"><pre>385</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>386</pre></span><pre>def isAlphanum(c):</pre></div>
+<div class="cov"><span class="num"><pre>387</pre></span><pre>    &quot;&quot;&quot;return true if the character is a letter, digit, underscore,</pre></div>
+<div class="cov"><span class="num"><pre>388</pre></span><pre>           dollar sign, or non-ASCII character.</pre></div>
+<div class="cov"><span class="num"><pre>389</pre></span><pre>    &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>390</pre></span><pre>    return ((c &gt;= 'a' and c &lt;= 'z') or (c &gt;= '0' and c &lt;= '9') or</pre></div>
+<div class="cov"><span class="num"><pre>391</pre></span><pre>            (c &gt;= 'A' and c &lt;= 'Z') or c == '_' or c == '$' or c == '\\' or (c is not None and ord(c) &gt; 126));</pre></div>
+<div class="skip"><span class="num"><pre>392</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>393</pre></span><pre>class UnterminatedComment(Exception):</pre></div>
+<div class="cov"><span class="num"><pre>394</pre></span><pre>    pass</pre></div>
+<div class="skip"><span class="num"><pre>395</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>396</pre></span><pre>class UnterminatedStringLiteral(Exception):</pre></div>
+<div class="cov"><span class="num"><pre>397</pre></span><pre>    pass</pre></div>
+<div class="skip"><span class="num"><pre>398</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>399</pre></span><pre>class UnterminatedRegularExpression(Exception):</pre></div>
+<div class="cov"><span class="num"><pre>400</pre></span><pre>    pass</pre></div>
+<div class="skip"><span class="num"><pre>401</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>402</pre></span><pre>class JavascriptMinify(object):</pre></div>
+<div class="skip"><span class="num"><pre>403</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>404</pre></span><pre>    def _outA(self):</pre></div>
+<div class="cov"><span class="num"><pre>405</pre></span><pre>        self.outstream.write(self.theA)</pre></div>
+<div class="cov"><span class="num"><pre>406</pre></span><pre>    def _outB(self):</pre></div>
+<div class="cov"><span class="num"><pre>407</pre></span><pre>        self.outstream.write(self.theB)</pre></div>
+<div class="skip"><span class="num"><pre>408</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>409</pre></span><pre>    def _get(self):</pre></div>
+<div class="cov"><span class="num"><pre>410</pre></span><pre>        &quot;&quot;&quot;return the next character from stdin. Watch out for lookahead. If</pre></div>
+<div class="cov"><span class="num"><pre>411</pre></span><pre>           the character is a control character, translate it to a space or</pre></div>
+<div class="cov"><span class="num"><pre>412</pre></span><pre>           linefeed.</pre></div>
+<div class="cov"><span class="num"><pre>413</pre></span><pre>        &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>414</pre></span><pre>        c = self.theLookahead</pre></div>
+<div class="cov"><span class="num"><pre>415</pre></span><pre>        self.theLookahead = None</pre></div>
+<div class="cov"><span class="num"><pre>416</pre></span><pre>        if c == None:</pre></div>
+<div class="cov"><span class="num"><pre>417</pre></span><pre>            c = self.instream.read(1)</pre></div>
+<div class="cov"><span class="num"><pre>418</pre></span><pre>        if c &gt;= ' ' or c == '\n':</pre></div>
+<div class="cov"><span class="num"><pre>419</pre></span><pre>            return c</pre></div>
+<div class="cov"><span class="num"><pre>420</pre></span><pre>        if c == '': # EOF</pre></div>
+<div class="cov"><span class="num"><pre>421</pre></span><pre>            return '\000'</pre></div>
+<div class="cov"><span class="num"><pre>422</pre></span><pre>        if c == '\r':</pre></div>
+<div class="nocov"><span class="num"><pre>423</pre></span><pre>            return '\n'</pre></div>
+<div class="cov"><span class="num"><pre>424</pre></span><pre>        return ' '</pre></div>
+<div class="skip"><span class="num"><pre>425</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>426</pre></span><pre>    def _peek(self):</pre></div>
+<div class="cov"><span class="num"><pre>427</pre></span><pre>        self.theLookahead = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>428</pre></span><pre>        return self.theLookahead</pre></div>
+<div class="skip"><span class="num"><pre>429</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>430</pre></span><pre>    def _next(self):</pre></div>
+<div class="cov"><span class="num"><pre>431</pre></span><pre>        &quot;&quot;&quot;get the next character, excluding comments. peek() is used to see</pre></div>
+<div class="cov"><span class="num"><pre>432</pre></span><pre>           if an unescaped '/' is followed by a '/' or '*'.</pre></div>
+<div class="cov"><span class="num"><pre>433</pre></span><pre>        &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>434</pre></span><pre>        c = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>435</pre></span><pre>        if c == '/' and self.theA != '\\':</pre></div>
+<div class="cov"><span class="num"><pre>436</pre></span><pre>            p = self._peek()</pre></div>
+<div class="cov"><span class="num"><pre>437</pre></span><pre>            if p == '/':</pre></div>
+<div class="cov"><span class="num"><pre>438</pre></span><pre>                c = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>439</pre></span><pre>                while c &gt; '\n':</pre></div>
+<div class="cov"><span class="num"><pre>440</pre></span><pre>                    c = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>441</pre></span><pre>                return c</pre></div>
+<div class="cov"><span class="num"><pre>442</pre></span><pre>            if p == '*':</pre></div>
+<div class="cov"><span class="num"><pre>443</pre></span><pre>                c = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>444</pre></span><pre>                while 1:</pre></div>
+<div class="cov"><span class="num"><pre>445</pre></span><pre>                    c = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>446</pre></span><pre>                    if c == '*':</pre></div>
+<div class="cov"><span class="num"><pre>447</pre></span><pre>                        if self._peek() == '/':</pre></div>
+<div class="cov"><span class="num"><pre>448</pre></span><pre>                            self._get()</pre></div>
+<div class="cov"><span class="num"><pre>449</pre></span><pre>                            return ' '</pre></div>
+<div class="cov"><span class="num"><pre>450</pre></span><pre>                    if c == '\000':</pre></div>
+<div class="nocov"><span class="num"><pre>451</pre></span><pre>                        raise UnterminatedComment()</pre></div>
+<div class="skip"><span class="num"><pre>452</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>453</pre></span><pre>        return c</pre></div>
+<div class="skip"><span class="num"><pre>454</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>455</pre></span><pre>    def _action(self, action):</pre></div>
+<div class="cov"><span class="num"><pre>456</pre></span><pre>        &quot;&quot;&quot;do something! What you do is determined by the argument:</pre></div>
+<div class="cov"><span class="num"><pre>457</pre></span><pre>           1   Output A. Copy B to A. Get the next B.</pre></div>
+<div class="cov"><span class="num"><pre>458</pre></span><pre>           2   Copy B to A. Get the next B. (Delete A).</pre></div>
+<div class="cov"><span class="num"><pre>459</pre></span><pre>           3   Get the next B. (Delete B).</pre></div>
+<div class="cov"><span class="num"><pre>460</pre></span><pre>           action treats a string as a single character. Wow!</pre></div>
+<div class="cov"><span class="num"><pre>461</pre></span><pre>           action recognizes a regular expression if it is preceded by ( or , or =.</pre></div>
+<div class="cov"><span class="num"><pre>462</pre></span><pre>        &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>463</pre></span><pre>        if action &lt;= 1:</pre></div>
+<div class="cov"><span class="num"><pre>464</pre></span><pre>            self._outA()</pre></div>
+<div class="skip"><span class="num"><pre>465</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>466</pre></span><pre>        if action &lt;= 2:</pre></div>
+<div class="cov"><span class="num"><pre>467</pre></span><pre>            self.theA = self.theB</pre></div>
+<div class="cov"><span class="num"><pre>468</pre></span><pre>            if self.theA == &quot;'&quot; or self.theA == '&quot;':</pre></div>
+<div class="cov"><span class="num"><pre>469</pre></span><pre>                while 1:</pre></div>
+<div class="cov"><span class="num"><pre>470</pre></span><pre>                    self._outA()</pre></div>
+<div class="cov"><span class="num"><pre>471</pre></span><pre>                    self.theA = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>472</pre></span><pre>                    if self.theA == self.theB:</pre></div>
+<div class="cov"><span class="num"><pre>473</pre></span><pre>                        break</pre></div>
+<div class="cov"><span class="num"><pre>474</pre></span><pre>                    if self.theA &lt;= '\n':</pre></div>
+<div class="nocov"><span class="num"><pre>475</pre></span><pre>                        raise UnterminatedStringLiteral()</pre></div>
+<div class="cov"><span class="num"><pre>476</pre></span><pre>                    if self.theA == '\\':</pre></div>
+<div class="cov"><span class="num"><pre>477</pre></span><pre>                        self._outA()</pre></div>
+<div class="cov"><span class="num"><pre>478</pre></span><pre>                        self.theA = self._get()</pre></div>
+<div class="skip"><span class="num"><pre>479</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>480</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>481</pre></span><pre>        if action &lt;= 3:</pre></div>
+<div class="cov"><span class="num"><pre>482</pre></span><pre>            self.theB = self._next()</pre></div>
+<div class="cov"><span class="num"><pre>483</pre></span><pre>            if self.theB == '/' and (self.theA == '(' or self.theA == ',' or</pre></div>
+<div class="cov"><span class="num"><pre>484</pre></span><pre>                                     self.theA == '=' or self.theA == ':' or</pre></div>
+<div class="cov"><span class="num"><pre>485</pre></span><pre>                                     self.theA == '[' or self.theA == '?' or</pre></div>
+<div class="cov"><span class="num"><pre>486</pre></span><pre>                                     self.theA == '!' or self.theA == '&amp;' or</pre></div>
+<div class="cov"><span class="num"><pre>487</pre></span><pre>                                     self.theA == '|' or self.theA == ';' or</pre></div>
+<div class="cov"><span class="num"><pre>488</pre></span><pre>                                     self.theA == '{' or self.theA == '}' or</pre></div>
+<div class="cov"><span class="num"><pre>489</pre></span><pre>                                     self.theA == '\n'):</pre></div>
+<div class="cov"><span class="num"><pre>490</pre></span><pre>                self._outA()</pre></div>
+<div class="cov"><span class="num"><pre>491</pre></span><pre>                self._outB()</pre></div>
+<div class="cov"><span class="num"><pre>492</pre></span><pre>                while 1:</pre></div>
+<div class="cov"><span class="num"><pre>493</pre></span><pre>                    self.theA = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>494</pre></span><pre>                    if self.theA == '/':</pre></div>
+<div class="cov"><span class="num"><pre>495</pre></span><pre>                        break</pre></div>
+<div class="cov"><span class="num"><pre>496</pre></span><pre>                    elif self.theA == '\\':</pre></div>
+<div class="cov"><span class="num"><pre>497</pre></span><pre>                        self._outA()</pre></div>
+<div class="cov"><span class="num"><pre>498</pre></span><pre>                        self.theA = self._get()</pre></div>
+<div class="cov"><span class="num"><pre>499</pre></span><pre>                    elif self.theA &lt;= '\n':</pre></div>
+<div class="nocov"><span class="num"><pre>500</pre></span><pre>                        raise UnterminatedRegularExpression()</pre></div>
+<div class="cov"><span class="num"><pre>501</pre></span><pre>                    self._outA()</pre></div>
+<div class="cov"><span class="num"><pre>502</pre></span><pre>                self.theB = self._next()</pre></div>
+<div class="skip"><span class="num"><pre>503</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>504</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>505</pre></span><pre>    def _jsmin(self):</pre></div>
+<div class="cov"><span class="num"><pre>506</pre></span><pre>        &quot;&quot;&quot;Copy the input to the output, deleting the characters which are</pre></div>
+<div class="cov"><span class="num"><pre>507</pre></span><pre>           insignificant to JavaScript. Comments will be removed. Tabs will be</pre></div>
+<div class="cov"><span class="num"><pre>508</pre></span><pre>           replaced with spaces. Carriage returns will be replaced with linefeeds.</pre></div>
+<div class="cov"><span class="num"><pre>509</pre></span><pre>           Most spaces and linefeeds will be removed.</pre></div>
+<div class="cov"><span class="num"><pre>510</pre></span><pre>        &quot;&quot;&quot;</pre></div>
+<div class="cov"><span class="num"><pre>511</pre></span><pre>        self.theA = '\n'</pre></div>
+<div class="cov"><span class="num"><pre>512</pre></span><pre>        self._action(3)</pre></div>
+<div class="skip"><span class="num"><pre>513</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>514</pre></span><pre>        while self.theA != '\000':</pre></div>
+<div class="cov"><span class="num"><pre>515</pre></span><pre>            if self.theA == ' ':</pre></div>
+<div class="cov"><span class="num"><pre>516</pre></span><pre>                if isAlphanum(self.theB):</pre></div>
+<div class="cov"><span class="num"><pre>517</pre></span><pre>                    self._action(1)</pre></div>
+<div class="cov"><span class="num"><pre>518</pre></span><pre>                else:</pre></div>
+<div class="cov"><span class="num"><pre>519</pre></span><pre>                    self._action(2)</pre></div>
+<div class="cov"><span class="num"><pre>520</pre></span><pre>            elif self.theA == '\n':</pre></div>
+<div class="cov"><span class="num"><pre>521</pre></span><pre>                if self.theB in ['{', '[', '(', '+', '-']:</pre></div>
+<div class="cov"><span class="num"><pre>522</pre></span><pre>                    self._action(1)</pre></div>
+<div class="cov"><span class="num"><pre>523</pre></span><pre>                elif self.theB == ' ':</pre></div>
+<div class="cov"><span class="num"><pre>524</pre></span><pre>                    self._action(3)</pre></div>
+<div class="cov"><span class="num"><pre>525</pre></span><pre>                else:</pre></div>
+<div class="cov"><span class="num"><pre>526</pre></span><pre>                    if isAlphanum(self.theB):</pre></div>
+<div class="cov"><span class="num"><pre>527</pre></span><pre>                        self._action(1)</pre></div>
+<div class="cov"><span class="num"><pre>528</pre></span><pre>                    else:</pre></div>
+<div class="cov"><span class="num"><pre>529</pre></span><pre>                        self._action(2)</pre></div>
+<div class="cov"><span class="num"><pre>530</pre></span><pre>            else:</pre></div>
+<div class="cov"><span class="num"><pre>531</pre></span><pre>                if self.theB == ' ':</pre></div>
+<div class="cov"><span class="num"><pre>532</pre></span><pre>                    if isAlphanum(self.theA):</pre></div>
+<div class="cov"><span class="num"><pre>533</pre></span><pre>                        self._action(1)</pre></div>
+<div class="cov"><span class="num"><pre>534</pre></span><pre>                    else:</pre></div>
+<div class="cov"><span class="num"><pre>535</pre></span><pre>                        self._action(3)</pre></div>
+<div class="cov"><span class="num"><pre>536</pre></span><pre>                elif self.theB == '\n':</pre></div>
+<div class="cov"><span class="num"><pre>537</pre></span><pre>                    if self.theA in ['}', ']', ')', '+', '-', '&quot;', '\'']:</pre></div>
+<div class="cov"><span class="num"><pre>538</pre></span><pre>                        self._action(1)</pre></div>
+<div class="cov"><span class="num"><pre>539</pre></span><pre>                    else:</pre></div>
+<div class="cov"><span class="num"><pre>540</pre></span><pre>                        if isAlphanum(self.theA):</pre></div>
+<div class="cov"><span class="num"><pre>541</pre></span><pre>                            self._action(1)</pre></div>
+<div class="cov"><span class="num"><pre>542</pre></span><pre>                        else:</pre></div>
+<div class="cov"><span class="num"><pre>543</pre></span><pre>                            self._action(3)</pre></div>
+<div class="cov"><span class="num"><pre>544</pre></span><pre>                else:</pre></div>
+<div class="cov"><span class="num"><pre>545</pre></span><pre>                    self._action(1)</pre></div>
+<div class="skip"><span class="num"><pre>546</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>547</pre></span><pre>    def minify(self, instream, outstream):</pre></div>
+<div class="cov"><span class="num"><pre>548</pre></span><pre>        self.instream = instream</pre></div>
+<div class="cov"><span class="num"><pre>549</pre></span><pre>        self.outstream = outstream</pre></div>
+<div class="cov"><span class="num"><pre>550</pre></span><pre>        self.theA = '\n'</pre></div>
+<div class="cov"><span class="num"><pre>551</pre></span><pre>        self.theB = None</pre></div>
+<div class="cov"><span class="num"><pre>552</pre></span><pre>        self.theLookahead = None</pre></div>
+<div class="skip"><span class="num"><pre>553</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>554</pre></span><pre>        self._jsmin()</pre></div>
+<div class="cov"><span class="num"><pre>555</pre></span><pre>        self.instream.close()</pre></div>
+<div class="skip"><span class="num"><pre>556</pre></span><pre></pre></div>
+<div class="skip"><span class="num"><pre>557</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>558</pre></span><pre>if __name__ == &quot;__main__&quot;:</pre></div>
+<div class="nocov"><span class="num"><pre>559</pre></span><pre>    main()</pre></div>
+<div class="skip"><span class="num"><pre>560</pre></span><pre></pre></div>
+</div>
+</body>
+</html>

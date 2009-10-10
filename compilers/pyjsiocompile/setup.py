@@ -14,6 +14,7 @@ setup(
     long_description='',
     packages= find_packages(),
     zip_safe = True,
+    install_requires=['beautifulsoup', 'coverage', 'distribute', 'mock', 'nose'],
     entry_points = '''    
         [console_scripts]
         jsio_compile = pyjsiocompile.compile:main
