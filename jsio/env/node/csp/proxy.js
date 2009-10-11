@@ -54,7 +54,7 @@ var msp = this.msp = {};
     var outConnections = {};
     var receiveData = function (data) {
       var frameBegin;
-      inBuffer += raw_to_bytes(data);
+      inBuffer += data;
       try {
         while ((frameBegin = inBuffer.indexOf('[')) != -1) {
           var frameEnd = parseInt(inBuffer.slice(0, frameBegin)) + frameBegin;
@@ -95,10 +95,10 @@ var msp = this.msp = {};
       .addListener('receive', receiveData)
       .addListener('eof', shutdown)
       .addListener('disconnect', shutdown)
-      .setEncoding('raw');
+      .setEncoding('bytes');
     var send = function (frame) {
       payload = JSON.stringify(frame);
-      inConnection.send(bytes_to_raw(payload.length + ',' + payload), 'raw');
+      inConnection.send(payload.length + ',' + payload, 'bytes');
     };
     var closeOutgoing = function (connectionId, errorType) {
       if (connectionId in outConnections) {
@@ -114,13 +114,13 @@ var msp = this.msp = {};
         assert(!(connectionId in outConnections), 'OPEN frame for existing connection');
         assert(host && port, 'Invalid host or port');
         var outConn = outConnections[connectionId] = node.tcp.createConnection(port, host);
-        outConn.setEncoding('raw');
+        outConn.setEncoding('bytes');
         outConn
           .addListener('connect', function () {
             send([connectionId, FRAME.OPENED]);
           })
           .addListener('receive', function (data) {
-            send([connectionId, FRAME.DATA, raw_to_bytes(data)]);
+            send([connectionId, FRAME.DATA, data]);
           })
           .addListener('eof', function () {
             closeOutgoing(connectionId, 'RemoteConnectionClosed');
@@ -135,8 +135,8 @@ var msp = this.msp = {};
       },
       data: function (connectionId, data) {
         debug('DATA FRAME')
-        data = bytes_to_raw(unescape(data))
-        outConnections[connectionId].send(data, 'raw');
+        data = unescape(data)
+        outConnections[connectionId].send(data, 'bytes');
       },
     };
   };
