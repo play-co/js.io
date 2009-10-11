@@ -110,7 +110,6 @@ var msp = this.msp = {};
     };
     var dispatchFrame = {
       open: function (connectionId, host, port) {
-        debug('OPEN FRAME');
         assert(!(connectionId in outConnections), 'OPEN frame for existing connection');
         assert(host && port, 'Invalid host or port');
         var outConn = outConnections[connectionId] = node.tcp.createConnection(port, host);
@@ -130,11 +129,9 @@ var msp = this.msp = {};
           });
       },
       close: function (connectionId) {
-        debug('CLOSE FRAME')
         closeOutgoing(connectionId, 'UserConnectionReset');
       },
       data: function (connectionId, data) {
-        debug('DATA FRAME')
         data = unescape(data)
         outConnections[connectionId].send(data, 'bytes');
       },
@@ -143,7 +140,6 @@ var msp = this.msp = {};
   msp.Proxy = function () {
     var self = this;
     self.cspserver = csp.createServer(function(connection) {
-      debug('got connection')
       proxyConnection = new msp.ProxyConnection(connection);
     });
     self.listen = function (port, host) {
