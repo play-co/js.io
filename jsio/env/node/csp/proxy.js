@@ -157,6 +157,6 @@ msp.Proxy = Class(function () {
 function start_server () {
 	var server = new msp.Proxy();
 	server.listen(8050);
-	puts("Proxying from http://:8050");
+	log("Proxying from http://:8050");
 };
 start_server();
