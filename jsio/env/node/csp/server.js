@@ -92,12 +92,12 @@ csp.Session = Class(function() {
 		this.resetTimeoutTimer();
 	};
 	this.teardownSession = function () {
+		myClearTimeout(this.durationTimer);
 		this.connection.readyState = (this.connection.readyState === 'open' ? 'writeOnly' : 'closed');
 		this.connection.emit('eof');
 		// XXX when the client calls close, do we want to allow the server to
 		// keep sending them stuff, write only? And what about when they time out?
 		delete sessionDict[this.key];
-		myClearTimeout(this.durationTimer);
 	};
 	// send data to the client
 	this.send = function (data) {
@@ -237,9 +237,9 @@ csp.Session = Class(function() {
 	// a csp.Server instance dispatches resources to this object's functions
 	this.dispatch = {
 		handshake: function (request, response) {
-		debug('calling stringify');
+			// debug('calling stringify');
 			var body = JSON.stringify( {'session': this.key})
-		debug('stringify called');
+			// debug('stringify called');
 			this.renderResponse(response, body);
 		},
 		comet: function (request, response) {
@@ -427,7 +427,7 @@ csp.Server = Class(node.EventEmitter, function () {
 						// make sure our json dict is an object literal
 						assert((dict instanceof Object) && !(dict instanceof Array));
 					} catch (err) {
-						debug(['INVALID HANDSHAKE, ', request, err]);
+						debug('INVALID HANDSHAKE, ', request, err);
 						throw new CSPError(400, 'Invalid data parameter for handshake');
 					};
 					var session = new csp.Session();
