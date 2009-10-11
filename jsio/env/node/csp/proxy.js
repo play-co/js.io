@@ -28,8 +28,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-include("util.js");
-include("server.js")
+jsio('import log, Class, bind');
+jsio('from .util import *');
+jsio('from .server import csp')
 
 // msp = "Multiplexing Socket Proxy"
 var msp = this.msp = {};

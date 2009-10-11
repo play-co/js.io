@@ -347,7 +347,7 @@ csp.Server = Class(node.EventEmitter, function () {
 		this._session_url = ''; // XXX this could be changed or made into a parameter
 		log('starting server, session url is <' + this._session_url + '>');
 	};
-	var CSPError = this.CSPError = Class(AssertionError, function (supr) {
+	var CSPError = Class(AssertionError, function (supr) {
 		this.name = 'CSPError'
 		this.init = function (code/*, other args */) {
 			supr(this, 'init', args);
