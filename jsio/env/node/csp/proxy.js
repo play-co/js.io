@@ -33,7 +33,8 @@ jsio('from .util import *');
 jsio('from .server import csp')
 
 // msp = "Multiplexing Socket Proxy"
-var msp = this.msp = {};
+var msp = this.msp = exports;
+
 ;(function () {
 
 var frameTypes = ['open', 'close', 'data'];
