@@ -92,7 +92,7 @@ msp.ProxyConnection = Class(function() {
 			} else {
 				this.closeOutgoing(connectionId, 'UserConnectionReset');
 			}
-			var outConn = this.outConnections[connectionId]
+			var outConn = this.outConnections[connectionId];
 			outConn.listeners('connect') = [];
 			outConn.listeners('receive') = [];
 			outConn.listeners('eof') = [];
@@ -135,7 +135,7 @@ msp.ProxyConnection = Class(function() {
 			this.closeOutgoing(connectionId, 'UserConnectionReset');
 		},
 		data: function (connectionId, data) {
-			data = unescape(data)
+			data = unescape(data);
 			this.outConnections[connectionId].send(data, 'bytes');
 		},
 	};	
@@ -146,7 +146,7 @@ msp.Proxy = Class(function () {
 		this.cspserver = csp.createServer(function(connection) {
 			proxyConnection = new msp.ProxyConnection(connection);
 		});
-	}
+	};
 	this.listen = function (port, host) {
 		this.cspserver.listen(port, host);
 	};
