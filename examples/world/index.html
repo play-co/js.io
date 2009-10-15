@@ -4,7 +4,14 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <title>Walking Live</title>
+<!-- Uncomment to run against raw jsio source -->
 <!--script type="text/javascript" src="jsio/jsio.js"></script-->
+
+
+<!-- Uncomment to run against compiled jsio + world source.
+     To compile against jsio turnk, run: 
+     	jsio_compile -o build/world_client.js index.html
+ -->
 <script type="text/javascript" src="build/world_client.js"></script>
 <script>
 jsio('import Class, bind, jsio.logging');
@@ -13,6 +20,10 @@ jsio('from world.constants import *');
 jsio('from world.client import *');
 
 jsio.logging.getLogger('world.client').setLevel(0);
+//jsio.logging.getLogger('csp.transports.jsonp').setLevel(0);
+//jsio.logging.getLogger('csp.client').setLevel(0);
+//jsio.logging.getLogger('csp.transports').setLevel(0);
+jsio.logging.setProduction(true);
 
 function addToHistory(params, color) {
 	if(!params || !params.msg) { return; }
