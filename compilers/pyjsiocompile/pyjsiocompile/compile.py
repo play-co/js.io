@@ -72,7 +72,6 @@ def main(argv=None):
         output += '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
     else:
         output = compile_source(INPUT, options)
-
     if options.minify:
         log.info("Minifying")
         output = minify(output)
@@ -156,7 +155,7 @@ def compile_source(target, options, extras=[]):
             
         sources[full_path] = {'src': minify(src), 'url': virtual_filename, }
         
-    out = ',\n'.join([ repr(key) + ": " + json.dumps(val)
+    out = ',\n'.join([ repr(str(key)) + ": " + json.dumps(val)
                        for (key, val) in sources.items() ])
     jsio_src = get_source(join_paths(options.jsio, 'jsio.js'))
     final_output = \
