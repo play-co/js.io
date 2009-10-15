@@ -39,7 +39,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 //var utf8 = this.utf8 = exports;
 
-var UnicodeCodecError = function (message) { this.message = message; };
+exports.UnicodeCodecError = function (message) { 
+	this.message = message; 
+};
+
+var UnicodeCodecError = exports.UnicodeCodecError;
+
 UnicodeCodecError.prototype.toString = function () {
 	return 'UnicodeCodecError' + (this.message ? ': ' + this.message : '');
 };
@@ -90,8 +95,10 @@ exports.decode = function (bytes) {
 		catch (err) { /* pass */ };
 	};
 	try {
-		return [decodeURIComponent(escape(bytes.slice(0, len_parsed))),
-		        len_parsed];
+		return [
+			decodeURIComponent(escape(bytes.slice(0, len_parsed))),
+			len_parsed
+		];
 	}
 	catch (err) {
 		throw new UnicodeCodecError('invalid utf-8 bytes');

@@ -131,7 +131,7 @@
 			
 			window = process;
 			var compile = function(context, args) {
-				var fn = node.compile("function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}", args.url);
+				node.compile("function fn(_) { with(_){delete _;(function(){" + args.src + "\n}).call(this)}}", args.url);
 				try {
 					fn.call(context.exports, context);
 				} catch(e) {
@@ -194,6 +194,18 @@
 			var log = function() {
 				if (typeof console != 'undefined' && console.log) {
 					console.log.apply(console, arguments);
+				} else {
+					var shouldScroll = document.body.scrollHeight == document.body.scrollTop + document.body.clientHeight;
+					var d = document.createElement('div');
+					document.body.appendChild(d);
+					out = []
+					for (var i = 0, item; (item = arguments[i]) || i < arguments.length; ++i) {
+						out.push(JSON.stringify(item));
+					}
+					d.innerHTML = out.join(", ");
+					if (shouldScroll) {
+						window.scrollTo(0, 10000);
+					}
 				}
 			}
 			

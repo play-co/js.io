@@ -8,6 +8,13 @@ var levels = exports.levels = {
     WARN: 3,
     ERROR: 4
 };
+
+var production = false;
+
+exports.setProduction = function(prod) {
+	production = !!prod;
+}
+
 exports.getLogger = function(name) {
     if (!(name in loggers)) {
         loggers[name] = new exports.Logger(name);
@@ -29,7 +36,7 @@ exports.Logger = Class(function() {
     }
     function makeLogFunction(level, type) {
         return function() {
-            if (level < this.level) return;
+            if (level < this.level || production) return;
             log.apply(log, [type, this.name].concat(Array.prototype.slice.call(arguments, 0)));
         }
     }

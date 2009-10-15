@@ -14,10 +14,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	}
 	
 	var error = function(e) {
-		setTimeout(function() {
-			throw e;
-		}, 0);
-		// TODO: send back an error?
+		logger.warn('Error: ', e, e.traceback);
 	}
 	
 	// Inherit and overwrite
@@ -35,7 +32,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	}
 
 	this.lineReceived = function(line) {
-		// logger.debug("lineReceived", line);
+		logger.debug("lineReceived", line);
 		try {
 			var frame = JSON.parse(line);
 			if (frame.length != 3) {

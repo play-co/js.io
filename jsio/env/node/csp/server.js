@@ -30,10 +30,16 @@ OTHER DEALINGS IN THE SOFTWARE.
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
 
-jsio('import log, Class, bind, ....uuid, ....utf8, ....base64');
+jsio('import log, Class, bind');
+jsio('import jsio.std.uuid as uuid');
+jsio('import jsio.std.utf8 as utf8');
+jsio('import jsio.std.base64 as base64');
 jsio('from .util import *');
-
+jsio('import jsio.logging');
 var http = jsio.node.require('/http.js');
+
+
+var logger = jsio.logging.getLogger('node.csp.server');
 
 var csp = this.csp = exports;
 
@@ -258,8 +264,8 @@ csp.Session = Class(function() {
 			};
 		},
 		send: function (request, response) {
-			// node.stdio.writeError('raw request data: ' + request.data + '\n')
 			var batch = JSON.parse(request.data);
+			logger.debug('received packet batch:', batch);
 			while (batch[0] != undefined) {
 				// packetId, encoding, content = batch.shift()
 				var packet = batch.shift(),
@@ -274,6 +280,7 @@ csp.Session = Class(function() {
 				};
 				this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] = packetContent;
 			};
+			logger.debug('incomingPacketBuffer', this.incomingPacketBuffer);
 			while (this.incomingPacketBuffer[0] !== undefined) {
 				var nextPacketPayload = this.incomingPacketBuffer.shift();
 				this.lastSequentialIncomingId += 1;
@@ -404,6 +411,7 @@ csp.Server = Class(node.EventEmitter, function () {
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
 		getRequestBody(request).addCallback(bind(this, function(body) {
+			logger.debug('Received request', request.uri.path);
 			try {
 				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
 				                    404, 'Request to invalid session URL');

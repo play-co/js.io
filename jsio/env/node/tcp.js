@@ -1,6 +1,8 @@
-require('jsio', ['Class', 'log', 'bind']);
-require('jsio.interfaces');
-require('jsio.logging');
+jsio('import Class, log, bind');
+jsio('import jsio.interfaces');
+jsio('import jsio.logging');
+
+var nodeTcp = jsio.node.require('/tcp.js');
 var logger = jsio.logging.getLogger('node.tcp');
 
 var Transport = Class(jsio.interfaces.Transport, function() {
@@ -25,7 +27,7 @@ var Transport = Class(jsio.interfaces.Transport, function() {
 
 exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 	this.listen = function() {
-    	var s = node.tcp.createServer(bind(this, function(socket) {
+    	var s = nodeTcp.createServer(bind(this, function(socket) {
 		    socket.setEncoding("utf8");
 		    socket.addListener("connect", bind(this, function() {
            		this.onConnect(new Transport(socket));

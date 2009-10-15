@@ -84,6 +84,6 @@ exports.uuid = function (len, radix) {
 			}
 		}
 	}
-
 	return uuid.join('');
 };
+

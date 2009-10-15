@@ -6,11 +6,11 @@ var logger = jsio.logging.getLogger('env.browser.csp');
 exports.Connector = Class(jsio.interfaces.Connector, function() {
     this.connect = function() {
         var conn = new CometSession();
-        conn.onopen = bind(this, function() {
+        conn.onconnect = bind(this, function() {
             logger.debug('conn has opened');
             this.onConnect(new Transport(conn));
         });
-        conn.onclose = bind(this, function(code) {
+        conn.ondisconnect = bind(this, function(code) {
             logger.debug('conn closed without opening, code:', code);
         });
         logger.debug('open the conection');
@@ -25,7 +25,7 @@ var Transport = Class(jsio.interfaces.Transport, function() {
     
     this.makeConnection = function(protocol) {
         this._conn.onread = bind(protocol, 'dataReceived');
-        this._conn.onclose = bind(protocol, 'connectionLost'); // TODO: map error codes
+        this._conn.ondisconnect = bind(protocol, 'connectionLost'); // TODO: map error codes
     }
 	
     this.write = function(data, encoding) {

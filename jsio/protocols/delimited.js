@@ -16,8 +16,10 @@ exports.DelimitedProtocol = Class(jsio.interfaces.Protocol, function(supr) {
     }
     
     this.dataReceived = function(data) {
-        logger.debug('dataReceived:', JSON.stringify(data));
+        logger.debug('dataReceived:(' + data.length + ')', data);
+        logger.debug('last 2:', data.slice(data.length-2));
         this.buffer += data;
+        logger.debug('index', this.buffer.indexOf(this.delimiter));
         var i;
         while ((i = this.buffer.indexOf(this.delimiter)) != -1) {
             var line = this.buffer.slice(0, i);
