@@ -271,7 +271,7 @@ exports.CometSession = Class(function(supr) {
 	
 	this._doOnDisconnect = function(err) {
 		if (typeof(this.ondisconnect) == 'function') {
-			logger.debug('call ondisconnect function', data);
+			logger.debug('call ondisconnect function', err);
 			this.ondisconnect(err);
 		}
 		else {
