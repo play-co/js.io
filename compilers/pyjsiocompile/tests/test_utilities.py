@@ -72,7 +72,7 @@ class TestOptionParser(object):
         
         assert self.default_jsio_path == options.jsio
         assert 'output.js' == options.output
-        assert 'browser' == options.environment
+        assert 'browser' == options.environment, options.environment
         assert 'csp' == options.transport
         assert not options.verbose
         assert options.minify
