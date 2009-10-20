@@ -45,7 +45,17 @@ exports.Buffer = Class(function(supr) {
         this._rawBuffer = this._rawBuffer.slice(output.length);
         return output;
     }
-
+	this.consumeMaxBytes = function(num) {
+		var output = this._rawBuffer.slice(0, num);
+		this._rawBuffer = this._rawBuffer(num);
+		return output;
+	}
+	this.consumeAllBytes = function() {
+		var temp = this._rawBuffer;
+		this._rawBuffer = "";
+		return temp;
+	}
+	
     this.consumeLine = function(delimiter) {
         delimiter = !!delimiter ? delimiter : "\n"
         var output = this.peekLine(delimiter);
