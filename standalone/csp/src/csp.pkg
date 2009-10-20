@@ -1,0 +1,6 @@
+{
+    "root": "csp",
+    "transports": ["csp"],
+    "environments": ["browser"],
+    "additional_dependancies": [ ]
+}
