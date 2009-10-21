@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from urllib2 import urlopen
+import warnings
 fileopen = open
 
 from BeautifulSoup import BeautifulSoup as Soup
@@ -29,14 +30,15 @@ def make_option_parser():
                       dest="output", type="string", 
                       default="output.js",
                       help="output FILENAME", metavar="FILENAME")
-    parser.add_option("-e", "--environment", 
-                      dest="environment", type="string", 
-                      default="browser",
-                      help="target environment (e.g. browser or node)")
+    parser.add_option("-e", "--environments", 
+                      dest="environments", type="string", 
+                      action='append',
+                      default=["browser"],
+                      help="target environments (e.g. browser or node)")
     parser.add_option("-t", "--transports", 
                       dest="transports", type="string", 
-                      action="append"
-                      default="csp",
+                      action="append",
+                      default=["csp"],
                       help="target transport (e.g. csp or tcp)")
     parser.add_option("--v", 
                       action="store_const", const=logging.INFO, dest="verbose")
@@ -71,7 +73,7 @@ def main(argv=None):
     
     compile_kwargs = {}
     if INPUT.endswith('pkg'):
-        INPUT, option, compile_kwargs = \
+        INPUT, options, compile_kwargs = \
             load_package_configuration(INPUT, options)
     output = \
         compile_source(INPUT, options, **compile_kwargs) + options.epilogue
@@ -87,12 +89,25 @@ def main(argv=None):
     f.close()
 
 def load_package_configuration(INPUT, options):
+    """ load the configuration options in the specified pkg
+        
+        the pkg options should take precedence over the command-line
+        options
+    """
+    # QUESTION: is this true? are we really going to ignore command-line
+    #           options? let's at least print a message for now.
     pkg_data = json.loads(get_source(INPUT))
     pkg_data['root'] = str(pkg_data['root'])
-    if 'environment' in pkg_data:
-        options.environment = str(pkg_data['environment'])
-    if 'transport' in pkg_data:
-        options.transports = [str(xprt) for xprt in pkg_data['transport']]
+    if 'environmenta' in pkg_data:
+        print "using the 'environment' value from package %s" % INPUT
+        options.environment = [str(env) for env in pkg_data['environments']]
+    if 'transports' in pkg_data:
+        print "using the 'transports' value from package %s" % INPUT
+        options.transports = [str(xprt) for xprt in pkg_data['transports']]
+    if 'environments' in pkg_data:
+        print "using the 'environments' value from package %s" % INPUT
+        options.environments = \
+            [str(env) for env in pkg_data['environments']]
     options.epilogue = \
         '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
     BASEDIR = os.path.dirname(INPUT)
@@ -119,15 +134,21 @@ def get_source(target):
     else:
         return fileopen(target).read()
 
-def build_transport_path(environment, transport):
-    return 'jsio.env.%s.%s' % (environment, transport)
+def build_transport_paths(environments, transports):
+    return ['jsio.env.%s.%s' % (environment, transport)
+            for transport in transports
+            for environment in environments]
     
-def get_transport_dependencies(jsio, env, xprt, path_template, extras=[]):
-    raw_source = \
-        get_source(join_paths(jsio, 'env', env, xprt) + '.js')
-    source = remove_comments(raw_source)
-    return map(lambda x: (x, path_template % env), 
-               (extract_dependencies(source)))    
+def get_transport_dependencies(jsio, env, xprts, path_template, extras=[]):
+    dependencies = []
+    for xprt in xprts:
+        print join_paths(jsio, 'env', env, xprt) + '.js'
+        raw_source = \
+            get_source(join_paths(jsio, 'env', env, xprt) + '.js')
+        source = remove_comments(raw_source)
+        dependencies.extend(map(lambda x: (x, path_template % env), 
+                                (extract_dependencies(source))))
+    return dependencies
     
 def get_dependencies(source, path='', extras=[]):
     return map(lambda x: (x, path), 
@@ -148,15 +169,18 @@ def compile_source(target, options, extras=[]):
     target_module = os.path.relpath(target).split('/')[-1].split('.')[0]
     target_module_path = target_module + '.js'
     dependencies = get_dependencies(target_source, extras)
+    print dependencies
     checked = [target_module, 'jsio', 'jsio.env', 'log', 'Class', 'bind']
-    transport_path = build_transport_path(options.environment,
-                                          options.transport)
-    checked.append(transport_path)
-    dependencies.extend(\
-        get_transport_dependencies(options.jsio,
-                                   options.environment,
-                                   options.transport,
-                                   'jsio.env.%s.'))
+    transport_paths = build_transport_paths(options.environments,
+                                            options.transports)
+    checked.extend(transport_paths)
+    for environment in options.environments:
+        dependencies.extend(\
+            get_transport_dependencies(options.jsio,
+                                       environment,
+                                       options.transports,
+                                       'jsio.env.%s.'))
+    print dependencies
     log.debug('checked is %s', checked)
     while dependencies:
         pkg, path = dependencies.pop(0)
