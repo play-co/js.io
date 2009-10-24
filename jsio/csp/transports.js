@@ -3,6 +3,7 @@ jsio('import jsio.std.uri as uri');
 jsio('import jsio.std.base64 as base64');
 jsio('import jsio.logging');
 jsio('import .errors');
+jsio('from jsio.util.browserdetect import BrowserDetect')
 
 var logger = jsio.logging.getLogger("csp.transports");
 exports.allTransports = {}
@@ -143,7 +144,7 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 			var errorSuppressed = false;
 			var jsonpId = ifr.cbId++;
 			
-			doc.open();
+			if(BrowserDetect.isWebKit) { doc.open(); }
 			
 			win['eb' + jsonpId] = function errback(scriptTag) {
 				if(scriptTag && scriptTag.readyState != 'complete') { return; }
@@ -190,8 +191,20 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 			}
 
 			fullUrl = fullUrl.replace(/\"/g, "%22");
-			doc.write('<scr'+'ipt src="'+fullUrl+'" onreadystatechange="if(window[\'eb'+jsonpId+'\'])eb'+jsonpId+'(this)"></scr'+'ipt>');
-			doc.write('<scr'+'ipt>eb'+jsonpId+'(false)</scr'+'ipt>');
+			if(BrowserDetect.isWebKit) {
+				doc.write('<scr'+'ipt src="'+fullUrl+'"></scr'+'ipt>');
+				doc.write('<scr'+'ipt>eb'+jsonpId+'(false)</scr'+'ipt>');
+			} else {
+				var s = doc.createElement('script');
+				s.src = fullUrl;
+				if(BrowserDetect.isIE) { s.onreadystatechange = function() { if(window['eb'+jsonpId]) { window['eb'+jsonpId](this); }}}
+				head.appendChild(s);
+				if(!BrowserDetect.isIE) {
+					var s = doc.createElement('script');
+					s.innerHTML = 'eb'+jsonpId+'(false)';
+					head.appendChild(s);
+				}
+			}
 			killLoadingBar();
 		}), 0);
 	}
