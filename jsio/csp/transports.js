@@ -3,6 +3,8 @@ jsio('import jsio.std.uri as uri');
 jsio('import jsio.std.base64 as base64');
 jsio('import jsio.logging');
 jsio('import .errors');
+jsio('from jsio.util.browserdetect import BrowserDetect');
+jsio('import jsio.util.url as urlUtil');
 
 var logger = jsio.logging.getLogger("csp.transports");
 exports.allTransports = {}
@@ -83,15 +85,9 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 	var logger = jsio.logging.getLogger('csp.transports.jsonp');
 	function createIframe() {
 		var i = document.createElement("iframe");
-		i.style.display = 'block';
-		i.style.width = '0';
-		i.style.height = '0';
-		i.style.border = '0';
-		i.style.margin = '0';
-		i.style.padding = '0';
-		i.style.overflow = 'hidden';
-		i.style.visibility = 'hidden';
+		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; }
 		i.cbId = 0;
+		i.src = 'javascript:document.open();document.write("<html><body></body></html>")';
 		document.body.appendChild(i);
 		return i;
 	}
@@ -105,7 +101,8 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 	this.handshake = function(url, options) {
 		logger.debug('handshake:', url, options);
 		args = {
-			d:"{}"
+			d:'{}',
+			ct:'application/javascript'
 		}
 		this._makeRequest('send', url + '/handshake', args, this.handshakeSuccess, this.handshakeFailure);
 	}
@@ -137,21 +134,16 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 		window.setTimeout(bind(this, function() {
 			var ifr = this._ifr[rType];
 			// IE6+ uses contentWindow.document, the others use temp.contentDocument.
-			var doc = ifr.contentDocument || ifr.contentWindow.document || ifr.document;
-			var win = ifr.contentWindow
-			var head = doc.getElementsByTagName('body')[0] || doc.getElementsByTagName('head')[0];
-			var errorSuppressed = false;
+			var win = ifr.contentWindow;
+			var doc = win.document;
+			var body = doc.body;
+			var completed = false;
 			var jsonpId = ifr.cbId++;
-			
-			doc.open();
-			
-			win['eb' + jsonpId] = function errback(scriptTag) {
-				if(scriptTag && scriptTag.readyState != 'complete') { return; }
-				
-				logger.debug('in eb');
-				if (!errorSuppressed) {
-					logger.debug('error making request:', fullUrl);
-				}
+			var onFinish = win['eb' + jsonpId] = function(scriptTag) {
+				// IE6 onReadyStateChange
+				if(scriptTag && scriptTag.readyState != 'loaded') { return; }
+				logger.debug('in onFinish');
+				if (!completed) { logger.debug('error making request:', fullUrl); }
 
 				logger.debug('removing scripts');
 				var scripts = doc.getElementsByTagName('script');
@@ -161,37 +153,45 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 				if(s2) s2.parentNode.removeChild(s2);
 				logger.debug('removed scripts');
 
-				logger.debug('deleting cb');
+				logger.debug('deleting callbacks');
 				win['cb' + jsonpId] = function(){};
-				logger.debug('deleting eb');
 				win['eb' + jsonpId] = function(){};
 				
-				if (!errorSuppressed && self.opened) {
-					logger.debug('calling errback');
+				if (!completed) {
+					logger.debug('calling eb');
 					eb.apply(null, arguments);
 				}
 			}
+
 			win['cb' + jsonpId] = function callback() {
 				logger.debug('successful: ', fullUrl,[].slice.call(arguments, 0));
-				errorSuppressed = true;
+				completed = true;
 				logger.debug('calling the cb');
 				cb.apply(null, arguments);
 				logger.debug('cb called');
 			}
-			var fullUrl = url + '?'
-			for (key in args) {
-				fullUrl += key + '=' + args[key] + '&';
-			}
-			if (rType == "send") {
-				fullUrl += 'rs=;&rp=cb' + jsonpId;
-			}
-			else if (rType == "comet") {
-				fullUrl += 'bs=;&bp=cb' + jsonpId;
-			}
 
-			fullUrl = fullUrl.replace(/\"/g, "%22");
-			doc.write('<scr'+'ipt src="'+fullUrl+'" onreadystatechange="if(window[\'eb'+jsonpId+'\'])eb'+jsonpId+'(this)"></scr'+'ipt>');
-			doc.write('<scr'+'ipt>eb'+jsonpId+'(false)</scr'+'ipt>');
+			switch(rType) {
+				case 'send': args.rs = ';'; args.rp = 'cb' + jsonpId; break;
+				case 'comet': args.bs = ';'; args.bp = 'cb' + jsonpId; break;
+			}
+			var fullUrl = url + '?' + urlUtil.buildQuery(args);
+			
+			if(BrowserDetect.isWebKit) {
+				doc.open();
+				doc.write('<scr'+'ipt src="'+fullUrl+'"></scr'+'ipt>');
+				doc.write('<scr'+'ipt>eb'+jsonpId+'(false)</scr'+'ipt>');
+			} else {
+				var s = doc.createElement('script');
+				s.src = fullUrl;
+				if(s.onreadystatechange === null) { s.onreadystatechange = bind(window, onFinish, s); } // IE
+				body.appendChild(s);
+				if(!BrowserDetect.isIE) {
+					var s = doc.createElement('script');
+					s.innerHTML = 'eb'+jsonpId+'(false)';
+					body.appendChild(s);
+				}
+			}
 			killLoadingBar();
 		}), 0);
 	}

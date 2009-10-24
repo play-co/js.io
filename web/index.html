@@ -131,6 +131,9 @@ function generateContentBox() {
 }
 
 function selectLink(id) {
+  if(id == selectLink.last) { return; }
+  selectLink.last = id;
+  
   var hidden = $('#hiddenContent')[0];
   var content = $(('#c_'+id).toLowerCase())[0] || $('#c_error')[0];
   var selected = $('#mainSwappableContent')[0];
@@ -139,7 +142,7 @@ function selectLink(id) {
   }
   selected.appendChild(content);
 }
-
+selectLink.last = '';
 </script>
 </head>
 <body>

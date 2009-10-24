@@ -149,6 +149,8 @@ exports.CometSession = Class(function(supr) {
 	this._handshakeFailure = function(e) {
 		logger.debug('handshake failure', e);
 		if (this.readyState != READYSTATE.CONNECTING) { return; }
+		
+		logger.debug('trying again in ', this._handshakeBackoff);
 		this._handshakeRetryTimer = setTimeout(bind(this, function() {
 			this._handshakeRetryTimer = null;
 			this._transport.handshake(this._url, this._options);

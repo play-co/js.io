@@ -200,7 +200,11 @@
 					document.body.appendChild(d);
 					out = []
 					for (var i = 0, item; (item = arguments[i]) || i < arguments.length; ++i) {
-						out.push(JSON.stringify(item));
+						try {
+							out.push(JSON.stringify(item));
+						} catch(e) {
+							out.push(item.toString());
+						}
 					}
 					d.innerHTML = out.join(", ");
 					if (shouldScroll) {

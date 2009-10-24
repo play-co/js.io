@@ -118,21 +118,22 @@ $.remove = function(el) {
 
 $.cursorPos = function(ev, el) {
 	var offset = $.pos(el);
-	offset.top = ev.clientY - offset.top + document.body.scrollTop;
-	offset.left = ev.clientX - offset.left + document.body.scrollLeft;
+	offset.top = ev.clientY - offset.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop);
+	offset.left = ev.clientX - offset.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft);
 	return offset;
 }
 
 $.pos = function(el) {
 	var parent = el;
 	var offset = {top: 0, left: 0};
-	do {
+	while(parent && parent != document.body) {
 		offset.left += parent.offsetLeft;
 		offset.top += parent.offsetTop;
 		while(parent.offsetParent != parent.parentNode) {
 			offset.top -= parent.scrollTop; offset.left -= parent.scrollLeft;
 			parent = parent.parentNode;
 		}
-	} while((parent = parent.offsetParent) && parent != document);
+		parent = parent.offsetParent;
+	}
 	return offset;
 }
