@@ -1,28 +1,28 @@
-body, html { margin: 0px; padding: 0px; background: #666; color: #FFF;
-background: #222; }
+body, html { margin: 0px; padding: 0px; background: #222; }
 
-#wrapper {
+#worldWrapper {
+	color: #FFF; 
 	margin: 50px auto 0px auto;
 	-moz-border-radius: 6px;
 	-webkit-border-radius: 6px;
 	position: relative;
-	background: #888;
+	background: #111;
 	padding: 10px;
 }
 
-#background, #board, #history {
+#worldWrapper #background, #worldWrapper #board, #worldWrapper #history {
 	position: absolute;
-	top: 10px;
+	top: 40px;
 	left: 10px;	
 }
 
-#background {
-	background: #CCC;
+#worldWrapper #background {
+	background: #444;
 	-moz-border-radius: 6px;
 	-webkit-border-radius: 6px;
 }
 
-#history {
+#worldWrapper #history {
 	overflow: auto;
 	z-index: 5;
 	padding: 10px;
@@ -31,19 +31,19 @@ background: #222; }
 	word-wrap: break-word;
 }
 
-.history-hidden {
+#worldWrapper .history-hidden {
 	z-index: 1 !important;
 }
 
-.history-hidden div {
-	color: #000 !important;
+#worldWrapper .history-hidden div {
+	color: #FFF !important;
 }
 
-#board {
+#worldWrapper #board {
 	z-index: 2;
 }
 
-#board .name {
+#worldWrapper #board .name {
 	position: absolute;
 	font: 8px Tahoma;
 	z-index: 5;
@@ -51,7 +51,7 @@ background: #222; }
 	text-align: center;
 }
 
-#board .msg {
+#worldWrapper #board .msg {
 	position: absolute;
 	font: 8px Tahoma;
 	z-index: 1;
@@ -65,19 +65,19 @@ background: #222; }
 	word-wrap: break-word;
 }
 
-#board .player {
+#worldWrapper #board .player {
 	position: absolute;
 	background: url('../images/player-sprite.png');
 }
 
-#console {
+#worldWrapper #console {
 	position: absolute;
-	bottom: 10px;
+	top: 10px;
 	width: 640px;
 	text-align: center;
 }
 
-#say, #join {
+#worldWrapper #say, #worldWrapper #join {
 	width: 200px;
 	margin: 10px auto;
 }

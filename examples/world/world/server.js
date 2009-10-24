@@ -46,6 +46,10 @@ exports.WorldServer = Class(Server, function(supr) {
 		if(this.history.length > 100) {
 			this.history.shift();
 		}
+		
+		var player = this.players[conn.username];
+		player.params.msg = msg;
+		
 		this.broadcast('SAY', line, conn);
 	};
 	
