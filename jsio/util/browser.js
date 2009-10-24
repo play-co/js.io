@@ -115,3 +115,24 @@ $.remove = function(el) {
 		el.parentNode.removeChild(el);
 	}
 }
+
+$.cursorPos = function(ev, el) {
+	var offset = $.pos(el);
+	offset.top = ev.clientY - offset.top + document.body.scrollTop;
+	offset.left = ev.clientX - offset.left + document.body.scrollLeft;
+	return offset;
+}
+
+$.pos = function(el) {
+	var parent = el;
+	var offset = {top: 0, left: 0};
+	do {
+		offset.left += parent.offsetLeft;
+		offset.top += parent.offsetTop;
+		while(parent.offsetParent != parent.parentNode) {
+			offset.top -= parent.scrollTop; offset.left -= parent.scrollLeft;
+			parent = parent.parentNode;
+		}
+	} while((parent = parent.offsetParent) && parent != document);
+	return offset;
+}
