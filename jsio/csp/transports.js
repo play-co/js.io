@@ -5,7 +5,6 @@ jsio('import jsio.logging');
 jsio('import .errors');
 
 var logger = jsio.logging.getLogger("csp.transports");
-
 exports.allTransports = {}
 
 exports.registerTransport = function(name, transport) {
@@ -132,7 +131,7 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 	this.encodePacket = function(packetId, data, options) {
 		return [ packetId, 1, base64.encode(data) ]
 	}
-
+	
 	this._makeRequest = function(rType, url, args, cb, eb) {
 		args.n = Math.random();
 		window.setTimeout(bind(this, function() {
@@ -140,27 +139,32 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 			// IE6+ uses contentWindow.document, the others use temp.contentDocument.
 			var doc = ifr.contentDocument || ifr.contentWindow.document || ifr.document;
 			var win = ifr.contentWindow
-			var head = doc.getElementsByTagName('head')[0] || doc.getElementsByTagName('body')[0];
+			var head = doc.getElementsByTagName('body')[0] || doc.getElementsByTagName('head')[0];
 			var errorSuppressed = false;
 			var jsonpId = ifr.cbId++;
-			win['eb' + jsonpId] = function errback(isIe) {
+			
+			doc.open();
+			
+			win['eb' + jsonpId] = function errback(scriptTag) {
+				if(scriptTag && scriptTag.readyState != 'complete') { return; }
+				
 				logger.debug('in eb');
 				if (!errorSuppressed) {
 					logger.debug('error making request:', fullUrl);
 				}
-				if (!isIe) {
-					logger.debug('removing scripts');
-					var scripts = doc.getElementsByTagName('script');
-					var s1 = doc.getElementsByTagName('script')[0];
-					var s2 = doc.getElementsByTagName('script')[1];
-					s1.parentNode.removeChild(s1);
-					s2.parentNode.removeChild(s2);
-					logger.debug('removed scripts');
-				}
+
+				logger.debug('removing scripts');
+				var scripts = doc.getElementsByTagName('script');
+				var s1 = doc.getElementsByTagName('script')[0];
+				var s2 = doc.getElementsByTagName('script')[1];
+				if(s1) s1.parentNode.removeChild(s1);
+				if(s2) s2.parentNode.removeChild(s2);
+				logger.debug('removed scripts');
+
 				logger.debug('deleting cb');
-				win['cb' + jsonpId] = undefined;
+				win['cb' + jsonpId] = function(){};
 				logger.debug('deleting eb');
-				win['eb' + jsonpId] = undefined;
+				win['eb' + jsonpId] = function(){};
 				
 				if (!errorSuppressed && self.opened) {
 					logger.debug('calling errback');
@@ -184,34 +188,11 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 			else if (rType == "comet") {
 				fullUrl += 'bs=;&bp=cb' + jsonpId;
 			}
-			var s = doc.createElement("script");
-			s.src = fullUrl;
-			if (s.src.toString().indexOf('"') != -1) { 
-				// IE is dumb; some webservers are brittle.
-				s.src = s.src.toString().replace(/\"/g, "%22");
-			}
-			head.appendChild(s);
 
-			if (s.onreadystatechange === null) { // IE
-				// TODO:	I suspect that if IE gets half of an HTTP body when
-				//			the connection resets, it will go ahead and execute
-				//			the script tag as if all were well, and then fail
-				//			silently without a loaded event. For this reason
-				//			we should probably also set a timer of DURATION + 10
-				//			or something to catch timeouts eventually.
-				//			-Mcarter 8/11/09
-				s.onreadystatechange = function() {
-					if (s.readyState == "loaded") {
-						errback(true);
-					}
-				}
-			}
-			else {
-				var s = doc.createElement("script");
-				s.innerHTML = 'eb' + jsonpId + '(false);'
-				head.appendChild(s);
-				killLoadingBar();
-			}
+			fullUrl = fullUrl.replace(/\"/g, "%22");
+			doc.write('<scr'+'ipt src="'+fullUrl+'" onreadystatechange="if(window[\'eb'+jsonpId+'\'])eb'+jsonpId+'(this)"></scr'+'ipt>');
+			doc.write('<scr'+'ipt>eb'+jsonpId+'(false)</scr'+'ipt>');
+			killLoadingBar();
 		}), 0);
 	}
 	
