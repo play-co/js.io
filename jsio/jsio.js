@@ -347,7 +347,7 @@
 				throw new Error("Syntax error: " + what);
 			}
 		}
-				
+		
 		// import each item in the what statement
 		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
@@ -393,18 +393,18 @@
 				// remove trailing/leading dots
 				var segments = item.as.match(/^\.*(.*?)\.*$/)[1].split('.');
 				var c = context;
-				for(var k = 0, len = segments.length - 1, segment; (segment = segments[k]) && k < len; ++k) {
+				for(var k = 0, slen = segments.length - 1, segment; (segment = segments[k]) && k < slen; ++k) {
 					if(!segment) continue;
 					if (!c[segment]) { c[segment] = {}; }
 					c = c[segment];
 				}
-				c[segments[len]] = modules[pkg];
+				c[segments[slen]] = modules[pkg];
 			} else if(item["import"]) {
 				if(item["import"]['*']) {
-					for(var i in modules[pkg]) { context[i] = modules[pkg][i]; }
+					for(var k in modules[pkg]) { context[k] = modules[pkg][k]; }
 				} else {
 					try {
-						for(var j in item["import"]) { context[item["import"][j]] = modules[pkg][j]; }
+						for(var k in item["import"]) { context[item["import"][k]] = modules[pkg][k]; }
 					} catch(e) {
 						log('module: ', modules);
 						throw e;
@@ -412,6 +412,7 @@
 				}
 			}
 		}
+		
 	}
 	
 	// create the internal require function bound to a local context
