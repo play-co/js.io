@@ -16,9 +16,8 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
     this.listen = function() {
         $.onEvent(window, 'message', bind(this, '_onMessage'));
         this._button = document.createElement('a');
-        $.style(this._button, {display: 'inline-block', border: '1px solid #CCC', background: '#EEE'});
+        this._button.className = 'clientButton'
         this._button.innerHTML = 'new client';
-        console.log('opts', this._opts);
         $.onEvent(this._button, 'click', bind(this, function() {
             window.open(this._opts.clientUrl, 'W' + (ID++));
         }));
