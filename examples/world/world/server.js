@@ -126,6 +126,9 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 				this.x = args.x;
 				this.y = args.y;
 				break;
+			case 'SHOOT':
+				this.server.broadcast('SHOOT', args, this);
+				break;
 			default:
 				break;
 		}
