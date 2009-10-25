@@ -9,7 +9,6 @@ jsio('from .world.client import *');
 //jsio.logging.getLogger('csp.transports').setLevel(0);
 jsio.logging.setProduction(true);
 
-
 function addToHistory(params, color) {
 	if(!params || !params.msg) { return; }
 
@@ -93,7 +92,7 @@ function onConnect(presence, history) {
 	}
 	$.onEvent(sayInput, 'keyup', function(e) { if(e.keyCode == 13) { say(); }});
 	$.onEvent('sayBtn', 'click', say);
-
+	
 	$.onEvent('worldWrapper', 'mousedown', function(e) {
 		var target = e.target || e.srcElement;
 		while((target = target.parentNode) && target.id != 'console') {}
