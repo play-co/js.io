@@ -4,8 +4,9 @@ Martin Hunt (mghunt@gmail.com)
 Marcus Westin (marcus.westin@gmail.com)
 Michael Carter (CarterMichael@gmail.com)
 
+_________________
 
-To Run:
+To run the server:
 
 1) install node.js
     http://tinyclouds.org/node/
@@ -22,4 +23,14 @@ To Run:
 
 5) navigate to index.html
 
+_________________
+
+To develop locally:
+
+1) Navigate to js.io/examples/world/server.html with your browser. The server code now runs in your browser
+2) Click "new client" to simulate a new client joining your server from another window
+3) Code, Refresh, Repeat
+
+
 Enjoy!
+
