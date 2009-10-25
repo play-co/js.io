@@ -85,6 +85,8 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 			dy: this.self.y - this.self._y
 		}
 		
+		if (!args.dx || !args.dy) { return; } // can't shoot standing still
+		
 		this.sendFrame('SHOOT', args);
 		this.publish('shoot', args);
 	}
