@@ -119,7 +119,7 @@ exports.init = function() {
 			return new WorldPlayer(params);
 		}
 
-		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
+		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value);
 		client.subscribe('welcome', this, onConnect);
 		client.subscribe('say', this, addToHistory);
 		var domain = document.domain || "127.0.0.1";
