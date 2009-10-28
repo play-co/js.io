@@ -1,0 +1,32 @@
+body { 
+	width: 800px; 
+	margin: 40px auto; 
+	font-family: Helvetica;
+	font-size: 18px;
+	color: #333;
+	text-align: center;
+}
+a.clientButton {
+	-moz-border-radius: 5px;
+	padding: 3px 20px;
+	cursor: pointer;
+	font-size: 14px;
+	text-align: center;
+	border: 2px solid #666;
+	background: #eee;
+	color: #333;
+}
+a.clientButton:hover {
+	border: 2px solid #888;
+	background: #fff;
+}
+.monitor {
+	color: #383838;
+	font-family: monospace;
+	font-size: 13px;
+	font-weight: bold;
+	margin: 20px 0;
+	overflow-x: hidden;
+	text-align: left;
+	width: 750px;
+}

@@ -7,18 +7,14 @@ var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
 
 exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
-    this.init = function(playerFactory, username, avatarUrl) {
+    this.init = function(playerFactory, username) {
         supr(this, 'init');
 		this.playerFactory = playerFactory;
         this.username = username;
         
-        this.avatarUrl = avatarUrl;
 		this.players = {};
 
-		this.onJoin({
-			username: this.username,
-			url: avatarUrl
-		});
+		this.onJoin({ username: this.username });
 		this.self = this.players[this.username];
 		this._update = bind(this, 'update');
     }
@@ -83,6 +79,19 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		} catch(e) {}
 	}
 	
+	this.shoot = function() {
+		var args = {
+			x: this.self._x,
+			y: this.self._y,
+			dx: this.self.x - this.self._x,
+			dy: this.self.y - this.self._y
+		}
+		
+		if (!args.dx || !args.dy) { return; } // can't shoot standing still
+		
+		this.sendFrame('SHOOT', args);
+		this.publish('shoot', args);
+	}
 
 	// Callbacks
 	this.frameReceived = function(id, name, args) {
@@ -97,6 +106,9 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 				break;
 			case 'MOVE':
 				this.onMove(args.username, args.x, args.y);
+				break;
+			case 'SHOOT':
+				this.publish('shoot', args);
 				break;
 			case 'JOIN':
 				this.onJoin(args);
@@ -115,7 +127,6 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 	this.connectionMade = function() {
 		this.sendFrame('LOGIN', {
 			username: this.username,
-			url: this.avatarUrl,
 			x: this.self.x,
 			y: this.self.y,
 			color: this.self.color

@@ -1,22 +1,19 @@
 <html>
 <head>
 	<script src="jsio/jsio.js"></script>
-	<script>
-	jsio.require('jsio.logging')
-
-	jsio.logging.getLogger('RTJPProtocol').setLevel(0);
-	jsio.logging.getLogger('world.server').setLevel(1);
-
-	jsio.require('world.server', 'WorldServer')
-	worldServer = new WorldServer();
-
-	var listener = jsio.listen(worldServer, 'postmessage', {
-		clientUrl: 'index.html?transport=postmessage'
-	})
-	onload = function() {
-		document.body.appendChild(listener._button);
-	}
-	</script>
+	<script> jsio('from .server import *') </script>
+	<link rel="stylesheet" href="server.css" type="text/css" media="screen">
 </head>
+<body>
+	This is your server
+	<br />
+	<br />
+	It's javascript, so it runs in your browser
+	<br />
+	<br />
+	Click the button to simulate a client joining your server
+	<br />
+	<br />
+</body>
 </html>
 
