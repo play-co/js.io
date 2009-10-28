@@ -99,7 +99,7 @@ exports.init = function() {
 	var url;
 	
 	$.hide('sayBtn'); $.hide('sayInput'); $.hide('toggleHistoryBtn');
-	$.onEvent('joinInput', 'keyup', function(e) { if(e.keyCode == 13) { join(); }});
+	$.onEvent('joinInput', 'keydown', function(e) { if(e.keyCode == 13) { join(); }});
 	$.onEvent('joinBtn', 'click', join);
 
 	var queryParts = document.location.search.substr(1).split('&')
