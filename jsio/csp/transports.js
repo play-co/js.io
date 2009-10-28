@@ -4,7 +4,6 @@ jsio('import jsio.std.base64 as base64');
 jsio('import jsio.logging');
 jsio('import .errors');
 jsio('from jsio.util.browserdetect import BrowserDetect');
-jsio('import jsio.util.url as urlUtil');
 
 var logger = jsio.logging.getLogger("csp.transports");
 exports.allTransports = {}
@@ -19,23 +18,26 @@ exports.registerTransport = function(name, transport) {
 
 exports.chooseTransport = function(url, options) {
 	// NOTE: override just for testing.
-	return exports.allTransports.jsonp;
+	//return exports.allTransports.jsonp;
 	
 	var test = location.toString().match('file://');
 	if (test && test.index === 0) {
 		logger.debug('Detected Local file, choosing transport jsonp')
 		return exports.allTransports.jsonp // XXX
 	}
+
+	try {
+		if (window.XDomainRequest || window.XMLHttpRequest && (new XMLHttpRequest()).withCredentials !== undefined) {
+			logger.debug('Detected xdomain xhr capabilities; choosing transport xhr');
+			return exports.allTransports.xhr;
+		}
+	} catch(e) {}
+	
 	if (uri.isSameDomain(url, location.toString())) {
 		logger.debug('Detected same domain, chosing transport xhr');
 		return exports.allTransports.xhr;
 	}
-	try {
-		if (window.XMLHttpRequest && (new XMLHttpRequest()).withCredentials !== undefined) {
-			logger.debug('Detected cross-domain; detected xdomain xhr capabilities; choosing transport xhr');
-			return exports.allTransports.xhr;
-	}
-	} catch(e) { }
+	
 	logger.debug('Detected cross-domain; no xdomain xhr capabilities present; choosing transport jsonp');
 	return exports.allTransports.jsonp
 
@@ -51,60 +53,24 @@ var PARAMS = {
 
 
 exports.Transport = Class(function(supr) {
+	this.handshake = function(url, options) { throw new Error("handshake Not Implemented"); }
+	this.comet = function(url, sessionKey, lastEventId, options) { throw new Error("comet Not Implemented"); }
+	this.send = function(url, sessionKey, data, options) { throw new Error("send Not Implemented"); }
+	this.encodePacket = function(packetId, data, options) { throw new Error("encodePacket Not Implemented"); }
+	this.abort = function() { throw new Error("abort Not Implemented"); }
+});
 
-	this.handshake = function(url, options) {
-		throw new Error("handshake Not Implemented");
-	}
-	
-	this.comet = function(url, sessionKey, lastEventId, options) {
-		throw new Error("comet Not Implemented");
-	}
-	
-	this.send = function(url, sessionKey, data, options) {
-		throw new Error("send Not Implemented");
-	}
-	
-	this.encodePacket = function(packetId, data, options) {
-		throw new Error("encodePacket Not Implemented");
-	}
-	
-	this.abort = function() {
-		throw new Error("abort Not Implemented");
-	}
-	
-})
-
-exports.registerTransport('xhr', Class(exports.Transport, function(supr) {
-	// TODO: implement...
-
-}));
-
-
-exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
-
-	var logger = jsio.logging.getLogger('csp.transports.jsonp');
-	function createIframe() {
-		var i = document.createElement("iframe");
-		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; }
-		i.cbId = 0;
-		i.src = 'javascript:document.open();document.write("<html><body></body></html>")';
-		document.body.appendChild(i);
-		return i;
-	}
-
+var baseTransport = Class(exports.Transport, function(supr) {
 	this.init = function() {
-		this._ifr = {
-			'send':  createIframe(),
-			'comet': createIframe()
-		};
-	}
-	this.handshake = function(url, options) {
-		logger.debug('handshake:', url, options);
-		args = {
+		this._handshakeArgs = {
 			d:'{}',
 			ct:'application/javascript'
-		}
-		this._makeRequest('send', url + '/handshake', args, this.handshakeSuccess, this.handshakeFailure);
+		};
+	}
+	
+	this.handshake = function(url, options) {
+		logger.debug('handshake:', url, options);
+		this._makeRequest('send', url + '/handshake', this._handshakeArgs, this.handshakeSuccess, this.handshakeFailure);
 	}
 	
 	this.comet = function(url, sessionKey, lastEventId, options) {
@@ -124,9 +90,102 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 		}
 		this._makeRequest('send', url + '/send', args, this.sendSuccess, this.sendFailure);
 	}
+});
+
+exports.registerTransport('xhr', Class(baseTransport, function(supr) {
+	var createXHR = function() {
+		return window.XMLHttpRequest ? new XMLHttpRequest()
+			: window.XDomainRequest ? new XDomainRequest()
+			: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
+			: null;
+	}
+	
+	this.init = function() {
+		supr(this, 'init');
+		
+		this._xhr = {
+			'send': createXHR(),
+			'comet': createXHR()
+		};
+	}
 	
 	this.encodePacket = function(packetId, data, options) {
-		return [ packetId, 1, base64.encode(data) ]
+		// we don't need to base64 encode things unless there's a null character in there
+		return data.indexOf('\0') == -1 ? [ packetId, 0, data ] : [ packetId, 1, base64.encode(data) ];
+	}
+	
+	this._onReadyStateChange = function(rType, cb, eb) {
+		try {
+			var xhr = this._xhr[rType];
+			if(xhr.readyState != 4) { return; }
+			if(xhr.status != 200) { 
+				logger.debug('XHR failed with status ', xhr.status);
+				eb();
+			}
+			
+			logger.debug('XHR data received');
+			cb(eval(xhr.responseText));
+		} catch(e) {
+			var xhr = this._xhr[rType];
+			logger.debug('Error in XHR::onReadyStateChange', e);
+			eb();
+			try {
+				logger.debug('Removing XHR callbacks');
+				if('onload' in xhr) {
+					xhr.onload = xhr.onerror = null;
+				} else if('onreadystatechange' in xhr) {
+					xhr.onreadystatechange = null;
+				}
+			} catch(e) {
+				logger.debug('Error removing XHR callbacks');
+			}
+			logger.debug('done handling XHR error');
+		}
+	}
+	
+	/**
+	 * even though we encode the POST body as in application/x-www-form-urlencoded
+	 */
+	this._makeRequest = function(rType, url, args, cb, eb) {
+		var xhr = this._xhr[rType], data = args.d || null;
+		if('d' in args) { delete args.d; }
+		xhr.open('POST', url + '?' + uri.buildQuery(args)); // must open XHR first
+		xhr.setRequestHeader('Content-Type', 'text/plain'); // avoid preflighting
+		if('onload' in xhr) {
+			xhr.onload = bind(this, '_onReadyStateChange', rType, cb, eb);
+			xhr.onerror = xhr.ontimeout = eb;
+		} else if('onreadystatechange' in xhr) {
+			xhr.onreadystatechange = bind(this, '_onReadyStateChange', rType, cb, eb);
+		}
+		if(data) {
+			xhr.send(data);
+		} else {
+			xhr.send();
+		}
+	}
+}));
+
+exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
+
+	var logger = jsio.logging.getLogger('csp.transports.jsonp');
+	function createIframe() {
+		var i = document.createElement("iframe");
+		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; }
+		i.cbId = 0;
+		i.src = 'javascript:document.open();document.write("<html><body></body></html>")';
+		document.body.appendChild(i);
+		return i;
+	}
+
+	this.init = function() {
+		this._ifr = {
+			'send':  createIframe(),
+			'comet': createIframe()
+		};
+	}
+	
+	this.encodePacket = function(packetId, data, options) {
+		return [ packetId, 1, base64.encode(data) ];
 	}
 	
 	this._makeRequest = function(rType, url, args, cb, eb) {
@@ -175,7 +234,7 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 				case 'send': args.rs = ';'; args.rp = 'cb' + jsonpId; break;
 				case 'comet': args.bs = ';'; args.bp = 'cb' + jsonpId; break;
 			}
-			var fullUrl = url + '?' + urlUtil.buildQuery(args);
+			var fullUrl = url + '?' + uri.buildQuery(args);
 			
 			if(BrowserDetect.isWebKit) {
 				doc.open();
