@@ -62,7 +62,9 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		delete this.players[username];
 	}
 	
-	this.onError = function(msg) { }
+	this.onError = function(msg) {
+		alert(msg);
+	}
 	
 	this.move = function(x,y) {
 		this.self.move(x, y);
