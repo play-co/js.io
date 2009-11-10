@@ -100,6 +100,20 @@ exports.registerTransport('xhr', Class(baseTransport, function(supr) {
 			: null;
 	}
 	
+	var abortXHR = function(xhr) {
+		logger.debug('aborting XHR');
+		try {
+			if('onload' in xhr) {
+				xhr.onload = xhr.onerror = null;
+			} else if('onreadystatechange' in xhr) {
+				xhr.onreadystatechange = null;
+			}
+			if(xhr.abort) { xhr.abort(); }
+		} catch(e) {
+			logger.debug('error aborting xhr', e);
+		}
+	}
+	
 	this.init = function() {
 		supr(this, 'init');
 		
@@ -107,6 +121,15 @@ exports.registerTransport('xhr', Class(baseTransport, function(supr) {
 			'send': createXHR(),
 			'comet': createXHR()
 		};
+	}
+	
+	this.abort = function() {
+		var xhr;
+		for(var i in this._xhr) {
+			if(this._xhr.hasOwnProperty(i)) {
+				abortXHR(xhr);
+			}
+		}
 	}
 	
 	this.encodePacket = function(packetId, data, options) {
@@ -129,16 +152,7 @@ exports.registerTransport('xhr', Class(baseTransport, function(supr) {
 			var xhr = this._xhr[rType];
 			logger.debug('Error in XHR::onReadyStateChange', e);
 			eb();
-			try {
-				logger.debug('Removing XHR callbacks');
-				if('onload' in xhr) {
-					xhr.onload = xhr.onerror = null;
-				} else if('onreadystatechange' in xhr) {
-					xhr.onreadystatechange = null;
-				}
-			} catch(e) {
-				logger.debug('Error removing XHR callbacks');
-			}
+			abortXHR(xhr);
 			logger.debug('done handling XHR error');
 		}
 	}
@@ -168,13 +182,35 @@ exports.registerTransport('xhr', Class(baseTransport, function(supr) {
 exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 
 	var logger = jsio.logging.getLogger('csp.transports.jsonp');
-	function createIframe() {
+	
+	var createIframe = function() {
 		var i = document.createElement("iframe");
 		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; }
 		i.cbId = 0;
 		i.src = 'javascript:document.open();document.write("<html><body></body></html>")';
 		document.body.appendChild(i);
 		return i;
+	}
+	
+	var abortIframe = function(ifr) {
+		var win = ifr.contentWindow, doc = win.document;
+		logger.debug('removing scripts');
+		var scripts = doc.getElementsByTagName('script');
+		var s1 = doc.getElementsByTagName('script')[0];
+		var s2 = doc.getElementsByTagName('script')[1];
+		if(s1) s1.parentNode.removeChild(s1);
+		if(s2) s2.parentNode.removeChild(s2);
+		logger.debug('removed scripts');
+
+		logger.debug('deleting callbacks');
+		win['cb' + jsonpId] = function(){};
+		win['eb' + jsonpId] = function(){};
+	}
+	
+	var removeIframe = function(ifr) {
+		$setTimeout(function() {
+			if(ifr && ifr.parentNode) { ifr.parentNode.removeChild(ifr); }
+		}, 60000);
 	}
 
 	this.init = function() {
@@ -188,14 +224,22 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 		return [ packetId, 1, base64.encode(data) ];
 	}
 	
+	this.abort = function() {
+		for(var i in this._ifr) {
+			if(this._ifr.hasOwnProperty(i)) {
+				var ifr = this._ifr[i];
+				abortIframe(ifr);
+				removeIframe(ifr);
+			}
+		}
+	}
+	
 	this._makeRequest = function(rType, url, args, cb, eb) {
 		args.n = Math.random();
-		window.setTimeout(bind(this, function() {
+		$setTimeout(bind(this, function() {
 			var ifr = this._ifr[rType];
 			// IE6+ uses contentWindow.document, the others use temp.contentDocument.
-			var win = ifr.contentWindow;
-			var doc = win.document;
-			var body = doc.body;
+			var win = ifr.contentWindow, doc = win.document, body = doc.body;
 			var completed = false;
 			var jsonpId = ifr.cbId++;
 			var onFinish = win['eb' + jsonpId] = function(scriptTag) {
@@ -203,18 +247,8 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 				if(scriptTag && scriptTag.readyState != 'loaded') { return; }
 				logger.debug('in onFinish');
 				if (!completed) { logger.debug('error making request:', fullUrl); }
-
-				logger.debug('removing scripts');
-				var scripts = doc.getElementsByTagName('script');
-				var s1 = doc.getElementsByTagName('script')[0];
-				var s2 = doc.getElementsByTagName('script')[1];
-				if(s1) s1.parentNode.removeChild(s1);
-				if(s2) s2.parentNode.removeChild(s2);
-				logger.debug('removed scripts');
-
-				logger.debug('deleting callbacks');
-				win['cb' + jsonpId] = function(){};
-				win['eb' + jsonpId] = function(){};
+				
+				abortIframe(ifr);
 				
 				if (!completed) {
 					logger.debug('calling eb');
