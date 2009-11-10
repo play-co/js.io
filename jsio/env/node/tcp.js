@@ -2,7 +2,7 @@ jsio('import Class, log, bind');
 jsio('import jsio.interfaces');
 jsio('import jsio.logging');
 
-var nodeTcp = jsio.node.require('/tcp.js');
+var nodeTcp = jsio.node.require('tcp');
 var logger = jsio.logging.getLogger('node.tcp');
 
 var Transport = Class(jsio.interfaces.Transport, function() {
