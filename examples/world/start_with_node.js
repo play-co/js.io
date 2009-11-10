@@ -1,4 +1,4 @@
-require('jsio/jsio.js');
+require('./jsio/jsio');
 jsio("import jsio.logging");
 
 //jsio.logging.getLogger('RTJPProtocol').setLevel(0);
