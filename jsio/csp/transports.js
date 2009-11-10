@@ -179,7 +179,7 @@ exports.registerTransport('xhr', Class(baseTransport, function(supr) {
 	}
 }));
 
-exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
+exports.registerTransport('jsonp', Class(baseTransport, function(supr) {
 
 	var logger = jsio.logging.getLogger('csp.transports.jsonp');
 	
@@ -203,8 +203,8 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 		logger.debug('removed scripts');
 
 		logger.debug('deleting callbacks');
-		win['cb' + jsonpId] = function(){};
-		win['eb' + jsonpId] = function(){};
+		win['cb' + (ifr.cbId - 1)] = function(){};
+		win['eb' + (ifr.cbId - 1)] = function(){};
 	}
 	
 	var removeIframe = function(ifr) {
@@ -214,6 +214,7 @@ exports.registerTransport('jsonp', Class(exports.Transport, function(supr) {
 	}
 
 	this.init = function() {
+		supr(this, 'init');
 		this._ifr = {
 			'send':  createIframe(),
 			'comet': createIframe()
