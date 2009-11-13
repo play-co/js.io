@@ -123,10 +123,7 @@ var assert = this.assert = function (exp, message) {
 // schedule a callback to run at the next available moment,
 // equivalent to setTimeout(callback, 0)
 var reschedule = this.reschedule = function (callback) {
-	var timer = new node.Timer(); 
-	timer.addListener('timeout', callback);
-	timer.start(0, 0);
-	return timer;
+	return $setTimeout(callback, 0);
 }
 
 // cached static files

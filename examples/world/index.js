@@ -9,7 +9,6 @@ jsio('from .world.client import *');
 //jsio.logging.getLogger('csp.transports').setLevel(0);
 jsio.logging.setProduction(true);
 
-
 function addToHistory(params, color) {
 	if(!params || !params.msg) { return; }
 
@@ -39,6 +38,33 @@ function toggleHistory() {
 	$.id('toggleHistoryBtn').innerHTML = historyToggled ? 'walk' : 'history';
 }
 
+function onShoot(args) {
+	var board = $.id('board');
+	var shot = $.create({ parent: board });
+	$.style(shot, { position: 'absolute', width: '10px', height: '10px', backgroundColor: 'red' });
+	var speed = .03;
+	var x = args.x;
+	var y = args.y;
+	var dy = args.dy;
+	var dx = args.dx;
+
+	shot.style.left = Math.floor(x) + 'px';
+	shot.style.top = Math.floor(y) + 'px';
+
+	var interval = setInterval(function(){ 
+		x += dx * speed;
+		y += dy * speed;
+		shot.style.left = Math.floor(x) + 'px';
+		shot.style.top = Math.floor(y) + 'px';
+		
+		if(x < kBounds.minX ||  x > kBounds.maxX || y < kBounds.minY || y > kBounds.maxY) {
+			clearInterval(interval);
+			shot.parentNode.removeChild(shot);
+		}
+	}, 25);
+}
+
+
 function onConnect(presence, history) {
 	// hide the history
 	toggleHistory();
@@ -66,7 +92,7 @@ function onConnect(presence, history) {
 	}
 	$.onEvent(sayInput, 'keyup', function(e) { if(e.keyCode == 13) { say(); }});
 	$.onEvent('sayBtn', 'click', say);
-
+	
 	$.onEvent('worldWrapper', 'mousedown', function(e) {
 		var target = e.target || e.srcElement;
 		while((target = target.parentNode) && target.id != 'console') {}
@@ -77,6 +103,13 @@ function onConnect(presence, history) {
 		$.stopEvent(e);
 		var offset = $.cursorPos(e, $.id('board'));
 		client.move(offset.left - 22, offset.top - 22);
+	});
+	
+	$.onEvent(document, 'keypress', function(e) {
+		if (e.charCode == 32 && window.client) { // spacebar
+			client.shoot();
+			$.stopEvent(e);
+		}
 	});
 }
 
@@ -99,7 +132,7 @@ exports.init = function() {
 	var url;
 	
 	$.hide('sayBtn'); $.hide('sayInput'); $.hide('toggleHistoryBtn');
-	$.onEvent('joinInput', 'keyup', function(e) { if(e.keyCode == 13) { join(); }});
+	$.onEvent('joinInput', 'keydown', function(e) { if(e.keyCode == 13) { join(); }});
 	$.onEvent('joinBtn', 'click', join);
 
 	var queryParts = document.location.search.substr(1).split('&')
@@ -119,9 +152,10 @@ exports.init = function() {
 			return new WorldPlayer(params);
 		}
 
-		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value, url || 'http://www.google.com/favicon.ico');
+		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value);
 		client.subscribe('welcome', this, onConnect);
 		client.subscribe('say', this, addToHistory);
+		client.subscribe('shoot', this, onShoot);
 		var domain = document.domain || "127.0.0.1";
 		jsio.connect(client, clientParams.transport || 'csp', { url: "http://" + domain + ":5555" });
 	}

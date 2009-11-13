@@ -90,7 +90,7 @@ exports.CometSession = Class(function(supr) {
 		this._transport.sendSuccess = bind(this, this._writeSuccess);
 		this.readyState = READYSTATE.CONNECTING;
 		this._transport.handshake(this._url, this._options);
-		this._handshakeTimeoutTimer = setTimeout(bind(this, this._handshakeTimeout), 
+		this._handshakeTimeoutTimer = $setTimeout(bind(this, this._handshakeTimeout), 
 			this._options.connectTimeout);
 	}
 
@@ -151,7 +151,7 @@ exports.CometSession = Class(function(supr) {
 		if (this.readyState != READYSTATE.CONNECTING) { return; }
 		
 		logger.debug('trying again in ', this._handshakeBackoff);
-		this._handshakeRetryTimer = setTimeout(bind(this, function() {
+		this._handshakeRetryTimer = $setTimeout(bind(this, function() {
 			this._handshakeRetryTimer = null;
 			this._transport.handshake(this._url, this._options);
 		}), this._handshakeBackoff);
@@ -171,7 +171,7 @@ exports.CometSession = Class(function(supr) {
 	
 	this._writeFailure = function() {
 		if (this.readyState != READYSTATE.CONNECTED) { return; }
-		this._writeTimer = setTimeout(bind(this, function() {
+		this._writeTimer = $setTimeout(bind(this, function() {
 			this._writeTimer = null;
 			this._doWrite();
 		}), this._writeBackoff);
@@ -199,7 +199,7 @@ exports.CometSession = Class(function(supr) {
 
 	this._cometFailure = function() {
 		if (this.readyState != READYSTATE.CONNECTED) { return; }
-		this._cometTimer = setTimeout(bind(this, function() {
+		this._cometTimer = $setTimeout(bind(this, function() {
 			this._doConnectComet();
 		}), this._cometBackoff);
 		this._cometBackoff *= 2;
@@ -213,7 +213,7 @@ exports.CometSession = Class(function(supr) {
 		for (var i = 0,  packet; (packet = packets[i]) || i < packets.length; i++) {
 			logger.debug('process packet:', packet);
 			if (packet === null) {
-				return self._doClose();
+				return self.close();
 			}
 			logger.debug('process packet', packet);
 			var ackId = packet[0];
@@ -223,7 +223,7 @@ exports.CometSession = Class(function(supr) {
 				continue;
 			}
 			if (typeof(this._lastEventId) == 'number' && ackId != this._lastEventId+1) {
-				return this._doClose(new errors.ServerProtocolError(201));
+				return this.close(new errors.ServerProtocolError(201));
 			}
 			this._lastEventId = ackId;
 			if (encoding == 1) { // base64 encoding
@@ -232,7 +232,7 @@ exports.CometSession = Class(function(supr) {
 					data = base64.decode(data);
 					logger.debug('after base64 decode:', data);
 				} catch(e) {
-					return this._doClose(new errors.ServerProtocolError(202));
+					return this.close(new errors.ServerProtocolError(202));
 				}
 			}
 			if (this._options.encoding == 'utf8') {
@@ -299,7 +299,7 @@ exports.CometSession = Class(function(supr) {
 
 	this._resetTimeoutTimer = function() {
 		clearTimeout(this._timeoutTimer);
-		this._timeoutTimer = setTimeout(bind(this, function() {
+		this._timeoutTimer = $setTimeout(bind(this, function() {
 			logger.debug('connection timeout expired');
 			this.close(new errors.SessionTimeout())
 		}), this._getTimeoutInterval())

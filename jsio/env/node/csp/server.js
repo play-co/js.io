@@ -36,7 +36,7 @@ jsio('import jsio.std.utf8 as utf8');
 jsio('import jsio.std.base64 as base64');
 jsio('from .util import *');
 jsio('import jsio.logging');
-var http = jsio.node.require('/http.js');
+var http = jsio.node.require('http');
 
 
 var logger = jsio.logging.getLogger('node.csp.server');
@@ -150,7 +150,7 @@ csp.Session = Class(function() {
 	};
 	this.resetDurationTimer = function () {
 		var duration = 1000 * parseInt(this.variables.duration);
-		this.durationTimer = setTimeout(bind(this, this.completeResponse), duration);
+		this.durationTimer = $setTimeout(bind(this, this.completeResponse), duration);
 	};
 	this.resetIntervalTimer = function () {
 		myClearTimeout(this.intervalTimer);
@@ -158,14 +158,14 @@ csp.Session = Class(function() {
 			return;
 		};
 		var interval = 1000 * parseInt(this.variables.interval);
-		this.intervalTimer = setTimeout(bind(this, this.sendBatch), interval);
+		this.intervalTimer = $setTimeout(bind(this, this.sendBatch), interval);
 	};
 	this.resetTimeoutTimer = function () {
 		myClearTimeout(this.timeoutTimer);
 		// Give the client 50% longer than the duration of a comet request before 
 		// we time them out.
 		var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
-		this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
+		this.timeoutTimer = $setTimeout(bind(this, this.teardownSession), timeout);
 	};
 	this.sendHeaders = function (response, contentLength) {
 		var allowOrigin = '*'; // XXX: Make Access-Control configurable
@@ -304,7 +304,7 @@ csp.Session = Class(function() {
 	};
 });
 
-csp.Connection = Class(node.EventEmitter, function() {
+csp.Connection = Class(process.EventEmitter, function() {
 	this.init = function (session) {
 		this.remoteAddress = null; // XXX get remote address from requests
 		this.readyState = 'open';
@@ -348,9 +348,9 @@ csp.createServer = function (connection_listener) {
 	return new csp.Server().addListener('connection', connection_listener);
 };
 
-csp.Server = Class(node.EventEmitter, function () {
+csp.Server = Class(process.EventEmitter, function () {
 	this.init = function () {
-		node.EventEmitter.call(this);
+		process.EventEmitter.call(this);
 		this._session_url = ''; // XXX this could be changed or made into a parameter
 		log('starting server, session url is <' + this._session_url + '>');
 	};
@@ -387,7 +387,7 @@ csp.Server = Class(node.EventEmitter, function () {
 	// returns a request which fires with the whole post body as bytes, or
 	// immediately with null for GET requests
 	var getRequestBody = function (request) {
-		var promise = new node.Promise();
+		var promise = new process.Promise();
 		if (request.method === 'GET') {
 			reschedule(function () {
 				promise.emitSuccess('');

@@ -11,18 +11,144 @@
 	if(typeof exports == 'undefined') {
 		var jsio = window.jsio = bind(this, _jsioImport, window, '');
 	} else {
-		var jsio = process.jsio = bind(this, _jsioImport, process, '');
+		var jsio = GLOBAL.jsio = bind(this, _jsioImport, GLOBAL, '');
 	}
 	
-	jsio.__env = typeof(node) !== 'undefined' && node.version ? 'node' : 'browser';
+	var modulePathCache = {}
+	function getModulePathPossibilities(pathString) {
+		var segments = pathString.split('.')
+		var modPath = segments.join('/');
+		var out;
+		if (segments[0] in modulePathCache) {
+			out = [[modulePathCache[segments[0]] + '/' + modPath + '.js', null]];
+		} else {
+			out = [];
+			for (var i = 0, path; path = jsio.path[i]; ++i) {
+				out.push([path + '/' + modPath + '.js', path]);
+			}
+		}
+		return out;
+	}
 	
-	function bind(context, method/*, arg1, arg2, ... */){
+	jsio.path = ['.'];
+	jsio.__env = typeof node !== 'undefined' && typeof process !== 'undefined' && process.version ? 'node' : 'browser';
+	switch(jsio.__env) {
+		case 'node':
+			var posix = require('posix');
+			var RUNTIME = {
+				cwd: process.cwd,
+				argv: process.ARGV,
+				argc: process.ARGC,
+				write: process.stdio.writeError,
+				writeAsync: process.stdio.write,
+				readFile: function(filename) { return posix.cat(filename, 'utf8'); },
+				eval: function(code, location) { return process.compile(code, location); }
+			}
+			break;
+		case 'browser':
+			var src = browser_findScript();
+			var segments = src.split('/');
+			var cwd = segments.slice(0,segments.length-2).join('/');
+			if (cwd) { jsio.path.push(cwd); } else { cwd = '.'; };
+			var RUNTIME = {
+				cwd: function() { return cwd; },
+				argv: null,
+				argc: null,
+				write: browser_getLog(),
+				writeAsync: browser_getLog(),
+				readFile: function() {},
+				eval: function(src) { return eval(src); }
+			}
+			
+			if(typeof eval('(function(){})') == 'undefined') {
+				RUNTIME.eval = function(src) {
+					try {
+						eval('jsio.__f=' + src);
+						return jsio.__f;
+					} finally {
+						delete jsio.__f;
+					}
+				}
+			}
+			
+			modulePathCache.jsio = cwd;
+			break;
+	}
+	
+	function browser_findScript() {
+		try {
+			var scripts = document.getElementsByTagName('script');
+			for (var i = 0, script; script = scripts[i]; ++i) {
+				var j = script.src.indexOf('jsio/jsio.js');
+				if(j >= 0) { return makeAbsoluteURL(script.src, window.location); }
+			}
+		} catch(e) {}
+	}
+	
+	function browser_getLog() {
+		if (typeof console != 'undefined' && console.log) {
+			return console.log;
+		} else {
+			return browser_oldLog;
+		}
+	}
+	
+	function browser_oldLog() {
+		var shouldScroll = document.body.scrollHeight == document.body.scrollTop + document.body.clientHeight;
+		var d = document.createElement('div');
+		document.body.appendChild(d);
+		out = []
+		for (var i = 0, item; (item = arguments[i]) || i < arguments.length; ++i) {
+			try {
+				out.push(JSON.stringify(item));
+			} catch(e) {
+				out.push(item.toString());
+			}
+		}
+		d.innerHTML = out.join(", ");
+		if (shouldScroll) {
+			window.scrollTo(0, 10000);
+		}
+	}
+	
+	function $each(i, context, f) {
+		if(!f) { f = context; context = this; }
+		for(var j in i) {
+			if(i.hasOwnProperty(j)) {
+				f(j, i[j], i);
+			}
+		}
+	}
+	
+	function bind(context, method/*, args... */) {
 		var args = Array.prototype.slice.call(arguments, 2);
 		return function(){
 			method = (typeof method == 'string' ? context[method] : method);
 			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)))
 		}
 	};
+	
+	function $setTimeout(f, t/*, args... */) {
+		var args = Array.prototype.slice.call(arguments, 2);
+		return setTimeout(function() {
+			try {
+				f.apply(this, args);
+			} catch(e) {
+				// log?
+			}
+		}, t)
+	}
+	
+	function $setInterval(f, t/*, args... */) {
+		var args = Array.prototype.slice.call(arguments, 2);
+		return setInterval(function() {
+			try {
+				f.apply(this, args);
+			} catch(e) {
+				// log?
+			}
+		}, t)
+	}
 	
 	function Class(parent, proto) {
 		if(!parent) { throw new Error('parent or prototype not provided'); }
@@ -56,22 +182,6 @@
 		return cls;
 	}
 	
-	var modulePathCache = {}
-	var getModulePathPossibilities = function(pathString) {
-		var segments = pathString.split('.')
-		var modPath = segments.join('/');
-		var out;
-		if (segments[0] in modulePathCache) {
-			out = [[modulePathCache[segments[0]] + '/' + modPath + '.js', null]];
-		} else {
-			out = [];
-			for (var i = 0, path; path = jsio.path[i]; ++i) {
-				out.push([path + '/' + modPath + '.js', path]);
-			}
-		}
-		return out;
-	}
-	
 	var strDuplicate = function(str, num) {
 	    var out = "";
 	    for (var i = 0; i < num; ++ i) {
@@ -84,7 +194,6 @@
 	    //		return new Array(num + 1).join(str);
 	}
 	
-	jsio.path = ['.'];
 	switch(jsio.__env) {
 		case 'node':
 			var nodeWrapper = {
@@ -125,20 +234,28 @@
 				return item + "";
 			}
 			
-			var log = function() {
-				node.stdio.writeError(Array.prototype.slice.call(arguments, 0).map(stringifyPretty).join(' ') + "\n");
+			var log = function() { 
+				RUNTIME.write(Array.prototype.slice.call(arguments, 0).map(stringifyPretty).join(' ') + "\n");
 			}
 			
-			window = process;
+			window = GLOBAL;
 			var compile = function(context, args) {
-				node.compile("function fn(_) { with(_){delete _;(function(){" + args.src + "\n}).call(this)}}", args.url);
+				try {
+					var fn = RUNTIME.eval("(function(_) { with(_){delete _;(function(){" + args.src + "\n}).call(this)}})", args.location);
+				} catch(e) {
+					if(e instanceof SyntaxError) {
+						log("Syntax Error loading ", args.location, e);
+					}
+					throw e;
+				}
+				
 				try {
 					fn.call(context.exports, context);
 				} catch(e) {
 					if(e.type == "stack_overflow") {
-						log("Stack overflow in", args.url, e);
+						log("Stack overflow in", args.location, e);
 					} else {
-						log("error when loading", args.url);
+						log("error when loading", args.location);
 					}
 					throw e;
 				}
@@ -146,11 +263,11 @@
 			}
 
 			var windowCompile = function(context, args) {
-				var fn = node.compile("function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}}", args.url);
+				var fn = RUNTIME.eval("(function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}})", args.location);
 				fn.call(context.exports, context);
 			}
 			
-			var cwd = node.cwd();
+			var cwd = RUNTIME.cwd();
 			var makeRelative = function(path) {
 				var i = path.match('^' + cwd);
 				if (i && i[0] == cwd) {
@@ -159,27 +276,27 @@
 				}
 				return path;
 			}
-			
+
 			var getModuleSourceAndPath = function(pathString) {
 				var baseMod = pathString.split('.')[0];
-				var urls = getModulePathPossibilities(pathString);
-				var cwd = node.cwd() + '/';
-				for (var i = 0, url; url = urls[i]; ++i) {
-					var cachePath = url[1];
-					var url = url[0];
+				var paths = getModulePathPossibilities(pathString);
+				var cwd = RUNTIME.cwd() + '/';
+				for (var i = 0, path; path = paths[i]; ++i) {
+					var cachePath = path[1];
+					var path = path[0];
 					try {
-						var out = {src: node.fs.cat(url, "utf8").wait(), url: url};
+						var out = {src: RUNTIME.readFile(path).wait(), location: path};
 						if (!(baseMod in modulePathCache)) {
 							modulePathCache[baseMod] = cachePath;
 						}
 						return out;
 					} catch(e) {}
 				}
-				throw new Error("Module not found: " + pathString + "\n(looked in " + urls + ")");
+				throw new Error("Module not found: " + pathString + "\n(looked in " + paths + ")");
 			}
 			
 			var segments = __filename.split('/');
-
+			
 			var jsioPath = segments.slice(0,segments.length-2).join('/');
 			if (jsioPath) {
 				jsio.path.push(jsioPath);
@@ -188,63 +305,49 @@
 				modulePathCache.jsio = '.';
 			}
 			
-			jsio.__path = makeRelative(process.ARGV[1]);
+			jsio.__path = makeRelative(RUNTIME.argv[1]);
 			break;
 		default:
-			var log = function() {
-				if (typeof console != 'undefined' && console.log) {
-					console.log.apply(console, arguments);
-				} else {
-					var shouldScroll = document.body.scrollHeight == document.body.scrollTop + document.body.clientHeight;
-					var d = document.createElement('div');
-					document.body.appendChild(d);
-					out = []
-					for (var i = 0, item; (item = arguments[i]) || i < arguments.length; ++i) {
-						try {
-							out.push(JSON.stringify(item));
-						} catch(e) {
-							out.push(item.toString());
-						}
-					}
-					d.innerHTML = out.join(", ");
-					if (shouldScroll) {
-						window.scrollTo(0, 10000);
-					}
-				}
-			}
+			var log = browser_getLog();
 			
 			var compile = function(context, args) {
-				var code = "var fn = function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}}\n//@ sourceURL=" + args.url;
-				try { eval(code); } catch(e) {
+				var code = "(function(_){with(_){delete _;(function(){"
+					+ args.src
+					+ "\n}).call(this)}})\n//@ sourceURL=" + args.location;
+				
+				try { var fn = RUNTIME.eval(code); } catch(e) {
 					if(e instanceof SyntaxError) {
-						var src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + args.url + '\'></scr"+"ipt>")';
+						var src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' 
+							+ args.location
+							+ '\'></scr"+"ipt>")';
+						
 						var callback = function() {
 							var el = document.createElement('iframe');
 							with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden'; }
 							el.src = src;
-							setTimeout(function() {
+							$setTimeout(function() {
 								document.body.appendChild(el);
 							}, 0);
 						}
 						
 						if(document.body) { callback(); }
 						else { window.addEventListener('load', callback, false); }
-						throw new Error("forcing halt on load of " + args.url);
+						throw new Error("forcing halt on load of " + args.location);
 					}
 					throw e;
 				}
 				try {
 					fn.call(context.exports, context);
 				} catch(e) {
-					log('error when loading ' + args.url);
+					log('error when loading ' + args.location);
 					throw e;
 				}
 				return true;
 			}
 
 			var windowCompile = function(context, args) {
-				var f = "var fn = function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}}\n//@ sourceURL=" + args.url;
-				eval(f);
+				var f = "(function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}})\n//@ sourceURL=" + args.location;
+				var fn = RUNTIME.eval(f);
 				fn.call(context.exports, context);
 			}
 			
@@ -259,14 +362,14 @@
                     return preloaded_source[pathString];
                 }
 				var baseMod = pathString.split('.')[0];
-				var urls = getModulePathPossibilities(pathString);
-				for (var i = 0, url; url = urls[i]; ++i) {
-					var cachePath = url[1];
-					var url = url[0];
+				var paths = getModulePathPossibilities(pathString);
+				for (var i = 0, path; path = paths[i]; ++i) {
+					var cachePath = path[1];
+					var path = path[0];
 					var xhr = createXHR();
 					var failed = false;
 					try {
-						xhr.open('GET', url, false);
+						xhr.open('GET', path, false);
 						xhr.send(null);
 					} catch(e) {
 						failed = true;
@@ -284,25 +387,11 @@
 					if (!(baseMod in modulePathCache)) {
 						modulePathCache[baseMod] = cachePath;
 					}
-					return {src: xhr.responseText, url: url};
+					return {src: xhr.responseText, location: path};
 				}
-				throw new Error("Module not found: " + pathString + " (looked in " + urls.join(', ') + ")");
+				throw new Error("Module not found: " + pathString + " (looked in " + paths.join(', ') + ")");
 			}
 			
-			try {
-				var scripts = document.getElementsByTagName('script');
-				for (var i = 0, script; script = scripts[i]; ++i) {
-					if(/jsio\/jsio\.js$/.test(script.src)) {
-						var segments = script.src.split('/');
-						var jsioPath = segments.slice(0,segments.length-2).join('/') || '.';
-						jsio.path.push(jsioPath);
-						modulePathCache.jsio = jsioPath;
-						break;
-					}
-				}
-			} catch(e) {}
-			
-			var cwd = jsio.path[jsio.path.length - 1];
 			var makeRelative = function(path) {
 				return path.replace(cwd + '/', '').replace(cwd, '');
 			}
@@ -313,6 +402,31 @@
 	}
 	jsio.basePath = jsio.path[jsio.path.length-1];
 	var modules = {bind: bind, Class: Class, log: log, jsio:jsio};
+	
+	function makeAbsoluteURL(url, location) {
+		if (/^[A-Za-z]*:\/\//.test(url)) { return url; } // already absolute
+		var prefix = location.protocol + '//' + location.host;
+		if (url.charAt(0) == '/') { return prefix + url; }
+
+		var result = location.pathname.match(/\/*(.*?\/?)\/*$/);
+		var parts = result ? result[1].split('/') : [];
+		parts.pop();
+		
+		var urlParts = url.split('/');
+		while(true) {
+			if(urlParts[0] == '.') {
+				urlParts.shift();
+			} else if(urlParts[0] == '..') {
+				urlParts.shift(); parts.pop();
+			} else {
+				break;
+			}
+		}
+		
+		var pathname = parts.join('/');
+		if(pathname) pathname += '/';
+		return prefix + '/' + pathname + urlParts.join('/');
+	}
 	
 	function resolveRelativePath(pkg, path) {
 		if(pkg.charAt(0) == '.') {
@@ -366,24 +480,30 @@
 					throw e;
 				}
 				var newRelativePath = segments.slice(0, segments.length - 1).join('.');
-				var newContext = {};
 				if(!item.external) {
-					newContext.exports = {};
-					newContext.global = window;
+					var newContext = {
+						exports: {},
+						global: window,
+						bind: bind,
+						Class: Class,
+						$setTimeout: $setTimeout,
+						$setInterval: $setInterval
+					};
 					newContext.jsio = bind(this, _jsioImport, newContext, newRelativePath);
 					for(var j in modules.jsio) {
 					    newContext.jsio[j] = modules.jsio[j];
 					}
 					
 					// TODO: FIX for "trailing ." case
-					var tmp = result.url.split('/');
+					var tmp = result.location.split('/');
 					newContext.jsio.__dir = makeRelative(tmp.slice(0,tmp.length-1).join('/'));
-					newContext.jsio.__path = makeRelative(result.url);
+					newContext.jsio.__path = makeRelative(result.location);
 					newContext.jsio.__env = jsio.__env;
 					newContext.jsio.node = nodeWrapper;
 					compile(newContext, result);
 					modules[pkg] = newContext.exports;
 				} else {
+					var newContext = {};
 					newContext['window'] = {};
 					for(var j in item["import"]) {
 						newContext['window'][j] = null;

@@ -22,7 +22,6 @@ var attrs = [
 ];
 
 exports.Uri = Class(function(supr) {
-
 	this.init = function(url, isStrict) {
 		var uriData = exports.parse(url, isStrict)
 		for (attr in uriData) {
@@ -40,15 +39,19 @@ exports.Uri = Class(function(supr) {
 				this['_' + attr] = val;
 			}
 		}).call(this, attr);
-		
 	}
 	
-	this.render = function() {
+	this.toString = this.render = function() {
 		// XXX: implement in terms of the keys. Reasonable fallbacks?
 		return this._source;
 	}
-})
+});
 
+exports.buildQuery = function(kvp) {
+	var result = '';
+	for (key in kvp) { result += encodeURIComponent(key) + '=' + encodeURIComponent(kvp[key]) + '&'; }
+	return result;
+}
 
 // Regexs are based on parseUri 1.2.2
 // Original: (c) Steven Levithan <stevenlevithan.com>
