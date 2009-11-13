@@ -8,14 +8,10 @@ exports.WorldPlayer = Class(PubSub, function() {
 		if(!params) { params = {}; }
 		this.historyEl = params.history;
 		this.username = params.username || '';
-		this.color = params.color || {
-			r: Math.floor(Math.random() * 128) + 128,
-			g: Math.floor(Math.random() * 128) + 128,
-			b: Math.floor(Math.random() * 128) + 128
-		};
+		this.color = params.color;
 		
-		this._x = this.x = params.x || Math.floor(Math.random() * (kGameWidth - 20)) + 10;
-		this._y = this.y = params.y || Math.floor(Math.random() * (kGameHeight - 20)) + 10;
+		this._x = this.x = params.x;
+		this._y = this.y = params.y;
 		
 		this.dir = 'down';
 		

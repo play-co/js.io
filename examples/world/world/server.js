@@ -85,24 +85,29 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 				this.params = {
 					username: args.username,
 					url: args.url,
-					x: args.x,
-					y: args.y,
-					color: args.color
+					x: Math.floor(Math.random() * (kGameWidth - 20)) + 10,
+					y: Math.floor(Math.random() * (kGameHeight - 20)) + 10,
+					color: {
+						r: Math.floor(Math.random() * 128) + 128,
+						g: Math.floor(Math.random() * 128) + 128,
+						b: Math.floor(Math.random() * 128) + 128
+					}
 				};
+				
 				this.username = args.username;
+				this.server.join(this, this.params);
 				
 				var presence = [];
 				for (var username in this.server.players) {
 					presence.push(this.server.players[username].params);
 				}
-				
-				this.server.join(this, this.params);
 
 				this.sendFrame('WELCOME', {
 					presence: presence,
 					history: this.server.history
 				});
 			} catch(e) {
+				delete this.username;
 				this.sendFrame('ERROR', {msg: e.toString()});
 			}
 		}

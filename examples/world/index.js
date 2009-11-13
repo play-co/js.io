@@ -3,10 +3,11 @@ jsio('from jsio.util.browser import $');
 jsio('from .world.constants import *');
 jsio('from .world.client import *');
 
-//jsio.logging.getLogger('world.client').setLevel(0);
-//jsio.logging.getLogger('csp.transports.jsonp').setLevel(0);
-//jsio.logging.getLogger('csp.client').setLevel(0);
-//jsio.logging.getLogger('csp.transports').setLevel(0);
+// jsio.logging.getLogger('world.client').setLevel(0);
+// jsio.logging.getLogger('csp.transports.jsonp').setLevel(0);
+// jsio.logging.getLogger('csp.client').setLevel(0);
+// jsio.logging.getLogger('csp.transports').setLevel(0);
+// jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
 jsio.logging.setProduction(true);
 
 function addToHistory(params, color) {
@@ -99,11 +100,14 @@ function onConnect(presence, history) {
 		if(!target) { $.stopEvent(e); }
 	});
 	
-	$.onEvent('board', 'mousedown', function(e) {
+	function onMouseDown(e) {
 		$.stopEvent(e);
 		var offset = $.cursorPos(e, $.id('board'));
 		client.move(offset.left - 22, offset.top - 22);
-	});
+	}
+	
+	$.onEvent('background', 'mousedown', onMouseDown); // IE6 - mouse events aren't reaching #board due to opacity
+	$.onEvent('board', 'mousedown', onMouseDown);
 	
 	$.onEvent(document, 'keypress', function(e) {
 		if (e.charCode == 32 && window.client) { // spacebar
@@ -152,11 +156,18 @@ exports.init = function() {
 			return new WorldPlayer(params);
 		}
 
-		window.client = new WorldProtocol(uiPlayerFactory, joinInput.value);
-		client.subscribe('welcome', this, onConnect);
-		client.subscribe('say', this, addToHistory);
-		client.subscribe('shoot', this, onShoot);
-		var domain = document.domain || "127.0.0.1";
-		jsio.connect(client, clientParams.transport || 'csp', { url: "http://" + domain + ":5555" });
+		if(!window.client) {
+			window.client = new WorldProtocol(uiPlayerFactory, joinInput.value);
+			client.subscribe('welcome', this, onConnect);
+			client.subscribe('say', this, addToHistory);
+			client.subscribe('shoot', this, onShoot);
+		}
+		
+		if(!client.isConnected()) {
+			var domain = document.domain || "127.0.0.1";
+			client.connect(clientParams.transport || 'csp', "http://" + domain + ":5555");
+		}
+		
+		client.login(joinInput.value);
 	}
 }
