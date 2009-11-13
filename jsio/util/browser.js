@@ -55,6 +55,18 @@ $.removeClass = function(el, classNames) {
 		.replace(/^\s+|\s+%/, '');
 }
 
+function ieGetAlpha(el) {
+	try {
+		return el.filters.item("alpha");
+	} catch(e) {}
+	
+	try {
+		return el.filters.item("progid:DXImageTransform.Microsoft.Alpha");
+	} catch(e) {}
+	
+	return null;
+}
+
 $.style = function(el, style) {
 	if(el instanceof Array) {
 		for(var i = 0, o; o = el[i]; ++i) { $.style(o, style); }
@@ -69,6 +81,18 @@ $.style = function(el, style) {
 				break;
 			case 'opacity':
 				el.style.opacity = style[prop];
+				if(el.filters) {
+					try {
+						var alpha = ieGetAlpha();
+						var opacity = style[prop] == 1 ? 99.99 : style[prop] * 100;
+						if(!alpha) {
+							// TODO: this might destroy any existing filters?
+							el.style.filter = "alpha(opacity=" + opacity + ")";
+						} else {
+							alpha.Opacity = opacity;
+						}
+					} catch(e) {}
+				}
 				break;
 			default:
 				el.style[prop] = style[prop];
