@@ -259,7 +259,7 @@
 			}
 
 			var windowCompile = function(context, args) {
-				var fn = RUNTIME.eval("(function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}})", args.location);
+				var fn = RUNTIME.eval("(function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}})", args.location);
 				fn.call(context.exports, context);
 			}
 			
@@ -342,7 +342,7 @@
 			}
 
 			var windowCompile = function(context, args) {
-				var f = "(function(_){with(_){with(_.window){delete _;(function(){" + args.src + "\n}).call(this)}}})\n//@ sourceURL=" + args.location;
+				var f = "(function(_){with(_){delete _;(function(){" + args.src + "\n}).call(this)}})\n//@ sourceURL=" + args.location;
 				var fn = RUNTIME.eval(f);
 				fn.call(context.exports, context);
 			}
@@ -500,15 +500,19 @@
 					modules[pkg] = newContext.exports;
 				} else {
 					var newContext = {};
-					newContext['window'] = {};
 					for(var j in item["import"]) {
-						newContext['window'][j] = null;
+						newContext[j] = undefined;
 					}
 					windowCompile(newContext, result);
-					modules[pkg] = newContext.window;
+					modules[pkg] = newContext;
+					for(var j in item["import"]) {
+						if(newContext[j] === undefined) {
+							newContext[j] = window[j];
+						}
+					}
 				}
 			}
-
+			
 			if(item.as) {
 				// remove trailing/leading dots
 				var segments = item.as.match(/^\.*(.*?)\.*$/)[1].split('.');
