@@ -7,17 +7,31 @@ var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
 
 exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
-    this.init = function(playerFactory, username) {
-        supr(this, 'init');
+	this.init = function(playerFactory) {
+		supr(this, 'init');
 		this.playerFactory = playerFactory;
-        this.username = username;
-        
+		
+		this._isConnected = false;
 		this.players = {};
-
-		this.onJoin({ username: this.username });
-		this.self = this.players[this.username];
 		this._update = bind(this, 'update');
-    }
+	}
+	
+	this.connect = function(transport, url) {
+		this.url = url || this.url;
+		this.transport = transport || this.transport || 'csp';
+		if(!this._isConnected) {
+			jsio.connect(this, this.transport, {url: this.url});
+		}
+	}
+	
+	this.isConnected = function() { return this._isConnected; }
+	
+	this.login = function(username) {
+		this.username = username;
+		if(this._isConnected) {
+			this.sendFrame('LOGIN', {username: this.username});
+		}
+	}
 	
 	this.update = function() {
 		var again = false;
@@ -27,21 +41,27 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		this.interval = again ? setTimeout(this._update, 25) : null;
 	}
 	
-    // Public api
+	// Public api
+	
+	this.onWelcome = function(presence, history) {
+		for(var i = 0, p; p = presence[i]; ++i) {
+			this.onJoin(p);
+		}
 
-    this.onWelcome = function(presence, history) {
-        for(var i = 0, p; p = presence[i]; ++i) {
-            this.onJoin(p);
-        }
+		this.self = this.players[this.username];
+		if(!this.self) {
+			this.onError('could not join');
+		}
+		
 		if(!this.interval) { this.update(); }
-    }
+	}
 
-    this.onMove = function(username, x, y) {
+	this.onMove = function(username, x, y) {
 		this.players[username].move(x, y);
 		if(!this.interval) { this.update(); }
 	}
 	
-    this.onSay = function(params) {
+	this.onSay = function(params) {
 		this.players[params.username].say(params.msg, params.ts);
 		this.publish('say', params, this.players[params.username].color);
 	}
@@ -97,10 +117,10 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 	this.frameReceived = function(id, name, args) {
 		logger.debug('frameReceived', id, name, args);
 		switch(name) {
-            case 'WELCOME':
-                this.onWelcome(args.presence, args.history);
+			case 'WELCOME':
+				this.onWelcome(args.presence, args.history);
 				this.publish('welcome', args.presence, args.history);
-                break;
+				break;
 			case 'SAY':
 				this.onSay(args);
 				break;
@@ -125,16 +145,13 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 	}
 	
 	this.connectionMade = function() {
-		this.sendFrame('LOGIN', {
-			username: this.username,
-			x: this.self.x,
-			y: this.self.y,
-			color: this.self.color
-		});
+		this._isConnected = true;
+		if(this.username) {
+			this.login(this.username);
+		}
 	}
 	
 	this.connectionLost = function() {
-		alert('oops, the connection was lost');
-		window.location.replace();
+		this._isConnected = false;
 	}
 });

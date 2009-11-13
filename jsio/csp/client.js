@@ -6,6 +6,7 @@ jsio('import .errors');
 jsio('import .transports');
 
 var logger = jsio.logging.getLogger("csp.client");
+
 var READYSTATE = exports.READYSTATE = {
 	INITIAL: 0,
 	CONNECTING: 1,
@@ -13,7 +14,6 @@ var READYSTATE = exports.READYSTATE = {
 	DISCONNECTING: 3,
 	DISCONNECTED:  4
 };
-
 
 exports.CometSession = Class(function(supr) {
 	var id = 0;
@@ -179,15 +179,11 @@ exports.CometSession = Class(function(supr) {
 	}	
 	
 	this._doWrite = function() {
+		if(this._packetsInFlight) { return; }
 		logger.debug('_writeBuffer:', this._writeBuffer);
-//		return;
-		var newPacket = this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options);
+		this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
 		this._writeBuffer = "";
-		logger.debug('newPacket:', newPacket);
-		if (!this._packetsInFlight) {
-			this._packetsInFlight = [newPacket];
-		}
-		logger.debug('json packets:', JSON.stringify(this._packetsInFlight));
+		logger.debug('sending packets:', JSON.stringify(this._packetsInFlight));
 		this._transport.send(this._url, this._sessionKey, JSON.stringify(this._packetsInFlight), this._options);
 	}
 	

@@ -35,10 +35,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 jsio('import jsio.logging');
 var logger = jsio.logging.getLogger('base64');
 
-
-var alphabet =	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef' +
-				'ghijklmnopqrstuvwxyz0123456789-_';
+var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 var pad = '=';
+var padChar = alphabet.charAt(alphabet.length - 1);
 
 var shorten = function (array, number) {
 	// remove 'number' characters from the end of 'array', in place (no return)
@@ -92,10 +91,9 @@ exports.decode = function (b64text) {
 	logger.debug('decode', b64text);
 	b64text = b64text.replace(/\s/g, '') // kill whitespace
 	// strip trailing pad characters from input; // XXX maybe some better way?
-	var i = b64text.length; while (b64text[--i] === pad) {}; b64text = b64text.slice(0, i + 1);
-	assertOrBadInput(!alphabet_inverse.test(b64text),
-		'Input contains out-of-range characters.');
-	var padding = Array(5 - ((b64text.length % 4) || 4)).join(alphabet[alphabet.length - 1]);
+	var i = b64text.length; while (b64text.charAt(--i) === pad) {}; b64text = b64text.slice(0, i + 1);
+	assertOrBadInput(!alphabet_inverse.test(b64text), 'Input contains out-of-range characters.');
+	var padding = Array(5 - ((b64text.length % 4) || 4)).join(padChar);
 	b64text += padding; // pad with last letter of alphabet
 	var out_array = [];
 	for (var i=0, n=b64text.length; i < n; i+=4) {
@@ -114,5 +112,3 @@ exports.decode = function (b64text) {
 	logger.debug('decoded', result);
 	return result;
 };
-
-
