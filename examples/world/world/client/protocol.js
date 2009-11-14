@@ -2,60 +2,99 @@ jsio('import Class, bind');
 jsio('import jsio.logging');
 jsio('from jsio.interfaces import PubSub');
 jsio('from jsio.protocols.rtjp import RTJPProtocol');
+jsio('from world.constants import *');
 
 var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
 
-exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
-    this.init = function(playerFactory, username) {
-        supr(this, 'init');
+var World = Class(function() {
+	this.init = function(playerFactory) {
 		this.playerFactory = playerFactory;
-        this.username = username;
-        
 		this.players = {};
-
-		this.onJoin({ username: this.username });
-		this.self = this.players[this.username];
+		this.interval = 0;
+		this._active = [];
 		this._update = bind(this, 'update');
-    }
+	}
+	
+	this.getPlayer = function(username) { return this.players[username]; }
+	
+	this.movePlayer = function(username, x, y) {
+		var player = this.players[username];
+		if(!player.isMoving()) {
+			this._active.push(player);
+		}
+		player.move(x, y);
+		if(!this.interval) { this.interval = setTimeout(this._update, 25); }
+	}
 	
 	this.update = function() {
 		var again = false;
-		for(var username in this.players) {
-			again |= this.players[username].update();
+		var active = [];
+		for(var  i = 0, p; p = this._active[i]; ++i) {
+			if(p.update()) {
+				again = true;
+				active[active.length] = p;
+			}
 		}
+		this._active = active;
 		this.interval = again ? setTimeout(this._update, 25) : null;
 	}
 	
-    // Public api
-
-    this.onWelcome = function(presence, history) {
-        for(var i = 0, p; p = presence[i]; ++i) {
-            this.onJoin(p);
-        }
-		if(!this.interval) { this.update(); }
-    }
-
-    this.onMove = function(username, x, y) {
-		this.players[username].move(x, y);
-		if(!this.interval) { this.update(); }
-	}
-	
-    this.onSay = function(params) {
-		this.players[params.username].say(params.msg, params.ts);
-		this.publish('say', params, this.players[params.username].color);
-	}
-	
-	this.onJoin = function(params) {
+	this.addPlayer = function(params) {
 		if(!(params.username in this.players)) {
 			this.players[params.username] = this.playerFactory(params);
-			if(!this.interval) { this.update(); }
+			if(!this.interval) { this.interval = setTimeout(this._update, 25); }
 		}
 	}
 	
-	this.onLeave = function(username) {
+	this.deletePlayer = function(username) {
 		this.players[username].destroy();
 		delete this.players[username];
+	}
+});
+
+exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
+	this.init = function(playerFactory) {
+		supr(this, 'init');
+		this.world = new World(playerFactory);
+		this._isConnected = false;
+	}
+	
+	this.connect = function(transport, url) {
+		this.url = url || this.url;
+		this.transport = transport || this.transport || 'csp';
+		if(!this._isConnected) {
+			jsio.connect(this, this.transport, {url: this.url});
+		}
+	}
+	
+	this.isConnected = function() { return this._isConnected; }
+	
+	this.login = function(username) {
+		this.username = username;
+		if(this._isConnected) {
+			this.sendFrame('LOGIN', {username: this.username});
+		}
+	}
+	
+	// Public api
+	
+	this.onWelcome = function(presence, history) {
+		for(var i = 0, p; p = presence[i]; ++i) {
+			this.world.addPlayer(p);
+		}
+		
+		this.self = this.world.getPlayer(this.username);
+		if(!this.self) {
+			this.onError('could not join');
+		}
+	}
+
+	this.onSay = function(params) {
+		var p = this.world.getPlayer(params.username);
+		
+		p.say(params.msg, params.ts);
+		this.publish('say', params, p.color);
 	}
 	
 	this.onError = function(msg) {
@@ -63,8 +102,13 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 	}
 	
 	this.move = function(x,y) {
-		this.self.move(x, y);
-		if(!this.interval) { this.update(); }
+		
+		if(x < kBounds.minX) x = kBounds.minX;
+		if(x > kBounds.maxX) x = kBounds.maxX;
+		if(y < kBounds.minY) y = kBounds.minY;
+		if(y > kBounds.maxY) y = kBounds.maxY;
+		
+		this.world.movePlayer(this.username, x, y);
 		
 		try {
 			this.sendFrame('MOVE', {x:x, y:y});
@@ -97,24 +141,24 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 	this.frameReceived = function(id, name, args) {
 		logger.debug('frameReceived', id, name, args);
 		switch(name) {
-            case 'WELCOME':
-                this.onWelcome(args.presence, args.history);
+			case 'WELCOME':
+				this.onWelcome(args.presence, args.history);
 				this.publish('welcome', args.presence, args.history);
-                break;
+				break;
 			case 'SAY':
 				this.onSay(args);
 				break;
 			case 'MOVE':
-				this.onMove(args.username, args.x, args.y);
+				this.world.move(args.username, args.x, args.y);
 				break;
 			case 'SHOOT':
 				this.publish('shoot', args);
 				break;
 			case 'JOIN':
-				this.onJoin(args);
+				this.world.addPlayer(args);
 				break;
 			case 'LEAVE':
-				this.onLeave(args.username);
+				this.world.deletePlayer(args.username);
 				break;
 			case 'ERROR':
 				this.onError(args.msg);
@@ -125,16 +169,13 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 	}
 	
 	this.connectionMade = function() {
-		this.sendFrame('LOGIN', {
-			username: this.username,
-			x: this.self.x,
-			y: this.self.y,
-			color: this.self.color
-		});
+		this._isConnected = true;
+		if(this.username) {
+			this.login(this.username);
+		}
 	}
 	
 	this.connectionLost = function() {
-		alert('oops, the connection was lost');
-		window.location.replace();
+		this._isConnected = false;
 	}
 });
