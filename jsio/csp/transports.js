@@ -6,7 +6,7 @@ jsio('import .errors');
 jsio('from jsio.util.browserdetect import BrowserDetect');
 
 var logger = jsio.logging.getLogger("csp.transports");
-exports.allTransports = {}
+exports.allTransports = {};
 
 exports.registerTransport = function(name, transport) {
 	logger.debug('registering transport', name);
@@ -16,32 +16,65 @@ exports.registerTransport = function(name, transport) {
 	exports.allTransports[name] = transport;
 }
 
-exports.chooseTransport = function(url, options) {
-	// NOTE: override just for testing.
-	//return exports.allTransports.jsonp;
-	
+var isLocalFile = function (url, options) {
 	var test = location.toString().match('file://');
 	if (test && test.index === 0) {
-		logger.debug('Detected Local file, choosing transport jsonp')
-		return exports.allTransports.jsonp // XXX
-	}
+		logger.debug('Detected Local file');
+		return true;
+	};
+    return false;	
+};
 
+var haveCrossDomain = function (url, options) {
 	try {
 		if (window.XDomainRequest || window.XMLHttpRequest && (new XMLHttpRequest()).withCredentials !== undefined) {
-			logger.debug('Detected xdomain xhr capabilities; choosing transport xhr');
-			return exports.allTransports.xhr;
+			logger.debug('Detected xdomain xhr capabilities');
+			return true;
 		}
 	} catch(e) {}
-	
+	return false;
+};
+
+var isSameDomain = function (url, options) {
 	if (uri.isSameDomain(url, location.toString())) {
-		logger.debug('Detected same domain, chosing transport xhr');
+		logger.debug('Detected same domain');
+		return true;
+	}
+	return false;
+};
+
+var canChooseXHR = function (url, options) {
+	return (!isLocalFile(url, options) ||
+			(haveCrossDomain(url, options) ||
+			  isSameDomain(url, options)));
+};
+
+var preferXHR = function (url, options) {
+	if (canChooseXHR(url, options)) {
 		return exports.allTransports.xhr;
+	};
+	return exports.allTransports.jsonp;
+};
+
+var preferJSONP = function (url, options) {
+	return exports.allTransports.jsonp;
+};
+
+exports.chooseTransport = function(url, options) {
+
+	if (options.preferredTransport == 'xhr') {
+		return preferXHR(url, options);
+	} else if (options.preferredTransport == 'jsonp') {
+		return preferJSONP(url, options);
+	} else {
+		return exports.allTransports.jsonp;
 	}
 	
-	logger.debug('Detected cross-domain; no xdomain xhr capabilities present; choosing transport jsonp');
-	return exports.allTransports.jsonp
-
-}
+	logger.debug('Detected cross-domain;' + 
+				 ' no xdomain xhr capabilities present;' + 
+				 ' choosing transport jsonp');
+	return exports.allTransports.jsonp;
+};
 
 var PARAMS = {
 	'xhrstream':   {"is": "1", "bs": "\n"},
@@ -93,6 +126,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 });
 
 exports.registerTransport('xhr', Class(baseTransport, function(supr) {
+
 	var createXHR = function() {
 		return window.XMLHttpRequest ? new XMLHttpRequest()
 			: window.XDomainRequest ? new XDomainRequest()
@@ -215,10 +249,30 @@ exports.registerTransport('jsonp', Class(baseTransport, function(supr) {
 
 	this.init = function() {
 		supr(this, 'init');
+
+		this._onReady = [];
+		this._isReady = false;
+		
+		this._createIframes();
+	}
+
+	this._createIframes = function() {
+		if(!document.body) {
+			setTimeout(bind(this, '_createIframes'), 100);
+			return;
+		}
+		this._isReady = true;
+		
 		this._ifr = {
 			'send':  createIframe(),
 			'comet': createIframe()
 		};
+
+		var readyArgs = this._onReady;
+		this._onReady = [];
+		for(var i = 0, args; args = readyArgs[i]; ++i) {
+			this._makeRequest.apply(this, args);
+		}
 	}
 	
 	this.encodePacket = function(packetId, data, options) {
@@ -236,6 +290,11 @@ exports.registerTransport('jsonp', Class(baseTransport, function(supr) {
 	}
 	
 	this._makeRequest = function(rType, url, args, cb, eb) {
+		if(!this._isReady) {
+			this._onReady.push(arguments);
+			return;
+		}
+		
 		args.n = Math.random();
 		$setTimeout(bind(this, function() {
 			var ifr = this._ifr[rType];
