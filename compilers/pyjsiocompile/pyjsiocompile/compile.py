@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from urllib2 import urlopen
+import warnings
 fileopen = open
 
 from BeautifulSoup import BeautifulSoup as Soup
@@ -15,6 +16,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.WARN)
 log.addHandler(logging.StreamHandler())
 
+class NoValue(object):
+    pass
+
 def make_option_parser():
     from optparse import OptionParser
     parser = OptionParser("usage: %prog [options] inputfile")
@@ -26,12 +30,15 @@ def make_option_parser():
                       dest="output", type="string", 
                       default="output.js",
                       help="output FILENAME", metavar="FILENAME")
-    parser.add_option("-e", "--environment", 
-                      dest="environment", type="string", default="browser",
-                      help="target environment (e.g. browser or node)")
-    parser.add_option("-t", "--transport", 
-                      dest="transport", type="string", 
-                      default="csp",
+    parser.add_option("-e", "--environments", 
+                      dest="environments", type="string", 
+                      action='append',
+                      default=["browser"],
+                      help="target environments (e.g. browser or node)")
+    parser.add_option("-t", "--transports", 
+                      dest="transports", type="string", 
+                      action="append",
+                      default=["csp"],
                       help="target transport (e.g. csp or tcp)")
     parser.add_option("--v", 
                       action="store_const", const=logging.INFO, dest="verbose")
@@ -42,6 +49,10 @@ def make_option_parser():
                       help="Don't minify the output")
     
     return parser  
+
+def get_script_src_assignment(script_name):
+    SCRIPT_NAME_ASSIGNMENT = u"jsio.script_src = '%s'"
+    return SCRIPT_NAME_ASSIGNMENT % script_name
     
 def main(argv=None):
     if argv == None:
@@ -58,20 +69,27 @@ def main(argv=None):
     
     INPUT = args[0]
     OUTPUT = options.output
-    BASEDIR = os.path.dirname(INPUT)
+    options.epilogue = ""
 
     if INPUT.split('.')[-1] not in ('html', 'js', 'pkg'):
         print "Invalid input file; jsio_compile only operats on .js and .html files"
         sys.exit(1)
-
-    if INPUT.endswith('.pkg'):
-        pkg_data = json.loads(get_source(INPUT))
-        pkg_data['root'] = str(pkg_data['root'])
-        target = join_paths(BASEDIR, pkg_data['root'] + '.js')
-        output = compile_source(target, options, extras=[pkg_data['root']])
-        output += '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
-    else:
-        output = compile_source(INPUT, options)
+    
+    compile_kwargs = {}
+    if INPUT.endswith('pkg'):
+        INPUT, options, compile_kwargs = \
+            load_package_configuration(INPUT, options)
+    output = \
+        compile_source(INPUT, options, **compile_kwargs) + options.epilogue
+    
+    # the root script needs to be able to recognize itself so that it can
+    # figure out where it is. we modify the generated script to store the
+    # expected script name. later on, we can compare that against script
+    # tag src's.
+    output = \
+        output.replace(get_script_name_assignment('jsio.js'),
+                       get_script_name_assignment(os.path.basename(OUTPUT)))
+    
     if options.minify:
         log.info("Minifying")
         output = minify(output)
@@ -82,6 +100,32 @@ def main(argv=None):
     f.write(output)
     f.close()
 
+def load_package_configuration(INPUT, options):
+    """ load the configuration options in the specified pkg
+        
+        the pkg options should take precedence over the command-line
+        options
+    """
+    # QUESTION: is this true? are we really going to ignore command-line
+    #           options? let's at least print a message for now.
+    pkg_data = json.loads(get_source(INPUT))
+    pkg_data['root'] = str(pkg_data['root'])
+    if 'environmenta' in pkg_data:
+        print "using the 'environment' value from package %s" % INPUT
+        options.environment = [str(env) for env in pkg_data['environments']]
+    if 'transports' in pkg_data:
+        print "using the 'transports' value from package %s" % INPUT
+        options.transports = [str(xprt) for xprt in pkg_data['transports']]
+    if 'environments' in pkg_data:
+        print "using the 'environments' value from package %s" % INPUT
+        options.environments = \
+            [str(env) for env in pkg_data['environments']]
+    options.epilogue = \
+        '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
+    BASEDIR = os.path.dirname(INPUT)
+    new_input = join_paths(BASEDIR, pkg_data['root'] + '.js')
+    return (new_input, options, dict(extras=[pkg_data['root']]))
+    
 def join_paths(*paths):
     if '://' in paths[0]:
         return '/'.join(paths)
@@ -102,6 +146,26 @@ def get_source(target):
     else:
         return fileopen(target).read()
 
+def build_transport_paths(environments, transports):
+    return ['jsio.env.%s.%s' % (environment, transport)
+            for transport in transports
+            for environment in environments]
+    
+def get_transport_dependencies(jsio, env, xprts, path_template, extras=[]):
+    dependencies = []
+    for xprt in xprts:
+        print join_paths(jsio, 'env', env, xprt) + '.js'
+        raw_source = \
+            get_source(join_paths(jsio, 'env', env, xprt) + '.js')
+        source = remove_comments(raw_source)
+        dependencies.extend(map(lambda x: (x, path_template % env), 
+                                (extract_dependencies(source))))
+    return dependencies
+    
+def get_dependencies(source, path='', extras=[]):
+    return map(lambda x: (x, path), 
+               (extract_dependencies(source) + extras))
+    
 def compile_source(target, options, extras=[]):
     log.info('compiling %s', target)
     orig_source = get_source(target)
@@ -112,24 +176,26 @@ def compile_source(target, options, extras=[]):
             if 'src' in dict(script.attrs):
                 continue
             target += script.contents[0]
-    
-    target_source = remove_comments(target)
+                               
+    target_source = remove_comments(orig_source)
     target_module = os.path.relpath(target).split('/')[-1].split('.')[0]
-    env_path = 'jsio.env.' + options.environment + '.' + options.transport
-    checked = [target_module, 
-               'jsio', 'jsio.env', env_path, 
-               'log', 'Class', 'bind']
-    dependancies = map(lambda x: (x, ''), 
-                       (extract_dependancies(target_source) + extras))
-    env = remove_comments(get_source(join_paths(options.jsio, 'env',
-                                                  options.environment,
-                                                  options.transport + '.js')))
-    dependancies.extend(map(lambda x: \
-                                (x, 'jsio.env.%s.' % options.environment), 
-                            extract_dependancies(env)))
+    target_module_path = target_module + '.js'
+    dependencies = get_dependencies(target_source, extras)
+    print dependencies
+    checked = [target_module, 'jsio', 'jsio.env', 'log', 'Class', 'bind']
+    transport_paths = build_transport_paths(options.environments,
+                                            options.transports)
+    checked.extend(transport_paths)
+    for environment in options.environments:
+        dependencies.extend(\
+            get_transport_dependencies(options.jsio,
+                                       environment,
+                                       options.transports,
+                                       'jsio.env.%s.'))
+    print dependencies
     log.debug('checked is %s', checked)
-    while dependancies:
-        pkg, path = dependancies.pop(0)
+    while dependencies:
+        pkg, path = dependencies.pop(0)
         full_path = joinModulePath(path, pkg)
         log.debug('full_path: %s', full_path)
         if full_path in checked:
@@ -137,11 +203,13 @@ def compile_source(target, options, extras=[]):
         log.debug('checking dependancy %s', full_path)
         target = path_for_module(full_path, prefix=options.jsio)
         src = remove_comments(get_source(target))
-        depends = map(lambda x: (x, full_path), extract_dependancies(src))
-        dependancies.extend(depends)
+        depends = map(lambda x: (x, full_path), extract_dependencies(src))
+        dependencies.extend(depends)
         checked.append(full_path)
         
     sources = {}
+    sources[target_module] = dict(src=minify(target_source),
+                                  url=target_module_path)
     log.debug('checked is %s', checked)
     for full_path in checked:
         if full_path in (target_module, 'jsio', # 'jsio.env',
@@ -183,18 +251,18 @@ def joinModulePath(a, b):
         output = output[1:]
     return output
 
-def extract_dependancies(src):
-    dependancies = []
+def extract_dependencies(src):
+    dependencies = []
     re1 = re.compile("jsio\(\s*['\"]\s*(from|external)\s+([\w.$]+)\s+import\s+(.*?)\s*['\"]\s*\)")  
     for item in re1.finditer(src):
-        dependancies.append(item.groups()[1])
+        dependencies.append(item.groups()[1])
     re2 = re.compile("jsio\(\s*['\"]\s*import\s+(.*?)\s*['\"]\s*\)")
     re3 = re.compile("\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?")
     for item in re2.finditer(src):
         for listItem in re3.finditer(item.groups()[0]):
-            dependancies.append(listItem.groups()[0])
+            dependencies.append(listItem.groups()[0])
 
-    return dependancies
+    return dependencies
     
 def remove_comments(src):
     output = ""

@@ -1,11 +1,11 @@
 ;(function(){
 
     var preloaded_source = {
-        // Insert pre-loaded modules here...
+	// Insert pre-loaded modules here...
     };
 
     var pre_jsioImport = [
-        // Insert pre-require dependancies here
+	// Insert pre-require dependancies here
     ];
 	
 	if(typeof exports == 'undefined') {
@@ -14,6 +14,7 @@
 		var jsio = GLOBAL.jsio = bind(this, _jsioImport, GLOBAL, '');
 	}
 	
+        jsio.script_src = 'jsio.js';
 	var modulePathCache = {}
 	function getModulePathPossibilities(pathString) {
 		var segments = pathString.split('.')
@@ -79,8 +80,10 @@
 		try {
 			var scripts = document.getElementsByTagName('script');
 			for (var i = 0, script; script = scripts[i]; ++i) {
-				var j = script.src.indexOf('jsio/jsio.js');
-				if(j >= 0) { return makeAbsoluteURL(script.src, window.location); }
+			    if ((script.src == jsio.script_src) || 
+				(script.src.slice(script.src.length-jsio.script_src) == jsio.script_src)) {
+				return makeAbsoluteURL(script.src, window.location);
+			    }
 			}
 		} catch(e) {}
 	}
@@ -358,9 +361,9 @@
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
-                if (preloaded_source[pathString]) {
-                    return preloaded_source[pathString];
-                }
+		if (preloaded_source[pathString]) {
+		    return preloaded_source[pathString];
+		}
 				var baseMod = pathString.split('.')[0];
 				var paths = getModulePathPossibilities(pathString);
 				for (var i = 0, path; path = paths[i]; ++i) {
@@ -449,6 +452,7 @@
 		// parse the what statement
 		var match, imports = [];
 		if((match = what.match(/^(from|external)\s+([\w.$]+)\s+import\s+(.*)$/))) {
+
 			imports[0] = {from: resolveRelativePath(match[2], path), external: match[1] == 'external', "import": {}};
 			match[3].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
 				imports[0]["import"][item] = as || item;
@@ -562,7 +566,7 @@
 	}
 	
     for (var i =0, target; target=pre_jsioImport[i]; ++i) {
-        jsio.require(target);    
+	jsio.require(target);	 
     }
 })();
 
