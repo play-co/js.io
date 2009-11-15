@@ -81,7 +81,7 @@
 			var scripts = document.getElementsByTagName('script');
 			for (var i = 0, script; script = scripts[i]; ++i) {
 			    if ((script.src == jsio.script_src) || 
-				(script.src.slice(script.src.length-jsio.script_src) == jsio.script_src)) {
+				(script.src.slice(script.src.length-jsio.script_src.length) == jsio.script_src)) {
 				return makeAbsoluteURL(script.src, window.location);
 			    }
 			}

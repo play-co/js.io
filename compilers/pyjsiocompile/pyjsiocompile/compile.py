@@ -87,8 +87,8 @@ def main(argv=None):
     # expected script name. later on, we can compare that against script
     # tag src's.
     output = \
-        output.replace(get_script_name_assignment('jsio.js'),
-                       get_script_name_assignment(os.path.basename(OUTPUT)))
+        output.replace(get_script_src_assignment('jsio.js'),
+                       get_script_src_assignment(os.path.basename(OUTPUT)))
     
     if options.minify:
         log.info("Minifying")
@@ -227,7 +227,7 @@ def compile_source(target, options, extras=[]):
                        for (key, val) in sources.items() ])
     jsio_src = get_source(join_paths(options.jsio, 'jsio.js'))
     final_output = \
-        jsio_src.replace("        // Insert pre-loaded modules here...", out)
+        jsio_src.replace("	// Insert pre-loaded modules here...", out)
     return final_output
 
 def path_for_module(full_path, prefix):
@@ -265,6 +265,15 @@ def extract_dependencies(src):
     return dependencies
     
 def remove_comments(src):
+    # new regular expression way here... -mario
+    RE_COMMENT = re.compile(r'(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([^:]//.*)')
+    comment = RE_COMMENT.search(src)
+    while comment:
+        src = src[:comment.start()] + src[comment.end():]
+        comment = RE_COMMENT.search(src)
+    return src
+
+    # old way below here (brutally deletes http://'s)... -mario
     output = ""
     i = 0
     while True:
