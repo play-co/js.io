@@ -63,7 +63,7 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
                     if (!this.buffer.hasLine())
                         return;
                     this._frame = new StompFrame();
-                    var method = this.buffer.consumeLine();
+                    var method = this.buffer.consumeThroughDelimiter();
                     logger.debug('method is', JSON.stringify(method));
                     this._frame.setMethod(method);
                     this.state = 'headers';
@@ -72,7 +72,7 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
                     logger.debug('case headers');
                     var M = 0;
                     while (this.buffer.hasLine() && ++M < 10) {
-                        var line = this.buffer.consumeLine()
+                        var line = this.buffer.consumeThroughDelimiter();
                         if (line.length == 0) {
                             this.state = 'body';
                             break;
@@ -100,7 +100,7 @@ exports.StompProtocol = Class(BufferedProtocol, function(supr) {
                     else {
                         if (!this.buffer.hasLine('\x00'))
                             return
-                        this._frame.setBody(this.buffer.consumeLine('\x00'));
+                        this._frame.setBody(this.buffer.consumeThroughDelimiter('\x00'));
                     }
                     this.frameReceived(this._frame);
                     this._frame = null;
