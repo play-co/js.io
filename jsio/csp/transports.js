@@ -249,10 +249,30 @@ exports.registerTransport('jsonp', Class(baseTransport, function(supr) {
 
 	this.init = function() {
 		supr(this, 'init');
+
+		this._onReady = [];
+		this._isReady = false;
+		
+		this._createIframes();
+	}
+
+	this._createIframes = function() {
+		if(!document.body) {
+			setTimeout(bind(this, '_createIframes'), 100);
+			return;
+		}
+		this._isReady = true;
+		
 		this._ifr = {
 			'send':  createIframe(),
 			'comet': createIframe()
 		};
+
+		var readyArgs = this._onReady;
+		this._onReady = [];
+		for(var i = 0, args; args = readyArgs[i]; ++i) {
+			this._makeRequest.apply(this, args);
+		}
 	}
 	
 	this.encodePacket = function(packetId, data, options) {
@@ -270,6 +290,11 @@ exports.registerTransport('jsonp', Class(baseTransport, function(supr) {
 	}
 	
 	this._makeRequest = function(rType, url, args, cb, eb) {
+		if(!this._isReady) {
+			this._onReady.push(arguments);
+			return;
+		}
+		
 		args.n = Math.random();
 		$setTimeout(bind(this, function() {
 			var ifr = this._ifr[rType];

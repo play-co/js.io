@@ -180,9 +180,11 @@ def compile_source(target, options, extras=[]):
     target_source = remove_comments(orig_source)
     target_module = os.path.relpath(target).split('/')[-1].split('.')[0]
     target_module_path = target_module + '.js'
+
     dependencies = get_dependencies(target_source, extras)
-    print dependencies
-    checked = [target_module, 'jsio', 'jsio.env', 'log', 'Class', 'bind']
+    dependencies.append(('jsio','jsio.jsio'))
+    print 'dependencies:', dependencies
+    checked = [target_module, 'jsio.env', 'log', 'Class', 'bind']
     transport_paths = build_transport_paths(options.environments,
                                             options.transports)
     checked.extend(transport_paths)
@@ -192,11 +194,13 @@ def compile_source(target, options, extras=[]):
                                        environment,
                                        options.transports,
                                        'jsio.env.%s.'))
-    print dependencies
+    print 'dependencies:',dependencies
     log.debug('checked is %s', checked)
     while dependencies:
         pkg, path = dependencies.pop(0)
         full_path = joinModulePath(path, pkg)
+        if full_path == 'jsio':
+            full_path = 'jsio.jsio'
         log.debug('full_path: %s', full_path)
         if full_path in checked:
             continue
@@ -205,11 +209,12 @@ def compile_source(target, options, extras=[]):
         src = remove_comments(get_source(target))
         depends = map(lambda x: (x, full_path), extract_dependencies(src))
         dependencies.extend(depends)
-        checked.append(full_path)
+        if not pkg == 'jsio':
+            checked.append(full_path)
         
     sources = {}
     sources[target_module] = dict(src=minify(target_source),
-                                  url=target_module_path)
+                                  location=target_module_path)
     log.debug('checked is %s', checked)
     for full_path in checked:
         if full_path in (target_module, 'jsio', # 'jsio.env',
@@ -221,7 +226,7 @@ def compile_source(target, options, extras=[]):
         virtual_filename = path_for_module(full_path, prefix='jsio')
         log.debug(virtual_filename)
             
-        sources[full_path] = {'src': minify(src), 'url': virtual_filename, }
+        sources[full_path] = {'src': minify(src), 'location': virtual_filename, }
         
     out = ',\n'.join([ repr(str(key)) + ": " + json.dumps(val)
                        for (key, val) in sources.items() ])
@@ -266,13 +271,20 @@ def extract_dependencies(src):
     
 def remove_comments(src):
     # new regular expression way here... -mario
-    RE_COMMENT = re.compile(r'(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([^:]//.*)')
+    RE_COMMENT = re.compile(r'([^\\]/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([^:\\]//.*)')
     comment = RE_COMMENT.search(src)
     while comment:
         src = src[:comment.start()] + src[comment.end():]
         comment = RE_COMMENT.search(src)
-    return src
 
+    # hack for now: RE_COMMENT only matches comments not found at the start of the file, so explicitly look for those here
+    RE_COMMENT = re.compile(r'^/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/')
+    comment = RE_COMMENT.search(src)
+    if comment:
+        src = src[:comment.start()] + src[comment.end():]
+    
+    return src
+    
     # old way below here (brutally deletes http://'s)... -mario
     output = ""
     i = 0

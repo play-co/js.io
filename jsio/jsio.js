@@ -357,9 +357,9 @@
 			}
 			
 			var getModuleSourceAndPath = function(pathString) {
-		if (preloaded_source[pathString]) {
-		    return preloaded_source[pathString];
-		}
+				if (preloaded_source[pathString]) {
+				    return preloaded_source[pathString];
+				}
 				var baseMod = pathString.split('.')[0];
 				var paths = getModulePathPossibilities(pathString);
 				for (var i = 0, path; path = paths[i]; ++i) {
@@ -406,7 +406,6 @@
 		if (/^[A-Za-z]*:\/\//.test(url)) { return url; } // already absolute
 		var prefix = location.protocol + '//' + location.host;
 		if (url.charAt(0) == '/') { return prefix + url; }
-
 		var result = location.pathname.match(/\/*(.*?\/?)\/*$/);
 		var parts = result ? result[1].split('/') : [];
 		parts.pop();
