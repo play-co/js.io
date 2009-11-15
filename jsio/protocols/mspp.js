@@ -47,7 +47,6 @@ exports.MSPPStream = Class(function() {
     this._onreadraw = function(data) {
         if (this.encoding == 'utf8')
             data = utf8.decode(data);
-        loggers.stream.debug('onreadraw: '+data);
         this.onread(data);
     }
 
@@ -79,7 +78,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
     }
 
     this.connectionMade = function(isReconnect) {
-        loggers.protocol.debug('open');
+        loggers.protocol.debug('connectionMade');
         this.state = state.consuming;
         for (var i = 0; i < this.writeBuffer.length; i++)
             this._write(this.writeBuffer[i]);
@@ -113,7 +112,6 @@ exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
     }
 
     this.bufferUpdated = function() {
-        loggers.protocol.debug('bufferUpdate: '+this.buffer._rawBuffer);
         if (this.state != state.consuming)
             throw new Error("buffer update in invalid MSPP state: "+this.state);
         while (1) {
@@ -126,7 +124,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
                 break;
             this.buffer.consumeBytes(frameLengthLength);
             var data = this.buffer.consumeBytes(frameLength);
-            loggers.protocol.debug('received: '+data);
+            loggers.protocol.debug('read: '+data);
             data = JSON.parse(data);
             switch(data[1]) {
                 case frames.OPEN:
