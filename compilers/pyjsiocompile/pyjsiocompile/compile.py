@@ -10,7 +10,7 @@ try:
     os.path.relpath
 except:
     # this function is taken directly from posixpath.py in 2.6
-    # "os.path." added to abspath, commonprefix, curdir, pardir, sep
+    # os.path added to abspath, commonprefix, curdir, pardir, sep, join
     def _relpath(path, start=os.path.curdir):
         """Return a relative version of a path"""
 
@@ -26,7 +26,7 @@ except:
         rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
         if not rel_list:
             return os.path.curdir
-        return join(*rel_list)
+        return os.path.join(*rel_list)
 
     os.path.relpath = _relpath
 
