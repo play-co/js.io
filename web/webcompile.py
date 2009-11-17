@@ -21,8 +21,10 @@ try:
     pkg = make_file(form['pkg'])
     out = os.path.join(OUTDIR, form.getfirst("out"))
 
-    # compile, return result, clean up
-    commands.getoutput("jsio_compile %s -j jsio -o %s"%(pkg, out))
+    # compile, log, return result, clean up
+    f = open("wc.log", "a")
+    f.write(commands.getoutput("jsio_compile %s -j jsio -o %s"%(pkg, out)))
+    f.close()
     f = open(out, "r")
     data = f.read()
     f.close()
