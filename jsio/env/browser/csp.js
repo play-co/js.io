@@ -14,7 +14,10 @@ exports.Connector = Class(jsio.interfaces.Connector, function() {
             logger.debug('conn closed without opening, code:', code);
         });
         logger.debug('open the conection');
-        conn.connect(this._opts.url, {encoding: 'plain'});
+        this._opts.encoding = 'plain';
+        var url = this._opts.url;
+        delete this._opts.url;
+        conn.connect(url, this._opts);//{encoding: 'plain'});
     }
 });
 

@@ -155,6 +155,7 @@ selectLink.last = '';
       <li><a href="#news">news</a></li>
       <li><a href="#downloads">downloads</a></li>
       <li><a href="#documentation">documentation</a></li>
+      <li><a href="#compilation">compilation</a></li>
       <li><a href="http://github.com/mcarter/js.io">github &#x279A;</a></li>
       <li><a href="https://groups.google.com/group/jsio">google group &#x279A;</a></li>
     </ul>
@@ -233,6 +234,24 @@ selectLink.last = '';
     		<div id="history"></div>
     		<div id="board"></div>
   		</div>
+    </div>
+    <div id="c_compilation">
+      <div class="box">
+        <h1>Compilation</h1><br>
+        Read the <a href="#documentation">docs</a> to learn about available js.io compilers and how to use them, or simply let our Web Compiler do the heavy lifting for you.<br><br>
+
+        <h2>Web Compiler</h2>
+        <form action="webcompile" method="post" enctype="multipart/form-data">
+          The .js file containing your application:<br>
+          <input type="file" name="js"><br>
+          The .pkg file containing your compilation settings:<br>
+          <input type="file" name="pkg"><br>
+          The name of your final, compiled .js file:<br>
+          <input type="text" name="out"><br>
+          Click here to see your compiled javascript!
+          <input type="submit" value="Compile Javascript">
+        </form>
+      </div>
     </div>
   </div>
   

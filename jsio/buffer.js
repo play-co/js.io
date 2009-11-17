@@ -31,7 +31,7 @@ exports.Buffer = Class(function(supr) {
             return this._rawBuffer;
     }
 
-    this.peekLine = function(delimiter) {
+    this.peekToDelimiter = function(delimiter) {
         delimiter = delimiter ? delimiter : '\n';
         var i = this._rawBuffer.indexOf(delimiter);
         if (i == -1)
@@ -56,20 +56,23 @@ exports.Buffer = Class(function(supr) {
 		return temp;
 	}
 	
-    this.consumeLine = function(delimiter) {
-        delimiter = !!delimiter ? delimiter : "\n"
-        var output = this.peekLine(delimiter);
-        this._rawBuffer = this._rawBuffer.slice(output.length+delimiter.length);
-        return output;
+    this.consumeThroughDelimiter = function(delimiter) {
+        return this.consumeToDelimiter(delimiter) + this.consumeBytes(delimiter.length);
     }
 
+    this.consumeToDelimiter = function(delimiter) {
+        delimiter = !!delimiter ? delimiter : "\n"
+        var output = this.peekToDelimiter(delimiter);
+        this._rawBuffer = this._rawBuffer.slice(output.length);
+        return output;
+    }
 
     this.hasBytes = function(num) {
         num = num ? num : 0;
         return this._rawBuffer.length >= num;
     }
 
-    this.hasLine = function(delimiter) {
+    this.hasDelimiter = function(delimiter) {
         delimiter = !!delimiter ? delimiter : '\n';
         return (this._rawBuffer.indexOf(delimiter) != -1);
     }

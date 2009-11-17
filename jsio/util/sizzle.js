@@ -4,7 +4,8 @@
  *  Released under the MIT, BSD, and GPL Licenses.
  *  More information: http://sizzlejs.com/
  */
-(function(){
+
+Sizzle = (function(){
 
 var chunker = /((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^[\]]*\]|['"][^'"]*['"]|[^[\]'"]+)+\]|\\.|[^ >+~,(\[\\]+)+|[>+~])(\s*,\s*)?/g,
 	done = 0,
@@ -971,8 +972,6 @@ var posProcess = function(selector, context){
 	return Sizzle.filter( later, tmpSet );
 };
 
-// EXPOSE
-
-window.Sizzle = Sizzle;
+return Sizzle;
 
 })();
