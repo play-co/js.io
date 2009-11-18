@@ -2,7 +2,7 @@ jsio('import Class, bind');
 jsio('import jsio.logging');
 jsio('from jsio.interfaces import PubSub');
 jsio('from jsio.protocols.rtjp import RTJPProtocol');
-jsio('from world.constants import *');
+jsio('from ..constants import *');
 
 var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
