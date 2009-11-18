@@ -2,40 +2,31 @@
 jsio('import Class, bind');
 
 exports.Protocol = Class(function() {
-    this.connectionMade = function(isReconnect) {
-    }
-
-    this.dataReceived = function(data) {
-    }
-
-    this.connectionLost = function(reason) {
-    }
-    
-    this.connectionFailed = function() {
-
-    }
-
+	this.connectionMade = function(isReconnect) {}
+	this.dataReceived = function(data) {}
+	this.connectionLost = function(reason) {}
+	this.connectionFailed = function() {}
 });
 
 // Sort of like a twisted factory
 exports.Server = Class(function() {
-    this.init = function(protocolClass) {
-        this._protocolClass = protocolClass;
-    }
+	this.init = function(protocolClass) {
+		this._protocolClass = protocolClass;
+	}
 
-    this.buildProtocol = function() {
-        return new this._protocolClass();
-    }
-    
+	this.buildProtocol = function() {
+		return new this._protocolClass();
+	}
+	
 });
 
 exports.Transport = Class(function() {
-    this.write = function(data, encoding) {
-        throw new Error("Not implemented");
-    }
-    this.getPeer = function() {
-        throw new Error("Not implemented");
-    }
+	this.write = function(data, encoding) {
+		throw new Error("Not implemented");
+	}
+	this.getPeer = function() {
+		throw new Error("Not implemented");
+	}
 });
 
 exports.Listener = Class(function() {
@@ -47,7 +38,7 @@ exports.Listener = Class(function() {
 	this.onConnect = function(transport) {
 		var p = this._server.buildProtocol();
 		p.transport = transport;
-        p.server = this._server;
+		p.server = this._server;
 		transport.protocol = p;
 		transport.makeConnection(p);
 		p.connectionMade();

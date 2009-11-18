@@ -110,20 +110,11 @@
 		d.innerHTML = out.join(", ");
 	}
 	
-	function $each(i, context, f) {
-		if(!f) { f = context; context = this; }
-		for(var j in i) {
-			if(i.hasOwnProperty(j)) {
-				f(j, i[j], i);
-			}
-		}
-	}
-	
 	function bind(context, method/*, args... */) {
 		var args = Array.prototype.slice.call(arguments, 2);
 		return function(){
 			method = (typeof method == 'string' ? context[method] : method);
-			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)))
+			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
 		}
 	};
 	
