@@ -155,7 +155,7 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 				this.onSay(args);
 				break;
 			case 'MOVE':
-				this.world.move(args.username, args.x, args.y);
+				this.world.movePlayer(args.username, args.x, args.y);
 				break;
 			case 'SHOOT':
 				this.publish('shoot', args);

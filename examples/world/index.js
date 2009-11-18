@@ -8,7 +8,7 @@ jsio('from .world.client import *');
 // jsio.logging.getLogger('csp.client').setLevel(0);
 // jsio.logging.getLogger('csp.transports').setLevel(0);
 // jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
-//jsio.logging.setProduction(true);
+jsio.logging.setProduction(true);
 
 function addToHistory(params) {
 	if(!params || !params.msg) { return; }
@@ -142,7 +142,7 @@ exports.init = function() {
 		var kvp = part.split('=');
 		clientParams[decodeURIComponent(kvp[0])] = decodeURIComponent(kvp[1]); 
 	}
-
+	
 	var joinInput = $.id('joinInput');
 	var sayInput = $.id('sayInput');
 	function join() {
@@ -152,7 +152,7 @@ exports.init = function() {
 			params.history = $.id('history');
 			return new WorldPlayer(params);
 		}
-
+		
 		if(!window.client) {
 			window.client = new WorldProtocol(uiPlayerFactory, joinInput.value);
 			client.subscribe('welcome', this, onConnect);
