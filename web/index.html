@@ -12,6 +12,7 @@
 <style>
 html, body { margin: 0px; padding: 0px; background: none;}
 body { background: #636481 url('images/bg.png') repeat-x; }
+a img { border: 0 }
 h1, h2, h3, h4, h5, h6, h7, h8 { font-family: "Trebuchet MS";}
 #body { line-height: 1.5; font: 13px Helvetica, Tahoma; text-align: center;}
 #center { max-width: 931px; text-align: left; margin: 0px auto; }
@@ -69,13 +70,13 @@ h1, h2, h3, h4, h5, h6, h7, h8 { font-family: "Trebuchet MS";}
 
 .contentBox { position: relative; padding: 0px 2px 0px 0px; margin-bottom: 20px; }
 .contentBox .bglefttop { position: absolute; top: 0px; left: 0px; height: 11px; width: 11px; background: url(images/contentboxtl.png); }
-.contentBox .bgcentertop { height: 10px; background: #F5E9E9; border-top: 1px solid #888; margin: 0px 9px 0px 11px; }
+.contentBox .bgcentertop { height: 10px; background: #FFE9E9; border-top: 1px solid #888; margin: 0px 9px 0px 11px; }
 .contentBox .bgrighttop { position: absolute; top: 0px; right: 0px; height: 11px; width: 11px; background: url(images/contentboxtr.png); }
 .contentBox .bgleftbottom { position: absolute; bottom: 0px; left: 0px; height: 11px; width: 11px; background: url(images/contentboxbl.png); }
-.contentBox .bgcenterbottom { height: 10px; background: #F5E9E9; border-bottom: 1px solid #888; margin: 0px 9px 0px 11px; }
+.contentBox .bgcenterbottom { height: 10px; background: #FFE9E9; border-bottom: 1px solid #888; margin: 0px 9px 0px 11px; }
 .contentBox .bgrightbottom { position: absolute; bottom: 0px; right: 0px; height: 11px; width: 11px; background: url(images/contentboxbr.png); }
 
-.contentBox .boxContentWrapper { width: 100%; min-height: 40px; background: #F5E9E9; border-width: 0px 1px; border-style: solid; border-color: #888;}
+.contentBox .boxContentWrapper { width: 100%; min-height: 40px; background: #FFE9E9; border-width: 0px 1px; border-style: solid; border-color: #888;}
 .contentBox .boxContent { padding: 5px 15px; }
 
 #main .headerSpace { height: 0px; font-size: 0px; line-height: 0px; overflow: hidden;}
@@ -148,12 +149,13 @@ selectLink.last = '';
 
 <div id="body"><div id="center">
   <div id="rightcol">
-    <img id="logo" src="images/logo.png" alt="js.io" />
+    <a href="#news"><img id="logo" src="images/logo.png" alt="js.io" /></a>
     <div id="subtext">real-time web applications</div>
     <ul id="links">
       <li><a href="#news">news</a></li>
       <li><a href="#downloads">downloads</a></li>
       <li><a href="#documentation">documentation</a></li>
+      <li><a href="#compilation">compilation</a></li>
       <li><a href="http://github.com/mcarter/js.io">github &#x279A;</a></li>
       <li><a href="https://groups.google.com/group/jsio">google group &#x279A;</a></li>
     </ul>
@@ -180,7 +182,7 @@ selectLink.last = '';
         <h1>We have a new website!</h1>
         <h2><span class="date">24 October 2009</span> &#x273F; <span class="author">Martin Hunt</span></h2>
         It's still under development.  This is really just a static placeholder.  Soon we'll have real posts and comments!
-	<br><br>Don't forget to join our google group at <a href="http://groups.google.com/group/jsio">http://groups.google.com/group/jsio</a>.
+	<br><br>Don't forget to join our google group at <a href="http://groups.google.com/group/jsio">http://groups.google.com/group/jsio</a> &#x279A;.
       </div>
       <div class="box">
         <h1>We've moved to github</h1>
@@ -232,6 +234,24 @@ selectLink.last = '';
     		<div id="history"></div>
     		<div id="board"></div>
   		</div>
+    </div>
+    <div id="c_compilation">
+      <div class="box">
+        <h1>Compilation</h1><br>
+        Read the <a href="#documentation">docs</a> to learn about available js.io compilers and how to use them, or simply let our Web Compiler do the heavy lifting for you.<br><br>
+
+        <h2>Web Compiler</h2>
+        <form action="webcompile" method="post" enctype="multipart/form-data">
+          The .js file containing your application:<br>
+          <input type="file" name="js"><br>
+          The .pkg file containing your compilation settings:<br>
+          <input type="file" name="pkg"><br>
+          The name of your final, compiled .js file:<br>
+          <input type="text" name="out"><br>
+          Click here to see your compiled javascript!<br>
+          <input type="submit" value="Compile Javascript">
+        </form>
+      </div>
     </div>
   </div>
   
