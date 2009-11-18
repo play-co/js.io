@@ -5,12 +5,31 @@ jsio('from jsio.protocols.rtjp import RTJPProtocol');
 jsio('from .constants import *');
 
 var logger = jsio.logging.getLogger('world.server');
+logger.setLevel(0);
 
 exports.WorldServer = Class(Server, function(supr) {
 	this.init = function() {
 		supr(this, 'init', [WorldConnection]);
 		this.players = {};
 		this.history = [];
+		
+		// for(var i = 0; i < 5000; ++i) {
+		// 	var username = 'U' + i;
+		// 	this.players[username] = {
+		// 		username: username,
+		// 		sendFrame:function(){},
+		// 		params: {
+		// 			username: username,
+		// 			x: Math.floor(Math.random() * (kGameWidth - 20)) + 10,
+		// 			y: Math.floor(Math.random() * (kGameHeight - 20)) + 10,
+		// 			color: {
+		// 				r: Math.floor(Math.random() * 128) + 128,
+		// 				g: Math.floor(Math.random() * 128) + 128,
+		// 				b: Math.floor(Math.random() * 128) + 128
+		// 			}
+		// 		}
+		// 	};
+		// }
 	};
 
 	this.broadcast = function(fName, fArgs, sender) {
@@ -18,11 +37,10 @@ exports.WorldServer = Class(Server, function(supr) {
 			var conn = this.players[name];
 			if (conn === sender) { continue; }
 			try {
-			    conn.sendFrame(fName, fArgs);
-			}
-			catch(e) {
-			    logger.warn('Forcing close on disconnected csp connection. FIXME');
-			    conn.connectionLost();
+				conn.sendFrame(fName, fArgs);
+			} catch(e) {
+				logger.warn('Forcing close on disconnected csp connection. FIXME');
+				conn.connectionLost();
 			}
 		}
 	};
@@ -41,7 +59,7 @@ exports.WorldServer = Class(Server, function(supr) {
 	};
 
 	this.say = function(conn, msg) {
-		var line = {username:conn.username, msg:msg, ts:+new Date()};
+		var line = {username:conn.username, msg:msg, ts:+new Date(), color:conn.params.color};
 		this.history.push(line);
 		if(this.history.length > 100) {
 			this.history.shift();
@@ -101,7 +119,7 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 				for (var username in this.server.players) {
 					presence.push(this.server.players[username].params);
 				}
-
+logger.debug(presence);
 				this.sendFrame('WELCOME', {
 					presence: presence,
 					history: this.server.history

@@ -51,6 +51,10 @@ var World = Class(function() {
 		this.players[username].destroy();
 		delete this.players[username];
 	}
+	
+	this.getColor = function(username) {
+		return this.players[username] && this.players[username].color || {r: 128, b: 128, g: 128};
+	}
 });
 
 exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
@@ -94,7 +98,9 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		var p = this.world.getPlayer(params.username);
 		
 		p.say(params.msg, params.ts);
-		this.publish('say', params, p.color);
+		
+		params.color = p.color;
+		this.publish('say', params);
 	}
 	
 	this.onError = function(msg) {

@@ -8,9 +8,9 @@ jsio('from .world.client import *');
 // jsio.logging.getLogger('csp.client').setLevel(0);
 // jsio.logging.getLogger('csp.transports').setLevel(0);
 // jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
-jsio.logging.setProduction(true);
+//jsio.logging.setProduction(true);
 
-function addToHistory(params, color) {
+function addToHistory(params) {
 	if(!params || !params.msg) { return; }
 
 	var history = $.id('history');
@@ -19,11 +19,8 @@ function addToHistory(params, color) {
 	var postfix = h >= 12 ? 'pm' : 'am';
 	if(m < 10) { m = '0' + m; }
 	if(h > 12) { h -= 12; }
-		
-	if(!color) {
-		color = client.players[params.username] && client.players[params.username].color || {r: 128, b: 128, g: 128};
-	}
-
+	
+	var color = params.color || client.world.getColor(params.username);
 	history.insertBefore($.create({
 		text: h + ':' + m + postfix + ' - ' 
 			+ params.username + ': ' + params.msg
