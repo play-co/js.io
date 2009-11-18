@@ -129,13 +129,18 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		} catch(e) {}
 	}
 	
-	this.shoot = function() {
+	this.shoot = function(dx, dy) {
 		var args = {
 			x: this.self._x,
 			y: this.self._y,
-			dx: this.self.x - this.self._x,
-			dy: this.self.y - this.self._y
+			dx: dx - this.self._x || this.self.x - this.self._x,
+			dy: dy - this.self._y || this.self.y - this.self._y
 		}
+		
+		// normalize the vector
+		var len = Math.sqrt(args.dx * args.dx + args.dy + args.dy);
+		args.dx = args.dx / len * 400;
+		args.dy = args.dy / len * 400;
 		
 		if (!args.dx || !args.dy) { return; } // can't shoot standing still
 		

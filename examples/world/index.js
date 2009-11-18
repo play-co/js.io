@@ -100,14 +100,18 @@ function onConnect(presence, history) {
 	function onMouseDown(e) {
 		$.stopEvent(e);
 		var offset = $.cursorPos(e, $.id('board'));
-		client.move(offset.left - 22, offset.top - 22);
+		if(e.button == 2) {
+			client.shoot(offset.left - 22, offset.top - 22); 
+		} else {
+			client.move(offset.left - 22, offset.top - 22);
+		}
 	}
 	
 	$.onEvent('background', 'mousedown', onMouseDown); // IE6 - mouse events aren't reaching #board due to opacity
 	$.onEvent('board', 'mousedown', onMouseDown);
 	
-	$.onEvent(document, 'keypress', function(e) {
-		if (e.charCode == 32 && window.client) { // spacebar
+	$.onEvent(document, 'keydown', function(e) {
+		if (e.keyCode == 17 && window.client) {
 			client.shoot();
 			$.stopEvent(e);
 		}
