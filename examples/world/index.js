@@ -101,7 +101,8 @@ function onConnect(presence, history) {
 		$.stopEvent(e);
 		var offset = $.cursorPos(e, $.id('board'));
 		if(e.button == 2) {
-			client.shoot(offset.left - 22, offset.top - 22); 
+			client.shoot(offset.left - 22, offset.top - 22);
+			$.stopEvent(e);
 		} else {
 			client.move(offset.left - 22, offset.top - 22);
 		}
