@@ -104,7 +104,7 @@ var JSIOError = this.JSIOError = Class(Error, function () {
 	this.toString = Error.prototype.toString;
 	this.init = function (message, fileName, lineNumber) {
 		this.name = this.name; // promote class property to instance
-    this.message = message || '';
+	this.message = message || '';
 		this.fileName = fileName || '«filename»'; // location.href; // XXX what should go here?
 		this.lineNumber = isNaN(+lineNumber) ? 0 : +lineNumber
 	};

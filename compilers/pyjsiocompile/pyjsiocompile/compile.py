@@ -311,6 +311,7 @@ def remove_comments(src):
     return src
     
     # old way below here (brutally deletes http://'s)... -mario
+    """
     output = ""
     i = 0
     while True:
@@ -331,7 +332,7 @@ def remove_comments(src):
         if line:
             output2 += line + '\n'            
     return output2
-
+    """
             
 """
 soupselect.py

@@ -30,51 +30,51 @@ loggers.stream.setLevel(0);
 loggers.protocol.setLevel(0);
 
 var frames = {
-    'OPEN':  0,
-    'CLOSE': 1,
-    'DATA':  2
+	'OPEN':  0,
+	'CLOSE': 1,
+	'DATA':  2
 };
 
 exports.MSPPStream = Class(function() {
-    this.setMultiplexer = function(multiplexer) {
-        loggers.stream.debug('setMultiplexer: '+multiplexer);
-        this.multiplexer = multiplexer;
-    }
+	this.setMultiplexer = function(multiplexer) {
+		loggers.stream.debug('setMultiplexer: '+multiplexer);
+		this.multiplexer = multiplexer;
+	}
 
-    this.setEncoding = function(encoding) {
-        loggers.stream.debug('setEncoding: '+encoding);
-        this.encoding = encoding;
-    }
+	this.setEncoding = function(encoding) {
+		loggers.stream.debug('setEncoding: '+encoding);
+		this.encoding = encoding;
+	}
 
-    this.open = function(host, port, isBinary) {
-        if (isBinary)
-            this.encoding = 'utf8';
-        this.id = this.multiplexer.openStream(this, host, port);
-        loggers.stream.debug('open '+this.id+": "+host+" "+port+" "+isBinary);
-    }
+	this.open = function(host, port, isBinary) {
+		if (isBinary)
+			this.encoding = 'utf8';
+		this.id = this.multiplexer.openStream(this, host, port);
+		loggers.stream.debug('open '+this.id+": "+host+" "+port+" "+isBinary);
+	}
 
-    this.close = function() {
-        loggers.stream.debug('close '+this.id);
-        this.multiplexer.close(this.id);
-    }
+	this.close = function() {
+		loggers.stream.debug('close '+this.id);
+		this.multiplexer.close(this.id);
+	}
 
-    this.send = function(data, encoding) {
-        loggers.stream.debug('send '+this.id+": "+data+" "+encoding);
-        if ((encoding || this.encoding) == 'utf8')
-            data = utf8.encode(data);
-        this.multiplexer.writeToStream(this.id, data);
-    }
+	this.send = function(data, encoding) {
+		loggers.stream.debug('send '+this.id+": "+data+" "+encoding);
+		if ((encoding || this.encoding) == 'utf8')
+			data = utf8.encode(data);
+		this.multiplexer.writeToStream(this.id, data);
+	}
 
-    this._onreadraw = function(data) {
-        if (this.encoding == 'utf8')
-            data = utf8.decode(data);
+	this._onreadraw = function(data) {
+		if (this.encoding == 'utf8')
+			data = utf8.decode(data);
 		loggers.stream.debug('_onreadraw '+data);
-        this.onread(data);
-    }
+		this.onread(data);
+	}
 
-    this.onopen = function() {}
-    this.onclose = function(err) {}
-    this.onread = function(data) {}
+	this.onopen = function() {}
+	this.onclose = function(err) {}
+	this.onread = function(data) {}
 });
 
 var state = {};
@@ -83,60 +83,60 @@ state.connecting = 1;
 state.consuming = 2;
 
 exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
-    this.init = function() {
-        loggers.protocol.debug('new MSPPProtocol');
-        supr(this, 'init', []);
-        this.state = state.closed;
-        this.transportType = null;
-        this.transportOptions = null;
-        this.currentId = 0;
-        this.streams = {};
-        this.writeBuffer = [];
-    }
+	this.init = function() {
+		loggers.protocol.debug('new MSPPProtocol');
+		supr(this, 'init', []);
+		this.state = state.closed;
+		this.transportType = null;
+		this.transportOptions = null;
+		this.currentId = 0;
+		this.streams = {};
+		this.writeBuffer = [];
+	}
 
-    this.setTransport = function(transportType, transportOptions) {
-        this.transportType = transportType;
-        this.transportOptions = transportOptions;
-    }
+	this.setTransport = function(transportType, transportOptions) {
+		this.transportType = transportType;
+		this.transportOptions = transportOptions;
+	}
 
-    this.connectionMade = function(isReconnect) {
-        loggers.protocol.debug('connectionMade');
-        this.state = state.consuming;
-        for (var i = 0; i < this.writeBuffer.length; i++)
-            this._write(this.writeBuffer[i]);
-        writeBuffer = [];
-    }
+	this.connectionMade = function(isReconnect) {
+		loggers.protocol.debug('connectionMade');
+		this.state = state.consuming;
+		for (var i = 0; i < this.writeBuffer.length; i++)
+			this._write(this.writeBuffer[i]);
+		writeBuffer = [];
+	}
 
-    this.connectionLost = this.connectionFailed = function(reason) {
-        loggers.protocol.debug('closed: '+reason);
-        this.state = state.closed;
-        for (stream in this.streams)
-            this.streams[stream].onclose(reason);
-    }
+	this.connectionLost = this.connectionFailed = function(reason) {
+		loggers.protocol.debug('closed: '+reason);
+		this.state = state.closed;
+		for (stream in this.streams)
+			this.streams[stream].onclose(reason);
+	}
 
-    this.openStream = function(stream, host, port) {
-        if (this.state == state.closed) {
-            this.state = state.connecting;
-            jsio.connect(this, this.transportType, this.transportOptions);
-        }
-        var id = ++this.currentId;
-        this.streams[id] = stream;
-        this._write([id, frames.OPEN, host+","+port]);
-        return id;
-    }
+	this.openStream = function(stream, host, port) {
+		if (this.state == state.closed) {
+			this.state = state.connecting;
+			jsio.connect(this, this.transportType, this.transportOptions);
+		}
+		var id = ++this.currentId;
+		this.streams[id] = stream;
+		this._write([id, frames.OPEN, host+","+port]);
+		return id;
+	}
 
-    this.closeStream = function(id) {
-        this._write([id, frames.CLOSE, ""]);
-    }
+	this.closeStream = function(id) {
+		this._write([id, frames.CLOSE, ""]);
+	}
 
-    this.writeToStream = function(id, data) {
-        this._write([id, frames.DATA, data]);
-    }
+	this.writeToStream = function(id, data) {
+		this._write([id, frames.DATA, data]);
+	}
 
-    this.bufferUpdated = function() {
+	this.bufferUpdated = function() {
 		loggers.protocol.debug("bufferUpdated. state: "+this.state+". buffer: "+this.buffer._rawBuffer);
-        if (this.state != state.consuming)
-            throw new Error("buffer update in invalid MSPP state: "+this.state);
+		if (this.state != state.consuming)
+			throw new Error("buffer update in invalid MSPP state: "+this.state);
 		if (! this.buffer.hasDelimiter(':'))
 			return;
 		var lStr = this.buffer.peekToDelimiter(':');
@@ -163,17 +163,17 @@ exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
 			default:
 				throw new Error('invalid MSPP data type!');
 		}
-    }
+	}
 
-    this._write = function(data) {
-        if (this.state != state.consuming) {
-            loggers.protocol.debug("buffering write: "+data);
-            this.writeBuffer.push(data);
-            return;
-        }
+	this._write = function(data) {
+		if (this.state != state.consuming) {
+			loggers.protocol.debug("buffering write: "+data);
+			this.writeBuffer.push(data);
+			return;
+		}
 		var s = data[0] + "," + data[1] + data[2];
 		s = s.length + ":" + s;
-        loggers.protocol.debug('write: '+s);
-        this.transport.write(s);
-    }
+		loggers.protocol.debug('write: '+s);
+		this.transport.write(s);
+	}
 });
