@@ -35,7 +35,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 jsio('import jsio.logging');
 var logger = jsio.logging.getLogger('base64');
 
-var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\\-_';
+var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 var pad = '=';
 var padChar = alphabet.charAt(alphabet.length - 1);
 
