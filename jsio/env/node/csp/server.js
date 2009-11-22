@@ -83,17 +83,17 @@ csp.Session = Class(function() {
 		this.variables = { // set variables to defaults
 			'contentType'   : 'text/html',
 			// 'prebufferSize' : '0', // result stored in 'prebuffer' variable.
-			'prebuffer'     : '',
-			'preamble'      : '',
+			'prebuffer'	 : '',
+			'preamble'	  : '',
 			'requestPrefix' : '',
 			'requestSuffix' : '',
 			'batchPrefix'   : '',
 			'batchSuffix'   : '',
-			'interval'      : '0',
-			'duration'      : '30',
+			'interval'	  : '0',
+			'duration'	  : '30',
 			'isStreaming'   : '0',
-			'gzipOk'        : '',
-			'sse'           : '',
+			'gzipOk'		: '',
+			'sse'		   : '',
 		};
 		this.resetTimeoutTimer();
 	};
@@ -171,17 +171,17 @@ csp.Session = Class(function() {
 		var allowOrigin = '*'; // XXX: Make Access-Control configurable
 		if (contentLength === 'stream') {
 			response.sendHeader(200, {
-				'Content-Type'                : this.variables.contentType,
-				'Cache-Control'               : 'no-cache, must-revalidate',
-				'Transfer-Encoding'           : 'chunked',
+				'Content-Type'				: this.variables.contentType,
+				'Cache-Control'			   : 'no-cache, must-revalidate',
+				'Transfer-Encoding'		   : 'chunked',
 				'Access-Control-Allow-Origin' : allowOrigin
 			});
 		}
 		else if (contentLength >= 0) {
 			response.sendHeader(200, {
-				'Content-Type'                : this.variables.contentType,
-				'Cache-Control'               : 'no-cache, must-revalidate',
-				'Content-Length'              : contentLength,
+				'Content-Type'				: this.variables.contentType,
+				'Cache-Control'			   : 'no-cache, must-revalidate',
+				'Content-Length'			  : contentLength,
 				'Access-Control-Allow-Origin' : allowOrigin
 			});
 		};
@@ -367,7 +367,7 @@ csp.Server = Class(process.EventEmitter, function () {
 	};
 	var renderError = function (response, code, message) {
 		response.sendHeader(code, {'Content-Type'   : 'text/plain',
-		                           'Content-Length' : message.length});
+								   'Content-Length' : message.length});
 		response.sendBody(message);
 		response.finish();
 	};
@@ -376,7 +376,7 @@ csp.Server = Class(process.EventEmitter, function () {
 		staticFile('./' + path.join('/'))	// defined in util.js
 			.addCallback(function(content){
 				response.sendHeader(200, {'Content-Type'   : 'text/plain',
-				                          'Content-Length' : content.length});
+										  'Content-Length' : content.length});
 				response.sendBody(content);
 				response.finish();
 			})
@@ -414,9 +414,9 @@ csp.Server = Class(process.EventEmitter, function () {
 			logger.debug('Received request', request.uri.path);
 			try {
 				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
-				                    404, 'Request to invalid session URL');
+									404, 'Request to invalid session URL');
 				assertOrRenderError(request.method in methods,
-				                    405, 'Invalid HTTP method, ' + request.method);
+									405, 'Invalid HTTP method, ' + request.method);
 				var relpath = request.uri.path.slice(this._session_url.length + 1).split('/');
 				var resource = relpath[0];
 				if (resource === 'static') {
@@ -424,7 +424,7 @@ csp.Server = Class(process.EventEmitter, function () {
 					return;
 				};
 				assertOrRenderError((relpath.length == 1) && (resource in resources),
-				                    404, 'Invalid resource, ' + relpath);
+									404, 'Invalid resource, ' + relpath);
 				var params = request.uri.params;
 				// 'data' is either the POST body if it exists, or the 'd' variable
 				request.data = body || params.d || null;

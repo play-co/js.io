@@ -75,7 +75,7 @@ exports.BrowserDetect = new function() {
 			string: navigator.userAgent,
 			subString: "iPhone",
 			identity: "iPhone/iPod"
-	    },
+		},
 		{
 			string: navigator.platform,
 			subString: "Linux"

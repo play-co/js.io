@@ -1,9 +1,35 @@
 import logging
 import os
 import sys
+import re
 from urllib2 import urlopen
 import warnings
 fileopen = open
+
+# we need os.path.relpath, which isn't in python<2.6
+try:
+    os.path.relpath
+except:
+    # this function is taken directly from posixpath.py in 2.6
+    # os.path added to abspath, commonprefix, curdir, pardir, sep, join
+    def _relpath(path, start=os.path.curdir):
+        """Return a relative version of a path"""
+
+        if not path:
+            raise ValueError("no path specified")
+
+        start_list = os.path.abspath(start).split(os.path.sep)
+        path_list = os.path.abspath(path).split(os.path.sep)
+
+        # Work out how much of the filepath is shared by start and path.
+        i = len(os.path.commonprefix([start_list, path_list]))
+
+        rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
+        if not rel_list:
+            return os.path.curdir
+        return os.path.join(*rel_list)
+
+    os.path.relpath = _relpath
 
 from BeautifulSoup import BeautifulSoup as Soup
 
@@ -69,7 +95,7 @@ def main(argv=None):
     
     INPUT = args[0]
     OUTPUT = options.output
-    options.epilogue = ""
+    options.initialImport = ""
 
     if INPUT.split('.')[-1] not in ('html', 'js', 'pkg'):
         print "Invalid input file; jsio_compile only operats on .js and .html files"
@@ -80,7 +106,7 @@ def main(argv=None):
         INPUT, options, compile_kwargs = \
             load_package_configuration(INPUT, options)
     output = \
-        compile_source(INPUT, options, **compile_kwargs) + options.epilogue
+        compile_source(INPUT, options, **compile_kwargs)
     
     # the root script needs to be able to recognize itself so that it can
     # figure out where it is. we modify the generated script to store the
@@ -89,6 +115,9 @@ def main(argv=None):
     output = \
         output.replace(get_script_src_assignment('jsio.js'),
                        get_script_src_assignment(os.path.basename(OUTPUT)))
+    
+    expose = re.compile('window\.jsio\s=\sjsio;');
+    output = expose.sub(options.initialImport + (options.exposeJsio and ';window.jsio=jsio;' or ''), output, 1);
     
     if options.minify:
         log.info("Minifying")
@@ -120,8 +149,9 @@ def load_package_configuration(INPUT, options):
         print "using the 'environments' value from package %s" % INPUT
         options.environments = \
             [str(env) for env in pkg_data['environments']]
-    options.epilogue = \
-        '\njsio("import %s");\ndelete jsio;\n' % (pkg_data['root'])
+    options.initialImport = \
+        '\njsio("import %s");\n' % (pkg_data['root'])
+    options.exposeJsio = 'exposeJsio' in pkg_data and pkg_data['exposeJsio']
     BASEDIR = os.path.dirname(INPUT)
     new_input = join_paths(BASEDIR, pkg_data['root'] + '.js')
     return (new_input, options, dict(extras=[pkg_data['root']]))
@@ -286,6 +316,7 @@ def remove_comments(src):
     return src
     
     # old way below here (brutally deletes http://'s)... -mario
+    """
     output = ""
     i = 0
     while True:
@@ -306,7 +337,7 @@ def remove_comments(src):
         if line:
             output2 += line + '\n'            
     return output2
-
+    """
             
 """
 soupselect.py

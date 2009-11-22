@@ -51,7 +51,7 @@ for (var i=0, n=alphabet.length; i < n; i++) {
 
 
 // use this regexp in the decode function to sniff out invalid characters.
-var alphabet_inverse = new RegExp('[^' + alphabet + ']');
+var alphabet_inverse = new RegExp('[^' + alphabet.replace('-', '\\-') + ']');
 
 
 
@@ -81,7 +81,7 @@ exports.encode = function (bytes) {
 			alphabet.charAt((newchars >> 18) & 077),
 			alphabet.charAt((newchars >> 12) & 077),
 			alphabet.charAt((newchars >> 6)  & 077), 
-			alphabet.charAt((newchars)       & 077));      
+			alphabet.charAt((newchars)	   & 077));	  
 	};
 	shorten(out_array, padding.length);
 	return out_array.join('');
@@ -105,7 +105,7 @@ exports.decode = function (b64text) {
 		out_array.push(
 			(newchars >> 020) & 0xFF,
 			(newchars >> 010) & 0xFF, 
-			(newchars)        & 0xFF);
+			(newchars)		& 0xFF);
 	};
 	shorten(out_array, padding.length);
 	var result = String.fromCharCode.apply(String, out_array);

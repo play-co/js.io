@@ -123,14 +123,14 @@ $.stopEvent = function(e) {
 $.setText = function(el, text) {
 	el = $.id(el);
 	text = String(text);
-    if ('textContent' in el) {
+	if ('textContent' in el) {
 		el.textContent = text;
-    } else if ('innerText' in el) {
+	} else if ('innerText' in el) {
 		el.innerText = text.replace(/\n/g, ' ');
-    } else {
-        el.innerHTML = '';
-        el.appendChild(document.createTextNode(text));
-    }
+	} else {
+		el.innerHTML = '';
+		el.appendChild(document.createTextNode(text));
+	}
 }
 
 $.remove = function(el) {

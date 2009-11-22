@@ -1,20 +1,20 @@
 ;(function(){
 
-    var preloaded_source = {
+	var preloaded_source = {
 	// Insert pre-loaded modules here...
-    };
+	};
 
-    var pre_jsioImport = [
+	var pre_jsioImport = [
 	// Insert pre-require dependancies here
-    ];
+	];
 	
 	if(typeof exports == 'undefined') {
 		var jsio = window.jsio = bind(this, _jsioImport, window, '')
 	} else if (typeof GLOBAL != 'undefined') {
-		var jsio = GLOBAL.jsio = bind(this, _jsioImport, GLOBAL, '');
+		var jsio = bind(this, _jsioImport, GLOBAL, '');
 	}
 	
-        jsio.script_src = 'jsio.js';
+		jsio.script_src = 'jsio.js';
 	var modulePathCache = {}
 	function getModulePathPossibilities(pathString) {
 		var segments = pathString.split('.')
@@ -80,17 +80,17 @@
 		try {
 			var scripts = document.getElementsByTagName('script');
 			for (var i = 0, script; script = scripts[i]; ++i) {
-			    if ((script.src == jsio.script_src) || 
+				if ((script.src == jsio.script_src) || 
 				(script.src.slice(script.src.length-jsio.script_src.length) == jsio.script_src)) {
 				return makeAbsoluteURL(script.src, window.location);
-			    }
+				}
 			}
 		} catch(e) {}
 	}
 	
 	function browser_getLog() {
 		if (typeof console != 'undefined' && console.log) {
-			return console.log;
+			return bind(console, 'log');
 		} else {
 			return browser_oldLog;
 		}
@@ -110,20 +110,11 @@
 		d.innerHTML = out.join(", ");
 	}
 	
-	function $each(i, context, f) {
-		if(!f) { f = context; context = this; }
-		for(var j in i) {
-			if(i.hasOwnProperty(j)) {
-				f(j, i[j], i);
-			}
-		}
-	}
-	
 	function bind(context, method/*, args... */) {
 		var args = Array.prototype.slice.call(arguments, 2);
 		return function(){
 			method = (typeof method == 'string' ? context[method] : method);
-			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)))
+			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
 		}
 	};
 	
@@ -182,15 +173,15 @@
 	}
 	
 	var strDuplicate = function(str, num) {
-	    var out = "";
-	    for (var i = 0; i < num; ++ i) {
+		var out = "";
+		for (var i = 0; i < num; ++ i) {
 		out += str;
-	    }
-	    return out;
+		}
+		return out;
 
 
-	    // Doesn't work in node correctly.
-	    //		return new Array(num + 1).join(str);
+		// Doesn't work in node correctly.
+		//		return new Array(num + 1).join(str);
 	}
 	
 	switch(jsio.__env) {
@@ -361,7 +352,7 @@
 			
 			var getModuleSourceAndPath = function(pathString) {
 				if (preloaded_source[pathString]) {
-				    return preloaded_source[pathString];
+					return preloaded_source[pathString];
 				}
 				var baseMod = pathString.split('.')[0];
 				var paths = getModulePathPossibilities(pathString);
@@ -493,7 +484,7 @@
 					};
 					newContext.jsio = bind(this, _jsioImport, newContext, newRelativePath);
 					for(var j in modules.jsio) {
-					    newContext.jsio[j] = modules.jsio[j];
+						newContext.jsio[j] = modules.jsio[j];
 					}
 					
 					// TODO: FIX for "trailing ." case
@@ -570,7 +561,10 @@
 		_jsio('import .interfaces');
 		return new _jsio.interfaces.Server(protocolClass);
 	}
-    for (var i = 0, target; target = pre_jsioImport[i]; ++i) {
-        jsio.require(target);
-    }
+	
+	for (var i = 0, target; target = pre_jsioImport[i]; ++i) {
+		jsio.require(target);
+	}
+	
+	window.jsio = jsio;
 })();

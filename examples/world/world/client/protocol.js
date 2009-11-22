@@ -2,7 +2,7 @@ jsio('import Class, bind');
 jsio('import jsio.logging');
 jsio('from jsio.interfaces import PubSub');
 jsio('from jsio.protocols.rtjp import RTJPProtocol');
-jsio('from world.constants import *');
+jsio('from ..constants import *');
 
 var logger = jsio.logging.getLogger('world.client');
 logger.setLevel(0);
@@ -51,6 +51,10 @@ var World = Class(function() {
 		this.players[username].destroy();
 		delete this.players[username];
 	}
+	
+	this.getColor = function(username) {
+		return this.players[username] && this.players[username].color || {r: 128, b: 128, g: 128};
+	}
 });
 
 exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
@@ -94,7 +98,9 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		var p = this.world.getPlayer(params.username);
 		
 		p.say(params.msg, params.ts);
-		this.publish('say', params, p.color);
+		
+		params.color = p.color;
+		this.publish('say', params);
 	}
 	
 	this.onError = function(msg) {
@@ -123,13 +129,18 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		} catch(e) {}
 	}
 	
-	this.shoot = function() {
+	this.shoot = function(dx, dy) {
 		var args = {
 			x: this.self._x,
 			y: this.self._y,
-			dx: this.self.x - this.self._x,
-			dy: this.self.y - this.self._y
+			dx: dx - this.self._x || this.self.x - this.self._x,
+			dy: dy - this.self._y || this.self.y - this.self._y
 		}
+		
+		// normalize the vector
+		var len = Math.sqrt(args.dx * args.dx + args.dy + args.dy);
+		args.dx = args.dx / len * 400;
+		args.dy = args.dy / len * 400;
 		
 		if (!args.dx || !args.dy) { return; } // can't shoot standing still
 		
@@ -149,7 +160,7 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 				this.onSay(args);
 				break;
 			case 'MOVE':
-				this.world.move(args.username, args.x, args.y);
+				this.world.movePlayer(args.username, args.x, args.y);
 				break;
 			case 'SHOOT':
 				this.publish('shoot', args);

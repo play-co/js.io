@@ -22,7 +22,7 @@ var isLocalFile = function (url, options) {
 		logger.debug('Detected Local file');
 		return true;
 	};
-    return false;	
+	return false;	
 };
 
 var haveCrossDomain = function (url, options) {
@@ -78,7 +78,7 @@ exports.chooseTransport = function(url, options) {
 
 var PARAMS = {
 	'xhrstream':   {"is": "1", "bs": "\n"},
-	'xhrpoll':     {"du": "0"},
+	'xhrpoll':	 {"du": "0"},
 	'xhrlongpoll': {},
 	'sselongpoll': {"bp": "data: ", "bs": "\r\n", "se": "1"},
 	'ssestream':   {"bp": "data: ", "bs": "\r\n", "se": "1", "is": "1"}

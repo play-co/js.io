@@ -10,7 +10,7 @@ jsio('from .world.client import *');
 // jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
 jsio.logging.setProduction(true);
 
-function addToHistory(params, color) {
+function addToHistory(params) {
 	if(!params || !params.msg) { return; }
 
 	var history = $.id('history');
@@ -19,11 +19,8 @@ function addToHistory(params, color) {
 	var postfix = h >= 12 ? 'pm' : 'am';
 	if(m < 10) { m = '0' + m; }
 	if(h > 12) { h -= 12; }
-		
-	if(!color) {
-		color = client.players[params.username] && client.players[params.username].color || {r: 128, b: 128, g: 128};
-	}
-
+	
+	var color = params.color || client.world.getColor(params.username);
 	history.insertBefore($.create({
 		text: h + ':' + m + postfix + ' - ' 
 			+ params.username + ': ' + params.msg
@@ -103,14 +100,19 @@ function onConnect(presence, history) {
 	function onMouseDown(e) {
 		$.stopEvent(e);
 		var offset = $.cursorPos(e, $.id('board'));
-		client.move(offset.left - 22, offset.top - 22);
+		if(e.button == 2) {
+			client.shoot(offset.left - 22, offset.top - 22);
+			$.stopEvent(e);
+		} else {
+			client.move(offset.left - 22, offset.top - 22);
+		}
 	}
 	
 	$.onEvent('background', 'mousedown', onMouseDown); // IE6 - mouse events aren't reaching #board due to opacity
 	$.onEvent('board', 'mousedown', onMouseDown);
 	
-	$.onEvent(document, 'keypress', function(e) {
-		if (e.charCode == 32 && window.client) { // spacebar
+	$.onEvent(document, 'keydown', function(e) {
+		if (e.keyCode == 17 && window.client) {
 			client.shoot();
 			$.stopEvent(e);
 		}
@@ -145,7 +147,7 @@ exports.init = function() {
 		var kvp = part.split('=');
 		clientParams[decodeURIComponent(kvp[0])] = decodeURIComponent(kvp[1]); 
 	}
-
+	
 	var joinInput = $.id('joinInput');
 	var sayInput = $.id('sayInput');
 	function join() {
@@ -155,7 +157,7 @@ exports.init = function() {
 			params.history = $.id('history');
 			return new WorldPlayer(params);
 		}
-
+		
 		if(!window.client) {
 			window.client = new WorldProtocol(uiPlayerFactory, joinInput.value);
 			client.subscribe('welcome', this, onConnect);

@@ -10,7 +10,7 @@ var logger = jsio.logging.getLogger("csp.client");
 var READYSTATE = exports.READYSTATE = {
 	INITIAL: 0,
 	CONNECTING: 1,
-	CONNECTED:    2,
+	CONNECTED: 2,
 	DISCONNECTING: 3,
 	DISCONNECTED:  4
 };
@@ -206,7 +206,7 @@ exports.CometSession = Class(function(supr) {
 		logger.debug('comet Success:', packets);
 		this._cometBackoff = kDefaultBackoff;
 		this._resetTimeoutTimer();
-		for (var i = 0,  packet; (packet = packets[i]) || i < packets.length; i++) {
+		for (var i = 0, packet; (packet = packets[i]) || i < packets.length; i++) {
 			logger.debug('process packet:', packet);
 			if (packet === null) {
 				return self.close();
@@ -305,7 +305,4 @@ exports.CometSession = Class(function(supr) {
 		return kDefaultTimeoutInterval;
 	}
 
-})
-
-
-
+});
