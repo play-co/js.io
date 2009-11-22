@@ -19,7 +19,9 @@ class TestGetSource(object):
     def test_hookbox_no_smoke_for_remote_jsio(self):
         compile.main(self.compile_args)
         hookbox_exercising_js = """
-require('hookbox.compiled.js')
+var sys = require('sys');
+require.paths.push('tests/data');
+require('hookbox.compiled');
 """
         smoke_test_script_file = file(self.smoke_test_script_path, 'w')
         smoke_test_script_file.write(hookbox_exercising_js)
@@ -36,7 +38,9 @@ require('hookbox.compiled.js')
     def test_hookbox_no_smoke_for_local_jsio(self):
         compile.main(self.compile_args + ['-j', 'tests/data/jsio'])
         hookbox_exercising_js = """
-require('hookbox.compiled.js')
+var sys = require('sys');
+require.paths.push('tests/data');
+require('hookbox.compiled');
 """
         smoke_test_script_file = file(self.smoke_test_script_path, 'w')
         smoke_test_script_file.write(hookbox_exercising_js)
@@ -47,6 +51,7 @@ require('hookbox.compiled.js')
         expected_result = ""
         output, error = \
             Popen(run_command, stdout=PIPE, stderr=PIPE).communicate()
+        print output
         assert not error, error
         assert expected_result == output, repr(output)
     

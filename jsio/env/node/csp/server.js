@@ -373,7 +373,7 @@ csp.Server = Class(process.EventEmitter, function () {
 	};
 	var sendStatic = function (path, response) {
 		debug('SEND STATIC', path, response)
-		staticFile(path.join('/'))	// defined in util.js
+		staticFile('./' + path.join('/'))	// defined in util.js
 			.addCallback(function(content){
 				response.sendHeader(200, {'Content-Type'   : 'text/plain',
 				                          'Content-Length' : content.length});

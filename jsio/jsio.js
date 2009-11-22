@@ -9,7 +9,7 @@
     ];
 	
 	if(typeof exports == 'undefined') {
-		var jsio = window.jsio = bind(this, _jsioImport, window, '');
+		var jsio = window.jsio = bind(this, _jsioImport, window, '')
 	} else if (typeof GLOBAL != 'undefined') {
 		var jsio = GLOBAL.jsio = bind(this, _jsioImport, GLOBAL, '');
 	}
@@ -277,6 +277,9 @@
 			}
 
 			var getModuleSourceAndPath = function(pathString) {
+				if (preloaded_source[pathString]) {
+				    return preloaded_source[pathString];
+				}
 				var baseMod = pathString.split('.')[0];
 				var paths = getModulePathPossibilities(pathString);
 				var cwd = RUNTIME.cwd() + '/';
@@ -567,7 +570,6 @@
 		_jsio('import .interfaces');
 		return new _jsio.interfaces.Server(protocolClass);
 	}
-	
     for (var i = 0, target; target = pre_jsioImport[i]; ++i) {
         jsio.require(target);
     }

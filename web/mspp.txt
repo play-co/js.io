@@ -1,0 +1,71 @@
+sourced from jsio/env/node/csp/server.js 
+author: Jacob Rus
+
+Multiplexing Socket Proxy Protocol.
+===================================
+
+This protocol is designed to allow multiple incoming connections over some kind of socket transport with TCP-like semantics to be proxied to real TCP connections on the back end. In the specific case of Comet, and in particular Comet Session Protocol implementations, it allows a Comet server to easily be converted into a general-purpose TCP proxy for web apps, essentially “putting a socket in the browser.”
+
+The protocol is quite straight-forward: MSPP clients and servers communicate through length-prefixed JSON frames, giving each length, frame pair the form:
+
+    length[connection_id, frame_type, *arguments]
+  
+Where `length` is an integer representing the number of bytes in the frame, `connection_id` is an integer uniquely identifying a particular back-end-facing socket, `frame_type` is an integer, and `*arguments` is of variable length depending on frame type. From this point onward, “upstream” frames are those sent from client to server, while “downstream” frames are sent from server to client. Clients and servers each know how to send three frame types, which re-use the same `frame_type` values, but the frames differ slightly in the two directions.
+
+Upstream frame types
+--------------------
+
+### `0 = FRAME_OPEN`
+
+The open frame is a request for the server to open a new TCP connection at the specified connection ID to the specified host and port. An open frame looks like: `[id, 0, host, port]`.
+
+### `1 = FRAME_CLOSE`
+
+The close frame is a request to close the TCP connection at the specified connection ID. The close frame takes no extra arguments, and so looks like: `[id, 1]`.
+
+### `2 = FRAME_DATA`
+
+The data frame is a request to send data to the TCP connection. It takes the data to send, as a JSON string of bytes. In JSON, any bytes out of ASCII range can be written in the form `\uXX`, where `XX` is the byte in hexadecimal. Additionally, backslash and double quotation marks must be escaped. A data frame looks like `[id, 2, "Hello, Server!"]`
+<!-- XXX: check the JSON spec -->
+
+Downstream frame types
+----------------------
+
+### `0 = FRAME_OPENED`
+
+The opened frame is an announcement to the client that the server has successfully opened a connection to the requested back-end TCP server, which is now ready to receive data. An opened frame looks like: `[id, 0]`
+
+### `1 = FRAME_CLOSED`
+
+The closed frame is an announcement to the client that the back-end server has closed its TCP connection, that the connection has been broken, or some other error has occurred. A closed frame looks like `[id, 1, code]` where code is one of the following close codes:
+
+    102 = INVALID_HANDSHAKE
+    103 = USER_CONNECTION_RESET
+    104 = REMOTE_CONNECTION_TIMEOUT
+    106 = UNAUTHORIZED
+    108 = REMOTE_CONNECTION_FAILED
+    109 = REMOTE_CONNECTION_CLOSED
+    110 = PROTOCOL_ERROR
+
+### `2 = FRAME_DATA`
+
+The downstream data frame contains data received over the socket from the back-end server. It looks essentially like the upstream data frame: `[id, 2, "Hello, Client!"]`
+
+Example session
+---------------
+
+The following is a portion of an example session. Besides the content shown, nothing else is sent. That is, no separators sit between length-prefixed frames, which form a continuous stream in each direction. In this example, the client attempts to connect to three servers on `localhost`, ports `9001`, `9002`, and `9003`. The third connection cannot be established, so the server responds with a close frame, and the `REMOTE_CONNECTION_FAILED` close code.
+
+    CLIENT:                       SERVER:
+    20[1,0,localhost,9001]
+                                  5[1,0]
+    24[1,2,"Hello, Server 1."]
+                                  28[1,2,"Server 1 says hello."]
+    20[2,0,localhost,9002]
+                                  5[2,0]
+    20[3,0,localhost,9003]
+                                  9[3,1,108]
+    21[2,2,"Hi, Server 2."]
+    23[1,2,"Server 1: Jump!"]
+                                  25[2,2,"Server 2 says hi."]
+                                  24[1,2,"Server 1
