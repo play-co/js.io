@@ -9,9 +9,9 @@
 	];
 	
 	if(typeof exports == 'undefined') {
-		var jsio = window.jsio = bind(this, _jsioImport, window, '');
+		var jsio = bind(this, _jsioImport, window, '');
 	} else if (typeof GLOBAL != 'undefined') {
-		var jsio = GLOBAL.jsio = bind(this, _jsioImport, GLOBAL, '');
+		var jsio = bind(this, _jsioImport, GLOBAL, '');
 	}
 	
 		jsio.script_src = 'jsio.js';
@@ -90,7 +90,7 @@
 	
 	function browser_getLog() {
 		if (typeof console != 'undefined' && console.log) {
-			return console.log;
+			return bind(console, 'log');
 		} else {
 			return browser_oldLog;
 		}
@@ -562,4 +562,6 @@
 	for (var i = 0, target; target = pre_jsioImport[i]; ++i) {
 		jsio.require(target);
 	}
+	
+	window.jsio = jsio;
 })();
