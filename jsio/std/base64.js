@@ -51,7 +51,7 @@ for (var i=0, n=alphabet.length; i < n; i++) {
 
 
 // use this regexp in the decode function to sniff out invalid characters.
-var alphabet_inverse = new RegExp('[^' + alphabet + ']');
+var alphabet_inverse = new RegExp('[^' + alphabet.replace('-', '\\-') + ']');
 
 
 
