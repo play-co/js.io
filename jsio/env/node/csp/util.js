@@ -38,7 +38,7 @@ var debug = this.debug = function () {
 		arg = (typeof arg === 'string') ? arg : JSON.stringify(arg)
 		message.push(arg);
 	};
-	node.stdio.writeError(message.join(' ') + '\n');
+	process.stdio.writeError(message.join(' ') + '\n');
 };
 
 
@@ -127,10 +127,10 @@ var reschedule = this.reschedule = function (callback) {
 }
 
 // cached static files
-var staticFile = this.staticFile = function (){
+var staticFile = exports.staticFile = function (){
 	var cache = {} // static file content indexed by filename
 	var getfile = function(path) {
-		promise = new node.Promise();
+		promise = new process.Promise();
 		cacheContent = cache[path];
 		if (cacheContent !== undefined) {
 			// the file is in the cache, return it
@@ -139,7 +139,7 @@ var staticFile = this.staticFile = function (){
 			});
 		} else {
 			// load file from disk, save it in the cache, and return it
-			node.fs.cat(path, 'utf8')
+			process.fs.cat(path, 'utf8')
 				.addCallback(function(fileContent) {
 					cache[path] = fileContent;
 					promise.emitSuccess([fileContent]);
