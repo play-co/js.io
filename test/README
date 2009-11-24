@@ -1,0 +1,19 @@
+=============================================================================
+                              Dr. Strangetest
+                                     or
+            How I Learned to Stop Worrying and Love the javascript
+=============================================================================
+
+Introduction
+------------
+
+The test/run.js test runner is intended to work like the nose python test runner. That means:
+
+
+Running Tests
+-------------
+
+This is how I'm invoking the test runner:
+	MJSUNIT_PATH=~/projects/v8/test/mjsunit/mjsunit.js ENVJS_PATH=~/projects/envjs/ node test/run.js test
+
+The the test runner uses mjsunit for its assertion and a hacked env.js to provide a browser-like environment. Past that, I invoke the test runner (test/run.js) with node and tell it where to look for tests (test).
