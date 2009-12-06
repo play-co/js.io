@@ -88,6 +88,10 @@ def main(argv=None):
     log.debug(options)
     log.setLevel(options.verbose or logging.WARN)
     
+    global minify
+    if not options.minify:
+        minify = lambda x: x
+    
     if len(args) != 1:
         print "Invalid position arguments"
         parser.print_help()
