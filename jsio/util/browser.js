@@ -1,4 +1,4 @@
-jsio('external .sizzle import Sizzle');
+PKG('external .sizzle import Sizzle');
 
 var $ = exports.$ = Sizzle;
 
@@ -50,8 +50,8 @@ $.removeClass = function(el, classNames) {
 	var el = $.id(el);
 	el.className = (' ' + el.className + ' ')
 		.replace(' ', '  ')
-		.replace(new RegExp('( ' + classNames.replace(' ', ' | ') + ' )', 'g'), '')
-		.replace('\s', ' ')
+		.replace(new RegExp('( ' + classNames.replace('\s+', ' | ').replace('-','\-') + ' )', 'g'), '')
+		.replace(/\s+/, ' ')
 		.replace(/^\s+|\s+%/, '');
 }
 
