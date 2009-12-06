@@ -1,9 +1,10 @@
-jsio('import jsio.std.base64 as base64');
-jsio('import jsio.std.utf8 as utf8');
-jsio('import jsio.std.uri as uri'); 
-jsio('import jsio.logging');
-jsio('import .errors');
-jsio('import .transports');
+PKG('from base import *');
+PKG('import jsio.std.base64 as base64');
+PKG('import jsio.std.utf8 as utf8');
+PKG('import jsio.std.uri as uri'); 
+PKG('import jsio.logging');
+PKG('import .errors');
+PKG('import .transports');
 
 var logger = jsio.logging.getLogger("csp.client");
 

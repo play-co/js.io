@@ -1,6 +1,6 @@
-jsio('import Class, bind');
-jsio('import jsio.logging');
-jsio('from jsio.interfaces import Protocol');
+PKG('from base import *');
+PKG('import jsio.logging');
+PKG('from jsio.interfaces import Protocol');
 
 var logger = jsio.logging.getLogger('jsio.buffer.Buffer');
 

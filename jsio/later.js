@@ -1,4 +1,5 @@
-jsio('import Class, bind');
+PKG('from base import *');
+
 exports.Later = Class(function() {
 	this.init = function() {
 		this.cb = null
@@ -18,8 +19,7 @@ exports.Later = Class(function() {
 			if (result == false) {
 				this.cancel();
 			}
-		}
-		else {
+		} else {
 			this.values.push(arguments);
 		}
 	}

@@ -1,5 +1,6 @@
-jsio('import Class, log, bind, jsio.interfaces, jsio.logging');
-jsio('from .csp.server import createServer');
+PKG('from base import *');
+PKG('import jsio.interfaces, jsio.logging');
+PKG('from .csp.server import createServer');
 
 var logger = jsio.logging.getLogger('node.csp');
 

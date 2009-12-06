@@ -1,5 +1,5 @@
 // Sort of like a twisted protocol
-jsio('import Class, bind');
+PKG('from base import *');
 
 exports.Protocol = Class(function() {
 	this.connectionMade = function(isReconnect) {}
@@ -71,7 +71,7 @@ exports.PubSub = Class(function() {
 		if(this._subscribers.__any) {
 			var anyArgs = [signal].concat(args);
 			for(var i = 0, sub; sub = this._subscribers.__any[i]; ++i) {
-				sub.apply(window, args);
+				sub.apply(PKG.global, args);
 			}
 		}
 		

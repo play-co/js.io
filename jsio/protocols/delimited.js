@@ -1,4 +1,5 @@
-jsio('import Class, log, jsio.logging, jsio.interfaces');
+PKG('from base import *');
+PKG('import jsio.logging, jsio.interfaces');
 
 var logger = jsio.logging.getLogger('DelimitedProtocol')
 exports.DelimitedProtocol = Class(jsio.interfaces.Protocol, function(supr) {

@@ -1,4 +1,4 @@
-jsio('import Class, bind, log');
+PKG('from base import *');
 
 var loggers = {}
 var levels = exports.levels = {

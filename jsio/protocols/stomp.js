@@ -1,6 +1,7 @@
-jsio('import Class, bind, jsio.logging');
-jsio('from jsio.protocols.buffered import BufferedProtocol');
-jsio('from jsio.util.sprintf import sprintf');
+PKG('from base import *');
+PKG('import jsio.logging');
+PKG('from jsio.protocols.buffered import BufferedProtocol');
+PKG('from jsio.util.sprintf import sprintf');
 
 var logger = jsio.logging.getLogger('StompProtocol');
 

@@ -1,5 +1,6 @@
-jsio('import Class, bind, jsio.logging, jsio.interfaces');
-jsio('from jsio.csp.client import CometSession');
+PKG('from base import *');
+PKG('import jsio.logging, jsio.interfaces');
+PKG('from jsio.csp.client import CometSession');
 
 var logger = jsio.logging.getLogger('env.browser.csp');
 

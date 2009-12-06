@@ -30,14 +30,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
 
-jsio('import log, Class, bind');
-jsio('import jsio.std.uuid as uuid');
-jsio('import jsio.std.utf8 as utf8');
-jsio('import jsio.std.base64 as base64');
-jsio('from .util import *');
-jsio('import jsio.logging');
-var http = jsio.node.require('http');
+PKG('from base import *');
+PKG('import jsio.std.uuid as uuid');
+PKG('import jsio.std.utf8 as utf8');
+PKG('import jsio.std.base64 as base64');
+PKG('import jsio.logging');
+PKG('from .util import *');
 
+var http = PKG.__env.require('http');
 
 var logger = jsio.logging.getLogger('node.csp.server');
 
@@ -98,7 +98,7 @@ csp.Session = Class(function() {
 		this.resetTimeoutTimer();
 	};
 	this.teardownSession = function () {
-		myClearTimeout(this.durationTimer);
+		$clearTimeout(this.durationTimer);
 		this.connection.readyState = (this.connection.readyState === 'open' ? 'writeOnly' : 'closed');
 		this.connection.emit('eof');
 		// XXX when the client calls close, do we want to allow the server to
@@ -153,7 +153,7 @@ csp.Session = Class(function() {
 		this.durationTimer = $setTimeout(bind(this, this.completeResponse), duration);
 	};
 	this.resetIntervalTimer = function () {
-		myClearTimeout(this.intervalTimer);
+		$clearTimeout(this.intervalTimer);
 		if (this.variables.interval === '0') {
 			return;
 		};
@@ -161,7 +161,7 @@ csp.Session = Class(function() {
 		this.intervalTimer = $setTimeout(bind(this, this.sendBatch), interval);
 	};
 	this.resetTimeoutTimer = function () {
-		myClearTimeout(this.timeoutTimer);
+		$clearTimeout(this.timeoutTimer);
 		// Give the client 50% longer than the duration of a comet request before 
 		// we time them out.
 		var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
@@ -212,15 +212,15 @@ csp.Session = Class(function() {
 			this.cometResponse.sendBody(body);
 			this.cometResponse.finish();
 			this.cometResponse = null;
-			myClearTimeout(this.durationTimer);
+			$clearTimeout(this.durationTimer);
 		};
 	};
 	this.completeResponse = function() {
 		if (this.isStreaming()) {
 			this.cometResponse.finish(); // close a stream
 			this.cometResponse = null;
-			myClearTimeout(this.durationTimer);
-			myClearTimeout(this.intervalTimer);
+			$clearTimeout(this.durationTimer);
+			$clearTimeout(this.intervalTimer);
 		} else {
 			this.sendBatch() // send empty batch to poll/longpoll
 		};

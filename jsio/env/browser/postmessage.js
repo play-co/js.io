@@ -1,5 +1,6 @@
-jsio('import Class, log, bind, jsio.interfaces');
-jsio('from jsio.util.browser import $');
+PKG('from std import *');
+PKG('import jsio.interfaces');
+PKG('from browser import $');
 
 exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 	var ID = 0;

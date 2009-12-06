@@ -1,5 +1,5 @@
-jsio('import Class, bind');
-jsio('import jsio.logging');
+PKG('from base import *');
+PKG('import jsio.logging');
 
 var logger = jsio.logging.getLogger('uri');
 

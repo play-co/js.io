@@ -1,7 +1,7 @@
-jsio('import log, bind');
+PKG('from base import *');
 
 function getObj(objectName, transportName, envName) {
-	jsio('from .env.' + (envName || jsio.__env) + '.' + transportName + ' import ' + objectName + ' as result');
+	PKG('from .env.' + (envName || PKG.__env.getName()) + '.' + transportName + ' import ' + objectName + ' as result');
 	return result;
 }
 

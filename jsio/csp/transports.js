@@ -1,9 +1,9 @@
-jsio('import Class, bind');
-jsio('import jsio.std.uri as uri'); 
-jsio('import jsio.std.base64 as base64');
-jsio('import jsio.logging');
-jsio('import .errors');
-jsio('from jsio.util.browserdetect import BrowserDetect');
+PKG('from base import *');
+PKG('import jsio.std.uri as uri'); 
+PKG('import jsio.std.base64 as base64');
+PKG('import jsio.logging');
+PKG('import .errors');
+PKG('from jsio.util.browserdetect import BrowserDetect');
 
 var logger = jsio.logging.getLogger("csp.transports");
 exports.allTransports = {};

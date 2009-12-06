@@ -1,6 +1,7 @@
-jsio('import Class, log, jsio.logging');
-jsio('import jsio.std.utf8 as utf8');
-jsio('from jsio.protocols.buffered import BufferedProtocol');
+PKG('from base import *');
+PKG('import jsio.logging');
+PKG('import jsio.std.utf8 as utf8');
+PKG('from jsio.protocols.buffered import BufferedProtocol');
 
 /*
 works like this:
