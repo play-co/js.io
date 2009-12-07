@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="../../jsio.js"></script>
+	<script src="../../../PKG.js"></script>
 	<script>
-	jsio.require('jsio.interfaces');
-	ConsoleClient = jsio.Class(jsio.interfaces.Protocol, function() {
+	PKG('from base import *');
+	PKG('import net.interfaces');
+
+	ConsoleClient = Class(net.interfaces.Protocol, function() {
 		var parity = true;
 		this.connectionMade = function() {
 			document.getElementById('con').style.display = 'block';
@@ -51,7 +53,7 @@
 			client = new ConsoleClient();
 			var match = window.location.search.substring(1).match('^(.*&)?protocol=([^&]*)');
 			var protocolName = match ? match[2] : 'postmessage';
-			jsio.connect(client, protocolName, {host: "localhost", port: 5555});
+			net.connect(client, protocolName, {host: "localhost", port: 5555});
 			connectBtn.innerHTML = 'disconnect';
 			connectBtn.onclick = disconnect;
 		};

@@ -1,7 +1,7 @@
 PKG('from base import *');
-PKG('from jsio.interfaces import PubSub');
+PKG('import lib.PubSub as PubSub');
 PKG('from ..constants import *');
-PKG('from jsio.util.browser import $');
+PKG('from net.util.browser import $');
 
 exports.WorldPlayer = Class(PubSub, function() {
 	this.init = function(params) {

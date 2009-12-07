@@ -1,6 +1,6 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, logging');
-PKG('from jsio.protocols.delimited import DelimitedProtocol');
+PKG('import net.interfaces, logging');
+PKG('from net.protocols.delimited import DelimitedProtocol');
 
 var logger = logging.getLogger('RTJPProtocol')
 exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {

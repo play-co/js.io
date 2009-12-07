@@ -1,10 +1,10 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, logging');
+PKG('import net.interfaces, logging');
 PKG('from .csp.server import createServer');
 
 var logger = logging.getLogger('node.csp');
 
-var Transport = Class(jsio.interfaces.Transport, function() {
+var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(socket) {
 		this._socket = socket;
 		logger.debug('init', socket);
@@ -27,7 +27,7 @@ var Transport = Class(jsio.interfaces.Transport, function() {
 	}
 });
 
-exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
+exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	this.listen = function() {
 		var s = createServer(bind(this, function(socket) {
 			logger.info("Incoming connection");

@@ -1,6 +1,6 @@
 PKG('from base import *');
-PKG('import jsio, logging');
-PKG('from jsio.util.browser import $');
+PKG('import net, logging');
+PKG('from net.util.browser import $');
 PKG('from .world.constants import *');
 PKG('from .world.client import *');
 

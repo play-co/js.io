@@ -1,8 +1,8 @@
 PKG('from base import *');
-PKG('import jsio.interfaces');
+PKG('import net.interfaces');
 PKG('from browser import $');
 
-exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
+exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
 	
 	this.init = function() {
@@ -50,7 +50,7 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 	}
 });
 
-exports.Connector = Class(jsio.interfaces.Connector, function() {
+exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
 		window.opener.postMessage(JSON.stringify({type:"open"}), '*');
@@ -77,7 +77,7 @@ exports.Connector = Class(jsio.interfaces.Connector, function() {
 	}
 });
 
-exports.Transport = Class(jsio.interfaces.Transport, function() {
+exports.Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(win) {
 		this._win = win;
 	}

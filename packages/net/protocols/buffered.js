@@ -1,8 +1,8 @@
 PKG('from base import *');
 
 PKG('import logging');
-PKG('from jsio.interfaces import Protocol');
-PKG('from jsio.buffer import Buffer');
+PKG('from net.interfaces import Protocol');
+PKG('from net.buffer import Buffer');
 
 var logger = logging.getLogger('Buffered');
 

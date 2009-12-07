@@ -84,7 +84,9 @@
 			}
 			return false;
 		}
+
 		this.require = require;
+		this.include = include;
 	}
 	
 	function ENV_browser() {
@@ -321,7 +323,7 @@
 				try {
 					var module = sourceCache[pkg] || loadModule(pkg);
 				} catch(e) {
-					ENV.log('Error executing \'' + request + '\': could not load module ' + pkg);
+					ENV.log('\nError executing \'', request, '\': could not load module', pkg, '\n\tpath:', path, '\n\trequest:', request, '\n');
 					throw e;
 				}
 				

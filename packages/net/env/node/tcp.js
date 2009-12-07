@@ -1,10 +1,10 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, logging');
+PKG('import net.interfaces, logging');
 
-var nodeTcp = jsio.node.require('tcp');
+var nodeTcp = PKG.__env.require('tcp');
 var logger = logging.getLogger('node.tcp');
 
-var Transport = Class(jsio.interfaces.Transport, function() {
+var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(socket) {
 		this._socket = socket;
 	}
@@ -24,7 +24,7 @@ var Transport = Class(jsio.interfaces.Transport, function() {
 	}
 });
 
-exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
+exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	this.listen = function() {
 		var s = nodeTcp.createServer(bind(this, function(socket) {
 			socket.setEncoding("utf8");

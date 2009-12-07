@@ -1,10 +1,10 @@
 PKG('from base import *');
-PKG('import logging, jsio.interfaces');
-PKG('from jsio.csp.client import CometSession');
+PKG('import logging, net.interfaces');
+PKG('from net.csp.client import CometSession');
 
 var logger = logging.getLogger('env.browser.csp');
 
-exports.Connector = Class(jsio.interfaces.Connector, function() {
+exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		var conn = new CometSession();
 		conn.onconnect = bind(this, function() {
@@ -22,7 +22,7 @@ exports.Connector = Class(jsio.interfaces.Connector, function() {
 	}
 });
 
-var Transport = Class(jsio.interfaces.Transport, function() {
+var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(conn) {
 		this._conn = conn;
 	}

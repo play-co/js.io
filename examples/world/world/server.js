@@ -1,6 +1,6 @@
 PKG('from base import *');
-PKG('from jsio.interfaces import Server');
-PKG('from jsio.protocols.rtjp import RTJPProtocol');
+PKG('from net.interfaces import Server');
+PKG('from net.protocols.rtjp import RTJPProtocol');
 PKG('from .constants import *');
 
 var logger = logging.getLogger('world.server');

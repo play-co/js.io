@@ -1,10 +1,10 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, logging');
+PKG('import net.interfaces, logging');
 
 var logger = logging.getLogger('EchoProtocol');
 logger.setLevel(0);
 
-exports.Protocol = Class(jsio.interfaces.Protocol, function() {
+exports.Protocol = Class(net.interfaces.Protocol, function() {
 	this.connectionMade = function() {
 		logger.debug('in connectionMade');
 		this.transport.write('Welcome')
@@ -19,7 +19,7 @@ exports.Protocol = Class(jsio.interfaces.Protocol, function() {
 	}
 });
 
-exports.Server = Class(jsio.interfaces.Server, function(supr) {
+exports.Server = Class(net.interfaces.Server, function(supr) {
 	this.init = function() {
 		supr(this, 'init', [exports.Protocol]);
 	}

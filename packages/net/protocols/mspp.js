@@ -1,8 +1,8 @@
 PKG('from base import *');
-PKG('import jsio');
+PKG('import net');
+PKG('from net.protocols.buffered import BufferedProtocol');
 PKG('import logging');
 PKG('import std.utf8 as utf8');
-PKG('from jsio.protocols.buffered import BufferedProtocol');
 
 /*
 works like this:
@@ -119,7 +119,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
 	this.openStream = function(stream, host, port) {
 		if (this.state == state.closed) {
 			this.state = state.connecting;
-			jsio.connect(this, this.transportType, this.transportOptions);
+			net.connect(this, this.transportType, this.transportOptions);
 		}
 		var id = ++this.currentId;
 		this.streams[id] = stream;

@@ -1,12 +1,12 @@
-jsio('import logging');
-jsio('import world.server as server');
+PKG('import net, logging');
+PKG('import world.server as server');
 
 logging.getLogger('RTJPProtocol').setLevel(0);
 logging.getLogger('world.server').setLevel(1);
 
 worldServer = new server.WorldServer();
 
-var listener = jsio.listen(worldServer, 'postmessage', {
+var listener = net.listen(worldServer, 'postmessage', {
 	clientUrl: 'index.html?transport=postmessage'
 })
 var oldOnMessage = listener._onMessage;

@@ -1,7 +1,7 @@
 PKG('from base import *');
-PKG('import jsio, logging');
-PKG('from jsio.interfaces import PubSub');
-PKG('from jsio.protocols.rtjp import RTJPProtocol');
+PKG('import net, logging');
+PKG('import lib.PubSub as PubSub');
+PKG('from net.protocols.rtjp import RTJPProtocol');
 PKG('from ..constants import *');
 
 var logger = logging.getLogger('world.client');
@@ -68,7 +68,7 @@ exports.WorldProtocol = Class([RTJPProtocol, PubSub], function(supr) {
 		this.url = url || this.url;
 		this.transport = transport || this.transport || 'csp';
 		if(!this._isConnected) {
-			jsio.connect(this, this.transport, {url: this.url});
+			net.connect(this, this.transport, {url: this.url});
 		}
 	}
 	
