@@ -1,8 +1,8 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, jsio.logging');
+PKG('import jsio.interfaces, logging');
 PKG('from .csp.server import createServer');
 
-var logger = jsio.logging.getLogger('node.csp');
+var logger = logging.getLogger('node.csp');
 
 var Transport = Class(jsio.interfaces.Transport, function() {
 	this.init = function(socket) {

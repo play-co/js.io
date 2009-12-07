@@ -1,9 +1,9 @@
 PKG('from base import *');
-PKG('import jsio.logging');
+PKG('import logging');
 PKG('from jsio.protocols.buffered import BufferedProtocol');
 PKG('from jsio.util.sprintf import sprintf');
 
-var logger = jsio.logging.getLogger('StompProtocol');
+var logger = logging.getLogger('StompProtocol');
 
 exports.StompProtocol = Class(BufferedProtocol, function(supr) {
 

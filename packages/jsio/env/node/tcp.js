@@ -1,8 +1,8 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, jsio.logging');
+PKG('import jsio.interfaces, logging');
 
 var nodeTcp = jsio.node.require('tcp');
-var logger = jsio.logging.getLogger('node.tcp');
+var logger = logging.getLogger('node.tcp');
 
 var Transport = Class(jsio.interfaces.Transport, function() {
 	this.init = function(socket) {

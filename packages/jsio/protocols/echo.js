@@ -1,7 +1,7 @@
 PKG('from base import *');
-PKG('import jsio.interfaces, jsio.logging');
+PKG('import jsio.interfaces, logging');
 
-var logger = jsio.logging.getLogger('EchoProtocol');
+var logger = logging.getLogger('EchoProtocol');
 logger.setLevel(0);
 
 exports.Protocol = Class(jsio.interfaces.Protocol, function() {

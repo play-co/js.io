@@ -1,8 +1,8 @@
 PKG('from base import *');
-PKG('import jsio.logging');
+PKG('import logging');
 PKG('from jsio.interfaces import Protocol');
 
-var logger = jsio.logging.getLogger('jsio.buffer.Buffer');
+var logger = logging.getLogger('jsio.buffer.Buffer');
 
 var EmptyBufferError = exports.EmptyBufferError = Class(function () {
 	this.init = function(message) { this.message = message; }

@@ -1,11 +1,11 @@
 PKG('from base import *');
 PKG('import std.uri as uri'); 
 PKG('import std.base64 as base64');
-PKG('import jsio.logging');
+PKG('import logging');
 PKG('import .errors');
 PKG('from jsio.util.browserdetect import BrowserDetect');
 
-var logger = jsio.logging.getLogger("csp.transports");
+var logger = logging.getLogger("csp.transports");
 exports.allTransports = {};
 
 exports.registerTransport = function(name, transport) {
@@ -236,7 +236,7 @@ exports.registerTransport('xhr',
 
 exports.registerTransport('jsonp', 
 			  Class(baseTransport, function(supr) {
-				    var logger = jsio.logging.getLogger('csp.transports.jsonp');
+				    var logger = logging.getLogger('csp.transports.jsonp');
 				    
 				    var createIframe = function() {
 					var i = document.createElement("iframe");

@@ -34,12 +34,12 @@ PKG('from base import *');
 PKG('import std.uuid as uuid');
 PKG('import std.utf8 as utf8');
 PKG('import std.base64 as base64');
-PKG('import jsio.logging');
+PKG('import logging');
 PKG('from .util import *');
 
 var http = PKG.__env.require('http');
 
-var logger = jsio.logging.getLogger('node.csp.server');
+var logger = logging.getLogger('node.csp.server');
 
 var csp = this.csp = exports;
 
@@ -474,7 +474,7 @@ csp.Server = Class(process.EventEmitter, function () {
 
 /* // un-comment to run echo server when this file runs
 
-jsio.node.include('/utils.js');
+PKG.__env.include('/utils.js');
 function start_echo_server () {
 	var server = csp.createServer(function(connection) {
 		connection.addListener('receive', function (data) {

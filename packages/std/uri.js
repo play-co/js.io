@@ -1,7 +1,7 @@
 PKG('from base import *');
-PKG('import jsio.logging');
+PKG('import logging');
 
-var logger = jsio.logging.getLogger('uri');
+var logger = logging.getLogger('uri');
 
 var attrs = [ 
     "source",

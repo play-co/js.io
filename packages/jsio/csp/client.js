@@ -2,11 +2,11 @@ PKG('from base import *');
 PKG('import std.base64 as base64');
 PKG('import std.utf8 as utf8');
 PKG('import std.uri as uri'); 
-PKG('import jsio.logging');
+PKG('import logging');
 PKG('import .errors');
 PKG('import .transports');
 
-var logger = jsio.logging.getLogger("csp.client");
+var logger = logging.getLogger("csp.client");
 
 var READYSTATE = exports.READYSTATE = {
 	INITIAL: 0,

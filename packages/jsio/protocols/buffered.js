@@ -1,10 +1,10 @@
 PKG('from base import *');
 
-PKG('import jsio.logging');
+PKG('import logging');
 PKG('from jsio.interfaces import Protocol');
 PKG('from jsio.buffer import Buffer');
 
-var logger = jsio.logging.getLogger('Buffered');
+var logger = logging.getLogger('Buffered');
 
 exports.BufferedProtocol = Class(Protocol, function(supr) {
 

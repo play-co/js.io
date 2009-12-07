@@ -1,15 +1,15 @@
 PKG('from base import *');
-PKG('import jsio, jsio.logging');
+PKG('import jsio, logging');
 PKG('from jsio.util.browser import $');
 PKG('from .world.constants import *');
 PKG('from .world.client import *');
 
-// jsio.logging.getLogger('world.client').setLevel(0);
-// jsio.logging.getLogger('csp.transports.jsonp').setLevel(0);
-// jsio.logging.getLogger('csp.client').setLevel(0);
-// jsio.logging.getLogger('csp.transports').setLevel(0);
-// jsio.logging.getLogger('DelimitedProtocol').setLevel(0);
-jsio.logging.setProduction(true);
+// logging.getLogger('world.client').setLevel(0);
+// logging.getLogger('csp.transports.jsonp').setLevel(0);
+// logging.getLogger('csp.client').setLevel(0);
+// logging.getLogger('csp.transports').setLevel(0);
+// logging.getLogger('DelimitedProtocol').setLevel(0);
+logging.setProduction(true);
 
 function addToHistory(params) {
 	if(!params || !params.msg) { return; }

@@ -1,5 +1,6 @@
 PKG('from base import *');
-PKG('import jsio.logging');
+PKG('import jsio');
+PKG('import logging');
 PKG('import std.utf8 as utf8');
 PKG('from jsio.protocols.buffered import BufferedProtocol');
 
@@ -25,8 +26,8 @@ length_after_colon:id,2datadatadata
 */
 
 var loggers = {};
-loggers.stream = jsio.logging.getLogger('MSPPStream');
-loggers.protocol = jsio.logging.getLogger('MSPPProtocol');
+loggers.stream = logging.getLogger('MSPPStream');
+loggers.protocol = logging.getLogger('MSPPProtocol');
 loggers.stream.setLevel(0);
 loggers.protocol.setLevel(0);
 

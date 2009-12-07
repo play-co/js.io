@@ -1,8 +1,8 @@
 PKG('from base import *');
-PKG('import jsio.logging, jsio.interfaces');
+PKG('import logging, jsio.interfaces');
 PKG('from jsio.csp.client import CometSession');
 
-var logger = jsio.logging.getLogger('env.browser.csp');
+var logger = logging.getLogger('env.browser.csp');
 
 exports.Connector = Class(jsio.interfaces.Connector, function() {
 	this.connect = function() {

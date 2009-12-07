@@ -3,7 +3,7 @@ PKG('from jsio.interfaces import Server');
 PKG('from jsio.protocols.rtjp import RTJPProtocol');
 PKG('from .constants import *');
 
-var logger = jsio.logging.getLogger('world.server');
+var logger = logging.getLogger('world.server');
 logger.setLevel(0);
 
 exports.WorldServer = Class(Server, function(supr) {

@@ -1,10 +1,10 @@
 PKG('from base import *');
-PKG('import jsio, jsio.logging');
+PKG('import jsio, logging');
 PKG('from jsio.interfaces import PubSub');
 PKG('from jsio.protocols.rtjp import RTJPProtocol');
 PKG('from ..constants import *');
 
-var logger = jsio.logging.getLogger('world.client');
+var logger = logging.getLogger('world.client');
 logger.setLevel(0);
 
 var World = Class(function() {

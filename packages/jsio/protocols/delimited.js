@@ -1,7 +1,7 @@
 PKG('from base import *');
-PKG('import jsio.logging, jsio.interfaces');
+PKG('import logging, jsio.interfaces');
 
-var logger = jsio.logging.getLogger('DelimitedProtocol')
+var logger = logging.getLogger('DelimitedProtocol')
 exports.DelimitedProtocol = Class(jsio.interfaces.Protocol, function(supr) {
 
 	this.init = function(delimiter) {
