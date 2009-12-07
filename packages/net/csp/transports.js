@@ -1,9 +1,9 @@
-PKG('from base import *');
-PKG('import std.uri as uri'); 
-PKG('import std.base64 as base64');
-PKG('import logging');
-PKG('import .errors');
-PKG('from util.browserdetect import BrowserDetect');
+jsio('from base import *');
+jsio('import std.uri as uri'); 
+jsio('import std.base64 as base64');
+jsio('import logging');
+jsio('import .errors');
+jsio('from util.browserdetect import BrowserDetect');
 
 var logger = logging.getLogger("csp.transports");
 exports.allTransports = {};

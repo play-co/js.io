@@ -1,5 +1,5 @@
-PKG('from base import *');
-PKG('import logging, net.interfaces');
+jsio('from base import *');
+jsio('import logging, net.interfaces');
 
 var logger = logging.getLogger('DelimitedProtocol')
 exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {

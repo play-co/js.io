@@ -1,5 +1,5 @@
-PKG('import net.env');
-PKG('import std.JSON as JSON');
+jsio('import net.env');
+jsio('import std.JSON as JSON');
 
 JSON.createGlobal(); // create the global JSON object if it doesn't already exist
 
@@ -17,6 +17,6 @@ exports.connect = function(protocolInstance, transportName, opts) {
 }
 
 exports.quickServer = function(protocolClass) {
-	PKG('import net.interfaces');
+	jsio('import net.interfaces');
 	return new net.interfaces.Server(protocolClass);
 }

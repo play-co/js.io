@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="../../../PKG.js"></script>
+	<script src="../../../jsio.js"></script>
 	<script>
-	PKG('from base import *');
-	PKG('import net.interfaces');
+	jsio('from base import *');
+	jsio('import net.interfaces');
 
 	ConsoleClient = Class(net.interfaces.Protocol, function() {
 		var parity = true;

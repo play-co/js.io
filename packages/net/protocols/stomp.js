@@ -1,7 +1,7 @@
-PKG('from base import *');
-PKG('import logging');
-PKG('from net.protocols.buffered import BufferedProtocol');
-PKG('from util.sprintf import sprintf');
+jsio('from base import *');
+jsio('import logging');
+jsio('from net.protocols.buffered import BufferedProtocol');
+jsio('from util.sprintf import sprintf');
 
 var logger = logging.getLogger('StompProtocol');
 

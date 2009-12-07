@@ -1,6 +1,6 @@
-PKG('from base import *');
+jsio('from base import *');
 
-var ctx = PKG.__env.global;
+var ctx = jsio.__env.global;
 
 exports = Class(function() {
 	this.publish = function(signal) {

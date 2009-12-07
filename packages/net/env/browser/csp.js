@@ -1,6 +1,6 @@
-PKG('from base import *');
-PKG('import logging, net.interfaces');
-PKG('from net.csp.client import CometSession');
+jsio('from base import *');
+jsio('import logging, net.interfaces');
+jsio('from net.csp.client import CometSession');
 
 var logger = logging.getLogger('env.browser.csp');
 

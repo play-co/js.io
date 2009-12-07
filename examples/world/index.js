@@ -1,8 +1,8 @@
-PKG('from base import *');
-PKG('import net, logging');
-PKG('from util.browser import $');
-PKG('from .world.constants import *');
-PKG('from .world.client import *');
+jsio('from base import *');
+jsio('import net, logging');
+jsio('from util.browser import $');
+jsio('from .world.constants import *');
+jsio('from .world.client import *');
 
 // logging.getLogger('world.client').setLevel(0);
 // logging.getLogger('csp.transports.jsonp').setLevel(0);

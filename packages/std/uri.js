@@ -1,5 +1,5 @@
-PKG('from base import *');
-PKG('import logging');
+jsio('from base import *');
+jsio('import logging');
 
 var logger = logging.getLogger('uri');
 

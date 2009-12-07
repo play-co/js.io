@@ -1,4 +1,4 @@
-PKG('from base import *');
+jsio('from base import *');
 
 var loggers = {}
 var levels = exports.levels = {

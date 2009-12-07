@@ -30,14 +30,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
 
-PKG('from base import *');
-PKG('import std.uuid as uuid');
-PKG('import std.utf8 as utf8');
-PKG('import std.base64 as base64');
-PKG('import logging');
-PKG('from .util import *');
+jsio('from base import *');
+jsio('import std.uuid as uuid');
+jsio('import std.utf8 as utf8');
+jsio('import std.base64 as base64');
+jsio('import logging');
+jsio('from .util import *');
 
-var http = PKG.__env.require('http');
+var http = jsio.__env.require('http');
 
 var logger = logging.getLogger('node.csp.server');
 
@@ -474,7 +474,7 @@ csp.Server = Class(process.EventEmitter, function () {
 
 /* // un-comment to run echo server when this file runs
 
-PKG.__env.include('/utils.js');
+jsio.__env.include('/utils.js');
 function start_echo_server () {
 	var server = csp.createServer(function(connection) {
 		connection.addListener('receive', function (data) {

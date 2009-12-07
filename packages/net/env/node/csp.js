@@ -1,6 +1,6 @@
-PKG('from base import *');
-PKG('import net.interfaces, logging');
-PKG('from .csp.server import createServer');
+jsio('from base import *');
+jsio('import net.interfaces, logging');
+jsio('from .csp.server import createServer');
 
 var logger = logging.getLogger('node.csp');
 

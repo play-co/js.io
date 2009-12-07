@@ -1,7 +1,7 @@
-PKG('from base import *');
-PKG('import net.interfaces, logging');
+jsio('from base import *');
+jsio('import net.interfaces, logging');
 
-var nodeTcp = PKG.__env.require('tcp');
+var nodeTcp = jsio.__env.require('tcp');
 var logger = logging.getLogger('node.tcp');
 
 var Transport = Class(net.interfaces.Transport, function() {

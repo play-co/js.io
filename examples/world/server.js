@@ -1,5 +1,5 @@
-PKG('import net, logging');
-PKG('import world.server as server');
+jsio('import net, logging');
+jsio('import world.server as server');
 
 logging.getLogger('RTJPProtocol').setLevel(0);
 logging.getLogger('world.server').setLevel(1);

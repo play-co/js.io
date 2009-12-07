@@ -1,4 +1,4 @@
-PKG('external .sizzle import Sizzle');
+jsio('external .sizzle import Sizzle');
 
 var $ = exports.$ = Sizzle;
 

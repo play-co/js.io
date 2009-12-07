@@ -1,4 +1,4 @@
-PKG('from base import *');
+jsio('from base import *');
 
 exports.Later = Class(function() {
 	this.init = function() {

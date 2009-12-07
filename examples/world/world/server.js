@@ -1,7 +1,7 @@
-PKG('from base import *');
-PKG('from net.interfaces import Server');
-PKG('from net.protocols.rtjp import RTJPProtocol');
-PKG('from .constants import *');
+jsio('from base import *');
+jsio('from net.interfaces import Server');
+jsio('from net.protocols.rtjp import RTJPProtocol');
+jsio('from .constants import *');
 
 var logger = logging.getLogger('world.server');
 logger.setLevel(0);

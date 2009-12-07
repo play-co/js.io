@@ -1,8 +1,8 @@
-PKG('from base import *');
-PKG('import net');
-PKG('from net.protocols.buffered import BufferedProtocol');
-PKG('import logging');
-PKG('import std.utf8 as utf8');
+jsio('from base import *');
+jsio('import net');
+jsio('from net.protocols.buffered import BufferedProtocol');
+jsio('import logging');
+jsio('import std.utf8 as utf8');
 
 /*
 works like this:

@@ -1,4 +1,4 @@
-exports.log = PKG.__env.log;
+exports.log = jsio.__env.log;
 
 exports.bind = function(context, method /*, VARGS*/) {
 	if(arguments.length > 2) {

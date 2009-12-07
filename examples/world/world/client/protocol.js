@@ -1,8 +1,8 @@
-PKG('from base import *');
-PKG('import net, logging');
-PKG('import lib.PubSub as PubSub');
-PKG('from net.protocols.rtjp import RTJPProtocol');
-PKG('from ..constants import *');
+jsio('from base import *');
+jsio('import net, logging');
+jsio('import lib.PubSub as PubSub');
+jsio('from net.protocols.rtjp import RTJPProtocol');
+jsio('from ..constants import *');
 
 var logger = logging.getLogger('world.client');
 logger.setLevel(0);

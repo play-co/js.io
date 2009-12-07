@@ -1,5 +1,5 @@
-PKG('from base import *');
-PKG('import net.interfaces, logging');
+jsio('from base import *');
+jsio('import net.interfaces, logging');
 
 var logger = logging.getLogger('EchoProtocol');
 logger.setLevel(0);

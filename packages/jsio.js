@@ -1,4 +1,4 @@
-// PKG/browser.js
+// jsio/browser.js
 
 ;(function() {
 	var ENV, sourceCache = {};
@@ -11,12 +11,12 @@
 		}
 	}
 	
-	PKG = bind(this, importer, null, '');
-	PKG.__filename = 'PKG.js';
-	PKG.modules = [];
-	PKG.path = {};
-	PKG.setPath = function(path) { PKG.path.__default__ = typeof path == 'string' ? [path] : path; }
-	PKG.setEnv = function(env) {
+	jsio = bind(this, importer, null, '');
+	jsio.__filename = 'jsio.js';
+	jsio.modules = [];
+	jsio.path = {};
+	jsio.setPath = function(path) { jsio.path.__default__ = typeof path == 'string' ? [path] : path; }
+	jsio.setEnv = function(env) {
 		if(ENV && (env == ENV || env == ENV.name)) { return; }
 		
 		if(typeof env == 'string') {
@@ -34,12 +34,12 @@
 			ENV = env;
 		}
 		
-		PKG.__env = ENV;
-		PKG.__dir = ENV.getCwd();
-		if(!PKG.path.__default__) { PKG.setPath(ENV.getPath()); }
+		jsio.__env = ENV;
+		jsio.__dir = ENV.getCwd();
+		if(!jsio.path.__default__) { jsio.setPath(ENV.getPath()); }
 	}
 	
-	PKG.setEnv(typeof node !== 'undefined' && typeof process !== 'undefined' && process.version ? 'node' : 'browser');
+	jsio.setEnv(typeof node !== 'undefined' && typeof process !== 'undefined' && process.version ? 'node' : 'browser');
 	
 	// DONE
 	
@@ -93,7 +93,7 @@
 		var XHR = window.XMLHttpRequest || function() { return new ActiveXObject("Msxml2.XMLHTTP"); }
 		
 		this.global = window;
-		this.global.PKG = PKG;
+		this.global.jsio = jsio;
 		
 		this.log = typeof console != 'undefined' && console.log ? bind(console, 'log') : function() {}
 		
@@ -109,7 +109,7 @@
 		this.getPath = function() {
 			if(!path) {
 				try {
-					var filename = new RegExp('(.*?)' + PKG.__filename + '(\\?.*)?$');
+					var filename = new RegExp('(.*?)' + jsio.__filename + '(\\?.*)?$');
 					var scripts = document.getElementsByTagName('script');
 					for (var i = 0, script; script = scripts[i]; ++i) {
 						var result = script.src.match(filename);
@@ -195,14 +195,14 @@
 			baseMod = pathSegments[0],
 			modPath = pathSegments.join('/');
 		
-		if (baseMod in PKG.path) {
-			var path = PKG.path[baseMod];
+		if (baseMod in jsio.path) {
+			var path = jsio.path[baseMod];
 			if(path.charAt(path.length - 1) != '/') { path += '/'; }
 			return [{filePath: path + modPath + '.js'}];
 		}
 		
 		var out = [];
-		var paths = typeof PKG.path.__default__ == 'string' ? [PKG.path.__default__] : PKG.path.__default__;
+		var paths = typeof jsio.path.__default__ == 'string' ? [jsio.path.__default__] : jsio.path.__default__;
 		for (var i = 0, len = paths.length; i < len; ++i) {
 			var path = paths[i];
 			if(path.length && path.charAt(path.length - 1) != '/') { path += '/'; }
@@ -221,8 +221,8 @@
 			throw new Error("Module not found: " + pathString + " (looked in " + paths.join(', ') + ")");
 		}
 		
-		if (!(module.baseMod in PKG.path)) {
-			PKG.path[module.baseMod] = module.basePath;
+		if (!(module.baseMod in jsio.path)) {
+			jsio.path[module.baseMod] = module.basePath;
 		}
 		
 		return module;
@@ -274,7 +274,7 @@
 				imports[imports.length] = as ? {from: fullPkg, as: as} : {from: fullPkg, as: pkg};
 			});
 		} else {
-			var msg = 'Invalid PKG request: PKG(\'' + request + '\')';
+			var msg = 'Invalid jsio request: jsio(\'' + request + '\')';
 			throw SyntaxError ? new SyntaxError(msg) : new Error(msg);
 		}
 		return imports;
@@ -286,16 +286,16 @@
 			global: ENV.global
 		};
 		
-		ctx.PKG = bind(this, importer, ctx, pkgPath);
+		ctx.jsio = bind(this, importer, ctx, pkgPath);
 		
 		// TODO: FIX for "trailing ." case
 		var cwd = ENV.getCwd();
 		var i = filePath.lastIndexOf('/');
 
-		ctx.PKG.__env = PKG.__env;
-		ctx.PKG.__dir = i > 0 ? makeRelativePath(filePath.substring(0, i), cwd) : '';
-		ctx.PKG.__filename = i > 0 ? filePath.substring(i) : filePath;
-		ctx.PKG.__path = pkgPath;
+		ctx.jsio.__env = jsio.__env;
+		ctx.jsio.__dir = i > 0 ? makeRelativePath(filePath.substring(0, i), cwd) : '';
+		ctx.jsio.__filename = i > 0 ? filePath.substring(i) : filePath;
+		ctx.jsio.__path = pkgPath;
 		
 		return ctx;
 	};
@@ -316,7 +316,7 @@
 		// import each item in the request
 		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
-			var modules = PKG.modules;
+			var modules = jsio.modules;
 			
 			// eval any packages that we don't know about already
 			if(!(pkg in modules)) {

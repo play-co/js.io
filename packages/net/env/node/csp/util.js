@@ -27,7 +27,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-PKG('from base import *');
+jsio('from base import *');
 
 exports.debug = function () {
 	var message = [];

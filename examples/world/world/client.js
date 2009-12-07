@@ -1,4 +1,4 @@
-PKG('import .client.player, .client.protocol');
+jsio('import .client.player, .client.protocol');
 
 exports = {
 	WorldPlayer: client.player.WorldPlayer,

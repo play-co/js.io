@@ -1,6 +1,6 @@
-PKG('from base import *');
-PKG('import net.interfaces');
-PKG('from browser import $');
+jsio('from base import *');
+jsio('import net.interfaces');
+jsio('from browser import $');
 
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
@@ -9,8 +9,8 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		supr(this, 'init', arguments);
 		this._clients = {};
 		if (!this._opts.clientUrl) {
-			console.log(PKG.__dir);
-			this._opts.clientUrl = PKG.__dir + '/networkConsole.html';
+			console.log(jsio.__dir);
+			this._opts.clientUrl = jsio.__dir + '/networkConsole.html';
 		}
 	}
 	
