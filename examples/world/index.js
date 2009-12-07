@@ -1,6 +1,6 @@
 PKG('from base import *');
 PKG('import net, logging');
-PKG('from net.util.browser import $');
+PKG('from util.browser import $');
 PKG('from .world.constants import *');
 PKG('from .world.client import *');
 

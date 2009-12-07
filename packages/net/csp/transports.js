@@ -3,7 +3,7 @@ PKG('import std.uri as uri');
 PKG('import std.base64 as base64');
 PKG('import logging');
 PKG('import .errors');
-PKG('from net.util.browserdetect import BrowserDetect');
+PKG('from util.browserdetect import BrowserDetect');
 
 var logger = logging.getLogger("csp.transports");
 exports.allTransports = {};

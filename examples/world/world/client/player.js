@@ -1,7 +1,7 @@
 PKG('from base import *');
 PKG('import lib.PubSub as PubSub');
 PKG('from ..constants import *');
-PKG('from net.util.browser import $');
+PKG('from util.browser import $');
 
 exports.WorldPlayer = Class(PubSub, function() {
 	this.init = function(params) {
