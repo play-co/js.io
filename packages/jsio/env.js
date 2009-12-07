@@ -1,7 +1,7 @@
 PKG('from base import *');
 
 function getObj(objectName, transportName, envName) {
-	PKG('from .env.' + (envName || PKG.__env.getName()) + '.' + transportName + ' import ' + objectName + ' as result');
+	PKG('from .env.' + (envName || PKG.__env.name) + '.' + transportName + ' import ' + objectName + ' as result');
 	return result;
 }
 

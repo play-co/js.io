@@ -1,7 +1,7 @@
 // PKG/browser.js
 
 ;(function() {
-	var ENV, LOCAL;
+	var ENV, sourceCache = {};
 	
 	function bind(context, method/*, args... */) {
 		var args = Array.prototype.slice.call(arguments, 2);
@@ -11,32 +11,35 @@
 		}
 	}
 	
-	LOCAL = {
-		sourceCache: {},
-		baseModCache: {}
-	};
-	
-	LOCAL.envName = typeof node !== 'undefined' && typeof process !== 'undefined' && process.version ? 'node' : 'browser';
-	switch(LOCAL.envName) {
-		case 'node':
-			ENV = new ENV_node();
-			break;
-		case 'browser':
-		default:
-			ENV = new ENV_browser();
-			break;
+	PKG = bind(this, importer, null, '');
+	PKG.__filename = 'PKG.js';
+	PKG.modules = [];
+	PKG.path = {};
+	PKG.setPath = function(path) { PKG.path.__default__ = typeof path == 'string' ? [path] : path; }
+	PKG.setEnv = function(env) {
+		if(ENV && (env == ENV || env == ENV.name)) { return; }
+		
+		if(typeof env == 'string') {
+			switch(env) {
+				case 'node':
+					ENV = new ENV_node();
+					break;
+				case 'browser':
+				default:
+					ENV = new ENV_browser();
+					break;
+			}
+			ENV.name = env;
+		} else {
+			ENV = env;
+		}
+		
+		PKG.__env = ENV;
+		PKG.__dir = ENV.getCwd();
+		if(!PKG.path.__default__) { PKG.setPath(ENV.getPath()); }
 	}
 	
-	ENV.getName = function() { return LOCAL.envName; }
-	
-	var PKG = ENV.global.PKG = bind(this, importer, ENV.global, '');
-	PKG.__env = ENV;
-	PKG.__dir = ENV.getCwd();
-	PKG.__filename = 'PKG.js';
-	
-	PKG.modules = [];
-	PKG.path = [ENV.getPath()];
-	PKG.global = ENV.global;
+	PKG.setEnv(typeof node !== 'undefined' && typeof process !== 'undefined' && process.version ? 'node' : 'browser');
 	
 	// DONE
 	
@@ -47,6 +50,7 @@
 		this.getPath = function() {};
 		this.eval = function(code, path) {};
 		this.findModule = function(pathString) {};
+		this.log = function(args...) {};
 	}
 	*/
 	
@@ -91,33 +95,33 @@
 		
 		this.log = typeof console != 'undefined' && console.log ? bind(console, 'log') : function() {}
 		
-		var cwd = null;
+		var cwd = null, path = null;
 		this.getCwd = function() {
 			if(!cwd) {
+				var location = window.location.toString();
+				cwd = location.substring(0, location.lastIndexOf('/') + 1);
+			}
+			return cwd;
+		}
+		
+		this.getPath = function() {
+			if(!path) {
 				try {
 					var filename = new RegExp('(.*?)' + PKG.__filename + '(\\?.*)?$');
 					var scripts = document.getElementsByTagName('script');
 					for (var i = 0, script; script = scripts[i]; ++i) {
 						var result = script.src.match(filename);
 						if (result) {
-							if (/^[A-Za-z]*:\/\//.test(result[1])) {
-								cwd = result[1];
-							} else { // IE6 URLs aren't absolute unless we use innerHTML
-								var el = document.createElement('div');
-								el.innerHTML = '<a href="' + result[1].replace(/"/g, '\\\"') + '"></a>';
-								cwd = el.href;
-								el = null;
-							}
+							path = result[1];
+							if (/^[A-Za-z]*:\/\//.test(path)) { path = makeRelativePath(path, this.getCwd()); }
 							break;
 						}
 					}
 				} catch(e) {}
+				
+				if(!path) { path = '.'; }
 			}
-			return cwd;
-		}
-		
-		this.getPath = function() {
-			return this.getCwd();
+			return path;
 		}
 
 		// IE6 won't return an anonymous function from eval, so use the function constructor instead
@@ -176,17 +180,30 @@
 	};
 	
 	function guessModulePath(pathString) {
+		var i = 0;
+		if(pathString.charAt(0) == '.') {
+			var i = 1;
+			while(pathString.charAt(i) == '.') { ++i; }
+			var prefix = ENV.getCwd().split('/').slice(0, -i).join('/');
+			if(prefix && prefix.charAt(prefix.length - 1) != '/') { prefix += '/'; }
+			return [{filePath: prefix + pathString.substring(i).split('.').join('/') + '.js'}];
+		}
+		
 		var pathSegments = pathString.split('.'),
 			baseMod = pathSegments[0],
 			modPath = pathSegments.join('/');
 		
-		if (baseMod in LOCAL.baseModCache) {
-			return [{filePath: LOCAL.baseModCache[baseMod] + modPath + '.js'}];
+		if (baseMod in PKG.path) {
+			var path = PKG.path[baseMod];
+			if(path.charAt(path.length - 1) != '/') { path += '/'; }
+			return [{filePath: path + modPath + '.js'}];
 		}
-
+		
 		var out = [];
-		for (var i = 0, path; path = PKG.path[i]; ++i) {
-			if(path.charAt(path.length - 1) != '/') { path += '/'; } // TODO: can we remove this check
+		var paths = typeof PKG.path.__default__ == 'string' ? [PKG.path.__default__] : PKG.path.__default__;
+		for (var i = 0, len = paths.length; i < len; ++i) {
+			var path = paths[i];
+			if(path.length && path.charAt(path.length - 1) != '/') { path += '/'; }
 			out.push({filePath: path + modPath + '.js', baseMod: baseMod, basePath: path});
 		}
 		return out;
@@ -194,17 +211,16 @@
 	
 	// load a module from a file
 	function loadModule(pathString) {
-		var possibilities = guessModulePath(pathString);
+		var possibilities = guessModulePath(pathString),
 			module = ENV.findModule(possibilities);
-		
 		if(!module) {
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.filePath); }
 			throw new Error("Module not found: " + pathString + " (looked in " + paths.join(', ') + ")");
 		}
 		
-		if (!(module.baseMod in LOCAL.baseModCache)) {
-			LOCAL.baseModCache[module.baseMod] = module.basePath;
+		if (!(module.baseMod in PKG.path)) {
+			PKG.path[module.baseMod] = module.basePath;
 		}
 		
 		return module;
@@ -225,21 +241,17 @@
 		}
 	};
 	
-	function resolveRelativePath(pkg, path) {
-		if(pkg.charAt(0) == '.') {
-			pkg = pkg.substring(1);
-			var segments = path.split('.');
-			while(pkg.charAt(0) == '.') {
-				pkg = pkg.slice(1);
-				segments.pop();
-			}
-			
-			var prefix = segments.join('.');
-			if (prefix) {
-				return prefix + '.' + pkg;
-			}
+	function resolveRelativePath(pkg, path, pathSep) {
+		if(!path || (pathSep = pathSep || '.') != pkg.charAt(0)) { return pkg; }
+		
+		var i = 1;
+		while(pkg.charAt(i) == pathSep) { ++i; }
+		path = path.split(pathSep).slice(0, -i);
+		if(path.length) {
+			path = path.join(pathSep);
+			if(path.charAt(path.length - 1) != pathSep) { path += pathSep; }
 		}
-		return pkg;
+		return path + pkg.substring(i);
 	}
 	
 	function resolveImportRequest(path, request) {
@@ -281,43 +293,40 @@
 		ctx.PKG.__env = PKG.__env;
 		ctx.PKG.__dir = i > 0 ? makeRelativePath(filePath.substring(0, i), cwd) : '';
 		ctx.PKG.__filename = i > 0 ? filePath.substring(i) : filePath;
-		ctx.PKG.global = ENV.global;
+		ctx.PKG.__path = pkgPath;
 		
 		return ctx;
 	};
 	
-	function makeRelativePath(path) {
-		var cwd = ENV.getCwd();
-		var i = path.match('^' + cwd);
-		if (i && i[0] == cwd) {
-			var offset = path[cwd.length] == '/' ? 1 : 0
-			return path.slice(cwd.length + offset);
+	function makeRelativePath(path, relativeTo) {
+		var i = path.match('^' + relativeTo);
+		if (i && i[0] == relativeTo) {
+			var offset = path[relativeTo.length] == '/' ? 1 : 0
+			return path.slice(relativeTo.length + offset);
 		}
 		return path;
 	};
 	
 	function importer(context, path, request, altContext) {
+		context = context || ENV.global;
 		var imports = resolveImportRequest(path, request);
 		
 		// import each item in the request
 		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
 			var pkg = item.from;
-			
-			var j = item.from.lastIndexOf('.');
 			var modules = PKG.modules;
 			
 			// eval any packages that we don't know about already
 			if(!(pkg in modules)) {
 				try {
-					var module = LOCAL.sourceCache[pkg] || loadModule(pkg);
+					var module = sourceCache[pkg] || loadModule(pkg);
 				} catch(e) {
 					ENV.log('Error executing \'' + request + '\': could not load module ' + pkg);
 					throw e;
 				}
 				
 				if(!item.external) {
-					var pkgPath = j > 0 ? item.from.substring(0, j) : '';
-					var newContext = makeContext(pkgPath, module.filePath);
+					var newContext = makeContext(item.from, module.filePath);
 					execModule(newContext, module);
 					modules[pkg] = newContext.exports;
 				} else {
