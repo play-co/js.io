@@ -1,4 +1,4 @@
-require('./packages/PKG');
+require('../../packages/PKG');
 PKG.path.__default__.unshift('packages');
 PKG.path.world = '.';
 
