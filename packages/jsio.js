@@ -1,6 +1,6 @@
 var local = {};
 PKG('import .jsio.env as env', local);
-PKG('import .jsio.std.JSON as JSON', local);
+PKG('import .std.JSON as JSON', local);
 
 local.JSON.createGlobal(); // create the global JSON object if it doesn't already exist
 

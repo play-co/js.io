@@ -31,9 +31,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 // node module or a jsio module.
 
 PKG('from base import *');
-PKG('import jsio.std.uuid as uuid');
-PKG('import jsio.std.utf8 as utf8');
-PKG('import jsio.std.base64 as base64');
+PKG('import std.uuid as uuid');
+PKG('import std.utf8 as utf8');
+PKG('import std.base64 as base64');
 PKG('import jsio.logging');
 PKG('from .util import *');
 

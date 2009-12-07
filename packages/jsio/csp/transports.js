@@ -1,6 +1,6 @@
 PKG('from base import *');
-PKG('import jsio.std.uri as uri'); 
-PKG('import jsio.std.base64 as base64');
+PKG('import std.uri as uri'); 
+PKG('import std.base64 as base64');
 PKG('import jsio.logging');
 PKG('import .errors');
 PKG('from jsio.util.browserdetect import BrowserDetect');

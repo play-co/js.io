@@ -1,4 +1,4 @@
-PKG('from std import *');
+PKG('from base import *');
 PKG('import jsio.interfaces');
 PKG('from browser import $');
 
@@ -9,8 +9,8 @@ exports.Listener = Class(jsio.interfaces.Listener, function(supr) {
 		supr(this, 'init', arguments);
 		this._clients = {};
 		if (!this._opts.clientUrl) {
-			console.log(require.__dir);
-			this._opts.clientUrl = require.__dir + '/networkConsole.html';
+			console.log(PKG.__dir);
+			this._opts.clientUrl = PKG.__dir + '/networkConsole.html';
 		}
 	}
 	

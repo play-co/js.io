@@ -1,6 +1,6 @@
 PKG('from base import *');
 PKG('import jsio.logging');
-PKG('import jsio.std.utf8 as utf8');
+PKG('import std.utf8 as utf8');
 PKG('from jsio.protocols.buffered import BufferedProtocol');
 
 /*
