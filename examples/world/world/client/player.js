@@ -1,7 +1,7 @@
-jsio('import Class, bind');
-jsio('from jsio.interfaces import PubSub');
-jsio('from ..constants import *');
-jsio('from jsio.util.browser import $');
+PKG('from base import *');
+PKG('from jsio.interfaces import PubSub');
+PKG('from ..constants import *');
+PKG('from jsio.util.browser import $');
 
 exports.WorldPlayer = Class(PubSub, function() {
 	this.init = function(params) {

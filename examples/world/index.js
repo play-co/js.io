@@ -1,7 +1,8 @@
-jsio('import Class, bind, jsio.logging');
-jsio('from jsio.util.browser import $');
-jsio('from .world.constants import *');
-jsio('from .world.client import *');
+PKG('from base import *');
+PKG('import jsio, jsio.logging');
+PKG('from jsio.util.browser import $');
+PKG('from .world.constants import *');
+PKG('from .world.client import *');
 
 // jsio.logging.getLogger('world.client').setLevel(0);
 // jsio.logging.getLogger('csp.transports.jsonp').setLevel(0);

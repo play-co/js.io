@@ -12,9 +12,9 @@
      To compile against jsio turnk, run: 
      	jsio_compile -o build/world_client.js index.html
  -->
-<script type="text/javascript" src="jsio/jsio.js"></script>
+<script type="text/javascript" src="../../packages/PKG.js"></script>
 <script type="text/javascript">
-jsio('from .index import *');
+PKG('from .index import *');
 window.onload = init;
 </script>
 <link type="text/css" rel="stylesheet" href="css/world.css" />

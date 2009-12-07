@@ -1,8 +1,7 @@
-jsio('import Class, bind');
-jsio('import jsio.logging');
-jsio('from jsio.interfaces import Server');
-jsio('from jsio.protocols.rtjp import RTJPProtocol');
-jsio('from .constants import *');
+PKG('from base import *');
+PKG('from jsio.interfaces import Server');
+PKG('from jsio.protocols.rtjp import RTJPProtocol');
+PKG('from .constants import *');
 
 var logger = jsio.logging.getLogger('world.server');
 logger.setLevel(0);
@@ -119,7 +118,7 @@ var WorldConnection = Class(RTJPProtocol, function(supr) {
 				for (var username in this.server.players) {
 					presence.push(this.server.players[username].params);
 				}
-logger.debug(presence);
+				
 				this.sendFrame('WELCOME', {
 					presence: presence,
 					history: this.server.history
