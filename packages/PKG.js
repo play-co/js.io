@@ -182,13 +182,13 @@
 	};
 	
 	function guessModulePath(pathString) {
-		var i = 0;
 		if(pathString.charAt(0) == '.') {
-			var i = 1;
-			while(pathString.charAt(i) == '.') { ++i; }
-			var prefix = ENV.getCwd().split('/').slice(0, -i).join('/');
-			if(prefix && prefix.charAt(prefix.length - 1) != '/') { prefix += '/'; }
-			return [{filePath: prefix + pathString.substring(i).split('.').join('/') + '.js'}];
+			var i = 0;
+			while(pathString.charAt(i + 1) == '.') { ++i; }
+			var prefix = ENV.getCwd();
+			if (i) { prefix = prefix.split('/').slice(0, -i).join('/'); }
+			if (prefix && prefix.charAt(prefix.length - 1) != '/') { prefix += '/'; }
+			return [{filePath: prefix + pathString.substring(i + 1).split('.').join('/') + '.js'}];
 		}
 		
 		var pathSegments = pathString.split('.'),
