@@ -1,6 +1,8 @@
 // Sort of like a twisted protocol
 PKG('from base import *');
 
+var ctx = PKG.__env.global;
+
 exports.Protocol = Class(function() {
 	this.connectionMade = function(isReconnect) {}
 	this.dataReceived = function(data) {}
@@ -71,19 +73,19 @@ exports.PubSub = Class(function() {
 		if(this._subscribers.__any) {
 			var anyArgs = [signal].concat(args);
 			for(var i = 0, sub; sub = this._subscribers.__any[i]; ++i) {
-				sub.apply(PKG.global, args);
+				sub.apply(ctx, args);
 			}
 		}
 		
 		if(!this._subscribers[signal]) { return; }		
 		for(var i = 0, sub; sub = this._subscribers[signal][i]; ++i) {
-			sub.apply(window, args);
+			sub.apply(ctx, args);
 		}
 	}
 	
 	this.subscribe = function(signal) {
 		if(!this._subscribers) { this._subscribers = {}; }
 		if(!this._subscribers[signal]) { this._subscribers[signal] = []; }
-		this._subscribers[signal].push(bind.apply(jsio, Array.prototype.slice.call(arguments, 1)));
+		this._subscribers[signal].push(bind.apply(ctx, Array.prototype.slice.call(arguments, 1)));
 	}
 });
