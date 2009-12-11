@@ -1,6 +1,6 @@
 jsio('from base import *');
 jsio('import net.interfaces');
-jsio('from browser import $');
+jsio('from util.browser import $');
 
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
