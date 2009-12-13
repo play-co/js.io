@@ -135,14 +135,12 @@
 		this.eval = function(code, path) {
 			try { return rawEval(code, path); } catch(e) {
 				if(e instanceof SyntaxError) {
-					var src = 'javascript:document.open();document.write("<scr"+"ipt src="' + path + '"></scr"+"ipt>")';
+					var src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + path + '\'></scr"+"ipt>")';
 					var callback = function() {
 						var el = document.createElement('iframe');
 						with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden'; }
 						el.src = src;
-						$setTimeout(function() {
-							document.body.appendChild(el);
-						}, 0);
+						setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
 					}
 					
 					if(document.body) { callback(); }
@@ -287,11 +285,12 @@
 		};
 		
 		ctx.jsio = bind(this, importer, ctx, pkgPath);
+		if(pkgPath != 'base') { ctx.jsio('from base import *'); }
 		
 		// TODO: FIX for "trailing ." case
 		var cwd = ENV.getCwd();
 		var i = filePath.lastIndexOf('/');
-
+		
 		ctx.jsio.__env = jsio.__env;
 		ctx.jsio.__dir = i > 0 ? makeRelativePath(filePath.substring(0, i), cwd) : '';
 		ctx.jsio.__filename = i > 0 ? filePath.substring(i) : filePath;
