@@ -81,5 +81,5 @@ exports.parse = function(str, isStrict) {
 exports.isSameDomain = function(urlA, urlB) {
     var a = exports.parse(urlA);
     var b = exports.parse(urlB);
-    return ((a.port == b.port ) && (a.host == b.host) && (a.protocol = b.protocol));
+    return ((a.port == b.port ) && (a.host == b.host) && (a.protocol == b.protocol));
 };
