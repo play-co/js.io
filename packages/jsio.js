@@ -59,22 +59,20 @@
 		
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
-		this.log = function() { process.stdio.writeError(Array.prototype.join.call(arguments, ' ') + '\n'); }
+		this.log = function() {
+			try {
+				process.stdio.writeError(Array.prototype.map.call(arguments, JSON.stringify).join(' ') + '\n');
+			} catch(e) {
+				process.stdio.writeError(Array.prototype.join.call(arguments, ' ') + '\n');
+			}
+		}
+		
 		this.getPath = function() {
 			var segments = __filename.split('/');
 			segments.pop();
 			return segments.join('/') || '.';
 		}
-		this.eval = function(code, path) {
-			try {
-				return process.compile(code, path);
-			} catch(e) {
-				if(e instanceof SyntaxError) {
-					this.log("Syntax Error loading ", args.location, e);
-				}
-				throw e;
-			}
-		}
+		this.eval = process.compile;
 		this.findModule = function(possibilities) {
 			for (var i = 0, possible; possible = possibilities[i]; ++i) {
 				try {
@@ -179,31 +177,36 @@
 		}
 	};
 	
+	function ensureHasTrailingSlash(str) { return str.length && str.replace(/([^\/])$/, '$1/') || str; }
+	function removeTrailingSlash(str) { return str.replace(/\/$/,''); }
+	
 	function guessModulePath(pathString) {
+		// resolve relative paths
 		if(pathString.charAt(0) == '.') {
+			// count the number of dots
 			var i = 0;
 			while(pathString.charAt(i + 1) == '.') { ++i; }
-			var prefix = ENV.getCwd();
+
+			// remove one path segment for each dot from the cwd 
+			var prefix = removeTrailingSlash(ENV.getCwd());
 			if (i) { prefix = prefix.split('/').slice(0, -i).join('/'); }
-			if (prefix && prefix.charAt(prefix.length - 1) != '/') { prefix += '/'; }
-			return [{filePath: prefix + pathString.substring(i + 1).split('.').join('/') + '.js'}];
+			
+			return [{filePath: prefix + '/' + pathString.substring(i + 1).split('.').join('/') + '.js'}];
 		}
 		
+		// resolve absolute paths with respect to jsio packages/
 		var pathSegments = pathString.split('.'),
 			baseMod = pathSegments[0],
 			modPath = pathSegments.join('/');
 		
 		if (baseMod in jsio.path) {
-			var path = jsio.path[baseMod];
-			if(path.charAt(path.length - 1) != '/') { path += '/'; }
-			return [{filePath: path + modPath + '.js'}];
+			return [{filePath: ensureHasTrailingSlash(jsio.path[baseMod]) + modPath + '.js'}];
 		}
 		
 		var out = [];
 		var paths = typeof jsio.path.__default__ == 'string' ? [jsio.path.__default__] : jsio.path.__default__;
 		for (var i = 0, len = paths.length; i < len; ++i) {
-			var path = paths[i];
-			if(path.length && path.charAt(path.length - 1) != '/') { path += '/'; }
+			var path = ensureHasTrailingSlash(paths[i]);
 			out.push({filePath: path + modPath + '.js', baseMod: baseMod, basePath: path});
 		}
 		return out;
@@ -242,6 +245,7 @@
 	};
 	
 	function resolveRelativePath(pkg, path, pathSep) {
+		// does the pkg need to be resolved, i.e. is it a relative path?
 		if(!path || (pathSep = pathSep || '.') != pkg.charAt(0)) { return pkg; }
 		
 		var i = 1;
