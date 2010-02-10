@@ -30,7 +30,7 @@ exports.Class = function(parent, proto) {
 		proto.prototype = parent.prototype;
 	}
 
-	var cls = function() { if(this.init) { this.init.apply(this, arguments); }}
+	var cls = function() { if(this.init) { return this.init.apply(this, arguments); }}
 	cls.prototype = new proto(function(context, method, args) {
 		var args = args || [];
 		var target = proto;
