@@ -38,6 +38,7 @@ jsio('import logging');
 jsio('from .util import *');
 
 var http = jsio.__env.require('http');
+var nodeUrl = jsio.__env.require("url");
 
 var logger = logging.getLogger('node.csp.server');
 
@@ -411,13 +412,15 @@ csp.Server = Class(process.EventEmitter, function () {
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
 		getRequestBody(request).addCallback(bind(this, function(body) {
-			logger.debug('Received request', request.uri.path);
+			logger.debug('Received request', request.url);
 			try {
-				assertOrRenderError(startswith(request.uri.path, this._session_url + '/'),
+				var uri = nodeUrl.parse(request.url, true),
+					path = uri.pathname;
+				assertOrRenderError(startswith(path, this._session_url + '/'),
 									404, 'Request to invalid session URL');
 				assertOrRenderError(request.method in methods,
 									405, 'Invalid HTTP method, ' + request.method);
-				var relpath = request.uri.path.slice(this._session_url.length + 1).split('/');
+				var relpath = path.slice(this._session_url.length + 1).split('/');
 				var resource = relpath[0];
 				if (resource === 'static') {
 					sendStatic(relpath, response);
@@ -425,7 +428,7 @@ csp.Server = Class(process.EventEmitter, function () {
 				};
 				assertOrRenderError((relpath.length == 1) && (resource in resources),
 									404, 'Invalid resource, ' + relpath);
-				var params = request.uri.params;
+				var params = uri.query;
 				// 'data' is either the POST body if it exists, or the 'd' variable
 				request.data = body || params.d || null;
 				if (resource === 'handshake') {
