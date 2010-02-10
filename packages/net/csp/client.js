@@ -70,7 +70,7 @@ exports.CometSession = Class(function(supr) {
 
 
 	this.connect = function(url, options) {
-		this._url = url;
+		this._url = url.replace(/\/$/,'');
 		this._options = options || {};
 		
 		this._options.encoding = this._options.encoding || 'utf8';
