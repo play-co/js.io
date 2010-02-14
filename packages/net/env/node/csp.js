@@ -33,15 +33,16 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			logger.info("Incoming connection");
 			socket.setEncoding("utf8");
 			socket.addListener("connect", bind(this, function() {
-				logger.debug('connect event');
-				logger.debug('connect event');
 				this.onConnect(new Transport(socket));
 			}));
 		}));
+		this._cspServer = s;
 		var listenString = (this._opts.interface || "" ) + ":" + this._opts.port;
 		// TODO: Show class name
-		logger.info("Listening csp@" + listenString);
-		s.listen(this._opts.port, this._opts.interface || "");
+		if (!this._opts.skipListen) {
+			logger.info("Listening csp@" + listenString);
+			s.listen(this._opts.port, this._opts.interface || "");
+		}
 	}
 });
 
