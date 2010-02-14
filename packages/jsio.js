@@ -156,6 +156,7 @@
 					xhr.open('GET', possible.filePath, false);
 					xhr.send(null);
 				} catch(e) {
+					ENV.log('e:', e);
 					continue; // firefox file://
 				}
 				

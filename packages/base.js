@@ -8,7 +8,7 @@ exports.bind = function(context, method /*, VARGS*/) {
 			: function() { return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0))); }
 	} else {
 		return typeof method == 'string'
-			? function() { return context[method].apply(context, arguments); }
+			? function() { exports.log('crash?', method, context, arguments); return context[method].apply(context, arguments); }
 			: function() { return method.apply(context, arguments); }
 	}
 }

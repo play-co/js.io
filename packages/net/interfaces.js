@@ -45,7 +45,6 @@ exports.Listener = Class(function() {
 		transport.makeConnection(p);
 		p.connectionMade();
 	}
-	
 	this.listen = function() { throw new Error('Abstract class'); }
 	this.stop = function() {}
 });
@@ -61,6 +60,8 @@ exports.Connector = Class(function() {
 		this._protocol.transport = transport;
 		this._protocol.connectionMade();
 	}
-	
+	this.onDisconnect = function() {
+		this._protocol.connectionLost();
+	}
 	this.getProtocol = function() { return this._protocol; }
 });

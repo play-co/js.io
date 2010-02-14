@@ -24,6 +24,23 @@ var Transport = Class(net.interfaces.Transport, function() {
 	}
 });
 
+
+exports.Connector = Class(net.interfaces.Connector, function() {
+	this.connect = function() {
+		
+		var conn = nodeTcp.createConnection(this._opts.port, this._opts.host);
+		conn.addListener("connect", bind(this, function() {
+			this.onConnect(new Transport(conn));
+		}))
+//		conn.addListener("close", bind(this, function() {
+//			this.onDisconnect();
+//		}))
+//		conn.addListener("receive", bind(this._protocol, 'dataReceived'));
+		this._opts.encoding = 'plain';
+		conn.setEncoding("binary");
+	}
+});
+
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	this.listen = function() {
 		var s = nodeTcp.createServer(bind(this, function(socket) {
