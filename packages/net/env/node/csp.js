@@ -1,8 +1,7 @@
-jsio('from base import *');
 jsio('import net.interfaces, logging');
-jsio('from .csp.server import createServer');
-
 var logger = logging.getLogger('node.csp');
+jsio('from base import *');
+jsio('from .csp.server import createServer');
 
 var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(socket) {
@@ -45,4 +44,3 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		}
 	}
 });
-

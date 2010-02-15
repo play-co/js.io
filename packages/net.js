@@ -1,5 +1,8 @@
 jsio('import net.env');
 jsio('import std.JSON as JSON');
+jsio('import logging')
+
+var logger = logging.getLogger('net');
 
 JSON.createGlobal(); // create the global JSON object if it doesn't already exist
 

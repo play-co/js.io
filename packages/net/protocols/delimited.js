@@ -32,7 +32,10 @@ exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
 	this.lineReceived = function(line) {
 		logger.debug('Not implemented, lineReceived:', line);
 	}
-
+	this.sendLine = function(line) {
+		logger.debug('WRITE:', line + this.delimiter);
+		this.transport.write(line + this.delimiter);
+	}
 	this.connectionLost = function() {
 		logger.debug('connectionLost');
 	}

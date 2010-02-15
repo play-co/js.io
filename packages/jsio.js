@@ -55,7 +55,7 @@
 	*/
 	
 	function ENV_node() {
-		var posix = require('posix');
+		var fs = require('fs');
 		
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
@@ -76,9 +76,10 @@
 		this.findModule = function(possibilities) {
 			for (var i = 0, possible; possible = possibilities[i]; ++i) {
 				try {
-					possible.src = posix.cat(possible.filePath).wait();
+					possible.src = fs.cat(possible.filePath).wait();
 					return possible;
-				} catch(e) {}
+				} catch(e) {
+				}
 			}
 			return false;
 		}

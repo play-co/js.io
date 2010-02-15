@@ -1,4 +1,6 @@
 jsio('from base import *');
+jsio('import logging')
+var logger = logging.getLogger('net.later');
 
 exports.Later = Class(function() {
 	this.init = function() {
@@ -14,6 +16,7 @@ exports.Later = Class(function() {
 	}
 	
 	this.callback = function() {
+		logger.debug('callback', [].slice.call(arguments, 0));
 		if (this.cb) {
 			var result = this.cb.apply(this, arguments);
 			if (result == false) {
@@ -25,6 +28,7 @@ exports.Later = Class(function() {
 	}
 
 	this.errback = function() {
+		logger.debug('eb', [].slice.call(arguments, 0));
 		if (this.eb) {
 			this.eb.apply(this, arguments);
 		}

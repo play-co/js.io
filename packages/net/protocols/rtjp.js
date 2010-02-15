@@ -28,12 +28,11 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 			args = {}
 		}
 		logger.debug('sendFrame', name, args);
-		this.transport.write(JSON.stringify([++this.frameId, name, args]) + '\r\n');
+		this.sendLine(JSON.stringify([++this.frameId, name, args]));
 		return this.frameId;
 	}
 
 	this.lineReceived = function(line) {
-		logger.debug("lineReceived", line);
 		try {
 			var frame = JSON.parse(line);
 			if (frame.length != 3) {
@@ -56,7 +55,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	}
 
 	this.connectionLost = function() {
-		log('conn lost');
+		logger.debug('conn lost');
 	}
 });
 
