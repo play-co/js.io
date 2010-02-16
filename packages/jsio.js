@@ -291,7 +291,10 @@
 		};
 		
 		ctx.jsio = bind(this, importer, ctx, pkgPath);
-		if(pkgPath != 'base') { ctx.jsio('from base import *'); }
+		if(pkgPath != 'base') {
+			ctx.jsio('from base import *');
+			ctx.logging.__create(pkgPath, ctx);
+		}
 		
 		// TODO: FIX for "trailing ." case
 		var cwd = ENV.getCwd();
@@ -301,7 +304,6 @@
 		ctx.jsio.__dir = i > 0 ? makeRelativePath(filePath.substring(0, i), cwd) : '';
 		ctx.jsio.__filename = i > 0 ? filePath.substring(i) : filePath;
 		ctx.jsio.__path = pkgPath;
-		
 		return ctx;
 	};
 	
@@ -333,7 +335,7 @@
 				}
 				
 				if(!item.external) {
-					var newContext = makeContext(item.from, module.filePath);
+					var newContext = makeContext(pkg, module.filePath);
 					execModule(newContext, module);
 					modules[pkg] = newContext.exports;
 				} else {
