@@ -83,9 +83,8 @@ var PARAMS = {
 	'ssestream':   {"bp": "data: ", "bs": "\r\n", "se": "1", "is": "1"}
 };
 
-
 exports.Transport = Class(function(supr) {
-	this.handshake = function(url, options) { 
+	this.handshake = function(url, options) {
 		throw new Error("handshake Not Implemented"); 
 	};
 	this.comet = function(url, sessionKey, lastEventId, options) { 
