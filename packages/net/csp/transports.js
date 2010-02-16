@@ -356,12 +356,17 @@ Class(baseTransport, function(supr) {
 					body.appendChild(s);
 				}
 			}
+			
 			killLoadingBar();
 		}), 0);
 	};
 
-	function killLoadingBar() {
-		
-	}
+	var killLoadingBar = BrowserDetect.isFirefox ? function() {
+		if(!killLoadingBar.iframe) { killLoadingBar.iframe = document.createElement('iframe'); }
+		if(document.body) {
+			document.body.insertBefore(killLoadingBar.iframe, document.body.firstChild);
+			document.body.removeChild(killLoadingBar.iframe); 
+		}
+	} : function() {};
 });
 	
