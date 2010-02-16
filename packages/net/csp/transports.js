@@ -243,12 +243,9 @@ transports.jsonp = Class(baseTransport, function(supr) {
 	};
 
 	this._createIframes = function() {
-		if(!document.body) {
-			setTimeout(bind(this, '_createIframes'), 100);
-			return;
-		}
+		if(!document.body) { return $setTimeout(bind(this, '_createIframes'), 100); }
+		
 		this._isReady = true;
-
 		this._ifr = {
 			'send':	 createIframe(),
 			'comet': createIframe()
@@ -276,10 +273,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 	};
 
 	this._makeRequest = function(rType, url, args, cb, eb) {
-		if(!this._isReady) {
-			this._onReady.push(arguments);
-			return;
-		}
+		if(!this._isReady) { return this._onReady.push(arguments); }
 
 		args.n = Math.random();
 		$setTimeout(bind(this, function() {
