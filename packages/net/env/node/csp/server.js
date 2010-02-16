@@ -42,6 +42,7 @@ var nodeUrl = jsio.__env.require("url");
 
 var logger = logging.getLogger('node.csp.server');
 
+logger.setLevel(0);
 var csp = this.csp = exports;
 
 ;(function () {
@@ -350,10 +351,10 @@ csp.createServer = function (connection_listener) {
 };
 
 csp.Server = Class(process.EventEmitter, function () {
-	this.init = function () {
+	this.init = function (sessionURL) {
 		process.EventEmitter.call(this);
-		this._session_url = ''; // XXX this could be changed or made into a parameter
-		log('starting server, session url is <' + this._session_url + '>');
+		this._sessionUrl = sessionURL || ''; 
+		log('starting server, session url is <' + this._sessionUrl + '>');
 	};
 	var CSPError = Class(AssertionError, function (supr) {
 		this.name = 'CSPError'
@@ -412,23 +413,30 @@ csp.Server = Class(process.EventEmitter, function () {
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
 		getRequestBody(request).addCallback(bind(this, function(body) {
-			logger.debug('Received request', request.url);
+			logger.debug('received request', request.url);
 			try {
 				var uri = nodeUrl.parse(request.url, true),
-					path = uri.pathname;
-				assertOrRenderError(startswith(path, this._session_url + '/'),
+					path = uri.pathname,
+					sessionUrl = this._sessionUrl;
+
+				assertOrRenderError(startswith(path, sessionUrl + '/'),
 									404, 'Request to invalid session URL');
 				assertOrRenderError(request.method in methods,
 									405, 'Invalid HTTP method, ' + request.method);
-				var relpath = path.slice(this._session_url.length + 1).split('/');
-				var resource = relpath[0];
+				
+				var resource = path.split('/').pop();
 				if (resource === 'static') {
-					sendStatic(relpath, response);
+					assertOrRenderError(startswith(path, sessionUrl + '/'),
+										404, 'sendStatic Not Implemented');
+					// TODO: sendStatic(relativePath, response);
 					return;
 				};
-				assertOrRenderError((relpath.length == 1) && (resource in resources),
-									404, 'Invalid resource, ' + relpath);
+
+				assertOrRenderError(resources.hasOwnProperty(resource),
+									404, 'Invalid resource, ' + path);
+
 				var params = uri.query;
+
 				// 'data' is either the POST body if it exists, or the 'd' variable
 				request.data = body || params.d || null;
 				if (resource === 'handshake') {
