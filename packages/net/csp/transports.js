@@ -168,10 +168,9 @@ exports.transports.xhr = Class(baseTransport, function(supr) {
 	};
 
 	this.abort = function() {
-		var xhr;
 		for(var i in this._xhr) {
 			if(this._xhr.hasOwnProperty(i)) {
-				abortXHR(xhr);
+				abortXHR(this._xhr[i]);
 			}
 		}
 	};
