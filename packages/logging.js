@@ -36,8 +36,10 @@ exports.Logger = Class(function() {
 	}
 	function makeLogFunction(level, type) {
 		return function() {
-			if (level < this.level || production) return;
-			log.apply(log, [type, this.name].concat(Array.prototype.slice.call(arguments, 0)));
+			if (!production && level >= this.level) {
+				log.apply(log, [type, this.name].concat(Array.prototype.slice.call(arguments, 0)));
+			}
+			return arguments[0];
 		}
 	}
 
