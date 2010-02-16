@@ -223,8 +223,7 @@ exports.transports.xhr = Class(baseTransport, function(supr) {
 	};
 });
 
-exports.transports.jsonp =
-Class(baseTransport, function(supr) {
+transports.jsonp = Class(baseTransport, function(supr) {
 	var logger = logging.getLogger('csp.transports.jsonp');
 
 	var createIframe = function() {
