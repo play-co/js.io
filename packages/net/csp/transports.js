@@ -13,65 +13,43 @@ var createXHR = exports.createXHR = function() {
 		: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
 		: null;
 };
-exports.transports = {};
 
-var isLocalFile = function (url, options) {
-	var test = url.toString().match('^file://');
-	if (test && test.index === 0) {
-		logger.debug('Detected Local file');
+function isLocalFile(url) { return /^file:\/\//.test(url); }
+function isWindowDomain(url) { return uri.isSameDomain(url, window.location.href); }
+
+function canUseXHR(url) {
+	// always use jsonp for local files
+	if (isLocalFile(url)) { return false; }
+	
+	// try to create an XHR using the same function the XHR transport uses
+	var xhr = createXHR();
+	if (!xhr) { return false; }
+	
+	// if the URL requested is the same domain as the window,
+	// then we can use same-domain XHRs
+	if (isWindowDomain(url)) { return true; }
+	
+	// if the URL requested is a different domain than the window,
+	// then we need to check for cross-domain support
+	if (window.XMLHttpRequest
+			&& xhr instanceof window.XMLHttpRequest
+			&& xhr.withCredentials !== undefined
+		|| window.XDomainRequest 
+			&& xhr instanceof window.XDomainRequest) {
 		return true;
-	};
-	return false;		
-};
-
-var haveCrossDomain = function (url, options) {
-	try {
-		var XDomain = window.XDomainRequest;
-		var xhr = new window.XMLHttpRequest();
-		var withCredentials = 
-			(window.XMLHttpRequest && xhr.withCredentials !== undefined);
-		if (XDomain || withCredentials) {
-			logger.debug('Detected xdomain xhr capabilities');
-			return true;
-		}
-	} catch(e) {
-		logger.debug(e);
 	}
-	return false;
 };
 
-var isSameDomain = function (url, options) {
-	if (uri.isSameDomain(url, location))
-		return true;
-	else
-		return false;
-};
-
-var canChooseXHR = function (url, options) {
-	var isLocal = isLocalFile(url, options);
-	var crossDomain = haveCrossDomain(url, options);
-	var sameDomain = isSameDomain(url, options);
-	return ((!isLocal) && (crossDomain || sameDomain));
-};
-
-var preferXHR = function (url, options) {
-	if (canChooseXHR(url, options)) {
-		return exports.transports.xhr;
-	};
-	return exports.transports.jsonp;
-};
-
-var preferJSONP = function (url, options) {
-	return exports.transports.jsonp;
-};
+var transports = exports.transports = {};
 
 exports.chooseTransport = function(url, options) {
-	if (options.preferredTransport == 'xhr') {
-		return preferXHR(url, options);
-	} else if (options.preferredTransport == 'jsonp') {
-		return preferJSONP(url, options);
-	} else {
-		return exports.transports.jsonp;
+	switch(options.preferredTransport) {
+		case 'jsonp':
+			return transports.jsonp;
+		case 'xhr':
+		default:
+			if (canUseXHR(url)) { return transports.xhr; };
+			return transports.jsonp;
 	}
 };
 
