@@ -6,15 +6,7 @@ jsio('import .errors');
 jsio('from util.browserdetect import BrowserDetect');
 
 var logger = logging.getLogger("csp.transports");
-exports.allTransports = {};
-
-exports.registerTransport = function(name, transport) {
-	logger.debug('registering transport', name);
-	if (name in exports.allTransports) {
-		throw new Error("Transport " + name + " already exists");
-	}
-	exports.allTransports[name] = transport;
-}
+exports.transports = {};
 
 var isLocalFile = function (url, options) {
 	var test = url.toString().match('^file://');
@@ -57,13 +49,13 @@ var canChooseXHR = function (url, options) {
 
 var preferXHR = function (url, options) {
 	if (canChooseXHR(url, options)) {
-		return exports.allTransports.xhr;
+		return exports.transports.xhr;
 	};
-	return exports.allTransports.jsonp;
+	return exports.transports.jsonp;
 };
 
 var preferJSONP = function (url, options) {
-	return exports.allTransports.jsonp;
+	return exports.transports.jsonp;
 };
 
 exports.chooseTransport = function(url, options) {
@@ -72,7 +64,7 @@ exports.chooseTransport = function(url, options) {
 	} else if (options.preferredTransport == 'jsonp') {
 		return preferJSONP(url, options);
 	} else {
-		return exports.allTransports.jsonp;
+		return exports.transports.jsonp;
 	}
 };
 
@@ -145,7 +137,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 	};
 });
 
-exports.registerTransport('xhr', 
+exports.transports.xhr =
 	Class(baseTransport, function(supr) {
 		var createXHR = function() {
 			return window.XMLHttpRequest ? new XMLHttpRequest()
@@ -231,10 +223,9 @@ exports.registerTransport('xhr',
 				xhr.send();
 			}
 		};
-	})
-);
+	});
 
-exports.registerTransport('jsonp', 
+exports.transports.jsonp =
 	Class(baseTransport, function(supr) {
 		var logger = logging.getLogger('csp.transports.jsonp');
 
@@ -374,5 +365,5 @@ exports.registerTransport('jsonp',
 		function killLoadingBar() {
 			
 		}
-	})
-);
+	});
+	
