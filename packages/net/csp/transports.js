@@ -77,24 +77,23 @@ var PARAMS = {
 };
 
 
-exports.Transport = 
-	Class(function(supr) {
-		this.handshake = function(url, options) { 
-			throw new Error("handshake Not Implemented"); 
-		};
-		this.comet = function(url, sessionKey, lastEventId, options) { 
-			throw new Error("comet Not Implemented"); 
-		};
-		this.send = function(url, sessionKey, data, options) { 
-			throw new Error("send Not Implemented");
-		};
-		this.encodePacket = function(packetId, data, options) { 
-			throw new Error("encodePacket Not Implemented"); 
-		};
-		this.abort = function() { 
-			throw new Error("abort Not Implemented"); 
-		};
-	});
+exports.Transport = Class(function(supr) {
+	this.handshake = function(url, options) { 
+		throw new Error("handshake Not Implemented"); 
+	};
+	this.comet = function(url, sessionKey, lastEventId, options) { 
+		throw new Error("comet Not Implemented"); 
+	};
+	this.send = function(url, sessionKey, data, options) { 
+		throw new Error("send Not Implemented");
+	};
+	this.encodePacket = function(packetId, data, options) { 
+		throw new Error("encodePacket Not Implemented"); 
+	};
+	this.abort = function() { 
+		throw new Error("abort Not Implemented"); 
+	};
+});
 
 var baseTransport = Class(exports.Transport, function(supr) {
 	this.init = function() {
@@ -137,8 +136,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 	};
 });
 
-exports.transports.xhr =
-Class(baseTransport, function(supr) {
+exports.transports.xhr = Class(baseTransport, function(supr) {
 	var createXHR = function() {
 		return window.XMLHttpRequest ? new XMLHttpRequest()
 			: window.XDomainRequest ? new XDomainRequest()
@@ -255,8 +253,8 @@ Class(baseTransport, function(supr) {
 
 	var removeIframe = function(ifr) {
 		$setTimeout(function() {
-						if(ifr && ifr.parentNode) { ifr.parentNode.removeChild(ifr); }
-					}, 60000);
+				if(ifr && ifr.parentNode) { ifr.parentNode.removeChild(ifr); }
+			}, 60000);
 	};
 
 	this.init = function() {
