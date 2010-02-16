@@ -105,6 +105,7 @@ exports.logging = (function() {
 		this.setLevel = function(level) { this._level = level; }
 	
 		var slice = Array.prototype.slice;
+		var log = exports.log;
 		function makeLogFunction(level, type) {
 			return function() {
 				if (!production && level >= this._level) {
