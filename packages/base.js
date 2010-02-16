@@ -70,3 +70,56 @@ exports.$setInterval = function(f, t/*, VARGS */) {
 // node doesn't let you call clearTimeout(null)
 exports.$clearTimeout = function (timer) { return timer ? clearTimeout(timer) : null; };
 exports.$clearInterval = function (timer) { return timer ? clearInterval(timer) : null; };
+
+// keep logging local variables out of other closures in this file!
+exports.logging = (function() {
+	
+	// logging namespace, this is what is exported
+	var logging = {
+		DEBUG: 1,
+		LOG: 2,
+		INFO: 3,
+		WARN: 4,
+		ERROR: 5
+	};
+
+	// effectively globals - all loggers and a global production state
+	var loggers = {}
+	var production = false;
+
+	logging.setProduction = function(prod) { production = !!prod; }
+	logging.get = function(name) {
+		return loggers.hasOwnProperty(name) ? loggers[name]
+			: (loggers[name] = new Logger(name));
+	}
+	logging.getAll = function() { return loggers; }
+
+	logging.__create = function(pkg, ctx) { ctx.logger = logging.get(pkg); }
+	
+	var Logger = exports.Class(function() {
+		this.init = function(name, level) {
+			this._name = name;
+			this._level = level || logging.DEBUG;
+		}
+		
+		this.setLevel = function(level) { this._level = level; }
+	
+		var slice = Array.prototype.slice;
+		function makeLogFunction(level, type) {
+			return function() {
+				if (!production && level >= this._level) {
+					log.apply(log, [type, this._name].concat(slice.call(arguments, 0)));
+				}
+				return arguments[0];
+			}
+		}
+	
+		this.debug = makeLogFunction(logging.DEBUG, "DEBUG");
+		this.log = makeLogFunction(logging.LOG, "LOG");
+		this.info = makeLogFunction(logging.INFO, "INFO");
+		this.warn = makeLogFunction(logging.WARN, "WARN");
+		this.error = makeLogFunction(logging.ERROR, "ERROR");
+	});
+
+	return logging;
+})();
