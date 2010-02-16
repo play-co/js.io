@@ -6,6 +6,13 @@ jsio('import .errors');
 jsio('from util.browserdetect import BrowserDetect');
 
 var logger = logging.getLogger("csp.transports");
+
+var createXHR = exports.createXHR = function() {
+	return window.XMLHttpRequest ? new XMLHttpRequest()
+		: window.XDomainRequest ? new XDomainRequest()
+		: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
+		: null;
+};
 exports.transports = {};
 
 var isLocalFile = function (url, options) {
@@ -136,14 +143,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 	};
 });
 
-exports.transports.xhr = Class(baseTransport, function(supr) {
-	var createXHR = function() {
-		return window.XMLHttpRequest ? new XMLHttpRequest()
-			: window.XDomainRequest ? new XDomainRequest()
-			: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
-			: null;
-	};
-
+transports.xhr = Class(baseTransport, function(supr) {
 	var abortXHR = function(xhr) {
 		logger.debug('aborting XHR');
 		try {
