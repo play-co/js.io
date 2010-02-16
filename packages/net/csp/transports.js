@@ -1,11 +1,8 @@
 jsio('from base import *');
 jsio('import std.uri as uri'); 
 jsio('import std.base64 as base64');
-jsio('import logging');
 jsio('import .errors');
 jsio('from util.browserdetect import BrowserDetect');
-
-var logger = logging.getLogger("csp.transports");
 
 var createXHR = exports.createXHR = function() {
 	return window.XMLHttpRequest ? new XMLHttpRequest()
@@ -201,8 +198,6 @@ transports.xhr = Class(baseTransport, function(supr) {
 });
 
 transports.jsonp = Class(baseTransport, function(supr) {
-	var logger = logging.getLogger('csp.transports.jsonp');
-
 	var createIframe = function() {
 		var i = document.createElement("iframe");
 		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; }
@@ -214,15 +209,14 @@ transports.jsonp = Class(baseTransport, function(supr) {
 
 	var abortIframe = function(ifr) {
 		var win = ifr.contentWindow, doc = win.document;
-		logger.debug('removing scripts');
+		logger.debug('removing script tags');
 		var scripts = doc.getElementsByTagName('script');
 		var s1 = doc.getElementsByTagName('script')[0];
 		var s2 = doc.getElementsByTagName('script')[1];
 		if(s1) s1.parentNode.removeChild(s1);
 		if(s2) s2.parentNode.removeChild(s2);
-		logger.debug('removed scripts');
 
-		logger.debug('deleting callbacks');
+		logger.debug('deleting iframe callbacks');
 		win['cb' + (ifr.cbId - 1)] = function(){};
 		win['eb' + (ifr.cbId - 1)] = function(){};
 	};
@@ -285,7 +279,6 @@ transports.jsonp = Class(baseTransport, function(supr) {
 			var onFinish = win['eb' + jsonpId] = function(scriptTag) {
 				// IE6 onReadyStateChange
 				if(scriptTag && scriptTag.readyState != 'loaded') { return; }
-				logger.debug('in onFinish');
 				if (!completed) { logger.debug('error making request:', fullUrl); }
 
 				abortIframe(ifr);
@@ -297,7 +290,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 			};
 
 			win['cb' + jsonpId] = function callback() {
-				logger.debug('successful: ', fullUrl,[].slice.call(arguments, 0));
+				logger.debug('successful: ', fullUrl, [].slice.call(arguments, 0));
 				completed = true;
 				logger.debug('calling the cb');
 				cb.apply(null, arguments);
