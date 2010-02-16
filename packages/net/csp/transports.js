@@ -188,6 +188,7 @@ exports.transports.xhr = Class(baseTransport, function(supr) {
 			if(xhr.status != 200) { 
 				logger.debug('XHR failed with status ', xhr.status);
 				eb();
+				return;
 			}
 		
 			logger.debug('XHR data received');
