@@ -188,7 +188,7 @@ csp.Session = Class(function() {
 		this.sendHeaders(this.cometResponse, 'stream');
 		var preamble = this.variables.prebuffer + this.variables.preamble;
 		if (preamble) {
-			this.cometResponse.sendBody(preamble);
+			this.cometResponse.write(preamble);
 		};
 		this.resetIntervalTimer();
 	};
@@ -202,20 +202,20 @@ csp.Session = Class(function() {
 		};
 		var batch = prefix + JSON.stringify(packetArray) + suffix;
 		if (this.isStreaming()) {
-			this.cometResponse.sendBody(batch);
+			this.cometResponse.write(batch);
 			this.resetIntervalTimer();
 		} else {
 			var body = (this.variables.prebuffer + this.variables.preamble + batch);
 			this.sendHeaders(this.cometResponse, body.length)
-			this.cometResponse.sendBody(body);
-			this.cometResponse.finish();
+			this.cometResponse.write(body);
+			this.cometResponse.close();
 			this.cometResponse = null;
 			$clearTimeout(this.durationTimer);
 		};
 	};
 	this.completeResponse = function() {
 		if (this.isStreaming()) {
-			this.cometResponse.finish(); // close a stream
+			this.cometResponse.close(); // close a stream
 			this.cometResponse = null;
 			$clearTimeout(this.durationTimer);
 			$clearTimeout(this.intervalTimer);
@@ -235,8 +235,8 @@ csp.Session = Class(function() {
 		var suffix = ')' + this.variables.requestSuffix;
 		body = prefix + body + suffix;
 		this.sendHeaders(response, body.length);
-		response.sendBody(body);
-		response.finish();
+		response.write(body);
+		response.close();
 	};
 	// a csp.Server instance dispatches resources to this object's functions
 	this.dispatch = {
@@ -293,8 +293,8 @@ csp.Session = Class(function() {
 		reflect: function (request, response) {
 			var body = request.data;
 			this.sendHeaders(response, body.length);
-			response.sendBody(body);
-			response.finish();
+			response.write(body);
+			response.close();
 		},
 		streamtest: function (request, response) {
 			debug('streamtest'); // XXX who knows what this does...?
@@ -366,8 +366,8 @@ csp.Server = Class(process.EventEmitter, function () {
 	var renderError = function (response, code, message) {
 		response.sendHeader(code, {'Content-Type'   : 'text/plain',
 								   'Content-Length' : message.length});
-		response.sendBody(message);
-		response.finish();
+		response.write(message);
+		response.close();
 	};
 	var sendStatic = function (path, response) {
 		debug('SEND STATIC', path, response)
@@ -375,8 +375,8 @@ csp.Server = Class(process.EventEmitter, function () {
 			.addCallback(function(content){
 				response.sendHeader(200, {'Content-Type'   : 'text/plain',
 										  'Content-Length' : content.length});
-				response.sendBody(content);
-				response.finish();
+				response.write(content);
+				response.close();
 			})
 			.addErrback(function(){
 				renderError(response, 404, 'No such file, ' + path);
@@ -394,10 +394,11 @@ csp.Server = Class(process.EventEmitter, function () {
 			var body = [];
 			request.setBodyEncoding('binary');
 			request
-				.addListener('body', function (chunk) {
+				.addListener('data', function (chunk) {
+					logger.log("Server body")
 					body.push(chunk); // body += chunk
 				})
-				.addListener('complete', function () {
+				.addListener('end', function () {
 					promise.emitSuccess(body.join(''));
 				});
 		};
