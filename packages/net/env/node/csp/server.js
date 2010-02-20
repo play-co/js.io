@@ -34,15 +34,11 @@ jsio('from base import *');
 jsio('import std.uuid as uuid');
 jsio('import std.utf8 as utf8');
 jsio('import std.base64 as base64');
-jsio('import logging');
 jsio('from .util import *');
 
 var http = jsio.__env.require('http');
 var nodeUrl = jsio.__env.require("url");
 
-var logger = logging.getLogger('node.csp.server');
-
-logger.setLevel(0);
 var csp = this.csp = exports;
 
 ;(function () {
