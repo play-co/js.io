@@ -76,7 +76,7 @@
 		this.findModule = function(possibilities) {
 			for (var i = 0, possible; possible = possibilities[i]; ++i) {
 				try {
-					possible.src = fs.cat(possible.filePath).wait();
+					possible.src = fs.readFileSync(possible.filePath);
 					return possible;
 				} catch(e) {
 				}
