@@ -23,5 +23,5 @@ listener._onMessage = function(evt) {
 }
 
 onload = function() {
-	document.body.appendChild(listener._button);
+	document.body.appendChild(listener.getButton('index.html?transport=postmessage'));
 }
