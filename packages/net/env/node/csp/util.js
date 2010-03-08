@@ -85,24 +85,23 @@ exports.reschedule = function (callback) {
 // cached static files
 exports.staticFile = (function(){
 	var cache = {} // static file content indexed by filename
-	var getfile = function(path) {
-		promise = new process.Promise();
+	var getfile = function(path, callback) {
 		cacheContent = cache[path];
 		if (cacheContent !== undefined) {
 			// the file is in the cache, return it
 			exports.reschedule(function(){
-				promise.emitSuccess([cacheContent]);
+				callback(null, [cacheContent]);
 			});
 		} else {
 			// load file from disk, save it in the cache, and return it
-			process.fs.cat(path, 'utf8')
-				.addCallback(function(fileContent) {
+			process.fs.readFile(path, 'utf8', function(err, fileContent){
+				if (err) {
+					callback('staticFile readFile error ' + err)
+				} else {
 					cache[path] = fileContent;
-					promise.emitSuccess([fileContent]);
-				})
-				.addErrback(function(){
-					promise.emitError();
-				});
+					callback(null, [fileContent]);
+				}
+			})
 		};
 		return promise;
 	};

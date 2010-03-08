@@ -371,24 +371,23 @@ csp.Server = Class(process.EventEmitter, function () {
 	};
 	var sendStatic = function (path, response) {
 		debug('SEND STATIC', path, response)
-		staticFile('./' + path.join('/'))	// defined in util.js
-			.addCallback(function(content){
+		staticFile('./' + path.join('/'), function(err, content){
+			if (err) {
+				renderError(response, 404, 'No such file, ' + path);
+			} else {
 				response.sendHeader(200, {'Content-Type'   : 'text/plain',
 										  'Content-Length' : content.length});
 				response.write(content);
 				response.close();
-			})
-			.addErrback(function(){
-				renderError(response, 404, 'No such file, ' + path);
-			});
+			}
+		})
 	};
 	// returns a request which fires with the whole post body as bytes, or
 	// immediately with null for GET requests
-	var getRequestBody = function (request) {
-		var promise = new process.Promise();
+	var getRequestBody = function (request, callback) {
 		if (request.method === 'GET') {
 			reschedule(function () {
-				promise.emitSuccess('');
+				callback('')
 			});
 		} else {
 			var body = [];
@@ -399,17 +398,16 @@ csp.Server = Class(process.EventEmitter, function () {
 					body.push(chunk); // body += chunk
 				})
 				.addListener('end', function () {
-					promise.emitSuccess(body.join(''));
+					callback(body.join(''));
 				});
 		};
-		return promise;
 	};
 	// The logic of the server goes in the 'handleRequest' function, which is
 	// called every time a new request comes in.
 	var resources = Set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
 	var methods = Set('GET', 'POST');
 	this._handleRequest = function (request, response) {
-		getRequestBody(request).addCallback(bind(this, function(body) {
+		getRequestBody(request, bind(this, function(body) {
 			logger.debug('received request', request.url);
 			try {
 				var uri = nodeUrl.parse(request.url, true),
