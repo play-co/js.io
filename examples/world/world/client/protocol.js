@@ -1,11 +1,8 @@
 jsio('from base import *');
-jsio('import net, logging');
+jsio('import net');
 jsio('import lib.PubSub as PubSub');
 jsio('from net.protocols.rtjp import RTJPProtocol');
 jsio('from ..constants import *');
-
-var logger = logging.getLogger('world.client');
-logger.setLevel(0);
 
 var World = Class(function() {
 	this.init = function(playerFactory) {

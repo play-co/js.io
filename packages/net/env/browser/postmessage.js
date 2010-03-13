@@ -9,31 +9,40 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		supr(this, 'init', arguments);
 		this._clients = {};
 		if (!this._opts.clientUrl) {
-			console.log(jsio.__dir);
 			this._opts.clientUrl = jsio.__dir + '/networkConsole.html';
 		}
 	}
-	
+
 	this.listen = function() {
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
-		this._button = document.createElement('a');
-		this._button.className = 'clientButton'
-		this._button.innerHTML = 'new client';
-		$.onEvent(this._button, 'click', bind(this, function() {
-			window.open(this._opts.clientUrl, 'W' + (ID++));
-		}));
+	}
+
+	this.getButton = function(url, text) { 
+		var button = document.createElement('button');
+		button.className = 'clientButton';
+		button.innerHTML = text || 'launch client';
+		$.onEvent(button, 'click', bind(this, '_openWindow', url));
+		return button; 
 	}
 	
-	this.getButton = function() { return this._button; }
+	var uniqueId = 1;
+	this._openWindow = function(url) {
+		var options = { menubar: 'no', location: 'no', toolbar: 'no',
+			width: 550, height: 350, // left: 200, top: 200,
+			scrollbars: 'yes', status: 'yes', resizable: 'yes' };
+		
+		var arr = [];
+		for (var i in options) { arr.push(i + '=' + options[i]) }
+		var win = window.open(url, 'W' + uniqueId++, arr.join(','));
+		win.focus();
+	}
 	
 	this._onMessage = function(evt) {
-		log("SERVER RECEIVED", evt.data)
 		var name = evt.source.name;
 		var target = this._clients[name];
 		var data = eval('(' + evt.data + ')');
 		switch (data.type) {
 			case 'open':
-				log('connection opened');
 				this._clients[name] = new exports.Transport(evt.source);
 				evt.source.postMessage('{type:"open"}','*');
 				this.onConnect(this._clients[name]);
@@ -57,20 +66,16 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 	}
 	
 	this._onMessage = function(evt) {
-		log("CLIENT RECEIVED", evt.data)
 		var data = eval('(' + evt.data + ')');
 		switch(data.type) {
 			case 'open':
-				log('CLIENT connection opened');
 				this._transport = new exports.Transport(evt.source);
 				this.onConnect(this._transport);
 				break;
 			case 'close':
-				log('CLIENT connection closed');
 				this._transport.onClose();
 				break;
 			case 'data':
-				log('CLIENT data received:', data.payload);
 				this._transport.onData(data.payload);
 				break;
 		}
@@ -87,7 +92,6 @@ exports.Transport = Class(net.interfaces.Transport, function() {
 	}
 	
 	this.write = function(data, encoding) {
-		console.log('write', data);
 		this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
 	}
 	

@@ -6,20 +6,6 @@ body {
 	color: #333;
 	text-align: center;
 }
-a.clientButton {
-	-moz-border-radius: 5px;
-	padding: 3px 20px;
-	cursor: pointer;
-	font-size: 14px;
-	text-align: center;
-	border: 2px solid #666;
-	background: #eee;
-	color: #333;
-}
-a.clientButton:hover {
-	border: 2px solid #888;
-	background: #fff;
-}
 .monitor {
 	color: #383838;
 	font-family: monospace;

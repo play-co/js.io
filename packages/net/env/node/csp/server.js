@@ -186,7 +186,7 @@ exports.Session = Class(function() {
 		this.sendHeaders(this.cometResponse, 'stream');
 		var preamble = this.variables.prebuffer + this.variables.preamble;
 		if (preamble) {
-			this.cometResponse.sendBody(preamble);
+			this.cometResponse.write(preamble);
 		};
 		this.resetIntervalTimer();
 	};
@@ -200,20 +200,20 @@ exports.Session = Class(function() {
 		};
 		var batch = prefix + JSON.stringify(packetArray) + suffix;
 		if (this.isStreaming()) {
-			this.cometResponse.sendBody(batch);
+			this.cometResponse.write(batch);
 			this.resetIntervalTimer();
 		} else {
 			var body = (this.variables.prebuffer + this.variables.preamble + batch);
 			this.sendHeaders(this.cometResponse, body.length)
-			this.cometResponse.sendBody(body);
-			this.cometResponse.finish();
+			this.cometResponse.write(body);
+			this.cometResponse.close();
 			this.cometResponse = null;
 			$clearTimeout(this.durationTimer);
 		};
 	};
 	this.completeResponse = function() {
 		if (this.isStreaming()) {
-			this.cometResponse.finish(); // close a stream
+			this.cometResponse.close(); // close a stream
 			this.cometResponse = null;
 			$clearTimeout(this.durationTimer);
 			$clearTimeout(this.intervalTimer);
@@ -233,8 +233,8 @@ exports.Session = Class(function() {
 		var suffix = ')' + this.variables.requestSuffix;
 		body = prefix + body + suffix;
 		this.sendHeaders(response, body.length);
-		response.sendBody(body);
-		response.finish();
+		response.write(body);
+		response.close();
 	};
 	// a Server instance dispatches resources to this object's functions
 	this.dispatch = {
@@ -288,8 +288,8 @@ exports.Session = Class(function() {
 		reflect: function (request, response) {
 			var body = request.data;
 			this.sendHeaders(response, body.length);
-			response.sendBody(body);
-			response.finish();
+			response.write(body);
+			response.close();
 		},
 		streamtest: function (request, response) {
 			logger.debug('streamtest'); // XXX who knows what this does...?
@@ -364,49 +364,48 @@ exports.Server = Class(process.EventEmitter, function () {
 	var renderError = function (response, code, message) {
 		response.sendHeader(code, {'Content-Type'   : 'text/plain',
 								   'Content-Length' : message.length});
-		response.sendBody(message);
-		response.finish();
+		response.write(message);
+		response.close();
 	};
 	var sendStatic = function (path, response) {
 		logger.debug('SEND STATIC', path, response)
-		staticFile('./' + path.join('/'))	// defined in util.js
-			.addCallback(function(content){
+		staticFile('./' + path.join('/'), function(err, content){
+			if (err) {
+				renderError(response, 404, 'No such file, ' + path);
+			} else {
 				response.sendHeader(200, {'Content-Type'   : 'text/plain',
 										  'Content-Length' : content.length});
-				response.sendBody(content);
-				response.finish();
-			})
-			.addErrback(function(){
-				renderError(response, 404, 'No such file, ' + path);
-			});
+				response.write(content);
+				response.close();
+			}
+		})
 	};
 	// returns a request which fires with the whole post body as bytes, or
 	// immediately with null for GET requests
-	var getRequestBody = function (request) {
-		var promise = new process.Promise();
+	var getRequestBody = function (request, callback) {
 		if (request.method === 'GET') {
 			reschedule(function () {
-				promise.emitSuccess('');
+				callback('')
 			});
 		} else {
 			var body = [];
 			request.setBodyEncoding('binary');
 			request
-				.addListener('body', function (chunk) {
+				.addListener('data', function (chunk) {
+					logger.log("Server body")
 					body.push(chunk); // body += chunk
 				})
-				.addListener('complete', function () {
-					promise.emitSuccess(body.join(''));
+				.addListener('end', function () {
+					callback(body.join(''));
 				});
 		};
-		return promise;
 	};
 	// The logic of the server goes in the 'handleRequest' function, which is
 	// called every time a new request comes in.
 	var validResources = new Hash('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest'),
 		validMethods = new Hash('GET', 'POST');
 	this._handleRequest = function (request, response) {
-		getRequestBody(request).addCallback(bind(this, function(body) {
+		getRequestBody(request, bind(this, function(body) {
 			logger.debug('received request', request.url);
 			try {
 				var uri = nodeUrl.parse(request.url, true),

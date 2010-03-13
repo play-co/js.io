@@ -1,14 +1,14 @@
 jsio('from base import *');
-jsio('import net, logging');
+jsio('import net');
 jsio('from util.browser import $');
 jsio('from .world.constants import *');
 jsio('from .world.client import *');
 
-// logging.getLogger('world.client').setLevel(0);
-// logging.getLogger('csp.transports.jsonp').setLevel(0);
-// logging.getLogger('csp.client').setLevel(0);
-// logging.getLogger('csp.transports').setLevel(0);
-// logging.getLogger('DelimitedProtocol').setLevel(0);
+// logging.get('.world.client').setLevel(0);
+// logging.get('csp.transports.jsonp').setLevel(0);
+// logging.get('csp.client').setLevel(0);
+// logging.get('csp.transports').setLevel(0);
+// logging.get('DelimitedProtocol').setLevel(0);
 logging.setProduction(true);
 
 function addToHistory(params) {
