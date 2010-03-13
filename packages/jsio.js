@@ -60,11 +60,18 @@
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
 		this.log = function() {
+			var msg;
 			try {
-				process.stdio.writeError(Array.prototype.map.call(arguments, JSON.stringify).join(' ') + '\n');
+				process.stdio.writeError(msg = Array.prototype.map.call(arguments, function(a) {
+					if ((a instanceof Error) && a.message) {
+						return 'Error:' + a.message + '\nStack:' + a.stack + '\nArguments:' + a.arguments;
+					}
+					return typeof a == 'string' ? a : JSON.stringify(a);
+				}).join(' ') + '\n');
 			} catch(e) {
-				process.stdio.writeError(Array.prototype.join.call(arguments, ' ') + '\n');
+				process.stdio.writeError(msg = Array.prototype.join.call(arguments, ' ') + '\n');
 			}
+			return msg;
 		}
 		
 		this.getPath = function() {
@@ -94,7 +101,12 @@
 		this.global = window;
 		this.global.jsio = jsio;
 		
-		this.log = typeof console != 'undefined' && console.log ? bind(console, 'log') : function() {}
+		this.log = function() {
+			if(typeof console != 'undefined' && console.log) {
+				console.log.apply(console, arguments);
+			}
+			return Array.prototype.join.call(arguments, ' ');
+		}
 		
 		var cwd = null, path = null;
 		this.getCwd = function() {
