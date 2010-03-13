@@ -29,7 +29,8 @@ function canUseXHR(url) {
 	// if the URL requested is a different domain than the window,
 	// then we need to check for cross-domain support
 	if (window.XMLHttpRequest
-			&& xhr instanceof window.XMLHttpRequest
+			&& (xhr.__proto__ == XMLHttpRequest.prototype // WebKit Bug 25205
+				|| xhr instanceof window.XMLHttpRequest)
 			&& xhr.withCredentials !== undefined
 		|| window.XDomainRequest 
 			&& xhr instanceof window.XDomainRequest) {
@@ -122,7 +123,7 @@ transports.xhr = Class(baseTransport, function(supr) {
 		logger.debug('aborting XHR');
 		try {
 			if('onload' in xhr) {
-				xhr.onload = xhr.onerror = null;
+				xhr.onload = xhr.onerror = xhr.ontimeout = null;
 			} else if('onreadystatechange' in xhr) {
 				xhr.onreadystatechange = null;
 			}
