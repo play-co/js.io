@@ -34,41 +34,34 @@ jsio('from base import *');
 jsio('import std.uuid as uuid');
 jsio('import std.utf8 as utf8');
 jsio('import std.base64 as base64');
-jsio('import logging');
+jsio('import lib.Hash as Hash');
 jsio('from .util import *');
 
-var http = jsio.__env.require('http');
-var nodeUrl = jsio.__env.require("url");
+var http = jsio.__env.require('http'),
+	nodeUrl = jsio.__env.require('url');
 
-var logger = logging.getLogger('node.csp.server');
+var sessionDict = {},
+	varNames = {
+		// per session
+		'ct' : 'contentType',
+		'ps' : 'prebufferSize',
+		'p'	 : 'preamble',
+		'rp' : 'requestPrefix',
+		'rs' : 'requestSuffix',
+		'bp' : 'batchPrefix',
+		'bs' : 'batchSuffix',
+		'i'	 : 'interval',
+		'du' : 'duration',
+		'is' : 'isStreaming',
+		'g'	 : 'gzipOk',
+		'se' : 'sse',
+		// 's'	: 'sessionKey', // per request, handled at the csp.Server level
+		// 'a'	: 'ackId',			// left here to instruct other implementors.
+		// 'd'	: 'data',
+		// 'n'	: 'noCache',
+	};
 
-logger.setLevel(0);
-var csp = this.csp = exports;
-
-;(function () {
-
-var sessionDict = {};
-var varNames = {
-	// per session
-	'ct' : 'contentType',
-	'ps' : 'prebufferSize',
-	'p'	 : 'preamble',
-	'rp' : 'requestPrefix',
-	'rs' : 'requestSuffix',
-	'bp' : 'batchPrefix',
-	'bs' : 'batchSuffix',
-	'i'	 : 'interval',
-	'du' : 'duration',
-	'is' : 'isStreaming',
-	'g'	 : 'gzipOk',
-	'se' : 'sse',
-	// 's'	: 'sessionKey', // per request, handled at the csp.Server level
-	// 'a'	: 'ackId',			// left here to instruct other implementors.
-	// 'd'	: 'data',
-	// 'n'	: 'noCache',
-};
-
-csp.Session = Class(function() {
+exports.Session = Class(function() {
 	this.init = function () {
 		// this.lastAck = 0; // 'a' variable
 		this.key = uuid.uuid(8);			 // generate 8-character base-62 UUID
@@ -125,14 +118,15 @@ csp.Session = Class(function() {
 		this.send(null);
 		this.connection.readyState = (this.connection.readyState === 'open' ? 'readOnly' : 'closed');
 	};
+	
+	var updatedHeaders = new Hash('gzipOk', 'contentType');
 	this.updateVars = function (params) {
 		for (param in params) {
 			var key = varNames[param];
 			if (!key) continue;
 			var value = params[param];
-			// if gzipOk or contentType changes value, finish up any comet response
-			// with the previous values
-			if (key in Set('gzipOk', 'contentType') && value != this.variables[key] && this.cometResponse) {
+			// if gzipOk or contentType changes value, finish up any comet response with the previous values
+			if (updatedHeaders.contains(key) && value != this.variables[key] && this.cometResponse) {
 				this.completeResponse();
 			};
 			if (key in this.variables) {
@@ -242,13 +236,10 @@ csp.Session = Class(function() {
 		response.sendBody(body);
 		response.finish();
 	};
-	// a csp.Server instance dispatches resources to this object's functions
+	// a Server instance dispatches resources to this object's functions
 	this.dispatch = {
 		handshake: function (request, response) {
-			// debug('calling stringify');
-			var body = JSON.stringify( {'session': this.key})
-			// debug('stringify called');
-			this.renderResponse(response, body);
+			this.renderResponse(response, JSON.stringify( {'session': this.key}));
 		},
 		comet: function (request, response) {
 			this.cometResponse = response;
@@ -277,7 +268,7 @@ csp.Session = Class(function() {
 				} else if (encoding === 1) {
 					packetContent = base64.decode(content);
 				} else {
-					debug('BAD PACKET ENCODING,', encoding, '... dropping packet');
+					logger.debug('BAD PACKET ENCODING,', encoding, '... dropping packet');
 					break; // XXX probably should end connection here.
 				};
 				this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] = packetContent;
@@ -301,12 +292,12 @@ csp.Session = Class(function() {
 			response.finish();
 		},
 		streamtest: function (request, response) {
-			debug('streamtest'); // XXX who knows what this does...?
+			logger.debug('streamtest'); // XXX who knows what this does...?
 		},
 	};
 });
 
-csp.Connection = Class(process.EventEmitter, function() {
+exports.Connection = Class(process.EventEmitter, function() {
 	this.init = function (session) {
 		this.remoteAddress = null; // XXX get remote address from requests
 		this.readyState = 'open';
@@ -323,21 +314,24 @@ csp.Connection = Class(process.EventEmitter, function() {
 		};
 		this.emit('receive', data);
 	};
-	var known_encodings = Set('utf8', 'binary');
+	
+	var validEncodings = new Hash('utf8', 'binary');
 	this.setEncoding = function (encoding) {
-		assert(encoding in known_encodings, 'unrecognized encoding');
+		assert(validEncodings.contains(encoding), 'unrecognized encoding');
 		if (encoding !== 'utf8') {
 			assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer');
 		};
 		this._encoding = encoding;
 	};
+	
+	var validReadyStates = new Hash('writeOnly', 'open');
 	this.send = function (data, encoding) {
-		if (!(this.readyState in Set('writeOnly', 'open'))) {
+		if (!validReadyStates.contains(this.readyState)) {
 			// XXX make error type for this
 			throw new Error("Socket is not writable in readyState: " + this.readyState);
 		};
 		encoding = encoding || 'binary'; // default to 'binary'
-		assert(encoding in known_encodings, 'unrecognized encoding');
+		assert(validEncodings.contains(encoding), 'unrecognized encoding');
 		data = (encoding === 'utf8') ? utf8.encode(data) : data;
 		this._session.send(data);
 	};
@@ -346,11 +340,11 @@ csp.Connection = Class(process.EventEmitter, function() {
 	};
 });
 
-csp.createServer = function (connection_listener) {
-	return new csp.Server().addListener('connection', connection_listener);
+exports.createServer = function (connection_listener) {
+	return new exports.Server().addListener('connection', connection_listener);
 };
 
-csp.Server = Class(process.EventEmitter, function () {
+exports.Server = Class(process.EventEmitter, function () {
 	this.init = function (sessionURL) {
 		process.EventEmitter.call(this);
 		this._sessionUrl = sessionURL || ''; 
@@ -374,7 +368,7 @@ csp.Server = Class(process.EventEmitter, function () {
 		response.finish();
 	};
 	var sendStatic = function (path, response) {
-		debug('SEND STATIC', path, response)
+		logger.debug('SEND STATIC', path, response)
 		staticFile('./' + path.join('/'))	// defined in util.js
 			.addCallback(function(content){
 				response.sendHeader(200, {'Content-Type'   : 'text/plain',
@@ -409,8 +403,8 @@ csp.Server = Class(process.EventEmitter, function () {
 	};
 	// The logic of the server goes in the 'handleRequest' function, which is
 	// called every time a new request comes in.
-	var resources = Set('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest');
-	var methods = Set('GET', 'POST');
+	var validResources = new Hash('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest'),
+		validMethods = new Hash('GET', 'POST');
 	this._handleRequest = function (request, response) {
 		getRequestBody(request).addCallback(bind(this, function(body) {
 			logger.debug('received request', request.url);
@@ -421,7 +415,8 @@ csp.Server = Class(process.EventEmitter, function () {
 
 				assertOrRenderError(startswith(path, sessionUrl + '/'),
 									404, 'Request to invalid session URL');
-				assertOrRenderError(request.method in methods,
+				logger.debug(request.method);
+				assertOrRenderError(validMethods.contains(request.method),
 									405, 'Invalid HTTP method, ' + request.method);
 				
 				var resource = path.split('/').pop();
@@ -432,7 +427,7 @@ csp.Server = Class(process.EventEmitter, function () {
 					return;
 				};
 
-				assertOrRenderError(resources.hasOwnProperty(resource),
+				assertOrRenderError(validResources.contains(resource),
 									404, 'Invalid resource, ' + path);
 
 				var params = uri.query;
@@ -446,11 +441,11 @@ csp.Server = Class(process.EventEmitter, function () {
 						// make sure our json dict is an object literal
 						assert((dict instanceof Object) && !(dict instanceof Array));
 					} catch (err) {
-						debug('INVALID HANDSHAKE, ', request, err);
+						logger.debug('INVALID HANDSHAKE, ', request, err);
 						throw new CSPError(400, 'Invalid data parameter for handshake');
 					};
-					var session = new csp.Session();
-					var connection = new csp.Connection(session);
+					var session = new exports.Session();
+					var connection = new exports.Connection(session);
 					session.connection = connection;
 					this.emit('connection', connection);
 					connection.emit('connect');
@@ -468,7 +463,7 @@ csp.Server = Class(process.EventEmitter, function () {
 				if (err instanceof CSPError) {
 					renderError(response, err.code, err.message);					 
 				} else {
-					debug('Unexpected Error: ', err.message);
+					logger.debug('Unexpected Error: ', err.message);
 					renderError(response, 500, 'Unknown Server error');
 				};
 			};
@@ -476,12 +471,10 @@ csp.Server = Class(process.EventEmitter, function () {
 	};
 	this.listen = function (port, host) {
 		var server = http.createServer(bind(this, this._handleRequest));
+		if (!port) { throw logger.error('No port specified'); }
 		server.listen(port, host);
-		hoststring = host ? host : 'localhost';
 	};
 });
-
-})(); // end closure w/ code for csp
 
 /* // un-comment to run echo server when this file runs
 
