@@ -3,7 +3,11 @@ jsio('import logging');
 var logger = logging.getLogger('net.env');
 
 function getObj(objectName, transportName, envName) {
-	jsio('from .env.' + (envName || jsio.__env.name) + '.' + transportName + ' import ' + objectName + ' as result');
+	try {
+		jsio('from .env.' + (envName || jsio.__env.name) + '.' + transportName + ' import ' + objectName + ' as result');
+	} catch(e) {
+		throw logger.error('Invalid transport (', transportName, ') or environment (', envName, ')');
+	}
 	return result;
 }
 
