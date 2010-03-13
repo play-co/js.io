@@ -111,7 +111,7 @@ exports.logging = (function() {
 	var Logger = exports.Class(function() {
 		this.init = function(name, level) {
 			this._name = name;
-			this._level = level || logging.DEBUG;
+			this._level = level || logging.LOG;
 		}
 		
 		this.setLevel = function(level) { this._level = level; }
@@ -121,7 +121,7 @@ exports.logging = (function() {
 		function makeLogFunction(level, type) {
 			return function() {
 				if (!production && level >= this._level) {
-					log.apply(log, [type, this._name].concat(slice.call(arguments, 0)));
+					return log.apply(log, [type, this._name].concat(slice.call(arguments, 0)));
 				}
 				return arguments[0];
 			}
@@ -136,3 +136,5 @@ exports.logging = (function() {
 
 	return logging;
 })();
+
+var logger = exports.logging.get('jsiocore');
