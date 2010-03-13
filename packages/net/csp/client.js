@@ -47,7 +47,7 @@ exports.CometSession = Class(function(supr) {
 		this._writeBackoff = kDefaultBackoff;
 		this._writeRetryTimer = null;
 		
-		this.cometBackoff = kDefaultBackoff;
+		this._cometBackoff = kDefaultBackoff;
 		this._cometRetryTimer = null;
 		
 	}
