@@ -29,26 +29,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 jsio('from base import *');
 
-exports.debug = function () {
-	var message = [];
-	for (var i=0; i < arguments.length; i++) {
-		var arg = arguments[i];
-		arg = (typeof arg === 'string') ? arg : JSON.stringify(arg)
-		message.push(arg);
-	};
-	process.stdio.writeError(message.join(' ') + '\n');
-};
-
-// helper to make a hash table from the arguments for membership testing
-// Use like: 'a' in Set('a', 'b', 'c')
-exports.Set = function () {
-	var set = {};
-	for (var i = 0, len = arguments.length; i < len; i++) {
-		set[arguments[i]] = true;
-	};
-	return set;
-};
-
 // helper to test if string 2 is at the beginning of string 1
 exports.startswith = function (str1, str2) {
 	return str1.substring(0, str2.length) == str2;
