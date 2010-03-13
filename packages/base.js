@@ -4,11 +4,23 @@ exports.bind = function(context, method /*, VARGS*/) {
 	if(arguments.length > 2) {
 		var args = Array.prototype.slice.call(arguments, 2);
 		return typeof method == 'string'
-			? function() { return context[method].apply(context, args.concat(Array.prototype.slice.call(arguments, 0))); }
+			? function() {
+				if (context[method]) {
+					return context[method].apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
+				} else {
+					throw logger.error('No method:', method, 'for context', context);
+				}
+			}
 			: function() { return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0))); }
 	} else {
 		return typeof method == 'string'
-			? function() { exports.log('crash?', method, context, arguments); return context[method].apply(context, arguments); }
+			? function() {
+				if (context[method]) {
+					return context[method].apply(context, arguments);
+				} else {
+					throw logger.error('No method:', method, 'for context', context);
+				}
+			}
 			: function() { return method.apply(context, arguments); }
 	}
 }
@@ -26,7 +38,7 @@ exports.Class = function(parent, proto) {
 			}
 		}
 		parent = parent[0]; 
-	} else { 
+	} else {
 		proto.prototype = parent.prototype;
 	}
 
