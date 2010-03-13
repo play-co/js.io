@@ -1,6 +1,4 @@
 jsio('from base import *');
-jsio('import logging')
-var logger = logging.getLogger('net.later');
 
 exports.Later = Class(function() {
 	this.init = function() {
