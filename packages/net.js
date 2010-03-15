@@ -1,12 +1,12 @@
 jsio('import net.env');
 jsio('import std.JSON as JSON');
-jsio('import logging')
-
-var logger = logging.getLogger('net');
 
 JSON.createGlobal(); // create the global JSON object if it doesn't already exist
 
 exports.listen = function(server, transportName, opts) {
+	if (!transportName) {
+		throw logger.error('No transport provided for net.listen');
+	}
 	var listenerClass = net.env.getListener(transportName);
 	var listener = new listenerClass(server, opts);
 	listener.listen();
