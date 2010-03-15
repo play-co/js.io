@@ -1,5 +1,6 @@
 // Sort of like a twisted protocol
 jsio('from base import *');
+jsio('import net');
 
 var ctx = jsio.__env.global;
 
@@ -32,6 +33,9 @@ exports.Server = Class(function() {
 		return new this._protocolClass();
 	}
 	
+	this.listen = function(how, port) {
+		net.listen(this, how, port);
+	}
 });
 
 exports.Transport = Class(function() {
