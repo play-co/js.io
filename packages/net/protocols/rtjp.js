@@ -1,8 +1,7 @@
 jsio('from base import *');
-jsio('import net.interfaces, logging');
+jsio('import net.interfaces');
 jsio('from net.protocols.delimited import DelimitedProtocol');
 
-var logger = logging.getLogger('RTJPProtocol')
 exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	this.init = function() {
 		var delimiter = '\n';
@@ -15,7 +14,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	}
 	
 	var error = function(e) {
-		logger.warn('Error: ', e, e.traceback);
+		logger.error(e);
 	}
 	
 	// Inherit and overwrite
