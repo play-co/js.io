@@ -10,6 +10,18 @@ exports.Protocol = Class(function() {
 	this.connectionFailed = function() {}
 });
 
+exports.Client = Class(function() {
+	this.init = function(protocol) {
+		this._protocol = protocol;
+	}
+	
+	this.connect = function(transportName, opts) {
+		this._remote = new this._protocol();
+		this._remote._client = this;
+		net.connect(this._remote, transportName, opts);
+	}
+});
+
 // Sort of like a twisted factory
 exports.Server = Class(function() {
 	this.init = function(protocolClass) {
