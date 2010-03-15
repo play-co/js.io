@@ -392,7 +392,6 @@ exports.Server = Class(process.EventEmitter, function () {
 			request.setBodyEncoding('binary');
 			request
 				.addListener('data', function (chunk) {
-					logger.log("Server body")
 					body.push(chunk); // body += chunk
 				})
 				.addListener('end', function () {
