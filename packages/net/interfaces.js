@@ -50,13 +50,18 @@ exports.Listener = Class(function() {
 	}
 	
 	this.onConnect = function(transport) {
-		var p = this._server.buildProtocol();
-		p.transport = transport;
-		p.server = this._server;
-		transport.protocol = p;
-		transport.makeConnection(p);
-		p.connectionMade();
+		try {
+			var p = this._server.buildProtocol();
+			p.transport = transport;
+			p.server = this._server;
+			transport.protocol = p;
+			transport.makeConnection(p);
+			p.connectionMade();
+		} catch(e) {
+			logger.error(e);
+		}
 	}
+	
 	this.listen = function() { throw new Error('Abstract class'); }
 	this.stop = function() {}
 });
@@ -70,10 +75,20 @@ exports.Connector = Class(function() {
 	this.onConnect = function(transport) {
 		transport.makeConnection(this._protocol);
 		this._protocol.transport = transport;
-		this._protocol.connectionMade();
+		try {
+			this._protocol.connectionMade();
+		} catch(e) {
+			throw logger.error(e);
+		}
 	}
+	
 	this.onDisconnect = function() {
-		this._protocol.connectionLost();
+		try {
+			this._protocol.connectionLost();
+		} catch(e) {
+			throw logger.error(e);
+		}
 	}
+	
 	this.getProtocol = function() { return this._protocol; }
 });
