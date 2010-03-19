@@ -16,7 +16,7 @@ var Transport = Class(net.interfaces.Transport, function() {
 	}
 
 	this.write = function(data) {
-		this._socket.send(data);
+		this._socket.write(data);
 	}
 
 	this.loseConnection = function() {
