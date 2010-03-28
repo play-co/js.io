@@ -38,6 +38,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 //		conn.addListener("receive", bind(this._protocol, 'dataReceived'));
 		this._opts.encoding = 'plain';
 		conn.setEncoding("binary");
+		if (typeof this._opts.timeout == 'number') { conn.setTimeout(this._opts.timeout); }
 	}
 });
 
