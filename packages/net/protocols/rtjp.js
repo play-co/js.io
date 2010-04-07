@@ -4,7 +4,7 @@ jsio('from net.protocols.delimited import DelimitedProtocol');
 
 exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	this.init = function() {
-		var delimiter = '\n';
+		var delimiter = '\r\n';
 		supr(this, 'init', [delimiter]);
 		this.frameId = 0;
 	}
