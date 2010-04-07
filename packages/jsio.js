@@ -1,7 +1,10 @@
 // jsio/browser.js
 
 ;(function() {
-	var ENV, sourceCache = {};
+	var ENV, sourceCache = {
+		// Insert pre-loaded modules here...
+		
+	};
 	
 	function bind(context, method/*, args... */) {
 		var args = Array.prototype.slice.call(arguments, 2);
@@ -14,6 +17,9 @@
 	jsio = bind(this, importer, null, '');
 	jsio.__filename = 'jsio.js';
 	jsio.modules = [];
+	jsio.setCachedSrc = function(pkg, filePath, src) {
+		sourceCache[pkg] = { filePath: filePath, src: src };
+	}
 	jsio.path = {};
 	jsio.setPath = function(path) { jsio.path.__default__ = typeof path == 'string' ? [path] : path; }
 	jsio.setEnv = function(env) {
