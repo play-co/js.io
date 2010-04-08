@@ -28,8 +28,6 @@ length_after_colon:id,2datadatadata
 var loggers = {};
 loggers.stream = logging.getLogger('MSPPStream');
 loggers.protocol = logging.getLogger('MSPPProtocol');
-loggers.stream.setLevel(0);
-loggers.protocol.setLevel(0);
 
 var frames = {
 	'OPEN':  0,
@@ -68,8 +66,15 @@ exports.MSPPStream = Class(function() {
 	}
 
 	this._onreadraw = function(data) {
-		if (this.encoding == 'utf8')
-			data = utf8.decode(data);
+		if (this.encoding == 'utf8') {
+			var raw = utf8.decode(data);
+			var length = raw[1];
+			// TODO: actually buffer this stuff properly
+			if (length != data.length) {
+				throw new Error("Incomplete utf8 codepoint");
+			}
+			data = raw[0]
+		}
 		loggers.stream.debug('_onreadraw '+data);
 		this.onread(data);
 	}
