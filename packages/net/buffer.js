@@ -20,7 +20,7 @@ exports.Buffer = Class(function(supr) {
 	}
 
 	this.append = function(data) {
-		logger.info('append', JSON.stringify(data));
+		logger.debug('append', JSON.stringify(data));
 		this._rawBuffer += data;
 	}
 
