@@ -59,21 +59,22 @@
 	*/
 	
 	function ENV_node() {
-		var fs = require('fs');
+		var fs = require('fs'),
+			sys = require('sys');
 		
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
 		this.log = function() {
 			var msg;
 			try {
-				process.stdio.writeError(msg = Array.prototype.map.call(arguments, function(a) {
+				sys.error(msg = Array.prototype.map.call(arguments, function(a) {
 					if ((a instanceof Error) && a.message) {
 						return 'Error:' + a.message + '\nStack:' + a.stack + '\nArguments:' + a.arguments;
 					}
 					return typeof a == 'string' ? a : JSON.stringify(a);
 				}).join(' ') + '\n');
 			} catch(e) {
-				process.stdio.writeError(msg = Array.prototype.join.call(arguments, ' ') + '\n');
+				sys.error(msg = Array.prototype.join.call(arguments, ' ') + '\n');
 			}
 			return msg;
 		}
