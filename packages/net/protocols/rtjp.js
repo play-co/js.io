@@ -43,9 +43,6 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 			if (typeof(frame[1]) != "string") {
 				return error.call(this, "Invalid frame name");
 			}
-			if (typeof(frame[2]) != "object") {
-				return error.call(this, "Invalid frame args");
-			}
 			logger.debug("frameReceived:", frame[0], frame[1], frame[2]);
 			this.frameReceived(frame[0], frame[1], frame[2]);
 		} catch(e) {
