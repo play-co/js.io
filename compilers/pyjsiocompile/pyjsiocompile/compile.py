@@ -116,13 +116,14 @@ def main(argv=None):
     # figure out where it is. we modify the generated script to store the
     # expected script name. later on, we can compare that against script
     # tag src's.
-    output = \
-        output.replace(get_script_src_assignment('jsio.js'),
-                       get_script_src_assignment(os.path.basename(OUTPUT)))
-    
-    expose = re.compile('window\.jsio\s=\sjsio;');
-    output = expose.sub(options.initialImport + (options.exposeJsio and ';window.jsio=jsio;' or ''), output, 1);
-    
+#    output = \
+#        output.replace(get_script_src_assignment('jsio.js'),
+#                       get_script_src_assignment(os.path.basename(OUTPUT)))
+                       
+#    expose = re.compile('window\.jsio\s=\sjsio;');
+#    expose = re.compile('this\.global\.jsio\s=\sjsio');
+#    output = expose.sub(options.initialImport + (options.exposeJsio and ';this.global.jsio=jsio;' or ''), output, 1);
+    output += options.initialImport;
     if options.minify:
         log.info("Minifying")
         output = minify(output)
@@ -173,6 +174,7 @@ def minify(src):
     jsm.minify(StringIO.StringIO(src), o)
     return o.getvalue()
 
+
 def get_source(target):
     log.debug('fetching source from %s', target)
     if '://' in target:
@@ -181,22 +183,23 @@ def get_source(target):
         return fileopen(target).read()
 
 def build_transport_paths(environments, transports):
-    return ['jsio.env.%s.%s' % (environment, transport)
+    return ['net.env.%s.%s' % (environment, transport)
             for transport in transports
             for environment in environments]
     
 def get_transport_dependencies(jsio, env, xprts, path_template, extras=[]):
     dependencies = []
     for xprt in xprts:
-        print join_paths(jsio, 'env', env, xprt) + '.js'
+        print join_paths(jsio, 'net', 'env', env, xprt) + '.js'
         raw_source = \
-            get_source(join_paths(jsio, 'env', env, xprt) + '.js')
+            get_source(join_paths(jsio, 'net', 'env', env, xprt) + '.js')
         source = remove_comments(raw_source)
         dependencies.extend(map(lambda x: (x, path_template % env), 
                                 (extract_dependencies(source))))
     return dependencies
     
 def get_dependencies(source, path='', extras=[]):
+    print '** get dependencies for', source
     return map(lambda x: (x, path), 
                (extract_dependencies(source) + extras))
     
@@ -218,7 +221,7 @@ def compile_source(target, options, extras=[]):
     dependencies = get_dependencies(target_source, extras)
     dependencies.append(('jsio','jsio.jsio'))
     print 'dependencies:', dependencies
-    checked = [target_module, 'jsio.env', 'log', 'Class', 'bind']
+    checked = [target_module, 'net.env', 'log', 'Class', 'bind']
     transport_paths = build_transport_paths(options.environments,
                                             options.transports)
     checked.extend(transport_paths)
@@ -227,7 +230,7 @@ def compile_source(target, options, extras=[]):
             get_transport_dependencies(options.jsio,
                                        environment,
                                        options.transports,
-                                       'jsio.env.%s.'))
+                                       'net.env.%s.'))
     print 'dependencies:',dependencies
     log.debug('checked is %s', checked)
     while dependencies:
@@ -248,7 +251,7 @@ def compile_source(target, options, extras=[]):
         
     sources = {}
     sources[target_module] = dict(src=minify(target_source),
-                                  location=target_module_path)
+                                  filePath=target_module_path)
     log.debug('checked is %s', checked)
     for full_path in checked:
         if full_path in (target_module, 'jsio', # 'jsio.env',
@@ -260,7 +263,7 @@ def compile_source(target, options, extras=[]):
         virtual_filename = path_for_module(full_path, prefix='jsio')
         log.debug(virtual_filename)
             
-        sources[full_path] = {'src': minify(src), 'location': virtual_filename, }
+        sources[full_path] = {'src': minify(src), 'filePath': virtual_filename, }
         
     out = ',\n'.join([ repr(str(key)) + ": " + json.dumps(val)
                        for (key, val) in sources.items() ])
@@ -270,12 +273,16 @@ def compile_source(target, options, extras=[]):
     return final_output
 
 def path_for_module(full_path, prefix):
+    print 'path_for_module', full_path
+    is_relative = full_path[0] == '.'
     path_components = full_path.split('.')
     if full_path == 'jsio':
         path_components = [prefix, full_path]
     elif (path_components[0] == 'jsio'):
         path_components[0] = prefix
-    log.debug(path_components)
+    elif not is_relative:
+        path_components.insert(0, prefix)
+    #log.info('TEST', path_components)
     return join_paths(*path_components) + '.js'
 
 def joinModulePath(a, b):
@@ -300,7 +307,8 @@ def extract_dependencies(src):
     for item in re2.finditer(src):
         for listItem in re3.finditer(item.groups()[0]):
             dependencies.append(listItem.groups()[0])
-
+    if dependencies:
+        print 'returning', dependencies
     return dependencies
     
 def remove_comments(src):
