@@ -34,7 +34,7 @@ exports.Server = Class(function() {
 	}
 	
 	this.listen = function(how, port) {
-		net.listen(this, how, port);
+		return net.listen(this, how, port);
 	}
 });
 
