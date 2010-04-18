@@ -78,7 +78,7 @@
 						return 'Error:' + a.message + '\nStack:' + a.stack + '\nArguments:' + a.arguments;
 					}
 					return typeof a == 'string' ? a : JSON.stringify(a);
-				}).join(' ') + '\n');
+				}).join(' '));
 			} catch(e) {
 				sys.error(msg = Array.prototype.join.call(arguments, ' ') + '\n');
 			}
