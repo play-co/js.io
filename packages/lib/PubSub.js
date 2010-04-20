@@ -21,10 +21,24 @@ exports = Class(function() {
 		return this;
 	}
 	
-	this.subscribe = function(signal) {
+	this.subscribe = function(signal, ctx, method) {
 		if(!this._subscribers) { this._subscribers = {}; }
 		if(!this._subscribers[signal]) { this._subscribers[signal] = []; }
-		this._subscribers[signal].push(bind.apply(ctx, Array.prototype.slice.call(arguments, 1)));
+		var cb = bind.apply(ctx, Array.prototype.slice.call(arguments, 1));
+		cb._ctx = ctx; // references for unsubscription
+		cb._method = method;
+		this._subscribers[signal].push(cb);
+		return this;
+	}
+	
+	// if no method is specified, all subscriptions with a callback context of ctx will be removed
+	this.unsubscribe = function(signal, ctx, method) {
+		var subs = this._subscribers[signal];
+		for (var i = 0, c; c = subs[i]; ++i) {
+			if (c._ctx == ctx && (!method || c._method == method)) {
+				subs[i].splice(i--, 1);
+			}
+		}
 		return this;
 	}
 });
