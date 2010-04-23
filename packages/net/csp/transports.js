@@ -51,6 +51,8 @@ exports.chooseTransport = function(url, options) {
 	}
 };
 
+// TODO: would be nice to use these somewhere...
+
 var PARAMS = {
 	'xhrstream':   {"is": "1", "bs": "\n"},
 	'xhrpoll':     {"du": "0"},
@@ -79,6 +81,7 @@ exports.Transport = Class(function(supr) {
 
 var baseTransport = Class(exports.Transport, function(supr) {
 	this.init = function() {
+		this._aborted = false;
 		this._handshakeArgs = {
 			d:'{}',
 			ct:'application/javascript'
@@ -105,11 +108,12 @@ var baseTransport = Class(exports.Transport, function(supr) {
 						  this.cometFailure);
 	};
 	
-	this.send = function(url, sessionKey, data, options) {
+	this.send = function(url, sessionKey, lastEventId, data, options) {
 		logger.debug('send:', url, sessionKey, data, options);
 		args = {
 			d: data,
-			s: sessionKey
+			s: sessionKey,
+			a: lastEventId
 		};
 		this._makeRequest('send', url + '/send', 
 						  args, 
@@ -119,6 +123,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 });
 
 transports.xhr = Class(baseTransport, function(supr) {
+	
 	var abortXHR = function(xhr) {
 		logger.debug('aborting XHR');
 		try {
@@ -143,6 +148,7 @@ transports.xhr = Class(baseTransport, function(supr) {
 	};
 
 	this.abort = function() {
+		this._aborted = true;
 		for(var i in this._xhr) {
 			if(this._xhr.hasOwnProperty(i)) {
 				abortXHR(this._xhr[i]);
@@ -180,6 +186,9 @@ transports.xhr = Class(baseTransport, function(supr) {
 	 * even though we encode the POST body as in application/x-www-form-urlencoded
 	 */
 	this._makeRequest = function(rType, url, args, cb, eb) {
+		if (this._aborted) {
+			return;
+		}
 		var xhr = this._xhr[rType], data = args.d || null;
 		if('d' in args) { delete args.d; }
 		xhr.open('POST', url + '?' + uri.buildQuery(args)); // must open XHR first
@@ -190,7 +199,11 @@ transports.xhr = Class(baseTransport, function(supr) {
 		} else if('onreadystatechange' in xhr) {
 			xhr.onreadystatechange = bind(this, '_onReadyStateChange', rType, cb, eb);
 		}
-		setTimeout(bind(xhr, xhr.send, data), 0);
+		if(data) {
+			xhr.send(data);
+		} else {
+			xhr.send();
+		}
 	};
 });
 
@@ -254,6 +267,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 	};
 
 	this.abort = function() {
+		this._aborted = true;
 		for(var i in this._ifr) {
 			if(this._ifr.hasOwnProperty(i)) {
 				var ifr = this._ifr[i];
