@@ -6,7 +6,7 @@ import os, sys
 
 setup(
     name='pyjsiocompile',
-    version='0.1a5',
+    version='0.1a6',
     author='Michael Carter',
     author_email='CarterMichael@gmail.com',
     license='MIT License',
@@ -14,7 +14,13 @@ setup(
     long_description='',
     packages= find_packages(),
     zip_safe = True,
-    install_requires=['beautifulsoup', 'coverage', 'distribute', 'mock', 'nose'],
+    install_requires=[
+        'beautifulsoup', 
+        #'coverage', 
+        #'distribute', 
+        #'mock', 
+        #'nose'
+    ],
     entry_points = '''    
         [console_scripts]
         jsio_compile = pyjsiocompile.compile:main
