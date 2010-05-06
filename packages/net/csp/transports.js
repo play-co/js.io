@@ -156,24 +156,31 @@ transports.xhr = Class(baseTransport, function(supr) {
 	};
 
 	this._onReadyStateChange = function(rType, cb, eb) {
+		
+		var response = '';
 		try {
 			var xhr = this._xhr[rType];
 			if(xhr.readyState != 4) { return; }
+			
+			var response = eval(xhr.responseText);
+			
 			if(xhr.status != 200) { 
 				logger.debug('XHR failed with status ', xhr.status);
-				eb();
+				eb(xhr.status, response);
 				return;
 			}
-		
+			
 			logger.debug('XHR data received');
-			cb(eval(xhr.responseText));
 		} catch(e) {
 			var xhr = this._xhr[rType];
 			logger.debug('Error in XHR::onReadyStateChange', e);
-			eb();
+			eb(xhr.status, response);
 			abortXHR(xhr);
 			logger.debug('done handling XHR error');
+			return;
 		}
+		
+		cb(response);
 	};
 
 	/**

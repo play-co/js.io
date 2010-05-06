@@ -106,6 +106,7 @@ exports.CometSession = Class(function(supr) {
 		this._writeBuffer += data;
 		this._doWrite();
 	}
+	
 	this.close = function(err) {
 		switch(this.readyState) {
 			case READYSTATE.CONNECTING:
@@ -122,6 +123,11 @@ exports.CometSession = Class(function(supr) {
 				throw new errors.ReadyStateError("Session is already disconnected");
 				break;
 		}
+		
+		this._sessionKey = null;
+		this._opened = false; // what is this used for???
+		this.readyState = READYSTATE.DISCONNECTED;
+		
 		this._doOnDisconnect(err);
 	}
 
@@ -194,8 +200,11 @@ exports.CometSession = Class(function(supr) {
 		this._transport.comet(this._url, this._sessionKey, this._lastEventId || 0, this._options);
 	}
 
-	this._cometFailure = function() {
+	this._cometFailure = function(status, message) {
 		if (this.readyState != READYSTATE.CONNECTED) { return; }
+		if (status == 404 && message == 'Session not found') {
+			return this.close();
+		}
 		this._cometTimer = $setTimeout(bind(this, function() {
 			this._doConnectComet();
 		}), this._cometBackoff);
