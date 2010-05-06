@@ -1,8 +1,3 @@
-jsio('from base import *');
-jsio('import logging');
-
-var logger = logging.getLogger('uri');
-
 var attrs = [ 
 	"source",
 	"protocol",
@@ -52,6 +47,18 @@ exports.buildQuery = function(kvp) {
 		pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(kvp[key]));
 	}
 	return pairs.join('&');
+}
+
+exports.parseQuery = function(str) {
+	var pairs = str.split('&'),
+		n = pairs.length,
+		data = {};
+	for (var i = 0; i < n; ++i) {
+		var pair = pairs[i].split('='),
+			key = decodeURIComponent(pair[0]);
+		if (key) { data[key] = decodeURIComponent(pair[1]); }
+	}
+	return data;
 }
 
 // Regexs are based on parseUri 1.2.2
