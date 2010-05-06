@@ -17,3 +17,5 @@ exports.SessionTimeout = makeErrorClass("HandshakeTimeout", 101);
 
 exports.ServerProtocolError = makeErrorClass("ServerProtocolError", 200);
 
+exports.ServerClosedConnection = makeErrorClass("ServerClosedConnection", 301);
+exports.ConnectionClosedCleanly = makeErrorClass("ConnectionClosedCleanly", 300);

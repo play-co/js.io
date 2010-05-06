@@ -36,7 +36,7 @@ exports = Class(function() {
 		var subs = this._subscribers[signal];
 		for (var i = 0, c; c = subs[i]; ++i) {
 			if (c._ctx == ctx && (!method || c._method == method)) {
-				subs[i].splice(i--, 1);
+				subs.splice(i--, 1);
 			}
 		}
 		return this;

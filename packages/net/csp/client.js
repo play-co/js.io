@@ -2,12 +2,10 @@ jsio('from base import *');
 jsio('import std.base64 as base64');
 jsio('import std.utf8 as utf8');
 jsio('import std.uri as uri'); 
-jsio('import logging');
 jsio('import .errors');
 jsio('import .transports');
 
-var logger = logging.getLogger("csp.client");
-
+//var logger = logging.getLogger("csp.client");
 var READYSTATE = exports.READYSTATE = {
 	INITIAL: 0,
 	CONNECTING: 1,
@@ -15,6 +13,7 @@ var READYSTATE = exports.READYSTATE = {
 	DISCONNECTING: 3,
 	DISCONNECTED:  4
 };
+
 
 exports.CometSession = Class(function(supr) {
 	var id = 0;
@@ -45,11 +44,12 @@ exports.CometSession = Class(function(supr) {
 
 		
 		this._writeBackoff = kDefaultBackoff;
-		this._writeRetryTimer = null;
-		
 		this._cometBackoff = kDefaultBackoff;
-		this._cometRetryTimer = null;
 		
+		this._nullInBuffer = false;
+		this._nullInFlight= false;
+		this._nullSent = false;
+		this._nullReceived = false;
 	}
 	
 	
@@ -107,16 +107,60 @@ exports.CometSession = Class(function(supr) {
 		this._doWrite();
 	}
 	
+	// Close due to protocol error
+	this._protocolError = function(msg) {
+		logger.debug('_protocolError', msg);
+		// Immediately fire the onclose
+		// send a null packet to the server
+		// don't wait for a null packet back.
+		this.readyState = READYSTATE.DISCONNECTED;
+		this._doWrite(true);
+		this._doOnDisconnect(new errors.ServerProtocolError(msg));
+	}
+	
+	this._receivedNullPacket = function() {
+		logger.debug('_receivedNullPacket');
+		// send a null packet back to the server
+		this._receivedNull = true;
+		
+		// send our own null packet back. (maybe)
+		if (!(this._nullInFlight || this._nullInBuffer || this._nullSent)) {
+			this.readyState = READYSTATE.DISCONNECTING;
+			this._doWrite(true);
+		}
+		else {
+			this.readyState = READYSTATE.DISCONNECTED;
+		}
+		
+		// fire an onclose
+		this._doOnDisconnect(new errors.ConnectionClosedCleanly());
+
+	}
+	
+	this._sentNullPacket = function() {
+		logger.debug('_sentNullPacket');
+		this._nullSent = true;
+		if (this._nullSent && this._nullReceived) {
+			this.readyState = READYSTATE.DISCONNECTED;
+		}
+	}
+	
+	
+	// User Calls close
 	this.close = function(err) {
+		logger.debug('close called', err, 'readyState', this.readyState);
+
+		// 
 		switch(this.readyState) {
 			case READYSTATE.CONNECTING:
 				clearTimeout(this._handshakeRetryTimer);
 				clearTimeout(this._handshakeTimeoutTimer);
+				this.readyState = READYSTATE.DISCONNECTED;
+				this._doOnDisconnect(err);
 				break;
 			case READYSTATE.CONNECTED:
-				this._transport.abort();
-				clearTimeout(this._cometRetryTimer);
-				clearTimeout(this._writeRetryTimer);
+				this.readyState = READYSTATE.DISCONNECTING;
+				this._doWrite(true);
 				clearTimeout(this._timeoutTimer);
 				break;
 			case READYSTATE.DISCONNECTED:
@@ -167,31 +211,61 @@ exports.CometSession = Class(function(supr) {
 	}
 	
 	this._writeSuccess = function() {
-		if (this.readyState != READYSTATE.CONNECTED) { return; }
+		if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
+			return; 
+		}
+		if (this._nullInFlight) {
+			return this._sentNullPacket();
+			this.readyState = READYSTATE.DISCONNECTED;
+			return;
+		}
 		this._resetTimeoutTimer();
 		this.writeBackoff = kDefaultBackoff;
 		this._packetsInFlight = null;
-		if (this._writeBuffer) {
-			this._doWrite();
+		if (this._writeBuffer || this._nullInBuffer) {
+			this._doWrite(this._nullInBuffer);
 		}
 	}
 	
 	this._writeFailure = function() {
-		if (this.readyState != READYSTATE.CONNECTED) { return; }
+		if (this.readyState != READYSTATE.CONNECTED && this.READYSTATE != READYSTATE.DISCONNECTING) { return; }
 		this._writeTimer = $setTimeout(bind(this, function() {
 			this._writeTimer = null;
-			this._doWrite();
+			this.__doWrite(this._nullInBuffer);
 		}), this._writeBackoff);
 		this._writeBackoff *= 2;
 	}	
+
+	this._doWrite = function(sendNull) {
+		if (this._packetsInFlight) {
+			if (sendNull) {
+				this._nullInBuffer = true;
+				return; 
+			}
+			return;
+		}
+		this.__doWrite(sendNull);
+	}
 	
-	this._doWrite = function() {
-		if(this._packetsInFlight) { return; }
+	this.__doWrite = function(sendNull) {
 		logger.debug('_writeBuffer:', this._writeBuffer);
-		this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
-		this._writeBuffer = "";
+		if (!this._packetsInFlight && this._writeBuffer) {
+			this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
+			this._writeBuffer = "";
+		}
+		if (sendNull && !this._writeBuffer) {
+			if (!this._packetsInFlight) {
+				this._packetsInFlight = [];
+			}
+			this._packetsInFlight.push([++this._lastSentId, 0, null]);
+			this._nullInFlight = true;
+		}
+		if (!this._packetsInFlight) {
+			logger.debug("no packets to send");
+			return;
+		}
 		logger.debug('sending packets:', JSON.stringify(this._packetsInFlight));
-		this._transport.send(this._url, this._sessionKey, JSON.stringify(this._packetsInFlight), this._options);
+		this._transport.send(this._url, this._sessionKey, this._lastEventId || 0, JSON.stringify(this._packetsInFlight), this._options);
 	}
 	
 	this._doConnectComet = function() {
@@ -212,7 +286,7 @@ exports.CometSession = Class(function(supr) {
 	}
 	
 	this._cometSuccess = function(packets) {
-		if (this.readyState != READYSTATE.CONNECTED) { return; }
+		if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) { return; }
 		logger.debug('comet Success:', packets);
 		this._cometBackoff = kDefaultBackoff;
 		this._resetTimeoutTimer();
@@ -229,16 +303,19 @@ exports.CometSession = Class(function(supr) {
 				continue;
 			}
 			if (typeof(this._lastEventId) == 'number' && ackId != this._lastEventId+1) {
-				return this.close(new errors.ServerProtocolError(201));
+				return this._protocolError("Ack id too high");
 			}
 			this._lastEventId = ackId;
+			if (data == null) {
+				return this._receivedNullPacket();
+			}
 			if (encoding == 1) { // base64 encoding
 				try {
 					logger.debug('before base64 decode:', data);
 					data = base64.decode(data);
 					logger.debug('after base64 decode:', data);
 				} catch(e) {
-					return this.close(new errors.ServerProtocolError(202));
+					return this._protocolError("Unable to decode base64 payload");
 				}
 			}
 			if (this._options.encoding == 'utf8') {
