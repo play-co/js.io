@@ -112,11 +112,17 @@
 		this.global = window;
 		this.global.jsio = jsio;
 		
+		var SLICE = Array.prototype.slice;
 		this.log = function() {
-			if(typeof console != 'undefined' && console.log) {
-				console.log.apply(console, arguments);
+			var args = SLICE.call(arguments, 0);
+			if (typeof console != 'undefined' && console.log) {
+				if (console.log.apply) {
+					console.log.apply(console, arguments);
+				} else { // IE doesn't support log.apply, and the argument cannot be arguments - it must be an array
+					console.log(args);
+				}
 			}
-			return Array.prototype.join.call(arguments, ' ');
+			return args.join(' ');
 		}
 		
 		var cwd = null, path = null;
