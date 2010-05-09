@@ -206,11 +206,8 @@ transports.xhr = Class(baseTransport, function(supr) {
 		} else if('onreadystatechange' in xhr) {
 			xhr.onreadystatechange = bind(this, '_onReadyStateChange', rType, cb, eb);
 		}
-		if(data) {
-			xhr.send(data);
-		} else {
-			xhr.send();
-		}
+		
+		setTimeout(bind(xhr, 'send', data), 0);
 	};
 });
 
