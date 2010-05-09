@@ -1,4 +1,5 @@
 exports.log = jsio.__env.log;
+exports.GLOBAL = jsio.__env.global;
 
 exports.bind = function(context, method /*, VARGS*/) {
 	if(arguments.length > 2) {
