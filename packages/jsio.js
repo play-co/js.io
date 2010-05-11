@@ -45,7 +45,7 @@
 		if(!jsio.path.__default__) { jsio.setPath(ENV.getPath()); }
 	}
 	
-	if (typeof node !== 'undefined' && typeof process !== 'undefined' && process.version) {
+	if (typeof process !== 'undefined' && process.version) {
 		jsio.setEnv('node');
 	} else if (typeof XMLHttpRequest != 'undefined' || typeof ActiveXObject != 'undefined') {
 		jsio.setEnv('browser');
