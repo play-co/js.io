@@ -165,7 +165,7 @@ exports.Session = Class(function() {
 	this.sendHeaders = function (response, contentLength) {
 		var allowOrigin = '*'; // XXX: Make Access-Control configurable
 		if (contentLength === 'stream') {
-			response.sendHeader(200, {
+			response.writeHead(200, {
 				'Content-Type'				: this.variables.contentType,
 				'Cache-Control'			   : 'no-cache, must-revalidate',
 				'Transfer-Encoding'		   : 'chunked',
@@ -173,7 +173,7 @@ exports.Session = Class(function() {
 			});
 		}
 		else if (contentLength >= 0) {
-			response.sendHeader(200, {
+			response.writeHead(200, {
 				'Content-Type'				: this.variables.contentType,
 				'Cache-Control'			   : 'no-cache, must-revalidate',
 				'Content-Length'			  : contentLength,
@@ -205,14 +205,14 @@ exports.Session = Class(function() {
 			var body = (this.variables.prebuffer + this.variables.preamble + batch);
 			this.sendHeaders(this.cometResponse, body.length)
 			this.cometResponse.write(body);
-			this.cometResponse.close();
+			this.cometResponse.end();
 			this.cometResponse = null;
 			$clearTimeout(this.durationTimer);
 		};
 	};
 	this.completeResponse = function() {
 		if (this.isStreaming()) {
-			this.cometResponse.close(); // close a stream
+			this.cometResponse.end(); // close a stream
 			this.cometResponse = null;
 			$clearTimeout(this.durationTimer);
 			$clearTimeout(this.intervalTimer);
@@ -233,7 +233,7 @@ exports.Session = Class(function() {
 		body = prefix + body + suffix;
 		this.sendHeaders(response, body.length);
 		response.write(body);
-		response.close();
+		response.end();
 	};
 	// a Server instance dispatches resources to this object's functions
 	this.dispatch = {
@@ -288,7 +288,7 @@ exports.Session = Class(function() {
 			var body = request.data;
 			this.sendHeaders(response, body.length);
 			response.write(body);
-			response.close();
+			response.end();
 		},
 		streamtest: function (request, response) {
 			logger.debug('streamtest'); // XXX who knows what this does...?
@@ -361,10 +361,10 @@ exports.Server = Class(process.EventEmitter, function () {
 		if (!exp) { throw new CSPError(code, message) };
 	};
 	var renderError = function (response, code, message) {
-		response.sendHeader(code, {'Content-Type'   : 'text/plain',
+		response.writeHead(code, {'Content-Type'   : 'text/plain',
 								   'Content-Length' : message.length});
 		response.write(message);
-		response.close();
+		response.end();
 	};
 	var sendStatic = function (path, response) {
 		logger.debug('SEND STATIC', path, response)
@@ -372,10 +372,10 @@ exports.Server = Class(process.EventEmitter, function () {
 			if (err) {
 				renderError(response, 404, 'No such file, ' + path);
 			} else {
-				response.sendHeader(200, {'Content-Type'   : 'text/plain',
+				response.writeHead(200, {'Content-Type'   : 'text/plain',
 										  'Content-Length' : content.length});
 				response.write(content);
-				response.close();
+				response.end();
 			}
 		})
 	};
@@ -388,7 +388,7 @@ exports.Server = Class(process.EventEmitter, function () {
 			});
 		} else {
 			var body = [];
-			request.setBodyEncoding('binary');
+			request.setEncoding('binary');
 			request
 				.addListener('data', function (chunk) {
 					body.push(chunk); // body += chunk
