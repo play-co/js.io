@@ -1,11 +1,9 @@
-jsio('from base import *');
 jsio('import std.base64 as base64');
 jsio('import std.utf8 as utf8');
 jsio('import std.uri as uri'); 
 jsio('import .errors');
 jsio('import .transports');
 
-//var logger = logging.getLogger("csp.client");
 var READYSTATE = exports.READYSTATE = {
 	INITIAL: 0,
 	CONNECTING: 1,

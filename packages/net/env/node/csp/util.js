@@ -27,8 +27,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-jsio('from base import *');
-
 // helper to test if string 2 is at the beginning of string 1
 exports.startswith = function (str1, str2) {
 	return str1.substring(0, str2.length) == str2;

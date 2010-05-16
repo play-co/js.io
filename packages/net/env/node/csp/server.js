@@ -30,7 +30,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
 
-jsio('from base import *');
 jsio('import std.uuid as uuid');
 jsio('import std.utf8 as utf8');
 jsio('import std.base64 as base64');

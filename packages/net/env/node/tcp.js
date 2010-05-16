@@ -1,8 +1,6 @@
-jsio('from base import *');
-jsio('import net.interfaces, logging');
+jsio('import net.interfaces');
 
 var nodeTcp = jsio.__env.require('net');
-var logger = logging.getLogger('node.tcp');
 
 var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(socket) {

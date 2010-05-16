@@ -1,4 +1,3 @@
-jsio('from base import *');
 jsio('import net.interfaces');
 jsio('from util.browser import $');
 

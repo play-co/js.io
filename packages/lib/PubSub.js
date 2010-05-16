@@ -1,5 +1,3 @@
-jsio('from base import *');
-
 var ctx = jsio.__env.global;
 
 exports = Class(function() {

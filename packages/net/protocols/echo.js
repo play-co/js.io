@@ -1,8 +1,4 @@
-jsio('from base import *');
-jsio('import net.interfaces, logging');
-
-var logger = logging.getLogger('EchoProtocol');
-logger.setLevel(0);
+jsio('import net.interfaces');
 
 exports.Protocol = Class(net.interfaces.Protocol, function() {
 	this.connectionMade = function() {

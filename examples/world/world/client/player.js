@@ -1,4 +1,3 @@
-jsio('from base import *');
 jsio('import lib.PubSub as PubSub');
 jsio('from ..constants import *');
 jsio('from util.browser import $');

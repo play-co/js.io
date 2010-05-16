@@ -1,4 +1,3 @@
-jsio('from base import *');
 jsio('import net');
 jsio('from util.browser import $');
 jsio('from .world.constants import *');

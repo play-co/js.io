@@ -1,5 +1,4 @@
 // Sort of like a twisted protocol
-jsio('from base import *');
 jsio('import net');
 
 var ctx = jsio.__env.global;

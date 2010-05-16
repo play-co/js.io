@@ -1,6 +1,4 @@
-jsio('import net.interfaces, logging');
-var logger = logging.getLogger('node.csp');
-jsio('from base import *');
+jsio('import net.interfaces');
 jsio('from .csp.server import createServer');
 
 var Transport = Class(net.interfaces.Transport, function() {

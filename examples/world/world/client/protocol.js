@@ -1,4 +1,3 @@
-jsio('from base import *');
 jsio('import net');
 jsio('import lib.PubSub as PubSub');
 jsio('from net.protocols.rtjp import RTJPProtocol');

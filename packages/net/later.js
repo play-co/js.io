@@ -1,5 +1,3 @@
-jsio('from base import *');
-
 exports.Later = Class(function() {
 	this.init = function() {
 		this.cb = null
