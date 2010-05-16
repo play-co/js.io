@@ -1,10 +1,5 @@
-jsio('from base import *');
-
-jsio('import logging');
 jsio('from net.interfaces import Protocol');
 jsio('from net.buffer import Buffer');
-
-var logger = logging.getLogger('Buffered');
 
 exports.BufferedProtocol = Class(Protocol, function(supr) {
 

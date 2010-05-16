@@ -1,9 +1,8 @@
-jsio('import net, logging');
+jsio('import net');
 jsio('import .world.server as server');
-jsio('import logging');
 
-logging.getLogger('RTJPProtocol').setLevel(0);
-logging.getLogger('world.server').setLevel(1);
+logging.get('RTJPProtocol').setLevel(logging.DEBUG);
+logging.get('world.server').setLevel(logging.LOG);
 
 worldServer = new server.WorldServer();
 

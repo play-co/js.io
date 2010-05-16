@@ -32,9 +32,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-jsio('import logging');
-var logger = logging.getLogger('base64');
-
 var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 var pad = '=';
 var padChar = alphabet.charAt(alphabet.length - 1);

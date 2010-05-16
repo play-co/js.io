@@ -1,7 +1,7 @@
 require('../../packages/jsio');
 
 jsio('import net');
-jsio('import logging');
+jsio('from base import logging');
 
 //logging.getLogger('RTJPProtocol').setLevel(0);
 //logging.getLogger('node.csp.server').setLevel(0);

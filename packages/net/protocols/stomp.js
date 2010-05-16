@@ -1,9 +1,5 @@
-jsio('from base import *');
-jsio('import logging');
 jsio('from net.protocols.buffered import BufferedProtocol');
 jsio('from util.sprintf import sprintf');
-
-var logger = logging.getLogger('StompProtocol');
 
 exports.StompProtocol = Class(BufferedProtocol, function(supr) {
 

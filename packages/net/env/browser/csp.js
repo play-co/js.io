@@ -1,8 +1,5 @@
-jsio('from base import *');
-jsio('import logging, net.interfaces');
+jsio('import net.interfaces');
 jsio('from net.csp.client import CometSession');
-
-var logger = logging.getLogger('env.browser.csp');
 
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {

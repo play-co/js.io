@@ -1,8 +1,4 @@
-jsio('from base import *');
-jsio('import logging');
 jsio('from net.interfaces import Protocol');
-
-var logger = logging.getLogger('net.buffer.Buffer');
 
 var EmptyBufferError = exports.EmptyBufferError = Class(function () {
 	this.init = function(message) { this.message = message; }

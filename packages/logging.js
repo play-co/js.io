@@ -1,5 +1,3 @@
-jsio('from base import *');
-
 var loggers = {}
 var levels = exports.levels = {
 	DEBUG: 0,

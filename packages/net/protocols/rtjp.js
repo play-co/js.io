@@ -1,4 +1,3 @@
-jsio('from base import *');
 jsio('import net.interfaces');
 jsio('from net.protocols.delimited import DelimitedProtocol');
 
