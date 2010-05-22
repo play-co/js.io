@@ -85,6 +85,10 @@
                 <ul>
 <li><a class="reference external" href="#">Introduction</a><ul>
 <li><a class="reference external" href="#overview">Overview</a></li>
+<li><a class="reference external" href="#js-io">js.io</a><ul>
+<li><a class="reference external" href="#realtime-i-o-in-javascript-anywhere">Realtime i/o, in javascript, anywhere</a></li>
+</ul>
+</li>
 <li><a class="reference external" href="#common-use-cases">Common Use Cases</a></li>
 <li><a class="reference external" href="#installation">Installation</a></li>
 <li><a class="reference external" href="#github">Github</a></li>
@@ -102,7 +106,52 @@
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+</div>
+<div class="section" id="js-io">
+<h2>js.io<a class="headerlink" href="#js-io" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="realtime-i-o-in-javascript-anywhere">
+<h3>Realtime i/o, in javascript, anywhere<a class="headerlink" href="#realtime-i-o-in-javascript-anywhere" title="Permalink to this headline">¶</a></h3>
+<p>A simple chat server has multiple connections, each of which uses frameReceived and sendFrame to communicate with a browser</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// Connection.js</span>
+<span class="k">this</span><span class="p">.</span><span class="nx">frameReceived</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">frameName</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">server</span>
+    <span class="k">switch</span><span class="p">(</span><span class="nx">frameName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s1">&#39;join&#39;</span><span class="o">:</span>
+            <span class="nx">server</span><span class="p">.</span><span class="nx">broadcast</span><span class="p">(</span><span class="s1">&#39;join&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="nx">args</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="o">+</span><span class="k">new</span> <span class="nb">Date</span><span class="p">())</span> <span class="p">})</span>
+            <span class="k">break</span>
+        <span class="k">case</span> <span class="s1">&#39;message&#39;</span><span class="o">:</span>
+            <span class="nx">server</span><span class="p">.</span><span class="nx">broadcast</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span>
+            <span class="k">break</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Server.js</span>
+<span class="k">this</span><span class="p">.</span><span class="nx">broadcast</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">frameName</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">conn</span><span class="p">;</span> <span class="nx">conn</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">connections</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">conn</span><span class="p">.</span><span class="nx">sendFrame</span><span class="p">(</span><span class="nx">frameName</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span></pre></div>
+</div>
+<p>A simple browser chat client has a single connection which communicates with the server</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="k">this</span><span class="p">.</span><span class="nx">frameReceived</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">frameName</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="nx">frameName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s1">&#39;join&#39;</span><span class="o">:</span>
+            <span class="nx">logger</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;A chatter joined!&#39;</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="s1">&#39;at time&#39;</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">time</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">case</span> <span class="s1">&#39;message&#39;</span><span class="o">:</span>
+            <span class="nx">logger</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Chatter says&#39;</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">message</span><span class="p">)</span>
+            <span class="k">break</span>
+<span class="p">}</span>
+
+<span class="k">this</span><span class="p">.</span><span class="nx">sendMessage</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">).</span><span class="nx">value</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">sendFrame</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">message</span><span class="o">:</span> <span class="nx">message</span> <span class="p">})</span>
+<span class="p">}</span></pre></div>
+</div>
+<p>Any application with network access requires two things: a network transport and a network protocol. The network transport is the means by which an application communicates with the network. The network protocol defines how the application communications with the network.</p>
+<p>Common examples of transports are sockets, XMLHttpRequest&#8217;s and postcards. Common examples of protocols are tcp, http, and Algebraic chess notation (for postcard chess).</p>
+<p>Jsio abstracts out the transport and protocol for applications with bidirectional network communication, such that you can write your server/client architecture independent of the network transport and network protocol. Once you have written your server and client logic (both in javascript), you can deploy that server and client code in any number of environments. Most commonly, you will run your server code on your server, and your client code in a browser. But you can also run your client code on the server. You can even run your server code in the browser, and debug it with firebug!</p>
+</div>
 </div>
 <div class="section" id="common-use-cases">
 <h2>Common Use Cases<a class="headerlink" href="#common-use-cases" title="Permalink to this headline">¶</a></h2>
