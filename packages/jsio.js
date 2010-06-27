@@ -163,17 +163,18 @@
 		this.eval = function(code, path) {
 			try { return rawEval(code, path); } catch(e) {
 				if(e instanceof SyntaxError) {
-					var src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + path + '\'></scr"+"ipt>")';
-					var callback = function() {
-						var el = document.createElement('iframe');
-						with(el.style) { position = 'absolute'; top = left = '-999px'; width = height = '1px'; visibility = 'hidden'; }
-						el.src = src;
-						setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
-					}
-					
-					if(document.body) { callback(); }
-					else { window.addEventListener('load', callback, false); }
-					throw new Error("forcing halt on load of " + path);
+					e.message = "a syntax error is preventing execution of " + path;
+					e.type = "syntax_error";
+					try {
+						var cb = function() {
+							var el = document.createElement('iframe');
+							el.style.cssText = "position:absolute;top:-999px;left:-999px;width:1px;height:1px;visibility:hidden";
+							el.src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + path + '\'></scr"+"ipt>")';
+							setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
+						};
+						if (document.body) { cb(); }
+						else { window.addEventListener('load', cb, false); }
+					} catch(f) {}
 				}
 				throw e;
 			}
@@ -266,10 +267,12 @@
 		try {
 			fn.call(context.exports, context);
 		} catch(e) {
-			if(e.type == "stack_overflow") {
+			if(e.type == "syntax_error") {
+				throw new Error("error importing module: " + e.message);
+			} else if (e.type == "stack_overflow") {
 				ENV.log("Stack overflow in", module.filePath, ':', e);
 			} else {
-				ENV.log("error when loading", module.filePath, ':', e);
+				ENV.log("ERROR LOADING", module.filePath, ':', e);
 			}
 			throw e;
 		}
