@@ -102,6 +102,10 @@ $.style = function(el, style) {
 };
 
 $.onEvent = function(el, name, f) {
+	if (typeof f != 'function') {
+		f = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 2));
+	}
+	
 	el = $.id(el);
 	if(el.addEventListener) { 
 		el.addEventListener(name, f, false);
