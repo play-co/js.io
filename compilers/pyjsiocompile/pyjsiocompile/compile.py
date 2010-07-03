@@ -74,6 +74,12 @@ def make_option_parser():
     parser.add_option("-d", "--dont-compress", 
                       action="store_false", dest="minify", default=True,
                       help="Don't minify the output")
+    parser.add_option("-G", "--google-rest-minify", 
+                      action="store_true", dest="google_rest", default=False,
+                      help="Use Google Closure REST api to minify")
+    parser.add_option("-g", "--google-minify", 
+                      action="store_true", dest="google", default=False,
+                      help="Use Google compiler.jar to minify (must have java installed)")
     
     return parser  
 
@@ -92,7 +98,10 @@ def main(argv=None):
     global minify
     if not options.minify:
         minify = lambda x: x
-    
+    elif options.google:
+        minify = google_jar_minify
+    elif options.google_rest:
+        minify = google_minify
     if len(args) != 1:
         print "Invalid position arguments"
         parser.print_help()
@@ -490,9 +499,43 @@ def unmonkeypatch(BeautifulSoupClass=None):
     delattr(BeautifulSoupClass, 'findSelect')
 
 
+def google_jar_minify(src):
+    import commands, os
+    compiler = os.path.join(os.path.dirname(__file__), 'compiler.jar')
+    f = open('temp.js', 'w')
+    f.write(src)
+    f.close()
+    command = 'java -jar %s --js temp.js --js_output_file temp2.js --compilation_level SIMPLE_OPTIMIZATIONS' % (compiler,)
+    print command
+    print commands.getoutput(command)
+    return open('temp2.js').read()
 
 
+def google_minify(src):
+    print '*Google minify'
+    # Code from http://code.google.com/closure/compiler/docs/api-tutorial1.html
+    import httplib, urllib, sys
 
+    # Define the parameters for the POST request and encode them in
+    # a URL-safe format.
+
+    params = urllib.urlencode([
+        ('js_code', src),
+        ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
+        ('output_format', 'text'),
+        ('output_info', 'compiled_code'),
+    ])
+
+    # Always use the following value for the Content-type header.
+    headers = { "Content-type": "application/x-www-form-urlencoded" }
+    conn = httplib.HTTPConnection('closure-compiler.appspot.com')
+    conn.request('POST', '/compile', params, headers)
+    response = conn.getresponse()
+    data = response.read()
+    if len(data) < 70:
+        print 'failed'
+    return data
+#    conn.close()
 
 #!/usr/bin/python
 
