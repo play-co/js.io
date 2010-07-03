@@ -31,7 +31,7 @@ exports.Buffer = Class(function(supr) {
 		delimiter = delimiter ? delimiter : '\n';
 		var i = this._rawBuffer.indexOf(delimiter);
 		if (i == -1)
-			throw new EmptyBufferError("delimiter " + delmiter + "not present in buffer");
+			throw new EmptyBufferError("delimiter " + delimiter + "not present in buffer");
 		else
 			return this._rawBuffer.slice(0, i);
 	}
