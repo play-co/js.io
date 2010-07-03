@@ -4,6 +4,7 @@ import sys
 import re
 from urllib2 import urlopen
 import warnings
+import pprint
 fileopen = open
 
 # we need os.path.relpath, which isn't in python<2.6
@@ -155,7 +156,7 @@ def load_package_configuration(INPUT, options):
         options.environments = \
             [str(env) for env in pkg_data['environments']]
     options.initialImport = \
-        '\njsio("import %s");\n' % (pkg_data['root'])
+        '\njsio("import %s as %s");\n' % (pkg_data['root'], pkg_data.get('externalName', pkg_data['root']))
     options.exposeJsio = 'exposeJsio' in pkg_data and pkg_data['exposeJsio']
     BASEDIR = os.path.dirname(INPUT)
     new_input = join_paths(BASEDIR, pkg_data['root'] + '.js')
@@ -190,7 +191,7 @@ def build_transport_paths(environments, transports):
 def get_transport_dependencies(jsio, env, xprts, path_template, extras=[]):
     dependencies = []
     for xprt in xprts:
-        print join_paths(jsio, 'net', 'env', env, xprt) + '.js'
+#        print join_paths(jsio, 'net', 'env', env, xprt) + '.js'
         raw_source = \
             get_source(join_paths(jsio, 'net', 'env', env, xprt) + '.js')
         source = remove_comments(raw_source)
@@ -199,7 +200,7 @@ def get_transport_dependencies(jsio, env, xprts, path_template, extras=[]):
     return dependencies
     
 def get_dependencies(source, path='', extras=[]):
-    print '** get dependencies for', source
+#    print '** get dependencies for', source
     return map(lambda x: (x, path), 
                (extract_dependencies(source) + extras))
     
@@ -220,7 +221,9 @@ def compile_source(target, options, extras=[]):
 
     dependencies = get_dependencies(target_source, extras)
     dependencies.append(('jsio','jsio.jsio'))
-    print 'dependencies:', dependencies
+#    print 'dependencies:', dependencies
+    print 'dependencies:'
+    pprint.pprint(dependencies)
     checked = [target_module, 'net.env', 'log', 'Class', 'bind']
     transport_paths = build_transport_paths(options.environments,
                                             options.transports)
@@ -231,10 +234,15 @@ def compile_source(target, options, extras=[]):
                                        environment,
                                        options.transports,
                                        'net.env.%s.'))
-    print 'dependencies:',dependencies
     log.debug('checked is %s', checked)
     while dependencies:
         pkg, path = dependencies.pop(0)
+#        if isinstance(pkg, list):
+#            # This just means that we are analyzing a import path that we
+#            # extracted from the target/root file
+#            if path[0] == '.':
+#                full_path = 
+#        print 'pkg, path', pkg, path
         full_path = joinModulePath(path, pkg)
         if full_path == 'jsio':
             full_path = 'jsio.jsio'
@@ -273,7 +281,7 @@ def compile_source(target, options, extras=[]):
     return final_output
 
 def path_for_module(full_path, prefix):
-    print 'path_for_module', full_path
+#    print 'path_for_module', full_path
     is_relative = full_path[0] == '.'
     path_components = full_path.split('.')
     if full_path == 'jsio':
@@ -288,6 +296,9 @@ def path_for_module(full_path, prefix):
 def joinModulePath(a, b):
     if b[0] != '.':
         return b
+    if isinstance(a, list):
+        return b
+#    print 'joinModule', a, b
     segments = a.split('.')
     while b[0] == '.':
         b = b[1:]
@@ -295,6 +306,7 @@ def joinModulePath(a, b):
     output = '.'.join(segments) + '.' + b
     if output[0] == '.':
         output = output[1:]
+#    print 'return', output
     return output
 
 def extract_dependencies(src):
@@ -307,8 +319,8 @@ def extract_dependencies(src):
     for item in re2.finditer(src):
         for listItem in re3.finditer(item.groups()[0]):
             dependencies.append(listItem.groups()[0])
-    if dependencies:
-        print 'returning', dependencies
+#    if dependencies:
+#        print 'returning', dependencies
     return dependencies
     
 def remove_comments(src):
