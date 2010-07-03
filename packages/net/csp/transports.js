@@ -156,9 +156,10 @@ transports.xhr = Class(baseTransport, function(supr) {
 		}
 	};
 
+	var mustEncode = !(createXHR().sendAsBinary)
 	this.encodePacket = function(packetId, data, options) {
 		// we don't need to base64 encode things unless there's a null character in there
-		return data.indexOf('\0') == -1 ? [ packetId, 0, data ] : [ packetId, 1, base64.encode(data) ];
+		return mustEncode ? [ packetId, 1, base64.encode(data) ] : [ packetId, 0, data ];
 	};
 
 	this._onReadyStateChange = function(rType, cb, eb) {
@@ -209,11 +210,7 @@ transports.xhr = Class(baseTransport, function(supr) {
 		// NOTE WELL: Firefox (and probably everyone else) likes to encode our nice
 		//						binary strings as utf8. Don't let them! Say no to double utf8
 		//						encoding. Once is good, twice isn't better.
-		if (xhr.overrideMimeType) {
-			xhr.overrideMimeType("text/plain; charset=ISO-8859-1");
-		}
-		
-		setTimeout(bind(xhr, 'send', data), 0);
+		setTimeout(bind(xhr, xhr.sendAsBinary ? 'sendAsBinary' : 'send', data), 0);
 	};
 });
 
