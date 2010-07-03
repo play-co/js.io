@@ -209,7 +209,9 @@ transports.xhr = Class(baseTransport, function(supr) {
 		// NOTE WELL: Firefox (and probably everyone else) likes to encode our nice
 		//						binary strings as utf8. Don't let them! Say no to double utf8
 		//						encoding. Once is good, twice isn't better.
-		xhr.overrideMimeType("text/plain; charset=ISO-8859-1");
+		if (xhr.overrideMimeType) {
+			xhr.overrideMimeType("text/plain; charset=ISO-8859-1");
+		}
 		
 		setTimeout(bind(xhr, 'send', data), 0);
 	};
