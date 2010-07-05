@@ -38,11 +38,18 @@ exports.Server = Class(function() {
 });
 
 exports.Transport = Class(function() {
+	this._encoding = 'plain'
 	this.write = function(data, encoding) {
 		throw new Error("Not implemented");
 	}
 	this.getPeer = function() {
 		throw new Error("Not implemented");
+	}
+	this.setEncoding = function(encoding) {
+		this._encoding = encoding;
+	}
+	this.getEncoding = function() {
+		return this._encoding;
 	}
 });
 

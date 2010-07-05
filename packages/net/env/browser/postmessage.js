@@ -91,7 +91,11 @@ exports.Transport = Class(net.interfaces.Transport, function() {
 	}
 	
 	this.write = function(data, encoding) {
-		this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
+		if (this.encoding == 'utf8') {
+			this._win.postMessage(JSON.stringify({type: 'data', payload: utf8.encode(data)}), '*');
+		} else {
+			this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
+		} 
 	}
 	
 	this.loseConnection = function(protocol) {

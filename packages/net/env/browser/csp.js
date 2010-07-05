@@ -1,5 +1,6 @@
 jsio('import net.interfaces');
 jsio('from net.csp.client import CometSession');
+			jsio('import std.utf8 as utf8');
 
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
@@ -29,8 +30,13 @@ var Transport = Class(net.interfaces.Transport, function() {
 		this._conn.ondisconnect = bind(protocol, 'connectionLost'); // TODO: map error codes
 	}
 	
-	this.write = function(data, encoding) {
-		this._conn.write(data);
+	this.write = function(data) {
+		
+		if (this._encoding == 'utf8') {
+			this._conn.write(utf8.encode(data));
+		} else {
+			this._conn.write(data);
+		} 
 	}
 	
 	this.loseConnection = function(protocol) {
