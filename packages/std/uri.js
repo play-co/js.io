@@ -36,8 +36,13 @@ exports.Uri = Class(function(supr) {
 	};
 
 	this.toString = this.render = function() {
-		// XXX: implement in terms of the keys. Reasonable fallbacks?
-		return this._source;
+		// XXX TODO: This is vaguely reasonable, but not complete. fix it...
+		var a = this._protocol ? this._protocol + "://" : ""
+		var b = this._host ? this._host + ((this._port || 80) == 80 ? "" : ":" + this._port) : "";
+		var c = this._path;
+		var d = this._query ? '?' + this._query : '';
+		var e = this._anchor ? '#' + this._anchor : '';
+		return a + b + c + d + e;
 	};
 });
 
