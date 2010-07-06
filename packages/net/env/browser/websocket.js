@@ -4,9 +4,13 @@ jsio('import std.utf8 as utf8');
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		var url = this._opts.url;
-		var constructor = this._opts.constructor || window.WebSocket;
-		var ws = new constructor(url);
 		
+		var constructor = this._opts.wsConstructor || window.WebSocket;
+		logger.info('this._opts', this._opts);
+		var ws = new constructor(url);
+//		var ws = new constructor(url);
+//		JK = constructor;
+//		XKCDA = ws;
 		ws.onopen = bind(this, function() {
 			this.onConnect(new Transport(ws));
 		});
@@ -21,7 +25,6 @@ var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(ws) {
 		this._ws = ws;
 	}
-
 	
 	this.makeConnection = function(protocol) {
 		this._ws.onmessage = function(data) {
