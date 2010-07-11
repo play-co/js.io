@@ -30,4 +30,11 @@ exports = Class(function() {
 	
 	this.contains = function(val) { return this.m_values.hasOwnProperty(val); }
 	this.hasKey = this.containsKey = function(key) { return this.m_keys.hasOwnProperty(key); }
+	this.each = function(f, ctx) {
+		for (var i in keys) {
+			if (this.m_keys.hasOwnProperty(i)) {
+				f.call(ctx || GLOBAL, i, this.m_values[i], this);
+			}
+		}
+	}
 });
