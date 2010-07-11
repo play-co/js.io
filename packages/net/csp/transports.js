@@ -1,15 +1,42 @@
-jsio('from base import *');
 jsio('import std.uri as uri'); 
 jsio('import std.base64 as base64');
 jsio('import .errors');
 jsio('from util.browserdetect import BrowserDetect');
 
-var createXHR = exports.createXHR = function() {
-	return window.XMLHttpRequest ? new XMLHttpRequest()
-		: window.XDomainRequest ? new XDomainRequest()
-		: window.ActiveXObject ? new ActiveXObject("Msxml2.XMLHTTP")
-		: null;
-};
+;(function() {
+	var doc;
+	exports.getDoc = function() {
+		if (doc) { return doc; }
+		try {
+			alert('trying htmlfile');
+			doc = window.ActiveXObject && new ActiveXObject('htmlfile');
+			if (doc) {
+				doc.open().write('<html></html>');
+				doc.close();
+				window.attachEvent('onunload', function() {
+					try { doc.body.innerHTML = ''; } catch(e) {}
+					doc = null;
+				});
+			}
+		} catch(e) {}
+		
+		if (!doc) { doc = document; }
+		return doc;
+	};
+
+	exports.XHR = function() {
+		var win = window,
+			doc = exports.getDoc();
+		if (doc.parentWindow) { win = doc.parentWindow; }
+		
+		return new (exports.XHR = win.XDomainRequest ? win.XDomainRequest
+			: win.XMLHttpRequest ? win.XMLHttpRequest
+			: function() { return win.ActiveXObject && new win.ActiveXObject('Msxml2.XMLHTTP') || null; });
+	}
+	
+	exports.createXHR = function() { return new exports.XHR(); }
+
+})();
 
 function isLocalFile(url) { return /^file:\/\//.test(url); }
 function isWindowDomain(url) { return uri.isSameDomain(url, window.location.href); }
@@ -19,7 +46,7 @@ function canUseXHR(url) {
 	if (isLocalFile(url)) { return false; }
 	
 	// try to create an XHR using the same function the XHR transport uses
-	var xhr = createXHR();
+	var xhr = new exports.XHR();
 	if (!xhr) { return false; }
 	
 	// if the URL requested is the same domain as the window,
@@ -124,8 +151,28 @@ var baseTransport = Class(exports.Transport, function(supr) {
 
 transports.xhr = Class(baseTransport, function(supr) {
 	
-	var abortXHR = function(xhr) {
+	this.init = function() {
+		supr(this, 'init');
+	
+		this._xhr = {
+			'send': new exports.XHR(),
+			'comet': new exports.XHR()
+		};
+	};
+
+	this.abort = function() {
+		this._aborted = true;
+		for(var i in this._xhr) {
+			if(this._xhr.hasOwnProperty(i)) {
+				this._abortXHR(i);
+			}
+		}
+	};
+	
+	this._abortXHR = function(type) {
 		logger.debug('aborting XHR');
+
+		var xhr = this._xhr[type];
 		try {
 			if('onload' in xhr) {
 				xhr.onload = xhr.onerror = xhr.ontimeout = null;
@@ -136,27 +183,12 @@ transports.xhr = Class(baseTransport, function(supr) {
 		} catch(e) {
 			logger.debug('error aborting xhr', e);
 		}
+		
+		// do not reuse aborted XHRs
+		this._xhr[type] = new exports.XHR();
 	};
-
-	this.init = function() {
-		supr(this, 'init');
 	
-		this._xhr = {
-			'send': createXHR(),
-			'comet': createXHR()
-		};
-	};
-
-	this.abort = function() {
-		this._aborted = true;
-		for(var i in this._xhr) {
-			if(this._xhr.hasOwnProperty(i)) {
-				abortXHR(this._xhr[i]);
-			}
-		}
-	};
-
-	var mustEncode = !(createXHR().sendAsBinary)
+	var mustEncode = !(exports.createXHR().sendAsBinary);
 	this.encodePacket = function(packetId, data, options) {
 		// we don't need to base64 encode things unless there's a null character in there
 		return mustEncode ? [ packetId, 1, base64.encode(data) ] : [ packetId, 0, data ];
@@ -182,7 +214,7 @@ transports.xhr = Class(baseTransport, function(supr) {
 			var xhr = this._xhr[rType];
 			logger.debug('Error in XHR::onReadyStateChange', e);
 			eb(xhr.status, response);
-			abortXHR(xhr);
+			this._abortXHR(rType);
 			logger.debug('done handling XHR error');
 			return;
 		}
@@ -214,34 +246,41 @@ transports.xhr = Class(baseTransport, function(supr) {
 	};
 });
 
+var EMPTY_FUNCTION = function() {},
+	SLICE = Array.prototype.slice;
+
 transports.jsonp = Class(baseTransport, function(supr) {
+	var doc;
+	
 	var createIframe = function() {
-		var i = document.createElement("iframe");
-		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; }
+		var doc = exports.getDoc();
+		if (!doc.body) { return false; }
+		
+		var i = doc.createElement("iframe");
+		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; position = 'absolute'; top = left = '-999px'; }
 		i.cbId = 0;
-		i.src = 'javascript:document.open();document.write("<html><body></body></html>")';
-		document.body.appendChild(i);
+		doc.body.appendChild(i);
+		i.src = 'javascript:var d=document;d.open();d.write("<html><body></body></html>");d.close();';
 		return i;
 	};
 
-	var abortIframe = function(ifr) {
+	var cleanupIframe = function(ifr) {
 		var win = ifr.contentWindow, doc = win.document;
 		logger.debug('removing script tags');
+		
 		var scripts = doc.getElementsByTagName('script');
-		var s1 = doc.getElementsByTagName('script')[0];
-		var s2 = doc.getElementsByTagName('script')[1];
-		if(s1) s1.parentNode.removeChild(s1);
-		if(s2) s2.parentNode.removeChild(s2);
-
+		for (var i = scripts.length - 1; i >= 0; --i) {
+			doc.body.removeChild(scripts[i]);
+		}
+		
 		logger.debug('deleting iframe callbacks');
-		win['cb' + (ifr.cbId - 1)] = function(){};
-		win['eb' + (ifr.cbId - 1)] = function(){};
+		win['cb' + ifr.cbId] = win['eb' + ifr.cbId] = EMPTY_FUNCTION;
 	};
 
 	var removeIframe = function(ifr) {
 		$setTimeout(function() {
-				if(ifr && ifr.parentNode) { ifr.parentNode.removeChild(ifr); }
-			}, 60000);
+			if(ifr && ifr.parentNode) { ifr.parentNode.removeChild(ifr); }
+		}, 60000);
 	};
 
 	this.init = function() {
@@ -254,13 +293,14 @@ transports.jsonp = Class(baseTransport, function(supr) {
 	};
 
 	this._createIframes = function() {
-		if(!document.body) { return $setTimeout(bind(this, '_createIframes'), 100); }
+		this._ifr = {
+			send: createIframe(),
+			comet: createIframe()
+		};
+		
+		if(this._ifr.send === false) { return $setTimeout(bind(this, '_createIframes'), 100); }
 		
 		this._isReady = true;
-		this._ifr = {
-			'send':	 createIframe(),
-			'comet': createIframe()
-		};
 
 		var readyArgs = this._onReady;
 		this._onReady = [];
@@ -278,76 +318,106 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		for(var i in this._ifr) {
 			if(this._ifr.hasOwnProperty(i)) {
 				var ifr = this._ifr[i];
-				abortIframe(ifr);
+				cleanupIframe(ifr);
 				removeIframe(ifr);
 			}
 		}
 	};
-
+	
 	this._makeRequest = function(rType, url, args, cb, eb) {
 		if(!this._isReady) { return this._onReady.push(arguments); }
-
-		args.n = Math.random();
-		$setTimeout(bind(this, function() {
-			var ifr = this._ifr[rType];
-			// IE6+ uses contentWindow.document, the others use temp.contentDocument.
-			var win = ifr.contentWindow, doc = win.document, body = doc.body;
-			var completed = false;
-			var jsonpId = ifr.cbId++;
-			var onFinish = win['eb' + jsonpId] = function(scriptTag) {
-				// IE6 onReadyStateChange
-				if(scriptTag && scriptTag.readyState != 'loaded') { return; }
-				if (!completed) { logger.debug('error making request:', fullUrl); }
-
-				abortIframe(ifr);
-
-				if (!completed) {
-					logger.debug('calling eb');
-					eb.apply(null, arguments);
-				}
+		
+		var ifr = this._ifr[rType],
+			id = ++ifr.cbId,
+			req = {
+				type: rType,
+				id: id,
+				cb: cb,
+				eb: eb,
+				cbName: 'cb' + id,
+				ebName: 'eb' + id,
+				completed: false
 			};
-
-			win['cb' + jsonpId] = function callback() {
-				logger.debug('successful: ', fullUrl, [].slice.call(arguments, 0));
-				completed = true;
-				logger.debug('calling the cb');
-				cb.apply(null, arguments);
-				logger.debug('cb called');
-			};
-
-			switch(rType) {
-				case 'send': args.rs = ';'; args.rp = 'cb' + jsonpId; break;
-				case 'comet': args.bs = ';'; args.bp = 'cb' + jsonpId; break;
-			}
-
-			var fullUrl = url + '?' + uri.buildQuery(args);
-
-			if(BrowserDetect.isWebKit) {
-				doc.open();
-				doc.write('<scr'+'ipt src="'+fullUrl+'"></scr'+'ipt>');
-				doc.write('<scr'+'ipt>eb'+jsonpId+'(false)</scr'+'ipt>');
-			} else {
-				var s = doc.createElement('script');
-				s.src = fullUrl;
-				if(s.onreadystatechange === null) { s.onreadystatechange = bind(window, onFinish, s); } // IE
-				body.appendChild(s);
-				if(!BrowserDetect.isIE) {
-					var s = doc.createElement('script');
-					s.innerHTML = 'eb'+jsonpId+'(false)';
-					body.appendChild(s);
-				}
-			}
-			
-			killLoadingBar();
-		}), 0);
-	};
-
-	var killLoadingBar = BrowserDetect.isFirefox ? function() {
-		if(!killLoadingBar.iframe) { killLoadingBar.iframe = document.createElement('iframe'); }
-		if(document.body) {
-			document.body.insertBefore(killLoadingBar.iframe, document.body.firstChild);
-			document.body.removeChild(killLoadingBar.iframe); 
+		
+		args.n = Math.random();	
+		switch(rType) {
+			case 'send': args.rs = ';'; args.rp = req.cbName; break;
+			case 'comet': args.bs = ';'; args.bp = req.cbName; break;
 		}
+		
+		req.url = url + '?' + uri.buildQuery(args)
+		
+		$setTimeout(bind(this, '_request', req), 0);
+	}
+	
+	this._request = function(req) {
+		var ifr = this._ifr[req.type],
+			win = ifr.contentWindow,
+			doc = win.document,
+			body = doc.body;
+
+		win[req.ebName] = bind(this, checkForError, req);
+		win[req.cbName] = bind(this, onSuccess, req);
+		
+		if(BrowserDetect.isWebKit) {
+			// this will probably cause loading bars in Safari -- might want to rethink?
+			doc.open();
+			doc.write('<scr'+'ipt src="'+req.url+'"></scr'+'ipt><scr'+'ipt>'+ebName+'(false)</scr'+'ipt>');
+			doc.close();
+		} else {
+			var s = doc.createElement('script');
+			s.src = req.url;
+			
+			// IE
+			if(s.onreadystatechange === null) { s.onreadystatechange = bind(this, onReadyStateChange, req, s); }
+			body.appendChild(s);
+			
+			if(!BrowserDetect.isIE) {
+				var s = doc.createElement('script');
+				s.innerHTML = req.ebName+'(false)';
+				body.appendChild(s);
+			}
+		}
+		
+		killLoadingBar();
+	};
+	
+	function onSuccess(req) {
+		var args = SLICE.call(arguments, 1);
+		logger.debug('successful: ', req.url, args);
+		
+		req.completed = true;
+		
+		logger.debug('calling the cb');
+		req.cb.apply(GLOBAL, args);
+		logger.debug('cb called');
+	}
+	
+	// IE6/7 onReadyStateChange
+	function onReadyStateChange(req, scriptTag) {
+		if (scriptTag && scriptTag.readyState != 'loaded') { return; }
+		scriptTag.onreadystatechange = function() {};
+		checkForError.call(this, req);
+	}
+
+	function checkForError(req) {
+		cleanupIframe(this._ifr[req.type]);
+		
+		if (!req.completed) {
+			var args = SLICE.call(arguments, 3);
+			logger.debug('error making request:', req.url, args);
+			logger.debug('calling eb');
+			req.eb.apply(GLOBAL, args);
+		}
+	}
+	
+	var killLoadingBar = BrowserDetect.isFirefox ? function() {
+		var b = document.body;
+		if (!b) { return; }
+		
+		if (!killLoadingBar.iframe) { killLoadingBar.iframe = document.createElement('iframe'); }
+		b.insertBefore(killLoadingBar.iframe, b.firstChild);
+		b.removeChild(killLoadingBar.iframe);
 	} : function() {};
 });
 	
