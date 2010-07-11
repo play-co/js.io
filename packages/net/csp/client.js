@@ -214,8 +214,6 @@ exports.CometSession = Class(function(supr) {
 		}
 		if (this._nullInFlight) {
 			return this._sentNullPacket();
-			this.readyState = READYSTATE.DISCONNECTED;
-			return;
 		}
 		this._resetTimeoutTimer();
 		this.writeBackoff = kDefaultBackoff;
