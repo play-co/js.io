@@ -14,7 +14,6 @@ process.compile(posix.cat(mjsunit_path).wait(), 'mjsunit');
 
 require.paths.unshift(process.cwd());
 require('jsio/jsio');
-jsio('from jsio.logging import Logger');
 
 var Event = function (test, error, logs) {
     var self = this;

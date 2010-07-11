@@ -105,7 +105,7 @@ exports.logging = (function() {
 		return loggers.hasOwnProperty(name) ? loggers[name]
 			: (loggers[name] = new Logger(name));
 	}
-  logging.set = function(name, _logger) {
+	logging.set = function(name, _logger) {
 		loggers[name] = _logger;
 	}
 	
