@@ -8,7 +8,6 @@ jsio('from util.browserdetect import BrowserDetect');
 	exports.getDoc = function() {
 		if (doc) { return doc; }
 		try {
-			alert('trying htmlfile');
 			doc = window.ActiveXObject && new ActiveXObject('htmlfile');
 			if (doc) {
 				doc.open().write('<html></html>');
