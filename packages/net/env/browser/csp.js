@@ -1,6 +1,6 @@
 jsio('import net.interfaces');
 jsio('from net.csp.client import CometSession');
-			jsio('import std.utf8 as utf8');
+jsio('import std.utf8 as utf8');
 
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
@@ -10,7 +10,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 			this.onConnect(new Transport(conn));
 		});
 		conn.ondisconnect = bind(this, function(code) {
-			logger.debug('conn closed without opening, code:', code);
+			this.onConnectFailure('csp');
 		});
 		logger.debug('open the conection');
 		this._opts.encoding = 'plain';

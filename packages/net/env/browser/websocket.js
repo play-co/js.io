@@ -15,6 +15,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 			this.onConnect(new Transport(ws));
 		});
 		ws.onclose = bind(this, function(code) {
+			this.onConnectFailure('websocket');
 			logger.debug('conn closed without opening, code:', code);
 		});
 	}
