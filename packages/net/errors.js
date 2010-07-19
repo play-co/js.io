@@ -1,19 +1,30 @@
 var makeErrorClass = function(name, _code) {
-	var out = function(message, code) {
-		this.message = message;
-		this.code = code || _code;
-	}
-	out.prototype.toString = function() {
+	var toString = function() {
 		return name + (this.message ? ': ' + this.message : '');
 	}
-	return out;
+
+	var ctor = function(data) {
+		if (typeof data == 'string') {
+			this.message = data;
+		} else {
+			this.data = data;
+		}
+	}
+	
+	ctor.prototype = {
+		type: name,
+		toString: toString
+	};
+	
+	return ctor;
 }
 
 exports.ReadyStateError = makeErrorClass("ReadyStateError");
 exports.InvalidEncodingError = makeErrorClass("InvalidEncodingError");
+exports.ExpiredSession = makeErrorClass("ExpiredSession");
 
-exports.HandshakeTimeout = makeErrorClass("HandshakeTimeout", 100);
-exports.SessionTimeout = makeErrorClass("HandshakeTimeout", 101);
+exports.ServerUnreachable = makeErrorClass("ServerUnreachable", 100);
+exports.ConnectionTimeout = makeErrorClass("ConnectionTimeout", 101);
 
 exports.ServerProtocolError = makeErrorClass("ServerProtocolError", 200);
 

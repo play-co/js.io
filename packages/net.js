@@ -14,7 +14,9 @@ exports.listen = function(server, transportName, opts) {
 }
 
 exports.connect = function(protocolInstance, transportName, opts) {
-	var connector = new (net.env.getConnector(transportName))(protocolInstance, opts);
+	var ctor = net.env.getConnector(transportName),
+		connector = new ctor(protocolInstance, opts);
+	
 	connector.connect();
 	return connector;
 }

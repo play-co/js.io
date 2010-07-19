@@ -1,5 +1,6 @@
 // Sort of like a twisted protocol
 jsio('import net');
+jsio('import lib.Enum as Enum');
 
 var ctx = jsio.__env.global;
 
@@ -76,13 +77,17 @@ exports.Listener = Class(function() {
 	this.stop = function() {}
 });
 
+exports.STATE = Enum('INITIAL', 'DISCONNECTED', 'CONNECTING', 'CONNECTED');
 exports.Connector = Class(function() {
 	this.init = function(protocol, opts) {
 		this._protocol = protocol;
 		this._opts = opts;
+		this._state = exports.STATE.INITIAL;
 	}
 	
 	this.onConnect = function(transport) {
+		this._state = exports.STATE.CONNECTED;
+
 		transport.makeConnection(this._protocol);
 		this._protocol.transport = transport;
 		try {
@@ -92,9 +97,12 @@ exports.Connector = Class(function() {
 		}
 	}
 	
-	this.onDisconnect = function() {
+	this.onDisconnect = function(err) {
+		var wasConnected = this._state == exports.STATE.CONNECTED;
+		this._state = exports.STATE.DISCONNECTED;
+		
 		try {
-			this._protocol.connectionLost();
+			this._protocol.connectionLost(err, wasConnected);
 		} catch(e) {
 			throw logger.error(e);
 		}

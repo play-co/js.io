@@ -1,16 +1,17 @@
 jsio('import std.base64 as base64');
 jsio('import std.utf8 as utf8');
 jsio('import std.uri as uri'); 
-jsio('import .errors');
+jsio('import net.errors as errors');
 jsio('import .transports');
+jsio('import lib.Enum as Enum');
 
-var READYSTATE = exports.READYSTATE = {
+var READYSTATE = exports.READYSTATE = Enum({
 	INITIAL: 0,
 	CONNECTING: 1,
 	CONNECTED: 2,
 	DISCONNECTING: 3,
 	DISCONNECTED:  4
-};
+});
 
 
 exports.CometSession = Class(function(supr) {
@@ -89,6 +90,7 @@ exports.CometSession = Class(function(supr) {
 		this._transport.sendSuccess = bind(this, this._writeSuccess);
 		this.readyState = READYSTATE.CONNECTING;
 		this._transport.handshake(this._url, this._options);
+		
 		this._handshakeTimeoutTimer = $setTimeout(bind(this, this._handshakeTimeout), 
 			this._options.connectTimeout);
 	}
@@ -177,27 +179,31 @@ exports.CometSession = Class(function(supr) {
 	this._handshakeTimeout = function() {
 		logger.debug('handshake timeout');
 		this._handshakeTimeoutTimer = null;
-		this._doOnDisconnect(new errors.HandshakeTimeout());
+		this._doOnDisconnect(new errors.ServerUnreachable());
 	}
 	
-	this._handshakeSuccess = function(d) {
-		logger.debug('handshake success', d);
+	this._handshakeSuccess = function(data) {
+		logger.debug('handshake success', data);
 		if (this.readyState != READYSTATE.CONNECTING) { 
 			logger.debug('received handshake success in invalid readyState:', this.readyState);
 			return; 
 		}
 		clearTimeout(this._handshakeTimeoutTimer);
 		this._handshakeTimeoutTimer = null;
-		this._sessionKey = d.session;
+		this._sessionKey = data.response.session;
 		this._opened = true;
 		this.readyState = READYSTATE.CONNECTED;
 		this._doOnConnect();
 		this._doConnectComet();
 	}
 	
-	this._handshakeFailure = function(e) {
-		logger.debug('handshake failure', e);
+	this._handshakeFailure = function(data) {
+		logger.debug('handshake failure', data);
 		if (this.readyState != READYSTATE.CONNECTING) { return; }
+		if (data.status == 404) {
+			clearTimeout(this._handshakeTimeoutTimer);
+			return this._doOnDisconnect(new errors.ServerUnreachable());
+		}
 		
 		logger.debug('trying again in ', this._handshakeBackoff);
 		this._handshakeRetryTimer = $setTimeout(bind(this, function() {
@@ -210,7 +216,7 @@ exports.CometSession = Class(function(supr) {
 	
 	this._writeSuccess = function() {
 		if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
-			return; 
+			return;
 		}
 		if (this._nullInFlight) {
 			return this._sentNullPacket();
@@ -270,26 +276,29 @@ exports.CometSession = Class(function(supr) {
 		this._transport.comet(this._url, this._sessionKey, this._lastEventId || 0, this._options);
 	}
 
-	this._cometFailure = function(status, message) {
+	this._cometFailure = function(data) {
 		if (this.readyState != READYSTATE.CONNECTED) { return; }
-		if (status == 404 && message == 'Session not found') {
-			return this.close();
+		if (data.status == 404 && data.response == 'Session not found') {
+			return this.close(new errors.ExpiredSession(data));
 		}
+		
 		this._cometTimer = $setTimeout(bind(this, function() {
 			this._doConnectComet();
 		}), this._cometBackoff);
 		this._cometBackoff *= 2;
 	}
 	
-	this._cometSuccess = function(packets) {
+	this._cometSuccess = function(data) {
 		if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) { return; }
-		logger.debug('comet Success:', packets);
+		logger.debug('comet Success:', data);
 		this._cometBackoff = kDefaultBackoff;
 		this._resetTimeoutTimer();
-		for (var i = 0, packet; (packet = packets[i]) || i < packets.length; i++) {
+		
+		var response = data.response;
+		for (var i = 0, packet; (packet = response[i]) || i < response.length; i++) {
 			logger.debug('process packet:', packet);
 			if (packet === null) {
-				return self.close();
+				return this.close(new errors.ServerProtocolError(data));
 			}
 			logger.debug('process packet', packet);
 			var ackId = packet[0];
@@ -380,7 +389,7 @@ exports.CometSession = Class(function(supr) {
 		clearTimeout(this._timeoutTimer);
 		this._timeoutTimer = $setTimeout(bind(this, function() {
 			logger.debug('connection timeout expired');
-			this.close(new errors.SessionTimeout())
+			this.close(new errors.ConnectionTimeout())
 		}), this._getTimeoutInterval())
 	}
 	

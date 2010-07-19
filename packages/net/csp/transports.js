@@ -1,6 +1,5 @@
 jsio('import std.uri as uri'); 
 jsio('import std.base64 as base64');
-jsio('import .errors');
 jsio('from util.browserdetect import BrowserDetect');
 
 ;(function() {
@@ -195,30 +194,33 @@ transports.xhr = Class(baseTransport, function(supr) {
 
 	this._onReadyStateChange = function(rType, cb, eb) {
 		
-		var response = '';
+		var response = '',
+			xhr = this._xhr[rType];
+		
 		try {
-			var xhr = this._xhr[rType];
+			var data = {status: xhr.status};
+		} catch(e) { eb({response: 'Could not access status'}); }
+		
+		try {
 			if(xhr.readyState != 4) { return; }
 			
-			var response = eval(xhr.responseText);
-			
-			if(xhr.status != 200) { 
+			data.response = eval(xhr.responseText);
+			if(data.status != 200) { 
 				logger.debug('XHR failed with status ', xhr.status);
-				eb(xhr.status, response);
+				eb(data);
 				return;
 			}
 			
 			logger.debug('XHR data received');
 		} catch(e) {
-			var xhr = this._xhr[rType];
 			logger.debug('Error in XHR::onReadyStateChange', e);
-			eb(xhr.status, response);
+			eb(data);
 			this._abortXHR(rType);
 			logger.debug('done handling XHR error');
 			return;
 		}
 		
-		cb(response);
+		cb(data);
 	};
 
 	/**
@@ -381,14 +383,12 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		killLoadingBar();
 	};
 	
-	function onSuccess(req) {
-		var args = SLICE.call(arguments, 1);
-		logger.debug('successful: ', req.url, args);
-		
+	function onSuccess(req, response) {
+		logger.debug('successful: ', req.url, response);
 		req.completed = true;
 		
 		logger.debug('calling the cb');
-		req.cb.apply(GLOBAL, args);
+		req.cb.call(GLOBAL, {status: 200, response: response});
 		logger.debug('cb called');
 	}
 	
@@ -399,14 +399,18 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		checkForError.call(this, req);
 	}
 
-	function checkForError(req) {
+	function checkForError(req, response) {
 		cleanupIframe(this._ifr[req.type]);
 		
 		if (!req.completed) {
-			var args = SLICE.call(arguments, 3);
-			logger.debug('error making request:', req.url, args);
+			var data = {
+				status: response ? 200 : 404,
+				response: response || 'Unable to load resouce'
+			};
+			
+			logger.debug('error making request:', req.url, data);
 			logger.debug('calling eb');
-			req.eb.apply(GLOBAL, args);
+			req.eb.call(GLOBAL, data);
 		}
 	}
 	
