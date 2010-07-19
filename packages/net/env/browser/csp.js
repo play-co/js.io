@@ -7,7 +7,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		this._state = net.interfaces.STATE.CONNECTING;
 		
 		var conn = new CometSession();
-		conn.onconnect = bind(this, 'cometSessionOnConnect');
+		conn.onconnect = bind(this, 'cometSessionOnConnect', conn);
 		conn.ondisconnect = bind(this, 'onDisconnect');
 		
 		logger.debug('opening the connection');
@@ -17,7 +17,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		conn.connect(url, this._opts);//{encoding: 'plain'});
 	}
 	
-	this.cometSessionOnConnect = function() {
+	this.cometSessionOnConnect = function(conn) {
 		logger.debug('conn has opened');
 		this.onConnect(new Transport(conn));
 	}
