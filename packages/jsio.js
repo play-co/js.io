@@ -20,6 +20,7 @@
 	jsio.setCachedSrc = function(pkg, filePath, src) {
 		sourceCache[pkg] = { filePath: filePath, src: src };
 	}
+	jsio.getCachedSrc = function(pkg) { return sourceCache[pkg]; }
 	jsio.path = {};
 	jsio.setPath = function(path) { jsio.path.__default__ = typeof path == 'string' ? [path] : path; }
 	jsio.setEnv = function(env) {
@@ -107,12 +108,14 @@
 	}
 	
 	function ENV_browser() {
-		var XHR = window.XMLHttpRequest || function() { return new ActiveXObject("Msxml2.XMLHTTP"); }
+		var XHR = window.XMLHttpRequest || function() { return new ActiveXObject("Msxml2.XMLHTTP"); },
+			SLICE = Array.prototype.slice,
+			cwd = null,
+			path = null;
 		
 		this.global = window;
 		this.global.jsio = jsio;
 		
-		var SLICE = Array.prototype.slice;
 		this.log = function() {
 			var args = SLICE.call(arguments, 0);
 			if (typeof console != 'undefined' && console.log) {
@@ -125,7 +128,6 @@
 			return args.join(' ');
 		}
 		
-		var cwd = null, path = null;
 		this.getCwd = function() {
 			if(!cwd) {
 				var location = window.location.toString();
@@ -137,8 +139,9 @@
 		this.getPath = function() {
 			if(!path) {
 				try {
-					var filename = new RegExp('(.*?)' + jsio.__filename + '(\\?.*)?$');
-					var scripts = document.getElementsByTagName('script');
+					var filename = new RegExp('(.*?)' + jsio.__filename + '(\\?.*)?$'),
+						scripts = document.getElementsByTagName('script');
+					
 					for (var i = 0, script; script = scripts[i]; ++i) {
 						var result = script.src.match(filename);
 						if (result) {
@@ -298,17 +301,31 @@
 
 			imports[0] = {
 				from: resolveRelativePath(match[2], path),
-				external: match[1] == 'external', "import": {}
+				external: match[1] == 'external',
+				'import': {}
 			};
 			
 			match[3].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
-				imports[0]["import"][item] = as || item;
+				imports[0]['import'][item] = as || item;
 			});
 		} else if((match = request.match(/^import\s+(.*)$/))) {
 			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
 				fullPkg = resolveRelativePath(pkg, path);
 				imports[imports.length] = as ? {from: fullPkg, as: as} : {from: fullPkg, as: pkg};
 			});
+		} else if((match = request.match(/[\w.0-9$\/]/))) { // CommonJS syntax
+			var req = match[0],
+				isAbsolute = req.charAt(0) == '/';
+			
+			req = req.replace(/^\//, '') // leading slash not needed
+				.replace(/\.\.?\//g, '.') // replace relative path indicators with dots
+				.replace(/\//g, '.'); // any remaining slashes are path separators
+			
+			// isAbsolute handles the edge case where the path looks like /../foo
+			imports[0] = {
+				from: isAbsolute ? req : resolveRelativePath(req, path),
+				as: req
+			};
 		} else {
 			var msg = 'Invalid jsio request: jsio(\'' + request + '\')';
 			throw SyntaxError ? new SyntaxError(msg) : new Error(msg);
@@ -318,23 +335,26 @@
 	
 	function makeContext(pkgPath, filePath) {
 		var ctx = {
-			exports: {},
-			global: ENV.global
-		};
+				exports: {},
+				global: ENV.global
+			},
+			cwd = ENV.getCwd(),
+			i = filePath.lastIndexOf('/'),
+			isRelative = i > 0;
 		
-		ctx.jsio = bind(this, importer, ctx, pkgPath);
-		if(pkgPath != 'base') {
+		ctx.require = ctx.jsio = bind(this, importer, ctx, pkgPath);
+		ctx.module = {id: pkgPath};
+		
+		if (pkgPath != 'base') {
 			ctx.jsio('from base import *');
 			ctx.logging.__create(pkgPath, ctx);
 		}
 		
 		// TODO: FIX for "trailing ." case
-		var cwd = ENV.getCwd();
-		var i = filePath.lastIndexOf('/');
-		
+		ctx.jsio.__jsio = jsio;
 		ctx.jsio.__env = jsio.__env;
-		ctx.jsio.__dir = i > 0 ? makeRelativePath(filePath.substring(0, i), cwd) : '';
-		ctx.jsio.__filename = i > 0 ? filePath.substring(i) : filePath;
+		ctx.jsio.__dir = isRelative ? makeRelativePath(filePath.substring(0, i), cwd) : '';
+		ctx.jsio.__filename = isRelative ? filePath.substring(i) : filePath;
 		ctx.jsio.__path = pkgPath;
 		return ctx;
 	};
@@ -349,13 +369,20 @@
 	};
 	
 	function importer(context, path, request, altContext) {
-		context = context || ENV.global;
-		var imports = resolveImportRequest(path, request);
+		// importer is bound to a module's (or global) context -- we can override this
+		// by using altContext as in jsio('import foo', obj) --> obj.foo
+		context = altContext || context || ENV.global;
 		
-		// import each item in the request
-		for(var i = 0, item, len = imports.length; (item = imports[i]) || i < len; ++i) {
-			var pkg = item.from;
-			var modules = jsio.modules;
+		// parse the import request(s)
+		var imports = resolveImportRequest(path, request),
+			numImports = imports.length,
+			retVal = numImports > 1 ? {} : null;
+		
+		// import each requested item
+		for(var i = 0; i < numImports; ++i) {
+			var item = imports[i],
+				pkg = item.from,
+				modules = jsio.modules;
 			
 			// eval any packages that we don't know about already
 			if(!(pkg in modules)) {
@@ -368,15 +395,16 @@
 				
 				if(!item.external) {
 					var newContext = makeContext(pkg, module.filePath);
+					modules[pkg] = newContext.exports;
 					execModule(newContext, module);
 					modules[pkg] = newContext.exports;
 				} else {
-					var newContext = {};
-					for(var j in item['import']) {
-						newContext[j] = undefined;
-					}
+					var newContext = modules[pkg] = {};
+					
+					// capture the requested objects so they don't escape into the global scope
+					for(var j in item['import']) { newContext[j] = undefined; }
+					
 					execModule(newContext, module);
-					modules[pkg] = newContext;
 					for(var j in item['import']) {
 						if(newContext[j] === undefined) {
 							newContext[j] = ENV.global[j];
@@ -385,22 +413,41 @@
 				}
 			}
 			
-			var c = altContext || context;
-			if(item.as) {
+			var module = modules[pkg];
+			
+			// return the module if we're only importing one module
+			if (numImports == 1) { retVal = module; }
+			
+			// add the module to the current context
+			if (item.as) {
 				// remove trailing/leading dots
-				var segments = item.as.match(/^\.*(.*?)\.*$/)[1].split('.');
-				for(var k = 0, slen = segments.length - 1, segment; (segment = segments[k]) && k < slen; ++k) {
-					if(!segment) continue;
+				var as = item.as.match(/^\.*(.*?)\.*$/)[1],
+					segments = as.split('.'),
+					kMax = segments.length - 1,
+					c = context;
+				
+				// build the object in the context
+				for(var k = 0; k < kMax; ++k) {
+					var segment = segments[k];
+					if (!segment) continue;
 					if (!c[segment]) { c[segment] = {}; }
 					c = c[segment];
 				}
-				c[segments[slen]] = modules[pkg];
+				
+				c[segments[kMax]] = module;
+				
+				// there can be multiple module imports with this syntax (import foo, bar)
+				if (numImports > 1) {
+					retVal[as] = module;
+				}
 			} else if(item['import']) {
+				// there can only be one module import with this syntax 
+				// (from foo import bar), so retVal will already be set here
 				if(item['import']['*']) {
-					for(var k in modules[pkg]) { c[k] = modules[pkg][k]; }
+					for(var k in modules[pkg]) { context[k] = module[k]; }
 				} else {
 					try {
-						for(var k in item['import']) { c[item['import'][k]] = modules[pkg][k]; }
+						for(var k in item['import']) { context[item['import'][k]] = module[k]; }
 					} catch(e) {
 						ENV.log('module: ', modules);
 						throw e;
@@ -408,5 +455,7 @@
 				}
 			}
 		}
+		
+		return retVal;
 	}
 })();
