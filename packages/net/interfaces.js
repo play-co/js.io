@@ -8,7 +8,7 @@ exports.Protocol = Class(function() {
 	this.connectionMade = function(isReconnect) {}
 	this.dataReceived = function(data) {}
 	this.connectionLost = function(reason) {}
-	this.connectionFailed = function() {}
+	this.connectionFailed = function(transportName) {}
 });
 
 exports.Client = Class(function() {
@@ -108,5 +108,12 @@ exports.Connector = Class(function() {
 		}
 	}
 	
+	this.onConnectFailure = function(transportName) {
+		try {
+			this._protocol.connectionFailed(transportName);
+		} catch(e) {
+			throw logger.error(e);
+		}
+	}
 	this.getProtocol = function() { return this._protocol; }
 });
