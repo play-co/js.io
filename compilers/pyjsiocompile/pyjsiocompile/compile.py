@@ -60,12 +60,12 @@ def make_option_parser():
     parser.add_option("-e", "--environments", 
                       dest="environments", type="string", 
                       action='append',
-                      default=["browser"],
+                      default=[],
                       help="target environments (e.g. browser or node)")
     parser.add_option("-t", "--transports", 
                       dest="transports", type="string", 
                       action="append",
-                      default=["csp"],
+                      default=[],
                       help="target transport (e.g. csp or tcp)")
     parser.add_option("--v", 
                       action="store_const", const=logging.INFO, dest="verbose")
