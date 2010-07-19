@@ -140,6 +140,18 @@ def main(argv=None):
     else:
         log.info("Skipping minify")
     print "Writing output %s" % OUTPUT
+    
+    # TODO: clean up this hack to write .html files back out
+    if INPUT.endswith('.html'):
+        orig_source = get_source(INPUT)
+        soup = Soup(orig_source)
+        orig_source = ""
+        from BeautifulSoup import Tag
+        tag1 = Tag(soup, "script")
+        tag1.insert(0, output)
+        soup.head.insert(0, tag1)
+        output = soup.prettify()
+        
     f = fileopen(OUTPUT, 'w')
     f.write(output)
     f.close()
@@ -190,6 +202,7 @@ def get_source(target):
     if '://' in target:
         return urlopen(target).read()
     else:
+#        print 'get_source', repr(target)
         return fileopen(target).read()
 
 def build_transport_paths(environments, transports):
@@ -222,7 +235,7 @@ def compile_source(target, options, extras=[]):
         for script in select(soup, 'script'):
             if 'src' in dict(script.attrs):
                 continue
-            target += script.contents[0]
+            orig_source += script.contents[0] + "\n\n"
                                
     target_source = remove_comments(orig_source)
     target_module = os.path.relpath(target).split('/')[-1].split('.')[0]
@@ -231,8 +244,8 @@ def compile_source(target, options, extras=[]):
     dependencies = get_dependencies(target_source, extras)
     dependencies.append(('jsio','jsio.jsio'))
 #    print 'dependencies:', dependencies
-    print 'dependencies:'
-    pprint.pprint(dependencies)
+    log.info('dependencies:')
+    log.info(pprint.pformat(dependencies))
     checked = [target_module, 'net.env', 'log', 'Class', 'bind']
     transport_paths = build_transport_paths(options.environments,
                                             options.transports)
@@ -276,7 +289,9 @@ def compile_source(target, options, extras=[]):
             continue
         log.info("Loading dependancy %s", full_path)
         filename = path_for_module(full_path, prefix=options.jsio)
+        log.info("filename: %s", filename)
         src = get_source(filename)
+            
         virtual_filename = path_for_module(full_path, prefix='jsio')
         log.debug(virtual_filename)
             
@@ -300,6 +315,7 @@ def path_for_module(full_path, prefix):
     elif not is_relative:
         path_components.insert(0, prefix)
     #log.info('TEST', path_components)
+    path_components = [path_components[0]] + [ p or '..' for p in path_components[1:] ]
     return join_paths(*path_components) + '.js'
 
 def joinModulePath(a, b):
@@ -502,14 +518,25 @@ def unmonkeypatch(BeautifulSoupClass=None):
 def google_jar_minify(src):
     import commands, os
     compiler = os.path.join(os.path.dirname(__file__), 'compiler.jar')
-    f = open('temp.js', 'w')
+    if not os.path.exists(compiler):
+        compiler = 'compiler.jar'
+        if not os.path.exists(compiler):
+            log.critical('ERROR: could not find google closure\'s compiler.jar for -g option')
+            sys.exit(1)
+    f = open('.pyjsiocompile.temp.js', 'w')
     f.write(src)
     f.close()
-    command = 'java -jar %s --js temp.js --js_output_file temp2.js --compilation_level SIMPLE_OPTIMIZATIONS' % (compiler,)
-    print command
-    print commands.getoutput(command)
-    return open('temp2.js').read()
-
+    command = 'java -jar %s --js .pyjsiocompile.temp.js --js_output_file .pyjsiocompile.temp2.js --compilation_level SIMPLE_OPTIMIZATIONS' % (compiler,)
+    log.debug(command)
+    code, out = commands.getstatusoutput(command)
+    log.debug(out)
+    if code:
+        data = src
+    else:
+        data = open('.pyjsiocompile.temp2.js').read()
+    os.remove('.pyjsiocompile.temp.js')
+    os.remove('.pyjsiocompile.temp2.js')
+    return data
 
 def google_minify(src):
     print '*Google minify'
