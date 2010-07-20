@@ -1,6 +1,11 @@
 jsio('external .sizzle import Sizzle');
 
-var $ = exports.$ = Sizzle;
+var singleId = /^#([\w-]+)$/;
+
+var $ = exports.$ = function(selector, win) {
+	if (singleId.test(selector)) { return $.id(selector.substring(1), win); }
+	return Sizzle.apply(GLOBAL, arguments);
+}
 
 $.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
 
@@ -77,7 +82,7 @@ $.style = function(el, style) {
 	for(prop in style) {
 		switch(prop) {
 			case 'float':
-				el.style.styleFloat = el.style.float = style[prop];
+				el.style.styleFloat = el.style.cssFloat = style[prop];
 				break;
 			case 'opacity':
 				el.style.opacity = style[prop];

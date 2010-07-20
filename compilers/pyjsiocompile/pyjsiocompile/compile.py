@@ -97,7 +97,7 @@ def main(argv=None):
     
     global minify
     if not options.minify:
-        minify = lambda x: x
+        minify = lambda x, path=None: x
     elif options.google:
         minify = google_jar_minify
     elif options.google_rest:
@@ -271,7 +271,7 @@ def compile_source(target, options, extras=[]):
         log.debug('full_path: %s', full_path)
         if full_path in checked:
             continue
-        log.debug('checking dependancy %s', full_path)
+        log.debug('getting dependancies for %s', full_path)
         target = path_for_module(full_path, prefix=options.jsio)
         src = remove_comments(get_source(target))
         depends = map(lambda x: (x, full_path), extract_dependencies(src))
@@ -280,22 +280,21 @@ def compile_source(target, options, extras=[]):
             checked.append(full_path)
         
     sources = {}
-    sources[target_module] = dict(src=minify(target_source),
+    sources[target_module] = dict(src=minify(target_source,path=target_module_path),
                                   filePath=target_module_path)
     log.debug('checked is %s', checked)
     for full_path in checked:
         if full_path in (target_module, 'jsio', # 'jsio.env',
                          'log', 'Class', 'bind'):
             continue
-        log.info("Loading dependancy %s", full_path)
         filename = path_for_module(full_path, prefix=options.jsio)
-        log.info("filename: %s", filename)
+        log.info("Loading dependancy %s from %s", full_path, filename)
         src = get_source(filename)
             
         virtual_filename = path_for_module(full_path, prefix='jsio')
         log.debug(virtual_filename)
-            
-        sources[full_path] = {'src': minify(src), 'filePath': virtual_filename, }
+        
+        sources[full_path] = {'src': minify(src,path=virtual_filename), 'filePath': virtual_filename, }
         
     out = ',\n'.join([ repr(str(key)) + ": " + json.dumps(val)
                        for (key, val) in sources.items() ])
@@ -344,8 +343,8 @@ def extract_dependencies(src):
     for item in re2.finditer(src):
         for listItem in re3.finditer(item.groups()[0]):
             dependencies.append(listItem.groups()[0])
-#    if dependencies:
-#        print 'returning', dependencies
+    
+    log.debug('deps: ' + ', '.join(dependencies))
     return dependencies
     
 def remove_comments(src):
@@ -515,7 +514,7 @@ def unmonkeypatch(BeautifulSoupClass=None):
     delattr(BeautifulSoupClass, 'findSelect')
 
 
-def google_jar_minify(src):
+def google_jar_minify(src, path=None):
     import commands, os
     compiler = os.path.join(os.path.dirname(__file__), 'compiler.jar')
     if not os.path.exists(compiler):
@@ -526,19 +525,18 @@ def google_jar_minify(src):
     f = open('.pyjsiocompile.temp.js', 'w')
     f.write(src)
     f.close()
-    command = 'java -jar %s --js .pyjsiocompile.temp.js --js_output_file .pyjsiocompile.temp2.js --compilation_level SIMPLE_OPTIMIZATIONS' % (compiler,)
-    log.debug(command)
-    code, out = commands.getstatusoutput(command)
-    log.debug(out)
-    if code:
-        data = src
-    else:
-        data = open('.pyjsiocompile.temp2.js').read()
+    
+    command = 'java -jar %s --js .pyjsiocompile.temp.js --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET' % (compiler,)
+    status, data = commands.getstatusoutput(command)
+    if status:
+        print 'Failed compiling', path
+        print out
+        sys.exit(status)
+
     os.remove('.pyjsiocompile.temp.js')
-    os.remove('.pyjsiocompile.temp2.js')
     return data
 
-def google_minify(src):
+def google_minify(src, path=None):
     print '*Google minify'
     # Code from http://code.google.com/closure/compiler/docs/api-tutorial1.html
     import httplib, urllib, sys

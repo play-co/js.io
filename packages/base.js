@@ -89,16 +89,14 @@ exports.logging = (function() {
 	
 	// logging namespace, this is what is exported
 	var logging = {
-		DEBUG: 1,
-		LOG: 2,
-		INFO: 3,
-		WARN: 4,
-		ERROR: 5
-	};
-
-	// effectively globals - all loggers and a global production state
-	var loggers = {}
-	var production = false;
+			DEBUG: 1,
+			LOG: 2,
+			INFO: 3,
+			WARN: 4,
+			ERROR: 5
+		},
+		loggers = {}, // effectively globals - all loggers and a global production state
+		production = false;
 
 	logging.setProduction = function(prod) { production = !!prod; }
 	logging.get = function(name) {
@@ -117,21 +115,23 @@ exports.logging = (function() {
 		this.init = function(name, level) {
 			this._name = name;
 			this._level = level || logging.LOG;
+			this._listener = exports.log;
 		}
 		
 		this.setLevel = function(level) { this._level = level; }
 	
-		var slice = Array.prototype.slice;
-		var log = exports.log;
+		var SLICE = Array.prototype.slice;
+		
 		function makeLogFunction(level, type) {
 			return function() {
 				if (!production && level >= this._level) {
-					return log.apply(log, [type, this._name].concat(slice.call(arguments, 0)));
+					return this._listener.apply(this._listener, [type, this._name].concat(SLICE.call(arguments)));
 				}
 				return arguments[0];
 			}
 		}
 	
+		this.setListener = function(listener) { log = listener; }
 		this.debug = makeLogFunction(logging.DEBUG, "DEBUG");
 		this.log = makeLogFunction(logging.LOG, "LOG");
 		this.info = makeLogFunction(logging.INFO, "INFO");
