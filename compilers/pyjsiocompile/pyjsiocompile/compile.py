@@ -136,7 +136,7 @@ def main(argv=None):
     output += options.initialImport;
     if options.minify:
         log.info("Minifying")
-        output = minify(output)
+        output = minify(output, path='output')
     else:
         log.info("Skipping minify")
     print "Writing output %s" % OUTPUT
@@ -515,26 +515,29 @@ def unmonkeypatch(BeautifulSoupClass=None):
 
 
 def google_jar_minify(src, path=None):
-    import commands, os
+    import os, subprocess
+
     compiler = os.path.join(os.path.dirname(__file__), 'compiler.jar')
     if not os.path.exists(compiler):
         compiler = 'compiler.jar'
         if not os.path.exists(compiler):
             log.critical('ERROR: could not find google closure\'s compiler.jar for -g option')
             sys.exit(1)
-    f = open('.pyjsiocompile.temp.js', 'w')
-    f.write(src)
-    f.close()
-    
-    command = 'java -jar %s --js .pyjsiocompile.temp.js --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET' % (compiler,)
-    status, data = commands.getstatusoutput(command)
-    if status:
-        print 'Failed compiling', path
-        print out
-        sys.exit(status)
+    compilation_level = 'SIMPLE_OPTIMIZATIONS' # 'ADVANCED_OPTIMIZATIONS', 'WHITESPACE_ONLY'
+    warning_level = 'DEFAULT' # 'QUIET', 'VERBOSE'
 
-    os.remove('.pyjsiocompile.temp.js')
-    return data
+    log.info('closure compiler minifying %s', path)
+    command = ['java', '-jar', compiler, '--compilation_level', compilation_level, '--warning_level', warning_level]
+    handle = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = handle.communicate(src)
+    if handle.returncode:
+        log.error('Failed compiling %s', path)
+	log.error(stderr)
+        sys.exit(handle.returncode)
+    elif stderr:
+	log.warn('compiler warnings for %s', path)
+        log.warn(stderr)
+    return stdout
 
 def google_minify(src, path=None):
     print '*Google minify'
