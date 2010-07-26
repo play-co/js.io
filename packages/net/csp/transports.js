@@ -25,7 +25,7 @@ jsio('from util.browserdetect import BrowserDetect');
 	exports.XHR = function() {
 		var win = window,
 			doc = exports.getDoc();
-		if (doc.parentWindow) { win = doc.parentWindow; }
+		//if (doc.parentWindow) { win = doc.parentWindow; }
 		
 		return new (exports.XHR = win.XDomainRequest ? win.XDomainRequest
 			: win.XMLHttpRequest ? win.XMLHttpRequest
