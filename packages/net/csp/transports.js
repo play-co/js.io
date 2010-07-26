@@ -242,7 +242,11 @@ transports.xhr = Class(baseTransport, function(supr) {
 		// NOTE WELL: Firefox (and probably everyone else) likes to encode our nice
 		//						binary strings as utf8. Don't let them! Say no to double utf8
 		//						encoding. Once is good, twice isn't better.
-		setTimeout(bind(xhr, xhr.sendAsBinary ? 'sendAsBinary' : 'send', data), 0);
+		var supportsBinary = !!xhr.sendAsBinary;
+		if (supportsBinary) {
+			xhr.setRequestHeader('x-CSP-SendAsBinary', 'true');
+		}
+		setTimeout(bind(xhr, supportsBinary ? 'sendAsBinary' : 'send', data), 0);
 	};
 });
 
