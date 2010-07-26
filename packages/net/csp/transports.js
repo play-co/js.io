@@ -27,8 +27,7 @@ jsio('from util.browserdetect import BrowserDetect');
 			doc = exports.getDoc();
 		//if (doc.parentWindow) { win = doc.parentWindow; }
 		
-		return new (exports.XHR = win.XDomainRequest ? win.XDomainRequest
-			: win.XMLHttpRequest ? win.XMLHttpRequest
+		return new (exports.XHR = win.XMLHttpRequest ? win.XMLHttpRequest
 			: function() { return win.ActiveXObject && new win.ActiveXObject('Msxml2.XMLHTTP') || null; });
 	}
 	
