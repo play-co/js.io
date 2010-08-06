@@ -116,6 +116,7 @@ exports.Session = Class(function() {
 		// any remaining incoming packets will still fire 'receive' events.
 		this.send(null);
 		this.connection.readyState = (this.connection.readyState === 'open' ? 'readOnly' : 'closed');
+		this.connection.emit('close');
 	};
 	
 	var updatedHeaders = new Hash('gzipOk', 'contentType');
@@ -260,9 +261,13 @@ exports.Session = Class(function() {
 			logger.debug('received packet batch:', batch);
 			while (batch[0] != undefined) {
 				// packetId, encoding, content = batch.shift()
-				var packet = batch.shift(),
+				var packetContent,
+					packet = batch.shift(),
 					packetId = packet[0], encoding = packet[1], content = packet[2];
-				if (encoding === 0) {
+				
+				if (content === null) {
+					this.close();
+				} else if (encoding === 0) {
 					packetContent = content;
 				} else if (encoding === 1) {
 					packetContent = base64.decode(content);
