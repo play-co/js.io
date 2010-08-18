@@ -272,10 +272,13 @@
 		} catch(e) {
 			if(e.type == "syntax_error") {
 				throw new Error("error importing module: " + e.message);
-			} else if (e.type == "stack_overflow") {
-				ENV.log("Stack overflow in", module.filePath, ':', e);
-			} else {
-				ENV.log("ERROR LOADING", module.filePath, ':', e);
+			} else if (!e.jsioLogged) {
+				e.jsioLogged = true;
+				if (e.type == "stack_overflow") {
+					ENV.log("Stack overflow in", module.filePath, ':', e);
+				} else {
+					ENV.log("ERROR LOADING", module.filePath, ':', e);
+				}
 			}
 			throw e;
 		}
