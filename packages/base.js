@@ -28,7 +28,7 @@ exports.bind = function(context, method /*, VARGS*/) {
 
 exports.Class = function(parent, proto) {
 	if(!parent) { throw new Error('parent or prototype not provided'); }
-	if(!proto) { proto = parent; }
+	if(!proto) { proto = parent; parent = null; }
 	else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
 		proto.prototype = {};
 		for(var i = 0, p; p = parent[i]; ++i) {
@@ -44,7 +44,7 @@ exports.Class = function(parent, proto) {
 	}
 
 	var cls = function() { if(this.init) { return this.init.apply(this, arguments); }}
-	cls.prototype = new proto(function(context, method, args) {
+	cls.prototype = new proto(parent ? function(context, method, args) {
 		var args = args || [];
 		var target = proto;
 		while(target = target.prototype) {
@@ -53,7 +53,7 @@ exports.Class = function(parent, proto) {
 			}
 		}
 		throw new Error('method ' + method + ' does not exist');
-	});
+	} : null);
 	cls.prototype.constructor = cls;
 	return cls;
 }
