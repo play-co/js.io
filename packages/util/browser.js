@@ -1,3 +1,5 @@
+if (jsio.__env.name != 'browser') { return; }
+
 jsio('external .sizzle import Sizzle');
 
 var singleId = /^#([\w-]+)$/;
