@@ -244,7 +244,7 @@ transports.xhr = Class(baseTransport, function(supr) {
 		//						encoding. Once is good, twice isn't better.
 		var supportsBinary = !!xhr.sendAsBinary;
 		if (supportsBinary) {
-			xhr.setRequestHeader('x-CSP-SendAsBinary', 'true');
+			// xhr.setRequestHeader('x-CSP-SendAsBinary', 'true');
 		}
 		setTimeout(bind(xhr, supportsBinary ? 'sendAsBinary' : 'send', data), 0);
 	};

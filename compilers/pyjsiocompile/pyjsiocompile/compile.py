@@ -152,9 +152,11 @@ def main(argv=None):
         soup.head.insert(0, tag1)
         output = soup.prettify()
         
-    f = fileopen(OUTPUT, 'w')
-    f.write(output)
-    f.close()
+    if OUTPUT:
+        f = fileopen(OUTPUT, 'w')
+        f.write(output)
+        f.close()
+    return output
 
 def load_package_configuration(INPUT, options):
     """ load the configuration options in the specified pkg
