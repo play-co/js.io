@@ -1,50 +1,68 @@
 // jsio/browser.js
 
 ;(function() {
-	var ENV, sourceCache = {
-		// Insert pre-loaded modules here...
-		
-	};
-	
-	function bind(context, method/*, args... */) {
-		var args = Array.prototype.slice.call(arguments, 2);
-		return function(){
-			method = (typeof method == 'string' ? context[method] : method);
-			return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
-		}
-	}
-	
-	jsio = bind(this, importer, null, '');
-	jsio.__filename = 'jsio.js';
-	jsio.modules = [];
-	jsio.setCachedSrc = function(pkg, filePath, src) {
-		sourceCache[pkg] = { filePath: filePath, src: src };
-	}
-	jsio.getCachedSrc = function(pkg) { return sourceCache[pkg]; }
-	jsio.path = {};
-	jsio.setPath = function(path) { jsio.path.__default__ = typeof path == 'string' ? [path] : path; }
-	jsio.setEnv = function(env) {
-		if(ENV && (env == ENV || env == ENV.name)) { return; }
-		
-		if(typeof env == 'string') {
-			switch(env) {
-				case 'node':
-					ENV = new ENV_node();
-					break;
-				case 'browser':
-				default:
-					ENV = new ENV_browser();
-					break;
+	var SLICE = Array.prototype.slice,
+		ENV,
+		sourceCache = {
+			// Insert pre-loaded modules here...
+		},
+		bind = function(context, method/*, args... */) {
+			var args = Array.prototype.slice.call(arguments, 2);
+			return function(){
+				method = (typeof method == 'string' ? context[method] : method);
+				return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
 			}
-			ENV.name = env;
-		} else {
-			ENV = env;
+		};
+	
+	(function() {
+		this.__filename = 'jsio.js';
+		this.__preprocessors = {};
+		this.__cmds = [];
+		this.__jsio = this;
+		
+		this.modules = [];
+		this.frameworks = [];
+		
+		this.setCachedSrc = function(pkg, filePath, src) { sourceCache[pkg] = { filePath: filePath, src: src }; }
+		this.getCachedSrc = function(pkg) { return sourceCache[pkg]; }
+		
+		this.addFramework = function(name, init) { this.frameworks[name] = init; }
+		
+		this.path = {__default__:[]};
+		this.setPath = function(path) { this.path.__default__ = typeof path == 'string' ? [path] : path; }
+		this.addPath = function(path, baseModule) {
+			if (baseModule) {
+				jsio.path[baseModule] = path;
+			} else {
+				jsio.path.__default__.push(path);
+			}
 		}
 		
-		jsio.__env = ENV;
-		jsio.__dir = ENV.getCwd();
-		if(!jsio.path.__default__) { jsio.setPath(ENV.getPath()); }
-	}
+		this.addPreprocessor = function(name, preprocessor) { this.__preprocessors[name] = preprocessor; }
+		this.addCmd = function(processor) { this.__cmds.push(processor); }
+		
+		this.setEnv = function(env) {
+			if(ENV && (env == ENV || env == ENV.name)) { return; }
+
+			if(typeof env == 'string') {
+				switch(env) {
+					case 'node':
+						ENV = new ENV_node();
+						break;
+					case 'browser':
+					default:
+						ENV = new ENV_browser();
+						break;
+				}
+			} else {
+				ENV = env;
+			}
+
+			jsio.__env = ENV;
+			jsio.__dir = ENV.getCwd();
+			if(!jsio.path.__default__.length) { jsio.setPath(ENV.getPath()); }
+		}
+	}).call(jsio = bind(this, importer, null, ''));
 	
 	if (typeof process !== 'undefined' && process.version) {
 		jsio.setEnv('node');
@@ -52,15 +70,13 @@
 		jsio.setEnv('browser');
 	}
 	
-	// DONE
-	
 	/*
 	function ENV_abstract() {
 		this.global = null;
 		this.getCwd = function() {};
 		this.getPath = function() {};
 		this.eval = function(code, path) {};
-		this.findModule = function(pathString) {};
+		this.fetch = function(path) { return contentsOfPath; };
 		this.log = function(args...) {};
 	}
 	*/
@@ -69,6 +85,7 @@
 		var fs = require('fs'),
 			sys = require('sys');
 		
+		this.name = 'node';
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
 		this.log = function() {
@@ -92,27 +109,24 @@
 			return segments.join('/') || '.';
 		}
 		this.eval = process.compile;
-		this.findModule = function(possibilities) {
-			for (var i = 0, possible; possible = possibilities[i]; ++i) {
-				try {
-					possible.src = fs.readFileSync(possible.filePath);
-					return possible;
-				} catch(e) {
-				}
-			}
+		
+		this.fetch = function(filePath) {
+			try {
+				return fs.readFileSync(filePath);
+			} catch(e) {}
 			return false;
 		}
-
+		
 		this.require = require;
 		this.include = include;
 	}
 	
 	function ENV_browser() {
 		var XHR = window.XMLHttpRequest || function() { return new ActiveXObject("Msxml2.XMLHTTP"); },
-			SLICE = Array.prototype.slice,
 			cwd = null,
 			path = null;
 		
+		this.name = 'browser';
 		this.global = window;
 		this.global.jsio = jsio;
 		
@@ -183,32 +197,27 @@
 			}
 		}
 		
-		this.findModule = function(possibilities) {
-			for (var i = 0, possible; possible = possibilities[i]; ++i) {
-				var xhr = new XHR();
-				try {
-					xhr.open('GET', possible.filePath, false);
-					xhr.send(null);
-				} catch(e) {
-					ENV.log('e:', e);
-					continue; // firefox file://
-				}
-				
-				if (xhr.status == 404 || // all browsers, http://
-					xhr.status == -1100 || // safari file://
-					// XXX: We have no way to tell in opera if a file exists and is empty, or is 404
-					// XXX: Use flash?
-					//(!failed && xhr.status == 0 && !xhr.responseText && EXISTS)) // opera
-					false)
-				{
-					continue;
-				}
-				
-				possible.src = xhr.responseText;
-				return possible;
+		this.fetch = function(filePath) {
+			var xhr = new XHR();
+			try {
+				xhr.open('GET', filePath, false);
+				xhr.send(null);
+			} catch(e) {
+				ENV.log('e:', e);
+				return false; // firefox file://
 			}
 			
-			return false;
+			if (xhr.status == 404 || // all browsers, http://
+				xhr.status == -1100 || // safari file://
+				// XXX: We have no way to tell in opera if a file exists and is empty, or is 404
+				// XXX: Use flash?
+				//(!failed && xhr.status == 0 && !xhr.responseText && EXISTS)) // opera
+				false)
+			{
+				return false;
+			}
+			
+			return xhr.responseText;
 		}
 	};
 	
@@ -238,8 +247,8 @@
 			return [{filePath: ensureHasTrailingSlash(jsio.path[baseMod]) + modPath + '.js'}];
 		}
 		
-		var out = [];
-		var paths = typeof jsio.path.__default__ == 'string' ? [jsio.path.__default__] : jsio.path.__default__;
+		var out = [],
+			paths = jsio.path.__default__;
 		for (var i = 0, len = paths.length; i < len; ++i) {
 			var path = ensureHasTrailingSlash(paths[i]);
 			out.push({filePath: path + modPath + '.js', baseMod: baseMod, basePath: path});
@@ -247,18 +256,49 @@
 		return out;
 	}
 	
+	var preprocessorCheck = /^"(.*?)"\s*;\s*\n/,
+		preprocessorFunc = /^(.+)\(.+\)$/;
+	
+	function findModule(possibilities) {
+		var src;
+		for (var i = 0, possible; possible = possibilities[i]; ++i) {
+			src = ENV.fetch(possible.filePath);
+			if (src !== false) {
+				possible.src = src;
+				return possible;
+			}
+		}
+		return false;
+	}
+	
 	// load a module from a file
 	function loadModule(pathString) {
 		var possibilities = guessModulePath(pathString),
-			module = ENV.findModule(possibilities);
+			module = findModule(possibilities),
+			match;
+		
 		if(!module) {
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.filePath); }
 			throw new Error("Module not found: " + pathString + " (looked in " + paths.join(', ') + ")");
 		}
 		
-		if (!(module.baseMod in jsio.path)) {
-			jsio.path[module.baseMod] = module.basePath;
+		if (module.baseMod && !(module.baseMod in jsio.path)) {
+			jsio.addPath(module.basePath, module.baseMod);
+		}
+		
+		while (module.src.charAt(0) == '"' && (match = module.src.match(preprocessorCheck))) {
+			var preprocessors = match[1].split(','),
+				src = module.src.substring(match[0].length);
+
+			for (var i = preprocessors.length - 1; i >= 0; --i) {
+				var p = preprocessors[i];
+				if (typeof jsio.__preprocessors[p] == 'function') {
+					src = jsio.__preprocessors[p](src);
+				}
+			}
+			
+			module.src = src;
 		}
 		
 		return module;
@@ -277,7 +317,7 @@
 				if (e.type == "stack_overflow") {
 					ENV.log("Stack overflow in", module.filePath, ':', e);
 				} else {
-					ENV.log("ERROR LOADING", module.filePath, ':', e);
+					ENV.log("ERROR LOADING", module.filePath, ENV.name == 'browser' ? e : '');
 				}
 			}
 			throw e;
@@ -298,58 +338,34 @@
 		return path + pkg.substring(i);
 	}
 	
-	function resolveImportRequest(path, request) {
-		var match, imports = [];
-		if((match = request.match(/^(from|external)\s+([\w.$]+)\s+import\s+(.*)$/))) {
-
-			imports[0] = {
-				from: resolveRelativePath(match[2], path),
-				external: match[1] == 'external',
-				'import': {}
-			};
-			
-			match[3].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
-				imports[0]['import'][item] = as || item;
-			});
-		} else if((match = request.match(/^import\s+(.*)$/))) {
-			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
-				fullPkg = resolveRelativePath(pkg, path);
-				imports[imports.length] = as ? {from: fullPkg, as: as} : {from: fullPkg, as: pkg};
-			});
-		} else if((match = request.match(/[\w.0-9$\/]/))) { // CommonJS syntax
-			var req = match[0],
-				isAbsolute = req.charAt(0) == '/';
-			
-			req = req.replace(/^\//, '') // leading slash not needed
-				.replace(/\.\.?\//g, '.') // replace relative path indicators with dots
-				.replace(/\//g, '.'); // any remaining slashes are path separators
-			
-			// isAbsolute handles the edge case where the path looks like /../foo
-			imports[0] = {
-				from: isAbsolute ? req : resolveRelativePath(req, path),
-				as: req
-			};
-		} else {
-			var msg = 'Invalid jsio request: jsio(\'' + request + '\')';
-			throw SyntaxError ? new SyntaxError(msg) : new Error(msg);
+	function resolveImportRequest(context, path, request) {
+		var cmds = jsio.__cmds,
+			imports = [],
+			result = false;
+		
+		for (var i = 0, imp; imp = cmds[i]; ++i) {
+			if ((result = imp(context, path, request, imports))) { break; }
 		}
+		
+		if (result !== true) {
+			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(result || 'invalid jsio command: jsio(\'' + request + '\')');
+		}
+		
 		return imports;
 	};
 	
-	function makeContext(pkgPath, filePath) {
-		var ctx = {
-				exports: {},
-				global: ENV.global
-			},
+	function makeContext(pkgPath, filePath, dontAddBase) {
+		var ctx = {exports: {}},
 			cwd = ENV.getCwd(),
 			i = filePath.lastIndexOf('/'),
 			isRelative = i > 0;
 		
-		ctx.require = ctx.jsio = bind(this, importer, ctx, pkgPath);
+		ctx.jsio = bind(this, importer, ctx, pkgPath);
+		ctx.require = ctx.jsio;
 		ctx.module = {id: pkgPath};
-		
-		if (pkgPath != 'base') {
+		if (!dontAddBase && pkgPath != 'base') {
 			ctx.jsio('from base import *');
+			//importer(ctx, pkgPath, {from:})
 			ctx.logging.__create(pkgPath, ctx);
 		}
 		
@@ -377,7 +393,7 @@
 		context = altContext || context || ENV.global;
 		
 		// parse the import request(s)
-		var imports = resolveImportRequest(path, request),
+		var imports = resolveImportRequest(context, path, request),
 			numImports = imports.length,
 			retVal = numImports > 1 ? {} : null;
 		
@@ -396,24 +412,19 @@
 					throw e;
 				}
 				
-				if(!item.external) {
-					var newContext = makeContext(pkg, module.filePath);
-					modules[pkg] = newContext.exports;
-					execModule(newContext, module);
-					modules[pkg] = newContext.exports;
-				} else {
-					var newContext = modules[pkg] = {};
-					
-					// capture the requested objects so they don't escape into the global scope
-					for(var j in item['import']) { newContext[j] = undefined; }
-					
-					execModule(newContext, module);
-					for(var j in item['import']) {
-						if(newContext[j] === undefined) {
-							newContext[j] = ENV.global[j];
-						}
+				var newContext = makeContext(pkg, module.filePath, item.external);
+				modules[pkg] = newContext.exports;
+				if(item.external || item.grab) {
+					var src = [';(function(){'], k = 1;
+					for (var j in item['import']) {
+						newContext.exports[j] = undefined;
+						src[k++] = 'if(typeof '+j+'!="undefined"&&exports.'+j+'==undefined)exports.'+j+'='+j+';';
 					}
+					src[k] = '})();';
+					module.src += src.join('');
 				}
+				execModule(newContext, module);
+				modules[pkg] = newContext.exports;
 			}
 			
 			var module = modules[pkg];
@@ -422,38 +433,40 @@
 			if (numImports == 1) { retVal = module; }
 			
 			// add the module to the current context
-			if (item.as) {
-				// remove trailing/leading dots
-				var as = item.as.match(/^\.*(.*?)\.*$/)[1],
-					segments = as.split('.'),
-					kMax = segments.length - 1,
-					c = context;
+			if (item.exp != false) {
+				if (item.as) {
+					// remove trailing/leading dots
+					var as = item.as.match(/^\.*(.*?)\.*$/)[1],
+						segments = as.split('.'),
+						kMax = segments.length - 1,
+						c = context;
 				
-				// build the object in the context
-				for(var k = 0; k < kMax; ++k) {
-					var segment = segments[k];
-					if (!segment) continue;
-					if (!c[segment]) { c[segment] = {}; }
-					c = c[segment];
-				}
+					// build the object in the context
+					for(var k = 0; k < kMax; ++k) {
+						var segment = segments[k];
+						if (!segment) continue;
+						if (!c[segment]) { c[segment] = {}; }
+						c = c[segment];
+					}
 				
-				c[segments[kMax]] = module;
+					c[segments[kMax]] = module;
 				
-				// there can be multiple module imports with this syntax (import foo, bar)
-				if (numImports > 1) {
-					retVal[as] = module;
-				}
-			} else if(item['import']) {
-				// there can only be one module import with this syntax 
-				// (from foo import bar), so retVal will already be set here
-				if(item['import']['*']) {
-					for(var k in modules[pkg]) { context[k] = module[k]; }
-				} else {
-					try {
-						for(var k in item['import']) { context[item['import'][k]] = module[k]; }
-					} catch(e) {
-						ENV.log('module: ', modules);
-						throw e;
+					// there can be multiple module imports with this syntax (import foo, bar)
+					if (numImports > 1) {
+						retVal[as] = module;
+					}
+				} else if(item['import']) {
+					// there can only be one module import with this syntax 
+					// (from foo import bar), so retVal will already be set here
+					if(item['import']['*']) {
+						for(var k in modules[pkg]) { context[k] = module[k]; }
+					} else {
+						try {
+							for(var k in item['import']) { context[item['import'][k]] = module[k]; }
+						} catch(e) {
+							ENV.log('module: ', modules);
+							throw e;
+						}
 					}
 				}
 			}
@@ -461,4 +474,57 @@
 		
 		return retVal;
 	}
+	
+	// DEFINE SYNTAX FOR JSIO('cmd')
+	
+	// from myPackage import myFunc
+	// external myPackage import myFunc
+	jsio.addCmd(function(context, path, request, imports) {
+		var match = request.match(/^(from|external)\s+([\w.$]+)\s+(import|grab)\s+(.*)$/);
+		if(match) {
+			imports.push({
+				from: resolveRelativePath(match[2], path),
+				external: match[1] == 'external',
+				grab: match[3] == 'grab',
+				'import': {}
+			});
+
+			match[4].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
+				imports[0]['import'][item] = as || item;
+			});
+			return true;
+		}
+	});
+
+	// import myPackage
+	jsio.addCmd(function(context, path, request, imports) {
+		var match = request.match(/^import\s+(.*)$/);
+		if (match) {
+			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
+				fullPkg = resolveRelativePath(pkg, path);
+				imports.push(as ? {from: fullPkg, as: as} : {from: fullPkg, as: pkg});
+			});
+			return true;
+		}
+	});
+
+	// CommonJS syntax
+	jsio.addCmd(function(context, path, request, imports) {
+		var match = request.match(/^\s*[\w.0-9$\/]+\s*$/);
+		if(match) {
+			var req = match[0],
+				isAbsolute = req.charAt(0) == '/';
+			
+			req = req.replace(/^\//, '') // leading slash not needed
+				.replace(/\.\.?\//g, '.') // replace relative path indicators with dots
+				.replace(/\//g, '.'); // any remaining slashes are path separators
+
+			// isAbsolute handles the edge case where the path looks like /../foo
+			imports[0] = {
+				from: isAbsolute ? req : resolveRelativePath(req, path),
+				exp: false // don't insert into global context
+			};
+			return true;
+		}
+	});
 })();
