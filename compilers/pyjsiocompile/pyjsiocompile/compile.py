@@ -87,6 +87,9 @@ def get_script_src_assignment(script_name):
     SCRIPT_NAME_ASSIGNMENT = u"jsio.script_src = '%s'"
     return SCRIPT_NAME_ASSIGNMENT % script_name
     
+def shellcmd(argv=None):
+    main(argv)
+
 def main(argv=None):
     if argv == None:
         argv = sys.argv[1:]
@@ -156,6 +159,7 @@ def main(argv=None):
         f = fileopen(OUTPUT, 'w')
         f.write(output)
         f.close()
+    print "RETURNING", len(output)
     return output
 
 def load_package_configuration(INPUT, options):
@@ -191,7 +195,7 @@ def join_paths(*paths):
     else:
         return os.path.join(*paths)
 
-def minify(src):
+def minify(src, path=None):
     import StringIO
     jsm = JavascriptMinify()
     o = StringIO.StringIO()
@@ -532,12 +536,13 @@ def google_jar_minify(src, path=None):
     command = ['java', '-jar', compiler, '--compilation_level', compilation_level, '--warning_level', warning_level]
     handle = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = handle.communicate(src)
+
     if handle.returncode:
         log.error('Failed compiling %s', path)
-	log.error(stderr)
+        log.error(stderr)
         sys.exit(handle.returncode)
     elif stderr:
-	log.warn('compiler warnings for %s', path)
+        log.warn('compiler warnings for %s', path)
         log.warn(stderr)
     return stdout
 
@@ -780,7 +785,6 @@ class JavascriptMinify(object):
 
         self._jsmin()
         self.instream.close()
-
 
 if __name__ == "__main__":
     main()

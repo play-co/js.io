@@ -6,7 +6,7 @@ import os, sys
 
 setup(
     name='pyjsiocompile',
-    version='0.2.2',
+    version='0.2.3',
     author='Michael Carter',
     author_email='CarterMichael@gmail.com',
     license='MIT License',
@@ -23,7 +23,7 @@ setup(
     ],
     entry_points = '''    
         [console_scripts]
-        jsio_compile = pyjsiocompile.compile:main
+        jsio_compile = pyjsiocompile.compile:shellcmd
     ''',
     
     classifiers = [
