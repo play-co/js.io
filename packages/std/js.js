@@ -1,4 +1,6 @@
-exports.vargs = function(args, n) { return Array.prototype.slice.call(args, n || 0); }
+var SLICE = Array.prototype.slice;
+
+exports.vargs = function(args, n) { return SLICE.call(args, n || 0); }
 exports.isArray = function(input) { return Object.prototype.toString.call(input) === '[object Array]'; }
 
 exports.shallowCopy = function(input) {
@@ -27,3 +29,22 @@ exports.merge = function(base, extra) {
 	
 	return base;
 }
+
+exports.curry = function(method /*, VARGS*/) {
+	var args = SLICE.call(arguments, 1),
+		f = typeof method == 'string'
+				? function() { this[method].apply(ctx, args.concat(SLICE.call(arguments))); }
+				: function() { method.apply(this, args.concat(SLICE.call(arguments))); }
+	f.curried = true;
+	return f;
+}
+
+exports.unbind = function(method /*, VARGS*/) {
+	var args = SLICE.call(arguments, 1),
+		f = typeof method == 'string'
+				? function(ctx) { ctx[method].apply(ctx, args.concat(SLICE.call(arguments, 1))); }
+				: function(ctx) { method.apply(ctx, args.concat(SLICE.call(arguments, 1))); }
+	f.unbound = true;
+	return f;
+}
+
