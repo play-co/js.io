@@ -1,18 +1,20 @@
 exports.log = jsio.__env.log;
 exports.GLOBAL = jsio.__env.global;
 
+var SLICE = Array.prototype.slice;
+
 exports.bind = function(context, method /*, VARGS*/) {
 	if(arguments.length > 2) {
-		var args = Array.prototype.slice.call(arguments, 2);
+		var args = SLICE.call(arguments, 2);
 		return typeof method == 'string'
 			? function() {
 				if (context[method]) {
-					return context[method].apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
+					return context[method].apply(context, args.concat(SLICE.call(arguments, 0)));
 				} else {
 					throw logger.error('No method:', method, 'for context', context);
 				}
 			}
-			: function() { return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0))); }
+			: function() { return method.apply(context, args.concat(SLICE.call(arguments, 0))); }
 	} else {
 		return typeof method == 'string'
 			? function() {
@@ -59,7 +61,7 @@ exports.Class = function(parent, proto) {
 }
 
 exports.$setTimeout = function(f, t/*, VARGS */) {
-	var args = Array.prototype.slice.call(arguments, 2);
+	var args = SLICE.call(arguments, 2);
 	return setTimeout(function() {
 		try {
 			f.apply(this, args);
@@ -70,7 +72,7 @@ exports.$setTimeout = function(f, t/*, VARGS */) {
 }
 
 exports.$setInterval = function(f, t/*, VARGS */) {
-	var args = Array.prototype.slice.call(arguments, 2);
+	var args = SLICE.call(arguments, 2);
 	return setInterval(function() {
 		try {
 			f.apply(this, args);
@@ -120,8 +122,6 @@ exports.logging = (function() {
 		
 		this.setLevel = function(level) { this._level = level; }
 	
-		var SLICE = Array.prototype.slice;
-		
 		function makeLogFunction(level, type) {
 			return function() {
 				if (!production && level >= this._level) {
