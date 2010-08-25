@@ -130,7 +130,7 @@
 		
 		this.getCwd = function() {
 			if(!cwd) {
-				var location = window.location.toString();
+				var location = window.location.toString().split('#')[0];
 				cwd = location.substring(0, location.lastIndexOf('/') + 1);
 			}
 			return cwd;
