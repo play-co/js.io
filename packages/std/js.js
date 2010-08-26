@@ -21,9 +21,12 @@ exports.shallowCopy = function(input) {
 exports.merge = function(base, extra) {
 	base = base || {};
 	
-	for (var key in extra) {
-		if (extra.hasOwnProperty(key) && !base.hasOwnProperty(key)) {
-			base[key] = extra[key];
+	for (var i = 1, len = arguments.length; i < len; ++i) {
+		var copyFrom = arguments[i];
+		for (var key in copyFrom) {
+			if (copyFrom.hasOwnProperty(key) && !base.hasOwnProperty(key)) {
+				base[key] = copyFrom[key];
+			}
 		}
 	}
 	
