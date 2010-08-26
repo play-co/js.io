@@ -20,7 +20,7 @@
 		this.__cmds = [];
 		this.__jsio = this;
 		
-		this.modules = [];
+		this.modules = {preprocessors:{}};
 		this.frameworks = [];
 		
 		this.setCachedSrc = function(pkg, filePath, src) { sourceCache[pkg] = { filePath: filePath, src: src }; }
@@ -186,7 +186,8 @@
 						var cb = function() {
 							var el = document.createElement('iframe');
 							el.style.cssText = "position:absolute;top:-999px;left:-999px;width:1px;height:1px;visibility:hidden";
-							el.src = 'javascript:document.open();document.write("<scr"+"ipt src=\'' + path + '\'></scr"+"ipt>")';
+							el.src = 'javascript:document.open();document.write(window.parent.CODE_WITH_ERROR)';
+							window.CODE_WITH_ERROR = "<scr"+"ipt>" + code + "</scr"+"ipt>"
 							setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
 						};
 						if (document.body) { cb(); }
@@ -256,7 +257,7 @@
 		return out;
 	}
 	
-	var preprocessorCheck = /^"(.*?)"\s*;\s*\n/,
+	var preprocessorCheck = /^"use (.*?)"\s*;\s*\n/,
 		preprocessorFunc = /^(.+)\(.+\)$/;
 	
 	function findModule(possibilities) {
@@ -272,41 +273,49 @@
 	}
 	
 	// load a module from a file
-	function loadModule(pathString) {
+	function loadModule(pathString, opts) {
 		var possibilities = guessModulePath(pathString),
-			module = findModule(possibilities),
+			moduleDef = findModule(possibilities),
 			match;
 		
-		if(!module) {
+		if(!moduleDef) {
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.filePath); }
 			throw new Error("Module not found: " + pathString + " (looked in " + paths.join(', ') + ")");
 		}
 		
-		if (module.baseMod && !(module.baseMod in jsio.path)) {
-			jsio.addPath(module.basePath, module.baseMod);
+		if (moduleDef.baseMod && !(moduleDef.baseMod in jsio.path)) {
+			jsio.addPath(moduleDef.basePath, moduleDef.baseMod);
 		}
 		
-		while (module.src.charAt(0) == '"' && (match = module.src.match(preprocessorCheck))) {
-			var preprocessors = match[1].split(','),
-				src = module.src.substring(match[0].length);
-
-			for (var i = preprocessors.length - 1; i >= 0; --i) {
-				var p = preprocessors[i];
-				if (typeof jsio.__preprocessors[p] == 'function') {
-					src = jsio.__preprocessors[p](src);
-				}
-			}
-			
-			module.src = src;
+		if (opts.preprocessors) {
+			applyPreprocessors(moduleDef, opts.preprocessors, opts);
 		}
 		
-		return module;
+		while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
+			moduleDef.src = moduleDef.src.substring(match[0].length - 1);
+			applyPreprocessors(moduleDef, match[1].split(','), opts);
+		}
+		
+		return moduleDef;
 	}
 	
-	function execModule(context, module) {
-		var code = "(function(_){with(_){delete _;(function(){" + module.src + "\n}).call(this)}})";
-		var fn = ENV.eval(code, module.filePath);
+	function applyPreprocessors(moduleDef, names, opts) {
+		for (var i = 0, len = names.length; i < len; ++i) {
+			p = getPreprocessor(names[i]);
+			if (p) {
+				moduleDef.src = p(moduleDef.src, opts);
+			}
+		}
+	}
+	
+	function getPreprocessor(name) {
+		return jsio.modules.preprocessors[name] || jsio('import preprocessors.' + name, {dontExport: true});
+	}
+	
+	function execModuleDef(context, moduleDef) {
+		var code = "(function(_){with(_){delete _;(function(){" + moduleDef.src + "\n}).call(this)}})";
+		var fn = ENV.eval(code, moduleDef.filePath);
 		try {
 			fn.call(context.exports, context);
 		} catch(e) {
@@ -315,9 +324,9 @@
 			} else if (!e.jsioLogged) {
 				e.jsioLogged = true;
 				if (e.type == "stack_overflow") {
-					ENV.log("Stack overflow in", module.filePath, ':', e);
+					ENV.log("Stack overflow in", moduleDef.filePath, ':', e);
 				} else {
-					ENV.log("ERROR LOADING", module.filePath, ENV.name == 'browser' ? e : '');
+					ENV.log("ERROR LOADING", moduleDef.filePath, ENV.name == 'browser' ? e : '');
 				}
 			}
 			throw e;
@@ -338,13 +347,13 @@
 		return path + pkg.substring(i);
 	}
 	
-	function resolveImportRequest(context, path, request) {
+	function resolveImportRequest(context, path, request, opts) {
 		var cmds = jsio.__cmds,
 			imports = [],
 			result = false;
 		
 		for (var i = 0, imp; imp = cmds[i]; ++i) {
-			if ((result = imp(context, path, request, imports))) { break; }
+			if ((result = imp(context, path, request, opts, imports))) { break; }
 		}
 		
 		if (result !== true) {
@@ -361,7 +370,11 @@
 			isRelative = i > 0;
 		
 		ctx.jsio = bind(this, importer, ctx, pkgPath);
-		ctx.require = ctx.jsio;
+		ctx.require = function(request, opts) {
+			opts.dontExport = true;
+			return ctx.jsio(request, opts);
+		};
+		
 		ctx.module = {id: pkgPath};
 		if (!dontAddBase && pkgPath != 'base') {
 			ctx.jsio('from base import *');
@@ -387,13 +400,15 @@
 		return path;
 	};
 	
-	function importer(context, path, request, altContext) {
+	function importer(context, path, request, opts) {
+		opts = opts || {};
+		
 		// importer is bound to a module's (or global) context -- we can override this
-		// by using altContext as in jsio('import foo', obj) --> obj.foo
-		context = altContext || context || ENV.global;
+		// by using opts.context
+		context = opts.context || context || ENV.global;
 		
 		// parse the import request(s)
-		var imports = resolveImportRequest(context, path, request),
+		var imports = resolveImportRequest(context, path, request, opts),
 			numImports = imports.length,
 			retVal = numImports > 1 ? {} : null;
 		
@@ -406,13 +421,13 @@
 			// eval any packages that we don't know about already
 			if(!(pkg in modules)) {
 				try {
-					var module = sourceCache[pkg] || loadModule(pkg);
+					var moduleDef = sourceCache[pkg] || loadModule(pkg, opts);
 				} catch(e) {
 					ENV.log('\nError executing \'', request, '\': could not load module', pkg, '\n\tpath:', path, '\n\trequest:', request, '\n');
 					throw e;
 				}
 				
-				var newContext = makeContext(pkg, module.filePath, item.external);
+				var newContext = makeContext(pkg, moduleDef.filePath, item.external);
 				modules[pkg] = newContext.exports;
 				if(item.external || item.grab) {
 					var src = [';(function(){'], k = 1;
@@ -421,9 +436,9 @@
 						src[k++] = 'if(typeof '+j+'!="undefined"&&exports.'+j+'==undefined)exports.'+j+'='+j+';';
 					}
 					src[k] = '})();';
-					module.src += src.join('');
+					moduleDef.src += src.join('');
 				}
-				execModule(newContext, module);
+				execModuleDef(newContext, moduleDef);
 				modules[pkg] = newContext.exports;
 			}
 			
@@ -432,8 +447,8 @@
 			// return the module if we're only importing one module
 			if (numImports == 1) { retVal = module; }
 			
-			// add the module to the current context
-			if (item.exp != false) {
+			if (!opts.dontExport) {
+				// add the module to the current context
 				if (item.as) {
 					// remove trailing/leading dots
 					var as = item.as.match(/^\.*(.*?)\.*$/)[1],
@@ -479,8 +494,8 @@
 	
 	// from myPackage import myFunc
 	// external myPackage import myFunc
-	jsio.addCmd(function(context, path, request, imports) {
-		var match = request.match(/^(from|external)\s+([\w.$]+)\s+(import|grab)\s+(.*)$/);
+	jsio.addCmd(function(context, path, request, opts, imports) {
+		var match = request.match(/^\s*(from|external)\s+([\w.$]+)\s+(import|grab)\s+(.*)$/);
 		if(match) {
 			imports.push({
 				from: resolveRelativePath(match[2], path),
@@ -497,8 +512,8 @@
 	});
 
 	// import myPackage
-	jsio.addCmd(function(context, path, request, imports) {
-		var match = request.match(/^import\s+(.*)$/);
+	jsio.addCmd(function(context, path, request, opts, imports) {
+		var match = request.match(/^\s*import\s+(.*)$/);
 		if (match) {
 			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
 				fullPkg = resolveRelativePath(pkg, path);
@@ -509,7 +524,7 @@
 	});
 
 	// CommonJS syntax
-	jsio.addCmd(function(context, path, request, imports) {
+	jsio.addCmd(function(context, path, request, opts, imports) {
 		var match = request.match(/^\s*[\w.0-9$\/]+\s*$/);
 		if(match) {
 			var req = match[0],
@@ -521,9 +536,9 @@
 
 			// isAbsolute handles the edge case where the path looks like /../foo
 			imports[0] = {
-				from: isAbsolute ? req : resolveRelativePath(req, path),
-				exp: false // don't insert into global context
+				from: isAbsolute ? req : resolveRelativePath(req, path)
 			};
+			
 			return true;
 		}
 	});
