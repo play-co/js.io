@@ -19,22 +19,19 @@
 		this.__preprocessors = {};
 		this.__cmds = [];
 		this.__jsio = this;
+		this.__importer = importer;
+		this.__modules = {preprocessors:{}};
 		
-		this.modules = {preprocessors:{}};
-		this.frameworks = [];
+		this.setCachedSrc = function(filePath, src) { sourceCache[filePath] = { filePath: filePath, src: src }; }
+		this.getCachedSrc = function(filePath) { return sourceCache[filePath]; }
 		
-		this.setCachedSrc = function(pkg, filePath, src) { sourceCache[pkg] = { filePath: filePath, src: src }; }
-		this.getCachedSrc = function(pkg) { return sourceCache[pkg]; }
-		
-		this.addFramework = function(name, init) { this.frameworks[name] = init; }
-		
-		this.path = {__default__:[]};
-		this.setPath = function(path) { this.path.__default__ = typeof path == 'string' ? [path] : path; }
+		this.__path = {__default__:[]};
+		this.setPath = function(path) { this.__path.__default__ = typeof path == 'string' ? [path] : path; }
 		this.addPath = function(path, baseModule) {
 			if (baseModule) {
-				jsio.path[baseModule] = path;
+				jsio.__path[baseModule] = path;
 			} else {
-				jsio.path.__default__.push(path);
+				jsio.__path.__default__.push(path);
 			}
 		}
 		
@@ -60,9 +57,11 @@
 
 			jsio.__env = ENV;
 			jsio.__dir = ENV.getCwd();
-			if(!jsio.path.__default__.length) { jsio.setPath(ENV.getPath()); }
+			if(!jsio.__path.__default__.length) { jsio.setPath(ENV.getPath()); }
 		}
 	}).call(jsio = bind(this, importer, null, ''));
+	
+	jsio.__init__ = arguments.callee;
 	
 	if (typeof process !== 'undefined' && process.version) {
 		jsio.setEnv('node');
@@ -88,6 +87,7 @@
 		this.name = 'node';
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
+		this.hasCommonJS = true;
 		this.log = function() {
 			var msg;
 			try {
@@ -106,14 +106,12 @@
 		this.getPath = function() {
 			var segments = __filename.split('/');
 			segments.pop();
-			return segments.join('/') || '.';
+			return makeRelativePath(segments.join('/') || '.', this.getCwd());
 		}
 		this.eval = process.compile;
 		
-		this.fetch = function(filePath) {
-			try {
-				return fs.readFileSync(filePath);
-			} catch(e) {}
+		this.fetch = function(path) {
+			try { return fs.readFileSync(path); } catch(e) {}
 			return false;
 		}
 		
@@ -180,8 +178,7 @@
 		this.eval = function(code, path) {
 			try { return rawEval(code, path); } catch(e) {
 				if(e instanceof SyntaxError) {
-					e.message = "a syntax error is preventing execution of " + path;
-					e.type = "syntax_error";
+					ENV.log("a syntax error is preventing execution of " + path);
 					try {
 						var cb = function() {
 							var el = document.createElement('iframe');
@@ -198,10 +195,10 @@
 			}
 		}
 		
-		this.fetch = function(filePath) {
+		this.fetch = function(path) {
 			var xhr = new XHR();
 			try {
-				xhr.open('GET', filePath, false);
+				xhr.open('GET', path, false);
 				xhr.send(null);
 			} catch(e) {
 				ENV.log('e:', e);
@@ -222,21 +219,18 @@
 		}
 	};
 	
-	function ensureHasTrailingSlash(str) { return str.length && str.replace(/([^\/])$/, '$1/') || str; }
-	function removeTrailingSlash(str) { return str.replace(/\/$/,''); }
+	var rexpEndSlash = /\/$/;
+	function addEndSlash(str) { return rexpEndSlash.test(str) ? str : str + '/'; }
+	function removeEndSlash(str) { return str.replace(rexpEndSlash, ''); }
 	
 	function guessModulePath(pathString) {
 		// resolve relative paths
 		if(pathString.charAt(0) == '.') {
 			// count the number of dots
-			var i = 0;
-			while(pathString.charAt(i + 1) == '.') { ++i; }
-
-			// remove one path segment for each dot from the cwd 
-			var prefix = removeTrailingSlash(ENV.getCwd());
-			if (i) { prefix = prefix.split('/').slice(0, -i).join('/'); }
-			
-			return [{filePath: prefix + '/' + pathString.substring(i + 1).split('.').join('/') + '.js'}];
+			var prefix = './',
+				i = 0;
+			while (pathString.charAt(++i) == '.') { prefix += '../'; }
+			return [{filePath: prefix + pathString.substring(i).split('.').join('/') + '.js'}];
 		}
 		
 		// resolve absolute paths with respect to jsio packages/
@@ -244,14 +238,14 @@
 			baseMod = pathSegments[0],
 			modPath = pathSegments.join('/');
 		
-		if (baseMod in jsio.path) {
-			return [{filePath: ensureHasTrailingSlash(jsio.path[baseMod]) + modPath + '.js'}];
+		if (baseMod in jsio.__path) {
+			return [{filePath: addEndSlash(jsio.__path[baseMod]) + modPath + '.js'}];
 		}
 		
 		var out = [],
-			paths = jsio.path.__default__;
+			paths = jsio.__path.__default__;
 		for (var i = 0, len = paths.length; i < len; ++i) {
-			var path = ensureHasTrailingSlash(paths[i]);
+			var path = addEndSlash(paths[i]);
 			out.push({filePath: path + modPath + '.js', baseMod: baseMod, basePath: path});
 		}
 		return out;
@@ -263,7 +257,18 @@
 	function findModule(possibilities) {
 		var src;
 		for (var i = 0, possible; possible = possibilities[i]; ++i) {
-			src = ENV.fetch(possible.filePath);
+			var path = possible.filePath,
+				cachedVersion = sourceCache[path];
+			
+			if (cachedVersion) { return cachedVersion; }
+
+			/*if (/^\.\//.test(path)) {
+				// remove one path segment for each dot from the cwd 
+				path = addEndSlash(ENV.getCwd()) + path;
+			}*/
+			
+			src = ENV.fetch(path);
+			
 			if (src !== false) {
 				possible.src = src;
 				return possible;
@@ -273,44 +278,51 @@
 	}
 	
 	// load a module from a file
-	function loadModule(pathString, opts) {
-		var possibilities = guessModulePath(pathString),
+	function loadModule(path, modulePath, opts) {
+		var possibilities = guessModulePath(modulePath),
 			moduleDef = findModule(possibilities),
 			match;
 		
-		if(!moduleDef) {
+		if (!moduleDef) {
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.filePath); }
-			throw new Error("Module not found: " + pathString + " (looked in " + paths.join(', ') + ")");
+			throw new Error("Module not found: " + modulePath + " (looked in " + paths.join(', ') + ")");
 		}
 		
-		if (moduleDef.baseMod && !(moduleDef.baseMod in jsio.path)) {
+		moduleDef.path = modulePath;
+		
+		if (moduleDef.baseMod && !(moduleDef.baseMod in jsio.__path)) {
 			jsio.addPath(moduleDef.basePath, moduleDef.baseMod);
 		}
 		
-		if (opts.preprocessors) {
-			applyPreprocessors(moduleDef, opts.preprocessors, opts);
-		}
-		
+		// the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
 		while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
 			moduleDef.src = moduleDef.src.substring(match[0].length - 1);
-			applyPreprocessors(moduleDef, match[1].split(','), opts);
+			applyPreprocessors(path, moduleDef, match[1].split(','), opts);
 		}
+		
+		if (opts.preprocessors) {
+			applyPreprocessors(path, moduleDef, opts.preprocessors, opts);
+		}
+		
+		// required for jsjsiocompile
+		if (modulePath == 'base') { jsio.__baseFile = moduleDef.filePath; }
 		
 		return moduleDef;
 	}
 	
-	function applyPreprocessors(moduleDef, names, opts) {
+	function applyPreprocessors(path, moduleDef, names, opts) {
 		for (var i = 0, len = names.length; i < len; ++i) {
 			p = getPreprocessor(names[i]);
 			if (p) {
-				moduleDef.src = p(moduleDef.src, opts);
+				p(path, moduleDef, opts);
 			}
 		}
 	}
 	
 	function getPreprocessor(name) {
-		return jsio.modules.preprocessors[name] || jsio('import preprocessors.' + name, {dontExport: true});
+		var modName = 'preprocessors.' + name;
+		return typeof name == 'function' ? name : jsio.__modules[modName] || jsio('import preprocessors.' + name, {dontExport: true});
 	}
 	
 	function execModuleDef(context, moduleDef) {
@@ -333,18 +345,18 @@
 		}
 	};
 	
-	function resolveRelativePath(pkg, path, pathSep) {
-		// does the pkg need to be resolved, i.e. is it a relative path?
-		if(!path || (pathSep = pathSep || '.') != pkg.charAt(0)) { return pkg; }
+	function resolveRelativePath(modulePath, path, pathSep) {
+		// does the modulePath need to be resolved, i.e. is it a relative path?
+		if(!path || (pathSep = pathSep || '.') != modulePath.charAt(0)) { return modulePath; }
 		
 		var i = 1;
-		while(pkg.charAt(i) == pathSep) { ++i; }
+		while(modulePath.charAt(i) == pathSep) { ++i; }
 		path = path.split(pathSep).slice(0, -i);
 		if(path.length) {
 			path = path.join(pathSep);
 			if(path.charAt(path.length - 1) != pathSep) { path += pathSep; }
 		}
-		return path + pkg.substring(i);
+		return path + modulePath.substring(i);
 	}
 	
 	function resolveImportRequest(context, path, request, opts) {
@@ -357,29 +369,30 @@
 		}
 		
 		if (result !== true) {
-			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(result || 'invalid jsio command: jsio(\'' + request + '\')');
+			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result) || 'invalid jsio command: jsio(\'' + request + '\')');
 		}
 		
 		return imports;
 	};
 	
-	function makeContext(pkgPath, filePath, dontAddBase) {
+	function makeContext(modulePath, filePath, dontAddBase) {
 		var ctx = {exports: {}},
 			cwd = ENV.getCwd(),
 			i = filePath.lastIndexOf('/'),
 			isRelative = i > 0;
 		
-		ctx.jsio = bind(this, importer, ctx, pkgPath);
-		ctx.require = function(request, opts) {
-			opts.dontExport = true;
-			return ctx.jsio(request, opts);
-		};
+		ctx.jsio = bind(this, importer, ctx, modulePath);
+		if (!ENV.hasCommonJS) {
+			ctx.require = function(request, opts) {
+				opts.dontExport = true;
+				return ctx.jsio(request, opts);
+			};
+		}
 		
-		ctx.module = {id: pkgPath};
-		if (!dontAddBase && pkgPath != 'base') {
+		ctx.module = {id: modulePath};
+		if (!dontAddBase && modulePath != 'base') {
 			ctx.jsio('from base import *');
-			//importer(ctx, pkgPath, {from:})
-			ctx.logging.__create(pkgPath, ctx);
+			ctx.logging.__create(modulePath, ctx);
 		}
 		
 		// TODO: FIX for "trailing ." case
@@ -387,7 +400,7 @@
 		ctx.jsio.__env = jsio.__env;
 		ctx.jsio.__dir = isRelative ? makeRelativePath(filePath.substring(0, i), cwd) : '';
 		ctx.jsio.__filename = isRelative ? filePath.substring(i) : filePath;
-		ctx.jsio.__path = pkgPath;
+		ctx.jsio.__path = modulePath;
 		return ctx;
 	};
 	
@@ -397,6 +410,17 @@
 			var offset = path[relativeTo.length] == '/' ? 1 : 0
 			return path.slice(relativeTo.length + offset);
 		}
+		
+		var sA = removeEndSlash(path).split('/'),
+			sB = removeEndSlash(relativeTo).split('/'),
+			i = 0;
+
+		while(sA[i] == sB[i]) { ++i; }
+		if (i) {
+			path = sA.slice(i).join('/');
+			for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
+		}
+		
 		return path;
 	};
 	
@@ -415,20 +439,21 @@
 		// import each requested item
 		for(var i = 0; i < numImports; ++i) {
 			var item = imports[i],
-				pkg = item.from,
-				modules = jsio.modules;
+				modulePath = item.from,
+				modules = jsio.__modules;
 			
 			// eval any packages that we don't know about already
-			if(!(pkg in modules)) {
+			if(!(modulePath in modules)) {
 				try {
-					var moduleDef = sourceCache[pkg] || loadModule(pkg, opts);
+					//ENV.log('loadModule base path: ' + path + ', module path: ', modulePath);
+					var moduleDef = loadModule(path, modulePath, opts);
 				} catch(e) {
-					ENV.log('\nError executing \'', request, '\': could not load module', pkg, '\n\tpath:', path, '\n\trequest:', request, '\n');
+					ENV.log('\nError loading module:\n\tmodule path:', modulePath, '\n\tpath:', path, '\n\trequest:', request, '\n');
 					throw e;
 				}
 				
-				var newContext = makeContext(pkg, moduleDef.filePath, item.external);
-				modules[pkg] = newContext.exports;
+				var newContext = makeContext(modulePath, moduleDef.filePath, item.external);
+				modules[modulePath] = newContext.exports;
 				if(item.external || item.grab) {
 					var src = [';(function(){'], k = 1;
 					for (var j in item['import']) {
@@ -439,10 +464,10 @@
 					moduleDef.src += src.join('');
 				}
 				execModuleDef(newContext, moduleDef);
-				modules[pkg] = newContext.exports;
+				modules[modulePath] = newContext.exports;
 			}
 			
-			var module = modules[pkg];
+			var module = modules[modulePath];
 			
 			// return the module if we're only importing one module
 			if (numImports == 1) { retVal = module; }
@@ -463,7 +488,7 @@
 						if (!c[segment]) { c[segment] = {}; }
 						c = c[segment];
 					}
-				
+					
 					c[segments[kMax]] = module;
 				
 					// there can be multiple module imports with this syntax (import foo, bar)
@@ -474,7 +499,7 @@
 					// there can only be one module import with this syntax 
 					// (from foo import bar), so retVal will already be set here
 					if(item['import']['*']) {
-						for(var k in modules[pkg]) { context[k] = module[k]; }
+						for(var k in modules[modulePath]) { context[k] = module[k]; }
 					} else {
 						try {
 							for(var k in item['import']) { context[item['import'][k]] = module[k]; }
@@ -515,9 +540,9 @@
 	jsio.addCmd(function(context, path, request, opts, imports) {
 		var match = request.match(/^\s*import\s+(.*)$/);
 		if (match) {
-			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, pkg, as) {
-				fullPkg = resolveRelativePath(pkg, path);
-				imports.push(as ? {from: fullPkg, as: as} : {from: fullPkg, as: pkg});
+			match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, modulePath, as) {
+				fullPath = resolveRelativePath(modulePath, path);
+				imports.push(as ? {from: fullPath, as: as} : {from: fullPath, as: modulePath});
 			});
 			return true;
 		}
