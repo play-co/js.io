@@ -12,7 +12,37 @@
 				method = (typeof method == 'string' ? context[method] : method);
 				return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
 			}
-		};
+		},
+		rexpEndSlash = /\/$/;
+	
+	function addEndSlash(str) { return rexpEndSlash.test(str) ? str : str + '/'; }
+	function removeEndSlash(str) { return str.replace(rexpEndSlash, ''); }
+	function makeRelativePath(path, relativeTo) {
+		var i = path.match('^' + relativeTo);
+		if (i && i[0] == relativeTo) {
+			var offset = path[relativeTo.length] == '/' ? 1 : 0
+			return path.slice(relativeTo.length + offset);
+		}
+		
+		var sA = removeEndSlash(path).split('/'),
+			sB = removeEndSlash(relativeTo).split('/'),
+			i = 0;
+
+		while(sA[i] == sB[i]) { ++i; }
+		if (i) {
+			path = sA.slice(i).join('/');
+			for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
+		}
+		
+		return path;
+	};
+	
+	function resolveRelative(path) {
+		do {
+			var oldPath = path;
+		} while(oldPath != (path = path.replace(/(^|\/)([^\/]+)\/\.\.\//g, '/')));
+		return path;
+	}
 	
 	(function() {
 		this.__filename = 'jsio.js';
@@ -219,10 +249,6 @@
 		}
 	};
 	
-	var rexpEndSlash = /\/$/;
-	function addEndSlash(str) { return rexpEndSlash.test(str) ? str : str + '/'; }
-	function removeEndSlash(str) { return str.replace(rexpEndSlash, ''); }
-	
 	function guessModulePath(pathString) {
 		// resolve relative paths
 		if(pathString.charAt(0) == '.') {
@@ -286,7 +312,7 @@
 		if (!moduleDef) {
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.filePath); }
-			throw new Error("Module not found: " + modulePath + " (looked in " + paths.join(', ') + ")");
+			throw new Error('Error in ' + path + ": requested import (" + modulePath + ") not found.\n\tlooked in:\n\t\t" + paths.join('\n\t\t'));
 		}
 		
 		moduleDef.path = modulePath;
@@ -326,10 +352,12 @@
 	}
 	
 	function execModuleDef(context, moduleDef) {
-		var code = "(function(_){with(_){delete _;(function(){" + moduleDef.src + "\n}).call(this)}})";
+		var code = "(function(_){with(_){delete _;return function " + moduleDef.path.replace(/\./g, '$') + "(){" + moduleDef.src + "\n}}})";
 		var fn = ENV.eval(code, moduleDef.filePath);
 		try {
-			fn.call(context.exports, context);
+			fn = fn(context);
+			fn.name = moduleDef.path;
+			fn.call(context.exports);
 		} catch(e) {
 			if(e.type == "syntax_error") {
 				throw new Error("error importing module: " + e.message);
@@ -338,7 +366,10 @@
 				if (e.type == "stack_overflow") {
 					ENV.log("Stack overflow in", moduleDef.filePath, ':', e);
 				} else {
-					ENV.log("ERROR LOADING", moduleDef.filePath, ENV.name == 'browser' ? e : '');
+					ENV.log("ERROR LOADING", moduleDef.filePath);
+//					if (ENV.name == 'browser') {
+//						ENV.log(moduleDef.filePath + ':', e.message, "\n\n", e.stack.replace(new RegExp(resolveRelative(ENV.getCwd() + ENV.getPath() + '/jsio.js'), 'g'), ''));
+//					}
 				}
 			}
 			throw e;
@@ -348,15 +379,11 @@
 	function resolveRelativePath(modulePath, path, pathSep) {
 		// does the modulePath need to be resolved, i.e. is it a relative path?
 		if(!path || (pathSep = pathSep || '.') != modulePath.charAt(0)) { return modulePath; }
-		
-		var i = 1;
-		while(modulePath.charAt(i) == pathSep) { ++i; }
-		path = path.split(pathSep).slice(0, -i);
-		if(path.length) {
-			path = path.join(pathSep);
-			if(path.charAt(path.length - 1) != pathSep) { path += pathSep; }
-		}
-		return path + modulePath.substring(i);
+		path += '.' + modulePath;
+		do {
+			var oldPath = path;
+		} while(oldPath != (path = path.replace(/\.[^.]+\.\./g, '.')));
+		return path;
 	}
 	
 	function resolveImportRequest(context, path, request, opts) {
@@ -404,26 +431,6 @@
 		return ctx;
 	};
 	
-	function makeRelativePath(path, relativeTo) {
-		var i = path.match('^' + relativeTo);
-		if (i && i[0] == relativeTo) {
-			var offset = path[relativeTo.length] == '/' ? 1 : 0
-			return path.slice(relativeTo.length + offset);
-		}
-		
-		var sA = removeEndSlash(path).split('/'),
-			sB = removeEndSlash(relativeTo).split('/'),
-			i = 0;
-
-		while(sA[i] == sB[i]) { ++i; }
-		if (i) {
-			path = sA.slice(i).join('/');
-			for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
-		}
-		
-		return path;
-	};
-	
 	function importer(context, path, request, opts) {
 		opts = opts || {};
 		
@@ -448,7 +455,8 @@
 					//ENV.log('loadModule base path: ' + path + ', module path: ', modulePath);
 					var moduleDef = loadModule(path, modulePath, opts);
 				} catch(e) {
-					ENV.log('\nError loading module:\n\tmodule path:', modulePath, '\n\tpath:', path, '\n\trequest:', request, '\n');
+					ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', path, '\n\tfull request:', request, '\n');
+					e.jsioLogged = true;
 					throw e;
 				}
 				
