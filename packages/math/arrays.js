@@ -48,3 +48,21 @@ exports.shuffle = function(a, randGen) {
 	}
 	return a;
 }
+
+exports.rotate = function(a, count) {
+	var len = a.length,
+		b = new Array(len),
+		j = count % len;
+	
+	if (j < 0) {
+		j = j % len;
+		if (j) { j %= len; }
+	}
+	
+	for (var i = 0; i < len; ++i) {
+		b[i] = a[j];
+		j = (j + 1) % len;
+	}
+	
+	return b;
+}
