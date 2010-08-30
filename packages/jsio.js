@@ -141,7 +141,7 @@
 		this.eval = process.compile;
 		
 		this.fetch = function(path) {
-			try { return fs.readFileSync(path); } catch(e) {}
+			try { return fs.readFileSync(path, 'utf8'); } catch(e) {}
 			return false;
 		}
 		
