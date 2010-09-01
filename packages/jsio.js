@@ -303,15 +303,34 @@
 		return false;
 	}
 	
+	var failed = {};
+	
 	// load a module from a file
 	function loadModule(path, modulePath, opts) {
-		var possibilities = guessModulePath(modulePath),
-			moduleDef = findModule(possibilities),
+		var possibilities = guessModulePath(modulePath);
+		
+		for (var i = possibilities.length - 1; i >= 0; --i) {
+			var p = possibilities[i];
+			if (p.filePath in failed) {
+				possibilities.splice(i, 1);
+			}
+			
+			if (!possibilities.length) {
+				var e = new Error('Module failed to load (again)');
+				e.jsioLogged = true;
+				throw e;
+			}
+		}
+	
+		var moduleDef = findModule(possibilities),
 			match;
 		
 		if (!moduleDef) {
 			var paths = [];
-			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.filePath); }
+			for (var i = 0, p; p = possibilities[i]; ++i) {
+				failed[p.filePath] = true;
+				paths.push(p.filePath);
+			}
 			throw new Error('Error in ' + path + ": requested import (" + modulePath + ") not found.\n\tlooked in:\n\t\t" + paths.join('\n\t\t'));
 		}
 		
@@ -455,8 +474,10 @@
 					//ENV.log('loadModule base path: ' + path + ', module path: ', modulePath);
 					var moduleDef = loadModule(path, modulePath, opts);
 				} catch(e) {
-					ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', path, '\n\tfull request:', request, '\n');
-					e.jsioLogged = true;
+					if (!e.jsioLogged) {
+						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', path, '\n\tfull request:', request, '\n');
+						e.jsioLogged = true;
+					}
 					throw e;
 				}
 				
