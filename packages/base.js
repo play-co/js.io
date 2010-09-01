@@ -7,24 +7,24 @@ exports.bind = function(context, method /*, VARGS*/) {
 	if(arguments.length > 2) {
 		var args = SLICE.call(arguments, 2);
 		return typeof method == 'string'
-			? function() {
+			? function $$boundMethod() {
 				if (context[method]) {
 					return context[method].apply(context, args.concat(SLICE.call(arguments, 0)));
 				} else {
 					throw logger.error('No method:', method, 'for context', context);
 				}
 			}
-			: function() { return method.apply(context, args.concat(SLICE.call(arguments, 0))); }
+			: function $$boundMethod() { return method.apply(context, args.concat(SLICE.call(arguments, 0))); }
 	} else {
 		return typeof method == 'string'
-			? function() {
+			? function $$boundMethod() {
 				if (context[method]) {
 					return context[method].apply(context, arguments);
 				} else {
 					throw logger.error('No method:', method, 'for context', context);
 				}
 			}
-			: function() { return method.apply(context, arguments); }
+			: function $$boundMethod() { return method.apply(context, arguments); }
 	}
 }
 
