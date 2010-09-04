@@ -22,6 +22,22 @@ exports.subtract = function(pt, dx, dy) {
 		};
 }
 
+exports.addMagnitude = function(pt, m) {
+	return exports.setMagnitude(pt, exports.getMagnitude(pt) + m);
+}
+
+exports.setMagnitude = function(pt, m) {
+	var theta = Math.atan2(pt.y, pt.x);
+	return {
+		x: m * Math.cos(theta),
+		y: m * Math.sin(theta)
+	};
+}
+
+exports.getMagnitude = function(pt) {
+	return Math.sqrt(pt.x * pt.x + pt.y * pt.y);
+}
+
 exports.rotate = function(pt, r) {
 	var x = pt.x,
 		y = pt.y,
