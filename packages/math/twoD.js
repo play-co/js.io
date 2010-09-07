@@ -22,6 +22,13 @@ exports.subtract = function(pt, dx, dy) {
 		};
 }
 
+exports.scale = function(s, pt) {
+	return {
+		x: pt.x * s,
+		y: pt.y * s
+	};
+}
+
 exports.addMagnitude = function(pt, m) {
 	return exports.setMagnitude(pt, exports.getMagnitude(pt) + m);
 }
