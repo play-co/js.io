@@ -15,13 +15,22 @@ var attrs = [
 	"anchor"
 ];
 
-exports.Uri = Class(function(supr) {
+exports = Class(function(supr) {
 	this.init = function(url, isStrict) {
-		var uriData = exports.parse(url, isStrict)
+		if (url instanceof exports) {
+			for (attr in attrs) {
+				this['_' + attr] = url['_' + attr];
+			}
+			return;
+		}
+		
+		this._isStrict = isStrict;
+		
+		var uriData = exports.parse(url, isStrict);
 		for (attr in uriData) {
 			this['_' + attr] = uriData[attr];
 		};
-	};
+	}
   
 	for (var i = 0, attr; attr = attrs[i]; ++i) {
 		(function(attr) {
@@ -35,16 +44,47 @@ exports.Uri = Class(function(supr) {
 		}).call(this, attr);
 	};
 
-	this.toString = this.render = function() {
+	this.toString = this.render = function(onlyBase) {
 		// XXX TODO: This is vaguely reasonable, but not complete. fix it...
 		var a = this._protocol ? this._protocol + "://" : ""
 		var b = this._host ? this._host + ((this._port || 80) == 80 ? "" : ":" + this._port) : "";
+		
+		if (onlyBase) {
+			return a + b;
+		}
+		
 		var c = this._path;
 		var d = this._query ? '?' + this._query : '';
 		var e = this._anchor ? '#' + this._anchor : '';
 		return a + b + c + d + e;
 	};
 });
+
+exports.Uri = exports; // backwards compatibility?
+
+exports.relativeTo = function(url, base) {
+	url = String(url);
+	
+	if (/^http(s?):\/\//.test(url)) { return url; }
+	if (url.charAt(0) == '/') {
+		var baseuri = new exports(base);
+		url = baseuri.toString(true) + url;
+	} else if(url.charAt(0) == '.') {
+		url = base + url;
+	}
+	
+	return exports.resolveRelative(url);
+}
+
+exports.resolveRelative = function(url) {
+	var prevUrl;
+	
+	// remove ../ with preceeding folder
+	while((prevUrl = url) != (url = url.replace(/(^|\/)([^\/]+)\/\.\.\//g, '/'))) {};
+	
+	// remove ./ if it isn't preceeded by a .
+	return url.replace(/[^.]\.\//g, '');
+}
 
 exports.buildQuery = function(kvp) {
 	var pairs = [];
