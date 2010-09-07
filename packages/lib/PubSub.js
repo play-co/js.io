@@ -5,14 +5,17 @@ exports = Class(function() {
 		if(this._subscribers) {
 			var args = Array.prototype.slice.call(arguments, 1);
 			if(this._subscribers.__any) {
-				var anyArgs = [signal].concat(args);
-				for(var i = 0, sub; sub = this._subscribers.__any[i]; ++i) {
+				var anyArgs = [signal].concat(args),
+					subs = this._subscribers.__any.slice(0);
+				for(var i = 0, sub; sub = subs[i]; ++i) {
 					sub.apply(ctx, args);
 				}
 			}
-		
-			if(!this._subscribers[signal]) { return; }		
-			for(var i = 0, sub; sub = this._subscribers[signal][i]; ++i) {
+			
+			if(!this._subscribers[signal]) { return; }
+			
+			var subs = this._subscribers[signal].slice(0);
+			for(var i = 0, sub; sub = subs[i]; ++i) {
 				sub.apply(ctx, args);
 			}
 		}
