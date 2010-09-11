@@ -371,7 +371,7 @@
 	}
 	
 	function execModuleDef(context, moduleDef) {
-		var code = "(function(_){with(_){delete _;return function " + moduleDef.path.replace(/\./g, '$') + "(){" + moduleDef.src + "\n}}})";
+		var code = "(function(_){with(_){delete _;return function $$" + moduleDef.path.replace(/\./g, '$') + "(){" + moduleDef.src + "\n}}})";
 		var fn = ENV.eval(code, moduleDef.filePath);
 		try {
 			fn = fn(context);
