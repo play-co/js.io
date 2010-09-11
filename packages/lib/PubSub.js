@@ -34,6 +34,7 @@ exports = Class(function() {
 	
 	// if no method is specified, all subscriptions with a callback context of ctx will be removed
 	this.unsubscribe = function(signal, ctx, method) {
+		if (!this._subscribers || !this._subscribers[signal]) { return; }
 		var subs = this._subscribers[signal];
 		for (var i = 0, c; c = subs[i]; ++i) {
 			if (c._ctx == ctx && (!method || c._method == method)) {
