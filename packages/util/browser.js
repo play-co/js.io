@@ -113,17 +113,32 @@ $.onEvent = function(el, name, f) {
 		f = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 2));
 	}
 	
+	var handler = f;
+	
 	el = $.id(el);
 	if(el.addEventListener) { 
-		el.addEventListener(name, f, false);
+		el.addEventListener(name, handler, false);
 	} else {
-		el.attachEvent('on' + name, function(e) {
+		handler = function(e) {
 			var evt = e || window.event;
 			// TODO: normalize the event object
 			f(evt);
-		});
+		};
+		
+		el.attachEvent('on' + name, handler);
 	}
+	
+	return bind($, 'removeEvent', el, name, handler);
 };
+
+$.removeEvent = function(el, name, f) {
+	el = $.id(el);
+	if (el.addEventListener) {
+		el.removeEventListener(name, f, false);
+	} else {
+		el.detachEvent('on' + name, f);
+	}
+}
 
 $.stopEvent = function(e) {
 	e.cancelBubble = true;
