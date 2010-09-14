@@ -13,13 +13,13 @@ exports = function(path, moduleDef, opts) {
 	opts = opts || {};
 	
 	// prevent double import
-	if (srcTable[moduleDef.filePath]) {
+	if (srcTable[moduleDef.path]) {
 		moduleDef.src = '';
 		return;
 	}
-	srcTable[moduleDef.filePath] = true;
+	srcTable[moduleDef.path] = true;
 	
-	var self = moduleDef.filePath;
+	var self = moduleDef.path;
 	logger.info('> compiling', self, 'at path', path);
 	
 	if (opts.path) {
@@ -36,7 +36,7 @@ exports = function(path, moduleDef, opts) {
 		jsioAddPath.lastIndex = 0;
 		logger.info('detecting paths for', self);
 		while (true) {
-			var match = jsioAddPath.exec(src);
+			var match = jsioAddPath.exec(moduleDef.src);
 			if (!match) { break; }
 			logger.info('found path ' + match[1]);
 			try {
@@ -64,7 +64,7 @@ exports = function(path, moduleDef, opts) {
 			inlineOpts = {};
 		}
 		
-		run(moduleDef.path, cmd, opts, inlineOpts);
+		run(moduleDef, cmd, opts, inlineOpts);
 	}
 	
 	jsioDynamic.lastIndex = 0;
@@ -76,20 +76,31 @@ exports = function(path, moduleDef, opts) {
 			inlineOpts = match[2] || '';
 		
 		if (opts.dynamicImports && cmd in opts.dynamicImports) {
-			run(moduleDef.path, opts.dynamicImports[cmd], opts, inlineOpts);
+			var dynamicImports = opts.dynamicImports[cmd];
+			if (!dynamicImports) {
+				logger.info('Dynamic import ' + cmd + ': <nothing>');
+				continue;
+			} else if (JS.isArray(dynamicImports)) {
+				for (var j = 0, line; line = dynamicImports[j]; ++j) {
+					logger.info('Dynamic import ' + cmd + ': ' + line);
+					run(moduleDef, line, opts, inlineOpts);
+				}
+			} else {
+				logger.info('Dynamic import ' + cmd + ': ' + dynamicImports);
+				run(moduleDef, dynamicImports, opts, inlineOpts);
+			}
 		} else {
 			logger.error('Missing: import definition\nConstant', cmd, 'for DYNAMIC_IMPORT_' + cmd, ' was not provided to the compiler');
 		}
 	}
 	
-	srcTable[moduleDef.filePath] = JS.shallowCopy(moduleDef);
+	srcTable[moduleDef.path] = JS.shallowCopy(moduleDef);
 	moduleDef.src = '';
 }
 
-exports.output = function(write, opts) {
+exports.buildResult = function(opts) {
 	var opts = opts || {};
-	if (!write) { write = jsio.__env.require('sys').print; }
-	
+
 	logger.info('building final output');
 
 	if (opts.compress) {
@@ -111,7 +122,7 @@ exports.output = function(write, opts) {
 
 	logger.info('writing output');
 	
-	write(src);
+	return src;
 }
 
 function compressTable(table, opts) {
@@ -120,8 +131,21 @@ function compressTable(table, opts) {
 	}
 }
 
-function run(path, cmd, opts, inlineOpts) {
-	var newOpts = JS.merge({dontCompileJsio: true}, opts, inlineOpts);
+exports.getTable = function() { return srcTable; }
+
+exports.compile = function(statement, opts) {
+	var newOpts = mergeOpts({reload: true}, opts);
+	JSIO.__jsio(statement, newOpts);
+}
+
+function run(moduleDef, cmd, opts, inlineOpts) {
+	var newOpts = mergeOpts(opts, inlineOpts);
+	logger.info('from', moduleDef.directory + moduleDef.filename + ': ', cmd, newOpts);
+	JSIO.__importer({}, moduleDef.directory, moduleDef.filename, cmd, newOpts);
+}
+
+function mergeOpts(opts, inlineOpts) {
+	var newOpts = JS.merge(JS.shallowCopy(opts), inlineOpts);
 	
 	// add compiler to the end of the preprocessors list
 	if (newOpts.preprocessors) {
@@ -136,8 +160,5 @@ function run(path, cmd, opts, inlineOpts) {
 	} else {
 		newOpts.preprocessors = ['compiler'];
 	}
-	
-	logger.info(path, cmd, newOpts);
-	
-	JSIO.__importer({}, path, cmd, newOpts);
+	return newOpts;
 }

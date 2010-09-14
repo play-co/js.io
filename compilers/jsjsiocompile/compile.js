@@ -1,13 +1,7 @@
 var sys = require('sys'),
-	cwd = process.cwd();
+	jsioPath = process.argv[2];
 
-function endWithSlash(str) {
-	if (!/\/$/.test(str)) { str += '/'; }
-	return str;
-}
-
-var jsioPath = process.argv[2];
-require(endWithSlash(cwd) + endWithSlash(jsioPath) + 'jsio');
+require(jsioPath + '/jsio');
 
 var initial = process.argv[3];
 if (!initial) {
@@ -15,11 +9,16 @@ if (!initial) {
 	sys.exit();
 }
 
-jsio(initial, {preprocessors:['compiler'],dynamicImports:{ENV:'import .env.browser.csp'}});
-
-// we need to special case base since we don't process jsio.js using the compiler preprocessor
+// We don't run jsio.js through the compiler which is
+// where base.js normally gets imported.
 compiler = jsio('import preprocessors.compiler');
-baseModule = {path:'base',filePath:jsio.__baseFile,src:jsio.__env.fetch(jsio.__baseFile)};
-compiler('base', baseModule);
-compiler.output();
+compiler.compile('import base');
+compiler.compile('import ' + initial, {
+	autoDetectPaths: true,
+	dynamicImports: {
+		ENV: null
+	}
+});
+
+sys.print(compiler.buildResult());
 
