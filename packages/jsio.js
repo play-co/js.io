@@ -7,13 +7,21 @@
 			// Insert pre-loaded modules here...
 		},
 		rexpEndSlash = /\/$/,
+		makeModuleDef = function(path, baseMod, basePath) {
+			var def = util.splitPath(path + '.js');
+			if (baseMod) {
+				def.baseMod = baseMod;
+				def.basePath = basePath;
+			}
+			return def;
+		},
 		util = {
 			bind: function(context, method/*, args... */) {
 				var args = Array.prototype.slice.call(arguments, 2);
-				return function(){
+				return function() {
 					method = (typeof method == 'string' ? context[method] : method);
 					return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
-				}
+				};
 			},
 			addEndSlash: function(str) {
 				return rexpEndSlash.test(str) ? str : str + '/';
@@ -23,13 +31,13 @@
 				var i = path.match('^' + relativeTo);
 				if (i && i[0] == relativeTo) {
 					var len = relativeTo.length,
-						offset = path[len] == '/' ? 1 : 0
+						offset = path[len] == '/' ? 1 : 0;
 					return path.slice(len + offset);
 				}
 				
 				var sA = util.removeEndSlash(path).split('/'),
-					sB = util.removeEndSlash(relativeTo).split('/'),
-					i = 0;
+					sB = util.removeEndSlash(relativeTo).split('/');
+				i = 0;
 				
 				while(sA[i] == sB[i]) { ++i; }
 				if (i) {
@@ -39,74 +47,46 @@
 				
 				return path;
 			},
+			buildPath: function() {
+				return util.resolveRelativePath(Array.prototype.join.call(arguments, '/'));
+			},
 			resolveRelativePath: function(path) {
-				do {
-					var oldPath = path;
-				} while(oldPath != (path = path.replace(/(^|\/)(?!\.\.\/)([^\/]+)\/\.\.\//g, '/')));
+				path = path.replace(/\/\//g, '/').replace(/\/\.\//g, '/');
+				var o;
+				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '/'))) { print('| RESOLVE', path)
+				}
 				return path;
 			},
 			resolveRelativeModule: function(modulePath, directory) {
-				/*
-				...test -> ../../test
-				.test -> ./test
-				foo..test -> test
-				.foo..test -> ./test
-				foo...test -> ../test
-				*/
 				var result = [],
 					parts = modulePath.split('.'),
-					i = 0, j = -1,
 					len = parts.length,
-					relative = false;
+					relative = (len > 1 && !parts[0]),
+					i = relative ? 0 : -1;
 				
-				if (len > 1 && !parts[0]) {
-					relative = true;
-					++i;
-				}
-				
-				do {
-					if (!parts[i]) {
-						if (j >= 0 && result[j].charAt(0) == '.') {
-							result.pop();
-							--j;
-						} else {
-							result.push('..');
-							++j;
-						}
-					} else {
-						result.push(parts[i]);
-						++j;
-					}
-				} while(++i < len);
-				
-				result = result.join('/');
-				return relative ? util.resolveRelativePath(directory + result) : result;
+				while(++i < len) { result.push(parts[i] ? parts[i] : '..'); }
+				return util.buildPath(relative ? directory : '', result.join('/'));
 			},
 			resolveModulePath: function(modulePath, directory) {
 				// resolve relative paths
 				if(modulePath.charAt(0) == '.') {
-					return [util.splitPath(util.resolveRelativeModule(modulePath, directory) + '.js')];
+					return [makeModuleDef(util.resolveRelativeModule(modulePath, directory))];
 				}
-
+				
 				// resolve absolute paths with respect to jsio packages/
 				var pathSegments = modulePath.split('.'),
 					baseMod = pathSegments[0],
 					pathString = pathSegments.join('/');
 				
 				if (baseMod in jsio.__path) {
-					return [util.splitPath(util.addEndSlash(jsio.__path[baseMod]) + pathString + '.js')];
+					return [makeModuleDef(util.buildPath(jsio.__path[baseMod], pathString))];
 				}
-
+				
 				var out = [],
 					paths = jsio.__path.__default__;
 				
 				for (var i = 0, len = paths.length; i < len; ++i) {
-					var path = util.addEndSlash(paths[i]),
-						possibility = util.splitPath(path + pathString + '.js');
-					
-					possibility.baseMod = baseMod;
-					possibility.basePath = path;
-					out.push(possibility);
+					out.push(makeModuleDef(util.buildPath(paths[i], pathString), baseMod, paths[i]));
 				}
 				return out;
 			},
@@ -397,9 +377,6 @@
 		if (opts.preprocessors) {
 			applyPreprocessors(fromDir, moduleDef, opts.preprocessors, opts);
 		}
-		
-		// required for jsjsiocompile
-		// if (modulePath == 'base') { jsio.__baseFile = moduleDef.path; }
 		
 		return moduleDef;
 	}

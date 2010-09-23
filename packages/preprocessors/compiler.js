@@ -108,11 +108,8 @@ exports.buildResult = function(opts) {
 		compressTable(srcTable, opts);
 	}
 
-	var path = JS.shallowCopy(JSIO.__path);
-	path.__default__ = [];
-	
 	var jsioSrc = ';(' + jsio.__jsio.__init__.toString(-1) + ')();'
-			+ 'jsio.__path=' + JSON.stringify(path),
+			+ exports.getPathJS(),
 		strSrcTable = JSON.stringify(srcTable);
 
 	// use a function to avoid having to do some crazy escaping of '$' in the replacement string!
@@ -123,6 +120,12 @@ exports.buildResult = function(opts) {
 	logger.info('writing output');
 	
 	return src;
+}
+
+exports.getPathJS = function() {
+	var path = JS.shallowCopy(JSIO.__path);
+	path.__default__ = [];
+	return 'jsio.__path=' + JSON.stringify(path) + ';';
 }
 
 function compressTable(table, opts) {
