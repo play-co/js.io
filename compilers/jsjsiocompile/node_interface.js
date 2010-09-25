@@ -19,8 +19,10 @@ exports.init = function(compiler) {
 };
 
 exports.onError = function(msg) {
-	util.optparse.printUsage('<node> compile.js "import .myFile"', optDef);
-	logger.error('\n\n' + msg);
+	util.optparse.printUsage('<node> compile.js <initial import>\n\t where <initial import> looks like "import .myModule"', optDef);
+	jsio.__env.log('');
+	logger.error('\n' + msg);
+	jsio.__env.log('');
 }
 
 exports.onFinish = function(opts, src) {
@@ -112,6 +114,6 @@ var optDef = {
 	'--dontIncludeJsio': {
 		name: 'dontIncludeJsio',
 		type: 'boolean',
-		description: "(advanced option) Don't include a copy of jsio."
+		description: "(advanced option) Don't include a copy of jsio. This also enables --dontModifyJsio."
 	}
 }
