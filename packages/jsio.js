@@ -3,9 +3,6 @@
 ;(function() {
 	var SLICE = Array.prototype.slice,
 		ENV,
-		sourceCache = {
-			// Insert pre-loaded modules here...
-		},
 		rexpEndSlash = /\/$/,
 		makeModuleDef = function(path, baseMod, basePath) {
 			var def = util.splitPath(path + '.js');
@@ -53,8 +50,7 @@
 			resolveRelativePath: function(path) {
 				path = path.replace(/\/\//g, '/').replace(/\/\.\//g, '/');
 				var o;
-				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '/'))) { print('| RESOLVE', path)
-				}
+				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '/'))) {}
 				return path;
 			},
 			resolveRelativeModule: function(modulePath, directory) {
@@ -103,6 +99,9 @@
 	var exports = jsio = util.bind(this, importer, null, null, null);
 	exports.__util = util;
 	exports.__init__ = arguments.callee;
+	
+	// explicitly use jsio.__srcCache to avoid obfuscation with closure compiler
+	var sourceCache = jsio.__srcCache = {};
 	
 	(function() {
 		this.__filename = 'jsio.js';
@@ -173,7 +172,6 @@
 		this.name = 'node';
 		this.global = GLOBAL;
 		this.getCwd = process.cwd;
-		this.hasCommonJS = true;
 		this.log = function() {
 			var msg;
 			try {
@@ -202,7 +200,6 @@
 		}
 		
 		this.require = require;
-		this.include = include;
 	}
 	
 	function ENV_browser() {
@@ -316,7 +313,10 @@
 			var path = possible.path,
 				cachedVersion = sourceCache[path];
 			
-			if (cachedVersion && !opts.reload) { return cachedVersion; }
+			if (cachedVersion) {
+				possible.src = cachedVersion.src;
+				return possible;
+			}
 			
 			/*if (/^\.\//.test(path)) {
 				// remove one path segment for each dot from the cwd 
@@ -341,7 +341,7 @@
 		var possibilities = util.resolveModulePath(modulePath, fromDir);
 		for (var i = 0, p; p = possibilities[i]; ++i) {
 			var path = possibilities[i].path;
-			if (path in jsio.__modules) {
+			if (!opts.reload && (path in jsio.__modules)) {
 				return possibilities[i];
 			}
 			if (path in failedFetch) { possibilities.splice(i--, 1); }
@@ -440,12 +440,10 @@
 			cwd = ENV.getCwd();
 		
 		ctx.jsio = util.bind(this, importer, ctx, moduleDef.directory, moduleDef.filename);
-		if (!ENV.hasCommonJS) {
-			ctx.require = function(request, opts) {
-				opts.dontExport = true;
-				return ctx.jsio(request, opts);
-			};
-		}
+		ctx.require = ENV.require ? ENV.require : function(request, opts) {
+			opts.dontExport = true;
+			return ctx.jsio(request, opts);
+		};
 		
 		ctx.module = {id: modulePath};
 		if (!dontAddBase && modulePath != 'base') {
