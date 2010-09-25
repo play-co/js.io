@@ -1,0 +1,18 @@
+compiler.js:
+ - main module for jsio compiler
+ - environment-agnostic - see node_interface.js for node-specific code
+ - provides start: autodetects args from environment (e.g. argv in node)
+ - provides run: compile with manual specification of arguments
+
+build.js:
+ - uses the compiler to create a compiled version of the compiler
+ - embeds jsio in the compiler
+
+Interfaces:
+ - compiler interfaces expose init, onError, onFinish, and (optionally) set the compressor
+ - this allows the same module to run in node and the browser
+
+node_interface.js:
+ - provides the node-specific code for the compiler using a child process for the closure compiler
+ - provides command-line option parsing using util.optparse
+
