@@ -1,7 +1,10 @@
 /** run "node build.js" to generate the jsjsiocompiler **/
 
+var TARGET = 'build/jsio_compile';
+
 var sys = require('sys'),
-	fs = require('fs');
+	fs = require('fs'),
+	node = process.argv[0];
 
 require('./jsio/jsio');
 
@@ -48,12 +51,26 @@ walk('jsio', function(path, files, dirs) {
 	});
 });
 
-compiler.generateSrc({compressJsio: true, dontModifyJsio: true}, function(src) {
-	var fd = fs.openSync('build/compiler.js', 'w');
-	fs.writeSync(fd, src);
-	fs.writeSync(fd, 'jsio("import .compiler").start()');
-	fs.closeSync(fd);
-	logger.info('Wrote build/compiler.js');
+
+var exec = require('child_process').exec;
+
+exec("which " + node, function(error, stdout, stderr) {
+	var nodeLocation = stdout.replace(/\n/g, '');
+	logger.info('Found node at', nodeLocation)
+	exec(nodeLocation + " --version", function(error, stdout, stderr) {
+		var nodeVersion = stdout.replace(/\n/g, '');;
+		logger.info('Using node version', nodeVersion);
+		compiler.generateSrc({compressJsio: true, dontModifyJsio: true}, function(src) {
+			var fd = fs.openSync(TARGET, 'w');
+			fs.writeSync(fd, '#!' + nodeLocation + '\n');
+			fs.writeSync(fd, src);
+			fs.writeSync(fd, 'jsio("import .compiler").start()');
+			fs.closeSync(fd);
+			
+			exec("chmod +x " + TARGET);
+			logger.info('Wrote', TARGET);
+		});
+	});
 });
 
 // ********
