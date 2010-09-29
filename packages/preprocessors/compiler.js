@@ -35,11 +35,11 @@ exports = function(path, moduleDef, opts) {
 	
 	if (opts.autoDetectPaths) {
 		jsioAddPath.lastIndex = 0;
-		logger.log('detecting paths for', self);
+		logger.debug('detecting paths for', self);
 		while (true) {
 			var match = jsioAddPath.exec(moduleDef.src);
 			if (!match) { break; }
-			logger.log('found path ' + match[1]);
+			logger.debug('found path ' + match[1]);
 			try {
 				JSIO.addPath(eval(match[1]));
 			} catch(e) {
@@ -53,7 +53,7 @@ exports = function(path, moduleDef, opts) {
 		var match = jsioNormal.exec(moduleDef.src);
 		if (!match) { break; }
 		
-		logger.log('detected', match[0])
+		logger.debug('detected', match[0])
 		
 		var cmd = match[1],
 			inlineOpts = match[2] ? match[2].substring(1) : '';
@@ -86,15 +86,15 @@ exports = function(path, moduleDef, opts) {
 		if (opts.dynamicImports && cmd in opts.dynamicImports) {
 			var dynamicImports = opts.dynamicImports[cmd];
 			if (!dynamicImports) {
-				logger.log('Dynamic import ' + cmd + ': <nothing>');
+				logger.debug('Dynamic import ' + cmd + ': <nothing>');
 				continue;
 			} else if (JS.isArray(dynamicImports)) {
 				for (var j = 0, line; line = dynamicImports[j]; ++j) {
-					logger.log('Dynamic import ' + cmd + ': ' + line);
+					logger.debug('Dynamic import ' + cmd + ': ' + line);
 					run(moduleDef, line, opts, inlineOpts);
 				}
 			} else {
-				logger.log('Dynamic import ' + cmd + ': ' + dynamicImports);
+				logger.debug('Dynamic import ' + cmd + ': ' + dynamicImports);
 				run(moduleDef, dynamicImports, opts, inlineOpts);
 			}
 		} else {
@@ -144,7 +144,7 @@ function buildJsio(opts, callback) {
 	}
 	
 	if (opts.compressJsio || opts.compressSources) {
-		logger.info('compressing final code');
+		logger.info('compressing final code...');
 		compressor(src, callback);
 	} else {
 		callback(src);
@@ -162,7 +162,7 @@ function compressTable(table, opts, callback) {
 
 function compressStep(queue, table, key, callback) {
 	if (key) {
-		logger.log('compressing', key);
+		logger.log('compressing', key + '...');
 		compressor(table[key].src, function(result) {
 			table[key].src = result;
 			compressStep(queue, table, queue.pop(), callback);
