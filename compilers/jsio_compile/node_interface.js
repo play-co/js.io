@@ -38,7 +38,7 @@ exports.onFinish = function(opts, src) {
 
 exports.compressor = function(src, callback) {
 	var spawn = require('child_process').spawn,
-	    closure = spawn('java', ['-jar', closurePath + 'closure.jar']),
+	    closure = spawn('java', ['-jar', closurePath || 'closure.jar']),
 		stdout = [],
 		stderr = [];
 	closure.stdout.on('data', function(data) { stdout.push(data); });
