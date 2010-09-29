@@ -5,7 +5,7 @@
 * ====================
 *
 * Validates JavaScript objects using JSON Schemas
-* http://www.json.com/json-schema-proposal/
+* http://json-schema.org/
 *
 * Based on jsonschema-b4.js:
 *   Copyright (c) 2007 Kris Zyp SitePen (www.sitepen.com)
