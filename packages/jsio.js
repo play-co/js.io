@@ -124,6 +124,16 @@
 			}
 		}
 		
+		this.removePath = function(path) {
+			var paths = this.__path.__default__;
+			for(var i = 0, j = paths.length; i < j; ++i) {
+				if (paths[i] == path) {
+					paths.splice(i, 1);
+					break;
+				}
+			}
+		}
+		
 		this.addPreprocessor = function(name, preprocessor) { this.__preprocessors[name] = preprocessor; }
 		this.addCmd = function(processor) { this.__cmds.push(processor); }
 		
