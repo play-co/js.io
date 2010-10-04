@@ -1,11 +1,18 @@
-var Point = Class(function() {
-	this.init = function(x, y) {
-		if (typeof x == 'number') {
-			this.x = x;
-			this.y = y;
-		} else {
-			this.x = x.x;
-			this.y = x.y;
+var Point = exports = Class(function() {
+	this.init = function(a, b) {
+		switch(arguments.length) {
+			case 0:
+				this.x = 0;
+				this.y = 0;
+				break;
+			case 1:
+				this.x = a.x || 0;
+				this.y = a.y || 0;
+				break;
+			case 2:
+				this.x = a;
+				this.y = b;
+				break;
 		}
 	}
 	
@@ -21,6 +28,7 @@ var Point = Class(function() {
 		return this;
 	}
 	
+	this.translate = 
 	this.add = function(x, y) {
 		if (typeof x == 'number') {
 			this.x += x;
@@ -58,17 +66,10 @@ var Point = Class(function() {
 	
 	this.addMagnitude = function(m) { return this.setMagnitude(this.getMagnitude() + m); }
 	this.getMagnitude = function() { return Math.sqrt(this.x * this.x + this.y * this.y); }
-	
-	this.inBox = function(x1, y1, x2, y2) {
-		var x = this.x,
-			y = this.y;
-		return x >= x1 && x <= x2 && y >= y1 && y <= y2;
-	}
+	this.getDirection = function() { return Math.atan2(this.y, this.x); }
 });
 
-exports.Point = Point;
-
-exports.add = exports.translate = function(a, b, c, d) {
+Point.add = Point.translate = function(a, b, c, d) {
 	switch(arguments.length) {
 		case 2: return new Point(a).add(b);
 		case 3: return new Point(a).add(b, c);
@@ -76,7 +77,7 @@ exports.add = exports.translate = function(a, b, c, d) {
 	}
 }
 
-exports.subtract = function(a, b, c, d) {
+Point.subtract = function(a, b, c, d) {
 	switch(arguments.length) {
 		case 2: return new Point(a).subtract(b);
 		case 3: return new Point(a).subtract(b, c);
@@ -84,21 +85,21 @@ exports.subtract = function(a, b, c, d) {
 	}
 }
 
-exports.scale = function(a, b, c) {
+Point.scale = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: return new Point(a).scale(b);
 		case 3: return new Point(a, b).scale(c);
 	}
 }
 
-exports.setMagnitude = function(a, b, c) {
+Point.setMagnitude = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: return new Point(a).setMagnitude(c);
 		case 3: return new Point(a, b).setMagnitude(c);
 	}
 }
 
-exports.addMagnitude = function(a, b, c) {
+Point.addMagnitude = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: pt = new Point(a); break;
 		case 3: pt = new Point(a, b); b = c; break;
@@ -107,18 +108,11 @@ exports.addMagnitude = function(a, b, c) {
 	return pt.addMagnitude(b);
 }
 
-exports.getMagnitude = function(a, b) { return new Point(a, b).getMagnitude(); }
+Point.getMagnitude = function(a, b) { return new Point(a, b).getMagnitude(); }
 
-exports.rotate = function(a, b, c) {
+Point.rotate = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: return new Point(a).rotate(b);
 		case 3: return new Point(a, b).rotate(c);
-	}
-}
-
-exports.inBox = function(a, b, c, d, e, f) {
-	switch(arguments.length) {
-		case 5: return new Point(a).inBox(b, c, d, e);
-		case 6: return new Point(a, b).inBox(c, d, e, f);
 	}
 }
