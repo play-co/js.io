@@ -1,3 +1,8 @@
+"use import";
+
+import .Point;
+import .Line;
+
 var intersect = exports;
 
 intersect.rectAndPt = function(rect, pt) { return intersect.ptAndRect(pt, rect); }
@@ -26,9 +31,9 @@ intersect.rectAndRect = function(rect1, rect2) {
 
 var SIDES = Rect.SIDES;
 
-intersect.rectAndCirc =
-intersect.circAndRect = function(circ, rect) {
-	if (intersect.ptAndRect(circ, rect)) {
+intersect.rectAndCircle = function(rect, circle) { return intersect.rectAndCircle(circle, circ); }
+intersect.circleAndRect = function(circle, rect) {
+	if (intersect.ptAndRect(circle, rect)) {
 		return true;
 	}
 	
@@ -38,9 +43,10 @@ intersect.circAndRect = function(circ, rect) {
 		|| intersect.lineAndCirc(rect.getRight(), circ);
 }
 
-intersect.lineAndCirc = function(line, circ) {
-	var vec = intersect.ptToLine(circ, line);
-	return vec.getMagnitude() < circ.radius;
+intersect.circleAndLine = function(circle, line) { return intersect.lineAndCircle(line, circle); }
+intersect.lineAndCircle = function(line, circle) {
+	var vec = intersect.util.ptToLine(circle, line);
+	return vec.getMagnitude() < circle.radius;
 }
 
 // util -- does not return a true/false intersection
@@ -49,7 +55,7 @@ intersect.util = {};
 
 // returns line from pt to nearest pt on line
 intersect.util.ptToLine = function(pt, line) {
-	var m = line.magnitude(),
+	var m = line.getMagnitude(),
 		dx = (line.end.x - line.start.x),
 		dy = (line.end.y - line.start.y),
 		u = ((pt.x - line.start.x) * dx	// TODO can we abstract this from 2D to 2D/3D?

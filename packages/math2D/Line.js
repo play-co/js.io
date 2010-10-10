@@ -29,6 +29,7 @@ exports = Class(function() {
 		}
 	}
 	
+	this.getMagnitude = 
 	this.getLength = function() {
 		var dx = this.end.x - this.start.x,
 			dy = this.end.y - this.start.y;
