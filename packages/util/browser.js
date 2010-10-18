@@ -1,11 +1,32 @@
 if (jsio.__env.name == 'browser') {
 	jsio('external .sizzle import Sizzle');
-
+	
+	var DOM2 = typeof HTMLElement === "object";
+	function isElement(el) {
+		return el && 
+			(DOM2 ? el instanceof HTMLElement
+				: typeof el.nodeType == 'number' && typeof el.nodeName == 'string');
+	}
+	
+	function isWindow(el) {
+		return el && !isElement(el) && isElement(el.document);
+	}
+	
 	var singleId = /^#([\w-]+)$/;
-
+	
 	var $ = exports.$ = function(selector, win) {
-		if (singleId.test(selector)) { return $.id(selector.substring(1), win); }
-		return Sizzle.apply(GLOBAL, arguments);
+		switch(typeof selector) {
+			case 'object':
+				if (isElement(selector)) {
+					return $.remove(selector);
+				} else if (isElement(selector.document && selector.document.body)) {
+					return $.size(selector);
+				}
+				return $.create(selector);
+			case 'string':
+				if (singleId.test(selector)) { return $.id(selector.substring(1), win); }
+				return Sizzle.apply(GLOBAL, arguments);
+		}
 	}
 
 	$.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
@@ -185,5 +206,16 @@ if (jsio.__env.name == 'browser') {
 			parent = parent.offsetParent;
 		}
 		return offset;
+	}
+	
+	$.size = function(el) {
+		if (isElement(el)) {
+			return {width: el.offsetWidth, height: el.offsetHeight};
+		} else if (el.document) {
+			return {
+				width: el.innerWidth || (el.document.documentElement.clientWidth || el.document.body.clientWidth),
+				height: el.innerHeight || (el.document.documentElement.clientHeight || el.document.body.clientHeight)
+			};
+		}
 	}
 }
