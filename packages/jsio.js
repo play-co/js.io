@@ -50,7 +50,7 @@
 			resolveRelativePath: function(path) {
 				path = path.replace(/\/\//g, '/').replace(/\/\.\//g, '/');
 				var o;
-				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '/'))) {}
+				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '$1'))) {}
 				return path;
 			},
 			resolveRelativeModule: function(modulePath, directory) {
