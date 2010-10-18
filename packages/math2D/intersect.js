@@ -2,6 +2,7 @@
 
 import .Point;
 import .Line;
+import .Rect;
 
 var intersect = exports;
 
