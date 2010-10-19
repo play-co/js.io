@@ -16,16 +16,18 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
 	}
 
-	this.getButton = function(url, text) { 
-		var button = document.createElement('button');
-		button.className = 'clientButton';
-		button.innerHTML = text || 'launch client';
-		$.onEvent(button, 'click', bind(this, '_openWindow', url));
+	this.getButton = function(url, text) {
+		var button = $({
+			tagName: 'button',
+			text: text || 'launch client',
+			className: 'clientButton'
+		});
+		$.onEvent(button, 'click', bind(this, 'openWindow', url || this._opts.clientUrl));
 		return button; 
 	}
 	
 	var uniqueId = 1;
-	this._openWindow = function(url) {
+	this.openWindow = function(url) {
 		var options = { menubar: 'no', location: 'no', toolbar: 'no',
 			width: 550, height: 350, // left: 200, top: 200,
 			scrollbars: 'yes', status: 'yes', resizable: 'yes' };
