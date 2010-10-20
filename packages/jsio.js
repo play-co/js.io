@@ -235,8 +235,8 @@
 		
 		this.getCwd = function() {
 			if(!cwd) {
-				var location = window.location.toString().split('#')[0];
-				cwd = location.substring(0, location.lastIndexOf('/') + 1);
+				var loc = window.location, path = loc.pathname;
+				cwd = loc.protocol + '//' + loc.host + path.substring(0, path.lastIndexOf('/') + 1);
 			}
 			return cwd;
 		}
