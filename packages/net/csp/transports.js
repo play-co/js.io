@@ -417,7 +417,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		}
 	}
 	
-	var killLoadingBar = BrowserDetect.isFirefox ? function() {
+	var killLoadingBar = BrowserDetect.isFirefox || BrowserDetect.isOpera ? function() {
 		var b = document.body;
 		if (!b) { return; }
 		
