@@ -75,7 +75,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		
 		var el = this.createTab('+ client');
 		$.style(el, { marginLeft: '10px' });
-		$.onEvent(el, 'click', this, 'newTab');
+		$.onEvent(el, 'click', this, 'onNewTabClick');
 		
 		this._lastTab = el;
 		
@@ -120,7 +120,9 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		return el;
 	}
 	
-	this.newTab = function() {
+	this.onNewTabClick = function() { this.newTab(); }
+	
+	this.newTab = function(url) {
 		var text = (++this._numTabs);
 		var el = this.createTab(text);
 		el.status('loading...');
@@ -128,7 +130,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var frame = $({
 			tag: 'iframe',
 			attrs: {
-				src: this._opts.clientURL,
+				src: url || this._opts.clientURL,
 				border: 0
 			},
 			style: {
