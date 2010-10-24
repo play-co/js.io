@@ -99,7 +99,8 @@ exports.logging = (function() {
 		},
 		loggers = {}, // effectively globals - all loggers and a global production state
 		production = false;
-
+	var gPrefix = '';
+	logging.setPrefix = function(prefix) { gPrefix = prefix + ' '; }
 	logging.setProduction = function(prod) { production = !!prod; }
 	logging.get = function(name) {
 		return loggers.hasOwnProperty(name) ? loggers[name]
@@ -125,7 +126,8 @@ exports.logging = (function() {
 		function makeLogFunction(level, type) {
 			return function() {
 				if (!production && level >= this._level) {
-					return this._listener.apply(this._listener, [type, this._name].concat(SLICE.call(arguments)));
+					var prefix = type + ' ' + gPrefix + this._name;
+					return this._listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
 				}
 				return arguments[0];
 			}
