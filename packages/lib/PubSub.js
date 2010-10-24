@@ -8,7 +8,7 @@ exports = Class(function() {
 				var anyArgs = [signal].concat(args),
 					subs = this._subscribers.__any.slice(0);
 				for(var i = 0, sub; sub = subs[i]; ++i) {
-					sub.apply(ctx, args);
+					sub.apply(ctx, anyArgs);
 				}
 			}
 			
