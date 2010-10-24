@@ -7,8 +7,8 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
 	
 	var tabStyle = {
-		background: '#EEE',
-		border: '1px solid #CCC',
+		background: '#442',
+		border: '1px solid #885',
 		margin: '0px 0px -1px 3px',
 		MozBorderRadius: '3px 0px 0px 3px',
 		WebkitBorderRadius: '3px 0px 0px 3px',
@@ -36,7 +36,10 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 				width: '150px',
 				height: '100%',
 				overflow: 'hidden',
-				paddingTop: '5px'
+				paddingTop: '5px',
+				background: '#444',
+				fontWeight: 'bold',
+				color: '#EEA'
 			},
 			parent: document.body
 		});
@@ -73,8 +76,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var el = this.createTab('server');
 		$.onEvent(el, 'click', this, 'showFrame', this._serverContent);
 		
-		var el = this.createTab('+ client');
-		$.style(el, { marginLeft: '10px' });
+		var el = this.createTab('+ client', 1);
 		$.onEvent(el, 'click', this, 'onNewTabClick');
 		
 		this._lastTab = el;
@@ -90,10 +92,12 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		this._rightCol.style.width = $(window).width - 150 + 'px';
 	}
 	
-	this.createTab = function(text) {
+	this.createTab = function(text, indent) {
 		var el = $({
 			style: tabStyle
 		});
+		
+		$.style(el, { marginLeft: indent * 10 + 'px' });
 		
 		el.text = $({
 			text: text,
@@ -113,10 +117,10 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			this._leftCol.appendChild(el);
 		}
 		
-		$.onEvent(el, 'mouseover', bind($, $.style, el, {background: '#FFF'}));
-		$.onEvent(el, 'mouseout', bind($, $.style, el, {background: '#EEE'}));
-		$.onEvent(el, 'mousedown', bind($, $.style, el, {background: '#CCC'}));
-		$.onEvent(el, 'mouseup', bind($, $.style, el, {background: '#EEE'}));
+		$.onEvent(el, 'mouseover', bind($, $.style, el, {background: '#664'}));
+		$.onEvent(el, 'mouseout', bind($, $.style, el, {background: '#442'}));
+		$.onEvent(el, 'mousedown', bind($, $.style, el, {background: '#111'}));
+		$.onEvent(el, 'mouseup', bind($, $.style, el, {background: '#442'}));
 		return el;
 	}
 	
@@ -130,7 +134,6 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var frame = $({
 			tag: 'iframe',
 			attrs: {
-				src: url || this._opts.clientURL,
 				border: 0
 			},
 			style: {
@@ -139,9 +142,11 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 				width: '100%',
 				height: '100%',
 				borderWidth: '0px'
-			},
-			parent: this._rightCol
+			}
 		});
+		
+		frame.src = url || this._opts.clientURL;
+		this._rightCol.appendChild(frame);
 		
 		frame.onload = bind(this, 'onFrameLoad', frame, el);
 		this._frames.push(frame);
@@ -153,7 +158,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			style: {
 				'float': 'right',
 				'border': '1px solid #AAF',
-				'background': '#EEF',
+				'background': '#000',
 				'padding': '1px'
 			},
 			before: el.firstChild
