@@ -2,6 +2,7 @@
 
 import lib.Enum;
 import .Point;
+import .Line;
 
 var Rect = exports = Class(function() {
 	this.init = function(a, b, c, d) {

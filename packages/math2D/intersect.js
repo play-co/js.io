@@ -38,10 +38,10 @@ intersect.circleAndRect = function(circle, rect) {
 		return true;
 	}
 	
-	return intersect.lineAndCirc(rect.getTop(), circ)
-		|| intersect.lineAndCirc(rect.getLeft(), circ)
-		|| intersect.lineAndCirc(rect.getBottom(), circ)
-		|| intersect.lineAndCirc(rect.getRight(), circ);
+	return intersect.lineAndCircle(rect.getSide(1), circle)
+		|| intersect.lineAndCircle(rect.getSide(2), circle)
+		|| intersect.lineAndCircle(rect.getSide(3), circle)
+		|| intersect.lineAndCircle(rect.getSide(4), circle);
 }
 
 intersect.circleAndLine = function(circle, line) { return intersect.lineAndCircle(line, circle); }
