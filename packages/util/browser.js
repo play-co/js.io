@@ -38,15 +38,23 @@ if (jsio.__env.name == 'browser') {
 	
 		var el = doc.createElement(params.tag || 'div');
 		if(params.style) { $.style(el, params.style); }
+		if(params.src) { el.src = params.src; }
 		if(params.attrs) {
 			for(attr in params.attrs) {
 				el.setAttribute(attr, params.attrs[attr]);
 			}
 		}
+		
 		if(params['class'] || params['className']) {
 			el.className = params['class'] || params['className'];
 		}
+		
 		if(params.parent) { params.parent.appendChild(el); }
+		if ('before' in params) {
+			if (params.before) {
+				params.before.parentNode.insertBefore(el, params.before);
+			}
+		}
 		if(params.html) { el.innerHTML = params.html; }
 		if(params.text) { $.setText(el, params.text); }
 		return el;
@@ -72,6 +80,8 @@ if (jsio.__env.name == 'browser') {
 		el.className = current;
 		return $;
 	}
+	
+	$.getTag = function(from, tag) { return from.getElementsByTagName(tag); }
 
 	$.removeClass = function(el, classNames) {
 		var el = $.id(el);
@@ -101,28 +111,31 @@ if (jsio.__env.name == 'browser') {
 		}
 	
 		el = $.id(el);
+		var s = el.style;
 		for(prop in style) {
 			switch(prop) {
 				case 'float':
-					el.style.styleFloat = el.style.cssFloat = style[prop];
+					s.styleFloat = s.cssFloat = style[prop];
 					break;
 				case 'opacity':
-					el.style.opacity = style[prop];
+					s.opacity = style[prop];
 					if(el.filters) {
 						try {
 							var alpha = ieGetAlpha();
 							var opacity = style[prop] == 1 ? 99.99 : style[prop] * 100;
 							if(!alpha) {
 								// TODO: this might destroy any existing filters?
-								el.style.filter = "alpha(opacity=" + opacity + ")";
+								s.filter = "alpha(opacity=" + opacity + ")";
 							} else {
 								alpha.Opacity = opacity;
 							}
 						} catch(e) {}
 					}
 					break;
+				case 'boxSizing':
+					s.MsBoxSizing = s.MozBoxSizing = s.WebkitBoxSizing = style[prop];
 				default:
-					el.style[prop] = style[prop];
+					s[prop] = style[prop];
 					break;
 			}
 		}
