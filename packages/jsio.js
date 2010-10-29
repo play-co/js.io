@@ -261,6 +261,8 @@
 			}
 			return path;
 		}
+		
+		this.debugPath = function(path) { return path; }
 
 		// IE6 won't return an anonymous function from eval, so use the function constructor instead
 		var rawEval = typeof eval('(function(){})') == 'undefined'
@@ -269,9 +271,8 @@
 
 		// provide an eval with reasonable debugging
 		this.eval = function(code, path) {
-			try { return rawEval(code, path); } catch(e) {
+			try { return rawEval(code, this.debugPath(path)); } catch(e) {
 				if(e instanceof SyntaxError) {
-					debugger;
 					ENV.log("a syntax error is preventing execution of " + path);
 					try {
 						var cb = function() {
