@@ -126,15 +126,17 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	
 	this.onNewTabClick = function() { this.newTab(); }
 	
-	this.newTab = function(url) {
-		var text = (++this._numTabs);
+	this.newTab = function(url, text) {
+		++this._numTabs;
+		var text = text || this._numTabs;
 		var el = this.createTab(text);
 		el.status('loading...');
 		
 		var frame = $({
 			tag: 'iframe',
 			attrs: {
-				border: 0
+				border: 0,
+				name: 'tab' + this._numTabs
 			},
 			style: {
 				position: 'absolute',
