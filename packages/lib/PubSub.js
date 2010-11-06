@@ -1,6 +1,8 @@
 var ctx = jsio.__env.global;
 
 exports = Class(function() {
+	this.init = function() {}
+	
 	this.publish = function(signal) {
 		if(this._subscribers) {
 			var args = Array.prototype.slice.call(arguments, 1);
