@@ -56,12 +56,11 @@ intersect.util = {};
 
 // returns line from pt to nearest pt on line
 intersect.util.ptToLine = function(pt, line) {
-	var m = line.getMagnitude(),
-		dx = (line.end.x - line.start.x),
+	var dx = (line.end.x - line.start.x),
 		dy = (line.end.y - line.start.y),
 		u = ((pt.x - line.start.x) * dx	// TODO can we abstract this from 2D to 2D/3D?
 			+ (pt.y - line.start.y) * dy) / 
-			  (m * m);
+			  (dx * dx + dy * dy);
 
 	var i;
 	if (u < 0) {
