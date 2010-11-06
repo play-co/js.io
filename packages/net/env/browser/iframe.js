@@ -76,10 +76,11 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var el = this.createTab('server');
 		$.onEvent(el, 'click', this, 'showFrame', this._serverContent);
 		
-		var el = this.createTab('+ client', 1);
-		$.onEvent(el, 'click', this, 'onNewTabClick');
-		
-		this._lastTab = el;
+		if (opts && opts.clientURL) {
+			var el = this.createTab('+ client', 1);
+			$.onEvent(el, 'click', this, 'onNewTabClick');
+			this._lastTab = el;
+		}
 		
 		this.onResize();
 	}
