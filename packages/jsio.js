@@ -48,10 +48,13 @@
 				return util.resolveRelativePath(Array.prototype.join.call(arguments, '/'));
 			},
 			resolveRelativePath: function(path) {
+				var protocol = path.match(/^(\w+:\/\/)(.*)$/);
+				if (protocol) { path = protocol[2]; }
+				
 				path = path.replace(/\/\//g, '/').replace(/\/\.\//g, '/');
 				var o;
 				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '$1'))) {}
-				return path;
+				return protocol ? protocol[1] + path : path;
 			},
 			resolveRelativeModule: function(modulePath, directory) {
 				var result = [],
@@ -420,7 +423,8 @@
 				if (e.type == "stack_overflow") {
 					ENV.log("Stack overflow in", moduleDef.friendlyPath, ':', e);
 				} else {
-					ENV.log("ERROR LOADING", moduleDef.friendlyPath);
+					ENV.log(e.stack);
+					ENV.log(moduleDef.friendlyPath + ": enable 'break on error' in your debugger to debug. (" + moduleDef.path + ")");
 //					if (ENV.name == 'browser') {
 //						ENV.log(moduleDef.path + ':', e.message, "\n\n", e.stack.replace(new RegExp(util.resolveRelative(ENV.getCwd() + ENV.getPath() + '/jsio.js'), 'g'), ''));
 //					}

@@ -64,6 +64,12 @@ var Point = exports = Class(function() {
 		return this;
 	}
 	
+	this.normalize = function() {
+		var m = this.getMagnitude();
+		this.x /= m;
+		this.y /= m;
+	}
+	
 	this.addMagnitude = function(m) { return this.setMagnitude(this.getMagnitude() + m); }
 	this.getMagnitude = function() { return Math.sqrt(this.x * this.x + this.y * this.y); }
 	this.getDirection =
