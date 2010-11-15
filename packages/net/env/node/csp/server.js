@@ -319,9 +319,9 @@ exports.Connection = Class(process.EventEmitter, function() {
 		this.emit('receive', data);
 	};
 	
-	var validEncodings = new Hash('utf8', 'binary');
+	var validEncodings = new Hash('utf8', 'plain', 'binary');
 	this.setEncoding = function (encoding) {
-		assert(validEncodings.contains(encoding), 'unrecognized encoding');
+		assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
 		if (encoding !== 'utf8') {
 			assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer');
 		};
@@ -334,8 +334,8 @@ exports.Connection = Class(process.EventEmitter, function() {
 			// XXX make error type for this
 			throw new Error("Socket is not writable in readyState: " + this.readyState);
 		};
-		encoding = encoding || 'binary'; // default to 'binary'
-		assert(validEncodings.contains(encoding), 'unrecognized encoding');
+		encoding = encoding || this._encoding || 'binary'; // default to 'binary'
+		assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
 		data = (encoding === 'utf8') ? utf8.encode(data) : data;
 		this._session.send(data);
 	};
@@ -465,7 +465,7 @@ exports.Server = Class(process.EventEmitter, function () {
 				if (err instanceof CSPError) {
 					renderError(response, err.code, err.message);					 
 				} else {
-					logger.debug('Unexpected Error: ', err.message);
+					logger.warn('Unexpected Error: ', err.message);
 					renderError(response, 500, 'Unknown Server error');
 				};
 			};
