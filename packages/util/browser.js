@@ -65,6 +65,7 @@ if (jsio.__env.name == 'browser') {
 
 	// accepts an array or a space-delimited string of classNames
 	$.addClass = function(el, classNames) {
+		if (!el) { return; }
 		var el = $.id(el);
 		if(typeof classNames == "string") {
 			classNames = classNames.split(' ');
@@ -84,6 +85,7 @@ if (jsio.__env.name == 'browser') {
 	$.getTag = function(from, tag) { return from.getElementsByTagName(tag); }
 
 	$.removeClass = function(el, classNames) {
+		if (!el) { return; }
 		var el = $.id(el);
 		el.className = (' ' + el.className + ' ')
 			.replace(' ', '  ')

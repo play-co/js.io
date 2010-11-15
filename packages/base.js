@@ -29,6 +29,13 @@ exports.bind = function(context, method /*, VARGS*/) {
 }
 
 exports.Class = function(parent, proto) {
+	if (typeof parent == 'string') {
+		var name = parent,
+			parent = proto,
+			proto = arguments[2],
+			logger = logging.get(parent);
+	}
+	
 	if(!parent) { throw new Error('parent or prototype not provided'); }
 	if(!proto) { proto = parent; parent = null; }
 	else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
@@ -45,18 +52,20 @@ exports.Class = function(parent, proto) {
 		proto.prototype = parent.prototype;
 	}
 
-	var cls = function() { if(this.init) { return this.init.apply(this, arguments); }}
-	cls.prototype = new proto(parent ? function(context, method, args) {
-		var args = args || [];
-		var target = proto;
-		while(target = target.prototype) {
-			if(target[method]) {
-				return target[method].apply(context, args);
+	var cls = function() { if(this.init) { return this.init.apply(this, arguments); }},
+		supr = parent ? function(context, method, args) {
+			var args = args || [];
+			var target = proto;
+			while(target = target.prototype) {
+				if(target[method]) {
+					return target[method].apply(context, args);
+				}
 			}
-		}
-		throw new Error('method ' + method + ' does not exist');
-	} : null);
+			throw new Error('method ' + method + ' does not exist');
+		} : null;
+	cls.prototype = new proto(logger || supr, !logger && supr);
 	cls.prototype.constructor = cls;
+	if (name) { cls.prototype.__class__ = name; }
 	return cls;
 }
 

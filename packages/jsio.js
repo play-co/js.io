@@ -277,17 +277,21 @@
 			try { return rawEval(code, this.debugPath(path)); } catch(e) {
 				if(e instanceof SyntaxError) {
 					ENV.log("a syntax error is preventing execution of " + path);
-					try {
-						var cb = function() {
-							var el = document.createElement('iframe');
-							el.style.cssText = "position:absolute;top:-999px;left:-999px;width:1px;height:1px;visibility:hidden";
-							el.src = 'javascript:document.open();document.write(window.parent.CODE_WITH_ERROR)';
-							window.CODE_WITH_ERROR = "<scr"+"ipt>" + code + "</scr"+"ipt>"
-							setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
-						};
-						if (document.body) { cb(); }
-						else { window.addEventListener('load', cb, false); }
-					} catch(f) {}
+					if (this.checkSyntax) {
+						this.checkSyntax(code, path);
+					} else {
+						try {
+							var cb = function() {
+								var el = document.createElement('iframe');
+								el.style.cssText = "position:absolute;top:-999px;left:-999px;width:1px;height:1px;visibility:hidden";
+								el.src = 'javascript:setTimeout(function(){try{document.open();document.write(window.parent.CODE_WITH_ERROR);document.close();})';
+								window.CODE_WITH_ERROR = "<scr"+"ipt>" + code + "</scr"+"ipt>"
+								setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
+							};
+							if (document.body) { cb(); }
+							else { window.addEventListener('load', cb, false); }
+						} catch(f) {}
+					}
 				}
 				throw e;
 			}
