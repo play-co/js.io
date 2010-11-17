@@ -15,9 +15,9 @@ var attrs = [
 	"anchor"
 ];
 
-exports = Class(function(supr) {
+var URI = exports = Class(function(supr) {
 	this.init = function(url, isStrict) {
-		if (url instanceof exports) {
+		if (url instanceof URI) {
 			for (attr in attrs) {
 				this['_' + attr] = url['_' + attr];
 			}
@@ -43,6 +43,9 @@ exports = Class(function(supr) {
 			};
 		}).call(this, attr);
 	};
+	
+	this.query = function(key) { return exports.parseQuery(this._query)[key]; }
+	this.hash = function(key) { return exports.parseQuery(this._hash)[key]; }
 
 	this.toString = this.render = function(onlyBase) {
 		// XXX TODO: This is vaguely reasonable, but not complete. fix it...
@@ -59,8 +62,6 @@ exports = Class(function(supr) {
 		return a + b + c + d + e;
 	};
 });
-
-exports.Uri = exports; // backwards compatibility?
 
 exports.relativeTo = function(url, base) {
 	url = String(url);
