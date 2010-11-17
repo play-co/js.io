@@ -36,7 +36,7 @@ if (jsio.__env.name == 'browser') {
 		if(!params) { params = 'div'; }
 		if(typeof params == 'string') { return doc.createElement(params); }
 	
-		var el = doc.createElement(params.tag || 'div');
+		var el = doc.createElement(params.tag || params.tagName || 'div');
 		if(params.style) { $.style(el, params.style); }
 		if(params.src) { el.src = params.src; }
 		if(params.attrs) {
