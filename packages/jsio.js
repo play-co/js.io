@@ -366,6 +366,7 @@
 		}
 		
 		if (!possibilities.length) {
+			if (opts.suppressErrors) { return false; }
 			var e = new Error('Module failed to load (again)');
 			e.jsioLogged = true;
 			throw e;
@@ -375,6 +376,7 @@
 			match;
 		
 		if (!moduleDef) {
+			if (opts.suppressErrors) { return false; }
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.path); }
 			throw new Error('Error in ' + fromDir + fromFile + ": requested import (" + modulePath + ") not found.\n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t'));
@@ -448,7 +450,7 @@
 		}
 		
 		if (result !== true) {
-			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result) || 'invalid jsio command: jsio(\'' + request + '\')');
+			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result || 'invalid jsio command: jsio(\'' + request + '\')'));
 		}
 		
 		return imports;
@@ -501,6 +503,7 @@
 			
 			try {
 				var moduleDef = loadModule(fromDir, fromFile, modulePath, opts);
+				if (moduleDef === false) { return false; }
 			} catch(e) {
 				if (!e.jsioLogged) {
 					ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n');
