@@ -9,6 +9,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	}
 
 	this.connectionMade = function() {
+		if (this._client && this._client.connectionMade) { this._client.connectionMade(); }
 		logger.debug("connectionMade");
 	}
 	
