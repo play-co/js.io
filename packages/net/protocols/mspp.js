@@ -115,7 +115,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
 	this.connectionLost = function(reason) {
 		loggers.protocol.debug('closed: '+reason);
 		this.state = state.closed;
-		for (stream in this.streams)
+		for (var stream in this.streams)
 			this.streams[stream].onclose(reason);
 	}
 

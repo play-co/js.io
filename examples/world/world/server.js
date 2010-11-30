@@ -29,7 +29,7 @@ exports.WorldServer = Class(Server, function(supr) {
 	};
 
 	this.broadcast = function(fName, fArgs, sender) {
-		for (name in this.players) {
+		for (var name in this.players) {
 			var conn = this.players[name];
 			if (conn === sender) { continue; }
 			try {

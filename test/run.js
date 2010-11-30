@@ -97,7 +97,7 @@ var TestModule = function (modulepath) {
     };
     var _loadTestsFromModule = function (test_filename) {
 	var tests = [];
-	for (name in self._code) {
+	for (var name in self._code) {
 	    if (self._isTest(name, self._code[name])) {
 		var test_case = new TestCase(name, self);
 		tests.push(test_case);
@@ -108,7 +108,7 @@ var TestModule = function (modulepath) {
     self._tests = _loadTestsFromModule(modulepath);
     
     self.run = function (result) {
-	for (testname in self._tests) {
+	for (var testname in self._tests) {
 	    var test = self._tests[testname];
 	    result.addTest(test);
 	    var module = self._code;
@@ -147,7 +147,7 @@ var TestSuite = function (dirname) {
 	var gatherer = posix.readdir(dirname);
 	gatherer.addCallback(
 	    function (files) {
-		for (i in files) {
+		for (var i in files) {
 		    var filename = files[i];
 		    var full_filename = [dirname, filename].join("/");
 		    var isDir = false;
@@ -184,7 +184,7 @@ var TestSuite = function (dirname) {
     _loadTestModules(dirname);
     
     self.run = function (result) {
-	for (i in self._modules) {
+	for (var i in self._modules) {
 	    var module = self._modules[i];
 	    module.run(result);
 	};
@@ -201,7 +201,7 @@ var suite = new TestSuite(target);
 suite.run(result);
 
 var events = result.events();
-for (i in events) {    
+for (var i in events) {    
     var event = events[i];
     process.stdio.write("===================================\n");
     process.stdio.write("Test: " + event.test.name + "\n");
@@ -211,8 +211,8 @@ for (i in events) {
 	process.stdio.write(event.error + "\n");
     if (event.logs.length > 0) {
 	process.stdio.write("*** captured logs ***\n");
-	for (i in event.logs) {
-	    process.stdio.write(event.logs[i]);
+	for (var j in event.logs) {
+	    process.stdio.write(event.logs[j]);
 	};
     };
 };

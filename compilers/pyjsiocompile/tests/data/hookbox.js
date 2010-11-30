@@ -111,7 +111,7 @@ HookBoxProtocol = Class([RTJPProtocol], function(supr) {
         switch(fName) {
             case 'CONNECTED':
                 this.connected = true;
-                for (key in this._subscriptions) {
+                for (var key in this._subscriptions) {
                     var fId = this.sendFrame('SUBSCRIBE', {channel_name: key});
                     this._errors[fId] = this._subscriptions[key];
                 }

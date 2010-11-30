@@ -142,7 +142,7 @@ var StompFrame = exports.StompFrame = Class(function() {
 	}
 	this.toString = function() {
 		var i = 0;
-		for (key in this._headers) {
+		for (var key in this._headers) {
 			++i;
 		}
 		return sprintf("[StompFrame method(%s), num-headers(%d), body-length(%d)]", 
@@ -159,7 +159,7 @@ var StompFrame = exports.StompFrame = Class(function() {
 	}
 	this.serialize = function() {
 		var output = this._method + '\n'
-		for (key in this._headers) {
+		for (var key in this._headers) {
 			output += key + ': ' + this._headers[key] + '\n';
 		}
 		output += 'content-length: ' + this._body.length + '\n';

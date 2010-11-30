@@ -121,7 +121,7 @@ exports.Session = Class(function() {
 	
 	var updatedHeaders = new Hash('gzipOk', 'contentType');
 	this.updateVars = function (params) {
-		for (param in params) {
+		for (var param in params) {
 			var key = varNames[param];
 			if (!key) continue;
 			var value = params[param];

@@ -18,7 +18,7 @@ var attrs = [
 var URI = exports = Class(function(supr) {
 	this.init = function(url, isStrict) {
 		if (url instanceof URI) {
-			for (attr in attrs) {
+			for (var attr in attrs) {
 				this['_' + attr] = url['_' + attr];
 			}
 			return;
@@ -27,7 +27,7 @@ var URI = exports = Class(function(supr) {
 		this._isStrict = isStrict;
 		
 		var uriData = exports.parse(url, isStrict);
-		for (attr in uriData) {
+		for (var attr in uriData) {
 			this['_' + attr] = uriData[attr];
 		};
 	}
