@@ -84,7 +84,7 @@ msp.ProxyConnection = Class(function() {
 	};
 	this.shutdown = function (had_error) {
 		// close all outgoing TCP connections			 
-		for (connectionId in this.outConnections) {
+		for (var connectionId in this.outConnections) {
 			if (had_error) {
 				this.closeOutgoing(connectionId, 'ProtocolError');
 			} else {
