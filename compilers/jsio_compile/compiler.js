@@ -51,13 +51,23 @@ exports.run = function(args, opts) {
 	interface.logger.setLevel(debugLevel);
 	logging.get('preprocessors.compiler').setLevel(debugLevel);
 	
-	if (debugLevel < 5) {
+	if (debugLevel >= 3) {
 		var strOpts = JSON.stringify(opts, null, '\t');
 		logger.info('Starting compiler with args: ', args, 'and options:', strOpts.substring(1, strOpts.length - 1));
 	}
 	
-//	debugger;
-	if (opts.jsioPath) { jsio.path.set(opts.jsioPath); }
+	// use external copy of jsio rather than cached copy
+	if (opts.jsioPath) {
+		// force the path
+		jsio.path.set([opts.jsioPath]);
+		
+		// delete the cache copy
+		var sourceCache = jsio.__jsio.__srcCache;
+		for (var i in sourceCache) {
+			delete sourceCache[i];
+		}
+	}
+	
 	if (opts.path) {
 		for(var i = 0, len = opts.path.length; i < len; ++i) {
 			if (opts.path[i]) {
@@ -65,6 +75,8 @@ exports.run = function(args, opts) {
 			}
 		}
 	}
+	
+	logger.info('js.io path:', JSON.stringify(jsio.path.get()));
 	
 	var initial;
 	
