@@ -37,6 +37,9 @@ exports = Class(function() {
 	
 	this.jumpTo = function(s) {
 		this._s1 = this._s0 = s;
+		this._t0 = 0;
+		this._dt = 1;
+		this._ds = 0;
 		this.animate();
 		return this; 
 	}

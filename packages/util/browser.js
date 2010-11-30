@@ -2,15 +2,8 @@ if (jsio.__env.name == 'browser') {
 	jsio('external .sizzle import Sizzle');
 	jsio('import math2D.Rect');
 	
-	var DOM2 = typeof HTMLElement === "object";
-	function isElement(el) {
-		return el && 
-			(DOM2 ? el instanceof HTMLElement
-				: typeof el.nodeType == 'number' && typeof el.nodeName == 'string');
-	}
-	
 	function isWindow(el) {
-		return el && !isElement(el) && isElement(el.document);
+		return el && !$.isElement(el) && $.isElement(el.document);
 	}
 	
 	var singleId = /^#([\w-]+)$/;
@@ -18,9 +11,9 @@ if (jsio.__env.name == 'browser') {
 	var $ = exports.$ = function(selector, win) {
 		switch(typeof selector) {
 			case 'object':
-				if (isElement(selector)) {
+				if ($.isElement(selector)) {
 					return $.remove(selector);
-				} else if (isElement(selector.document && selector.document.body)) {
+				} else if ($.isElement(selector.document && selector.document.body)) {
 					return $.size(selector);
 				}
 				return $.create(selector);
@@ -29,7 +22,14 @@ if (jsio.__env.name == 'browser') {
 				return Sizzle.apply(GLOBAL, arguments);
 		}
 	}
-
+	
+	var DOM2 = typeof HTMLElement === "object";
+	$.isElement = function(el) {
+		return el && 
+			(DOM2 ? el instanceof HTMLElement
+				: typeof el.nodeType == 'number' && typeof el.nodeName == 'string');
+	}
+	
 	$.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
 
 	$.apply = function(el, params) {
@@ -252,7 +252,7 @@ if (jsio.__env.name == 'browser') {
 	}
 	
 	$.size = function(el) {
-		if (isElement(el)) {
+		if ($.isElement(el)) {
 			return {width: el.offsetWidth, height: el.offsetHeight};
 		} else if (el.document) {
 			var doc = el.document.documentElement || el.document.body;
@@ -263,5 +263,16 @@ if (jsio.__env.name == 'browser') {
 				el.innerHeight || (doc.clientHeight || doc.clientHeight)
 			);
 		}
+	}
+	
+	$.insertCSSFile = function(filename) {
+		document.getElementsByTagName('head')[0].appendChild($({
+			tag: 'link',
+			attrs: {
+				rel: 'stylesheet',
+				type: 'text/css',
+				href: filename
+			}
+		}));
 	}
 }
