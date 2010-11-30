@@ -1,5 +1,5 @@
 jsio('from base import *');
-var logger = logging.get('jsjsiocompiler');
+var logger = logging.get('jsio_compiler');
 
 var JSIO = 'jsio';
 
@@ -10,7 +10,7 @@ var supportedEnvs = {
 
 var interface = null;
 
-exports.start = function() {
+exports.start = function(/*optional*/ args, opts) {
 	if (!jsio.__env.name in supportedEnvs) {
 		logger.error("autostart failed: unknown environment.\n\n\tTry using compiler.run(args, opts) instead.");
 		return;
@@ -21,7 +21,7 @@ exports.start = function() {
 	interface = jsio(DYNAMIC_IMPORT_COMPILER);
 	
 	// expects the interface to eventually call startWithOpts to do the actual compile
-	interface.init(exports);
+	interface.init(exports, args, opts);
 }
 
 function getPackage(fileName) {
@@ -54,6 +54,16 @@ exports.run = function(args, opts) {
 	if (debugLevel < 5) {
 		var strOpts = JSON.stringify(opts, null, '\t');
 		logger.info('Starting compiler with args: ', args, 'and options:', strOpts.substring(1, strOpts.length - 1));
+	}
+	
+//	debugger;
+	if (opts.jsioPath) { jsio.path.set(opts.jsioPath); }
+	if (opts.path) {
+		for(var i = 0, len = opts.path.length; i < len; ++i) {
+			if (opts.path[i]) {
+				jsio.path.add(opts.path[i]);
+			}
+		}
 	}
 	
 	var initial;
@@ -147,8 +157,18 @@ exports.run = function(args, opts) {
 		}
 	}
 	
+	var result = initial.match(/^(.*)\.js$/);
+	if (result) {
+		initial = result[1];
+		if (initial.charAt[0] != '/' && initial.charAt[0] != '.') {
+			initial = './' + initial;
+		}
+	}
+	
 	// run the actual compiler
 	var compiler = jsio('import preprocessors.compiler');
+	if (opts.compressor) { compiler.setCompressor(opts.compressor); }
+	
 	compiler.compile('import base');
 	
 	if (opts.additionalDeps) {

@@ -7,11 +7,11 @@ exports.rand = Math.random;
 exports.int = exports.truncate = function(a) { return a | 0; }
 
 var round = exports.round = function(a, precision, method) {
+	if (!method || method == round.ROUND_HALF_AWAY_FROM_ZERO) {
+		return a.toFixed(precision);
+	}
+	
 	if(!precision) {
-		if (!method || method == round.ROUND_HALF_AWAY_FROM_ZERO) {
-			return a > 0 ? Math.floor(a + 0.5) : Math.ceil(a - 0.5);
-		}
-		
 		if (method == round.ROUND_HALF_UP) { Math.round(a); }
 		
 		var int = a | 0,
@@ -33,9 +33,11 @@ var round = exports.round = function(a, precision, method) {
 	}
 	
 	var int = a | 0,
-		frac = a - int;
-	return int + round(frac * Math.pow(10, precision), 0, method);
+		frac = a - int,
+		p = Math.pow(10, precision);
+	return (int + round(frac * p, 0, method) / p).toFixed(precision);
 }
 
-exports.round = Enum('ROUND_HALF_UP', 'ROUND_HALF_AWAY_FROM_ZERO', 'ROUND_HALF_TO_EVEN', 'ROUND_HALF_STOCHASTIC', 'ROUND_HALF_ALTERNATE');
-exports.round.alt = true;
+round.alt = true;
+
+Enum.call(round, 'ROUND_HALF_UP', 'ROUND_HALF_AWAY_FROM_ZERO', 'ROUND_HALF_TO_EVEN', 'ROUND_HALF_STOCHASTIC', 'ROUND_HALF_ALTERNATE');

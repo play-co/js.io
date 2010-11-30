@@ -56,7 +56,7 @@ exports.rotate = function(a, count) {
 	
 	if (j < 0) {
 		j = j % len;
-		if (j) { j %= len; }
+		if (j) { j += len; }
 	}
 	
 	for (var i = 0; i < len; ++i) {

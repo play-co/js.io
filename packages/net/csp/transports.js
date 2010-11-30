@@ -122,7 +122,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 	
 	this.comet = function(url, sessionKey, lastEventId, options) {
 		logger.debug('comet:', url, sessionKey, lastEventId, options);
-		args = {
+		var args = {
 			s: sessionKey,
 			a: lastEventId
 		};

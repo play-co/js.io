@@ -42,19 +42,19 @@ POSSIBILITY OF SUCH DAMAGE.
  *
  * EXAMPLES:
  *   // No arguments  - returns RFC4122, version 4 ID
- *   >>> Math.uuid()
+ *   >>> std.uuid()
  *   "92329D39-6F5C-4520-ABFC-AAB64544E172"
  * 
  *   // One argument - returns ID of the specified length
- *   >>> Math.uuid(15)	 // 15 character ID (default base=62)
+ *   >>> std.uuid(15)	 // 15 character ID (default base=62)
  *   "VcydxgltxrVZSTV"
  *
  *   // Two arguments - returns ID of the specified length, and radix. (Radix must be <= 62)
- *   >>> Math.uuid(8, 2)  // 8 character ID (base=2)
+ *   >>> std.uuid(8, 2)  // 8 character ID (base=2)
  *   "01001010"
- *   >>> Math.uuid(8, 10) // 8 character ID (base=10)
+ *   >>> std.uuid(8, 10) // 8 character ID (base=10)
  *   "47473046"
- *   >>> Math.uuid(8, 16) // 8 character ID (base=16)
+ *   >>> std.uuid(8, 16) // 8 character ID (base=16)
  *   "098F4D35"
  */
 

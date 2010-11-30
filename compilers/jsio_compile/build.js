@@ -1,4 +1,6 @@
-/** run "node build.js" to generate the jsjsiocompiler **/
+#!/usr/local/bin/node
+
+// run "node build.js" to generate a self-contained jsio_compile script
 
 var TARGET = 'build/jsio_compile';
 
@@ -60,7 +62,7 @@ exec("which " + node, function(error, stdout, stderr) {
 	exec(nodeLocation + " --version", function(error, stdout, stderr) {
 		var nodeVersion = stdout.replace(/\n/g, '');;
 		logger.info('Using node version', nodeVersion);
-		compiler.generateSrc({compressJsio: true, dontModifyJsio: true}, function(src) {
+		compiler.generateSrc({compressResult: true, preserveJsioSource: true}, function(src) {
 			var fd = fs.openSync(TARGET, 'w');
 			fs.writeSync(fd, '#!' + nodeLocation + '\n');
 			fs.writeSync(fd, src);

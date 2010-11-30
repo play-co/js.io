@@ -2,6 +2,7 @@
 
 ;(function() {
 	var SLICE = Array.prototype.slice,
+		DEBUG = true,
 		ENV,
 		rexpEndSlash = /\/$/,
 		makeModuleDef = function(path, baseMod, basePath) {
@@ -77,14 +78,14 @@
 					baseMod = pathSegments[0],
 					pathString = pathSegments.join('/');
 				
-				if (baseMod in jsio.__path) {
-					return [makeModuleDef(util.buildPath(jsio.__path[baseMod], pathString))];
+				if (jsio.path.cache.hasOwnProperty(baseMod)) {
+					return [makeModuleDef(util.buildPath(jsio.path.cache[baseMod], pathString))];
 				}
 				
 				var out = [],
-					paths = jsio.__path.__default__;
-				
-				for (var i = 0, len = paths.length; i < len; ++i) {
+					paths = jsio.path.get(),
+					len = paths.length;
+				for (var i = 0; i < len; ++i) {
 					out.push(makeModuleDef(util.buildPath(paths[i], pathString), baseMod, paths[i]));
 				}
 				return out;
@@ -113,29 +114,27 @@
 		this.__jsio = this;
 		this.__importer = importer;
 		this.__modules = {preprocessors:{}};
-		this.__path = {__default__:[]};
+		
+		this.path = {
+			set: function(path) { this.value = (typeof path == 'string' ? [path] : path); },
+			get: function() { return this.value.slice(0); },
+			add: function(path) { this.value.push(path); },
+			remove: function(path) {
+				var v = this.value, len = v.length;
+				for (var i = 0; i < len; ++i) {
+					if (v[i] == path) {
+						v.splice(i, 1);
+					}
+				}
+			},
+			value: [],
+			cache: {}
+		};
+		
+		this.addPath = util.bind(this.path, 'add');
 		
 		this.setCachedSrc = function(path, src) { sourceCache[path] = { path: path, src: src }; }
 		this.getCachedSrc = function(path) { return sourceCache[path]; }
-		
-		this.setPath = function(path) { this.__path.__default__ = typeof path == 'string' ? [path] : path; }
-		this.addPath = function(path, baseModule) {
-			if (baseModule) {
-				this.__path[baseModule] = path;
-			} else {
-				this.__path.__default__.push(path);
-			}
-		}
-		
-		this.removePath = function(path) {
-			var paths = this.__path.__default__;
-			for(var i = 0, j = paths.length; i < j; ++i) {
-				if (paths[i] == path) {
-					paths.splice(i, 1);
-					break;
-				}
-			}
-		}
 		
 		this.addPreprocessor = function(name, preprocessor) { this.__preprocessors[name] = preprocessor; }
 		this.addCmd = function(processor) { this.__cmds.push(processor); }
@@ -157,7 +156,7 @@
 			
 			this.__env = ENV;
 			this.__dir = ENV.getCwd();
-			this.setPath(ENV.getPath());
+			this.path.set(ENV.getPath());
 		}
 	}).call(exports);
 	
@@ -273,24 +272,26 @@
 			: function(src, path) { var src = src + '\n//@ sourceURL=' + path; return window.eval(src); };
 
 		// provide an eval with reasonable debugging
-		this.eval = function(code, path) {
-			try { return rawEval(code, this.debugPath(path)); } catch(e) {
+		this.eval = function(code, path, origCode) {
+			try {
+				return rawEval(code, this.debugPath(path));
+			} catch(e) {
 				if(e instanceof SyntaxError) {
 					ENV.log("a syntax error is preventing execution of " + path);
-					try {
-						var cb = function() {
-							var el = document.createElement('iframe');
-							el.style.cssText = "position:absolute;top:-999px;left:-999px;width:1px;height:1px;visibility:hidden";
-							el.src = 'javascript:document.open();document.write(window.parent.CODE_WITH_ERROR)';
-							window.CODE_WITH_ERROR = "<scr"+"ipt>" + code + "</scr"+"ipt>"
-							setTimeout(function() {try{document.body.appendChild(el)}catch(e){}}, 0);
-						};
-						if (document.body) { cb(); }
-						else { window.addEventListener('load', cb, false); }
-					} catch(f) {}
+					if (DEBUG && this.checkSyntax) {
+						this.checkSyntax(origCode, path);
+					}
 				}
 				throw e;
 			}
+		}
+		
+		this.checkSyntax = function(code, path) {
+			try {
+				var syntax = jsio('import util.syntax', {suppressErrors: true, dontExport: true}),
+					result = syntax(code);
+				syntax.display(result, path);
+			} catch(e) {}
 		}
 		
 		this.fetch = function(path) {
@@ -362,6 +363,7 @@
 		}
 		
 		if (!possibilities.length) {
+			if (opts.suppressErrors) { return false; }
 			var e = new Error('Module failed to load (again)');
 			e.jsioLogged = true;
 			throw e;
@@ -371,6 +373,7 @@
 			match;
 		
 		if (!moduleDef) {
+			if (opts.suppressErrors) { return false; }
 			var paths = [];
 			for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.path); }
 			throw new Error('Error in ' + fromDir + fromFile + ": requested import (" + modulePath + ") not found.\n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t'));
@@ -378,8 +381,8 @@
 		
 		moduleDef.friendlyPath = modulePath;
 		
-		if (moduleDef.baseMod && !(moduleDef.baseMod in jsio.__path)) {
-			jsio.addPath(moduleDef.basePath, moduleDef.baseMod);
+		if (moduleDef.baseMod && !(moduleDef.baseMod in jsio.path.cache)) {
+			jsio.path.cache[moduleDef.baseMod] = moduleDef.basePath;
 		}
 		
 		// the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
@@ -405,13 +408,15 @@
 	}
 	
 	function getPreprocessor(name) {
-		var modName = 'preprocessors.' + name;
-		return typeof name == 'function' ? name : jsio.__modules[modName] || jsio('import preprocessors.' + name, {dontExport: true});
+		return typeof name == 'function'
+			? name
+			: (jsio.__modules['preprocessors.' + name] 
+				|| jsio('import preprocessors.' + name, {dontExport: true}));
 	}
 	
 	function execModuleDef(context, moduleDef) {
 		var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\/.]/g, '_') + "(){" + moduleDef.src + "\n}}})";
-		var fn = ENV.eval(code, moduleDef.path);
+		var fn = ENV.eval(code, moduleDef.path, moduleDef.src);
 		try {
 			fn = fn(context);
 			fn.call(context.exports);
@@ -444,7 +449,7 @@
 		}
 		
 		if (result !== true) {
-			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result) || 'invalid jsio command: jsio(\'' + request + '\')');
+			throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result || 'invalid jsio command: jsio(\'' + request + '\')'));
 		}
 		
 		return imports;
@@ -472,17 +477,18 @@
 		ctx.jsio.__dir = moduleDef.directory;
 		ctx.jsio.__filename = moduleDef.filename;
 		ctx.jsio.__path = modulePath;
+		ctx.jsio.path = jsio.path;
 		return ctx;
 	};
 	
-	function importer(context, fromDir, fromFile, request, opts) {
+	function importer(boundContext, fromDir, fromFile, request, opts) {
 		opts = opts || {};
 		fromDir = fromDir || './';
 		fromFile = fromFile || '<initial file>';
 		
 		// importer is bound to a module's (or global) context -- we can override this
 		// by using opts.context
-		context = opts.context || context || ENV.global;
+		var context = opts.context || boundContext || ENV.global;
 		
 		// parse the import request(s)
 		var imports = resolveImportRequest(context, request, opts),
@@ -497,6 +503,7 @@
 			
 			try {
 				var moduleDef = loadModule(fromDir, fromFile, modulePath, opts);
+				if (moduleDef === false) { return false; }
 			} catch(e) {
 				if (!e.jsioLogged) {
 					ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n');

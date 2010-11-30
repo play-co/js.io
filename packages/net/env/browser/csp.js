@@ -11,7 +11,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		conn.ondisconnect = bind(this, 'onDisconnect');
 		
 		logger.debug('opening the connection');
-		this._opts.encoding = 'plain';
+		if (!this._opts.encoding) { this._opts.encoding = 'plain'; }
 		var url = this._opts.url;
 		delete this._opts.url;
 		conn.connect(url, this._opts);//{encoding: 'plain'});
@@ -33,7 +33,7 @@ var Transport = Class(net.interfaces.Transport, function() {
 	}
 	
 	this.write = function(data) {
-		this._conn.write(this._encoding == 'utf8' ? utf8.encode(data) : data);
+		this._conn.write(data);
 	}
 	
 	this.loseConnection = function(protocol) {

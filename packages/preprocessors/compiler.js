@@ -7,7 +7,7 @@ var sourceCache = /jsio.__srcCache\s*=\s*\{\s*\}/,
 	jsioAddPath = /jsio\.addPath\s*\(\s*(['"][^'"]+?['"])\s*\)/g,
 	jsioNormal = /jsio\s*\(\s*(['"].+?['"])\s*(,\s*\{[^}]+\})?\)/g,
 	jsioDynamic = /jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/g,
-	srcTable = {};
+	gSrcTable = {};
 
 exports = function(path, moduleDef, opts) {
 	opts = opts || {};
@@ -15,21 +15,21 @@ exports = function(path, moduleDef, opts) {
 	logger.info('compiling', moduleDef.path);
 	
 	// prevent double import
-	if (srcTable[moduleDef.path]) {
+	if (gSrcTable[moduleDef.path]) {
 		moduleDef.src = '';
 		return;
 	}
-	srcTable[moduleDef.path] = true;
+	gSrcTable[moduleDef.path] = true;
 	
 	var self = moduleDef.path;
 	
 	if (opts.path) {
 		if (JS.isArray(opts.path)) {
 			for (var i = 0, len = opts.path.length; i < len; ++i) {
-				JSIO.addPath(opts.path);
+				jsio.path.add(opts.path);
 			}
 		} else if (typeof opts.path == 'string') {
-			JSIO.addPath(opts.path);
+			jsio.path.add(opts.path);
 		}
 	}
 	
@@ -41,7 +41,7 @@ exports = function(path, moduleDef, opts) {
 			if (!match) { break; }
 			logger.debug('found path ' + match[1]);
 			try {
-				JSIO.addPath(eval(match[1]));
+				jsio.path.add(eval(match[1]));
 			} catch(e) {
 				logger.warn('failed to add path ' + match[1]);
 			}
@@ -102,50 +102,74 @@ exports = function(path, moduleDef, opts) {
 		}
 	}
 	
-	srcTable[moduleDef.path] = JS.shallowCopy(moduleDef);
+	gSrcTable[moduleDef.path] = JS.shallowCopy(moduleDef);
 	moduleDef.src = '';
 }
 
-var compressor;
-exports.setCompressor = function(_compressor) { compressor = _compressor; }
+exports.reset = function() {
+	gSrcTable = {};
+}
 
+/**
+ * set the compressor function, which has the signature:
+ *    function (string source, function callback)
+ */
+var gActiveCompressor;
+exports.setCompressor = function(compressor) { gActiveCompressor = compressor; }
+
+/**
+ * opts.compressSources: compress each source file ** requires an active compressor (see exports.setCompressor)
+ * opts.compressResult: compress the resulting file ** requires an active compressor (see exports.setCompressor)
+ * opts.includeJsio: include a copy of jsio.js in the output
+ * opts.preserveJsioSource: don't modify the included copy of jsio.js (useful if the code will be used in another run of the jsio compiler)
+ */
 exports.generateSrc = function(opts, callback) {
-	var opts = opts || {};
+	
+	var opts = JS.merge(opts, {
+			compressSources: false,
+			includeJsio: true,
+			preserveJsioSource: false
+		});
 
 	var cb = bind(this, buildJsio, opts, callback);
 	if (opts.compressSources) {
-		compressTable(srcTable, opts, cb);
+		compressTable(gSrcTable, opts, cb);
 	} else {
 		cb();
 	}
 }
 
 exports.getPathJS = function() {
-	var path = JS.shallowCopy(JSIO.__path);
-	path.__default__ = [];
-	return 'jsio.__path=' + JSON.stringify(path) + ';';
+	return 'jsio.path.set(' + JSON.stringify(jsio.path.get()) + ');jsio.path.cache=' + JSON.stringify(jsio.path.cache) + ';';
 }
 
 function buildJsio(opts, callback) {
 	var src,
-		jsioSrc = (opts.dontIncludeJsio ? ''
-			: ';(' + jsio.__jsio.__init__.toString(-1) + ')();')
+		jsioSrc = (opts.includeJsio ? ';(' + jsio.__jsio.__init__.toString(-1) + ')();' : '')
 				+ exports.getPathJS();
 	
-	if (opts.dontModifyJsio || opts.dontIncludeJsio) {
+	// if we're not allowed to modify the jsio source or we're not including the jsio source
+	// then use jsio.setCachedSrc to include the source strings
+	if (opts.preserveJsioSource || !opts.includeJsio) {
+		logger.info('using setCachedSrc');
+		
 		var lines = [];
-		for (var i in srcTable) {
-			lines.push("jsio.setCachedSrc('" + srcTable[i].path + "'," + JSON.stringify(srcTable[i].src) + ");");
+		for (var i in gSrcTable) {
+			lines.push("jsio.setCachedSrc('" + gSrcTable[i].path + "'," + JSON.stringify(gSrcTable[i].src) + ");");
 		}
 		src = jsioSrc + lines.join('\n');
 	} else {
-		// use a function to avoid having to do some crazy escaping of '$' in the replacement string!
-		src = jsioSrc.replace(sourceCache, function(match) { return "jsio.__srcCache=" +  JSON.stringify(srcTable); });
+		logger.info('writing srcCache');
+		
+		// otherwise we can just look for the jsio.__srcCache variable and inline the compiled
+		// source as a JSON string.  We need to use a function here to avoid some ugly escaping
+		// of '$' in the replacement string.
+		src = jsioSrc.replace(sourceCache, function(match) { return "jsio.__srcCache=" +  JSON.stringify(gSrcTable); });
 	}
 	
-	if (opts.compressJsio || opts.compressSources) {
+	if (opts.compressResult) {
 		logger.info('compressing final code...');
-		compressor(src, callback);
+		gActiveCompressor(src, callback);
 	} else {
 		callback(src);
 	}
@@ -163,7 +187,7 @@ function compressTable(table, opts, callback) {
 function compressStep(queue, table, key, callback) {
 	if (key) {
 		logger.log('compressing', key + '...');
-		compressor(table[key].src, function(result) {
+		gActiveCompressor(table[key].src, function(result) {
 			table[key].src = result;
 			compressStep(queue, table, queue.pop(), callback);
 		});
@@ -172,11 +196,11 @@ function compressStep(queue, table, key, callback) {
 	}
 }
 
-exports.getTable = function() { return srcTable; }
+exports.getTable = function() { return gSrcTable; }
 
 exports.compile = function(statement, opts) {
 	var newOpts = mergeOpts({reload: true}, opts);
-	JSIO.__jsio(statement, newOpts);
+	JSIO(statement, newOpts);
 }
 
 function run(moduleDef, cmd, opts, inlineOpts) {

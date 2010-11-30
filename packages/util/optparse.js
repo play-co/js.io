@@ -37,10 +37,11 @@ function addArg(result, optsDef, argv, i) {
 	var val,
 		srcName = argv[i],
 		itemSchema = optsDef[argv[i]],
-		len = argv.length;
+		len = argv.length,
+		itemType = itemSchema.type.toLowerCase();
 	
 	++i;
-	switch(itemSchema.type.toLowerCase()) {
+	switch(itemType) {
 		case 'boolean':
 			val = true;
 			--i;
@@ -59,11 +60,11 @@ function addArg(result, optsDef, argv, i) {
 			var buf = argv[i];
 			while(true) {
 				try {
-					var val = JSON.parse(buf);
+					var val = eval(buf);
 					break;
 				} catch(e) {}
 				++i;
-				if (i >= len) { ERROR('Could not parse "' + argv[i] + '": ' + itemSchema.type); }
+				if (i >= len) { ERROR('Could not parse "' + argv[i] + '": ' + itemSchema.type + '\n' + buf + '\n' + JSON.stringify(argv)); }
 				buf += argv[i];
 			}
 			break;
@@ -89,22 +90,25 @@ function addArg(result, optsDef, argv, i) {
 }
 
 exports = function(argv, origDef) {
-	var optsDef = JS.shallowCopy(origDef);
+	var optsDef = JS.shallowCopy(origDef),
+		result = {};
 	for (var i in optsDef) {
-		var also = optsDef[i].also;
+		var opt = optsDef[i];
+		if ('default' in opt) { result[opt.name] = opt.default; }
+		
+		var also = opt.also;
 		if (also) {
 			if (JS.isArray(also)) {
 				for (var j = 0, len = also.length; j < len; ++j) {
-					addAlso(optsDef, also[j], optsDef[i]);
+					addAlso(optsDef, also[j], opt);
 				}
 			} else {
-				addAlso(optsDef, also, optsDef[i]);
+				addAlso(optsDef, also, opt);
 			}
 		}
 	}
 	
 	var unprocessed = [],
-		result = {},
 		i = 0,
 		len = argv.length;
 	

@@ -1,5 +1,6 @@
 if (jsio.__env.name == 'browser') {
 	jsio('external .sizzle import Sizzle');
+	jsio('import math2D.Rect');
 	
 	var DOM2 = typeof HTMLElement === "object";
 	function isElement(el) {
@@ -31,33 +32,60 @@ if (jsio.__env.name == 'browser') {
 
 	$.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
 
-	$.create = function(params) {
-		var doc = (params.win || window).document;
-		if(!params) { params = 'div'; }
-		if(typeof params == 'string') { return doc.createElement(params); }
-	
-		var el = doc.createElement(params.tag || 'div');
-		if(params.style) { $.style(el, params.style); }
-		if(params.src) { el.src = params.src; }
-		if(params.attrs) {
+	$.apply = function(el, params) {
+		if (params.attrs) {
 			for(attr in params.attrs) {
 				el.setAttribute(attr, params.attrs[attr]);
 			}
 		}
 		
-		if(params['class'] || params['className']) {
+		if (params.style) { $.style(el, params.style); }
+		if (params.src) { el.src = params.src; }
+		if (params['class'] || params['className']) {
 			el.className = params['class'] || params['className'];
 		}
 		
-		if(params.parent) { params.parent.appendChild(el); }
-		if ('before' in params) {
-			if (params.before) {
-				params.before.parentNode.insertBefore(el, params.before);
-			}
+		var parent = params.parent || params.parentNode;
+		if (params.before) {
+			$.insertBefore(params.before.parentNode || parent, el, params.before);
+		} else if (params.after) {
+			$.insertAfter(params.after.parentNode || parent, el, params.after);
+		} else if (parent) {
+			parent.appendChild(el);
 		}
-		if(params.html) { el.innerHTML = params.html; }
-		if(params.text) { $.setText(el, params.text); }
+		
+		if (params.html) { el.innerHTML = params.html; }
+		if (params.text) { $.setText(el, params.text); }
 		return el;
+	}
+	
+	$.insertBefore = function(parentNode, el, beforeNode) {
+		if (!parentNode || !el) { return; }
+		if (beforeNode && beforeNode.parentNode == parentNode) {
+			parentNode.insertBefore(el, beforeNode);
+		} else {
+			parentNode.appendChild(el);
+		}
+	}
+	
+	$.insertAfter = function(parentNode, el, afterNode) {
+		if (!parentNode || !el) { return; }
+		if (!afterNode || afterNode.parentNode != parentNode) {
+			$.insertBefore(parentNode, el, parentNode.firstChild);
+		} else if (!afterNode.nextSibling) {
+			parentNode.appendChild(el);
+		} else {
+			parentNode.insertBefore(el, afterNode.nextSibling);
+		}
+	}
+
+	$.create = function(params) {
+		var doc = (params.win || window).document;
+		if (!params || typeof params == 'string') {
+			return doc.createElement(params || 'div');
+		};
+
+		return $.apply(doc.createElement(params.tag || params.tagName || 'div'), params);
 	}
 
 	$.show = function(el, how) { $.id(el).style.display = how || 'block'; }
@@ -65,6 +93,7 @@ if (jsio.__env.name == 'browser') {
 
 	// accepts an array or a space-delimited string of classNames
 	$.addClass = function(el, classNames) {
+		if (!el) { return; }
 		var el = $.id(el);
 		if(typeof classNames == "string") {
 			classNames = classNames.split(' ');
@@ -84,6 +113,7 @@ if (jsio.__env.name == 'browser') {
 	$.getTag = function(from, tag) { return from.getElementsByTagName(tag); }
 
 	$.removeClass = function(el, classNames) {
+		if (!el) { return; }
 		var el = $.id(el);
 		el.className = (' ' + el.className + ' ')
 			.replace(' ', '  ')
@@ -225,10 +255,13 @@ if (jsio.__env.name == 'browser') {
 		if (isElement(el)) {
 			return {width: el.offsetWidth, height: el.offsetHeight};
 		} else if (el.document) {
-			return {
-				width: el.innerWidth || (el.document.documentElement.clientWidth || el.document.body.clientWidth),
-				height: el.innerHeight || (el.document.documentElement.clientHeight || el.document.body.clientHeight)
-			};
+			var doc = el.document.documentElement || el.document.body;
+			return new math2D.Rect(
+				doc.offsetTop,
+				doc.offsetLeft,
+				el.innerWidth || (doc.clientWidth || doc.clientWidth),
+				el.innerHeight || (doc.clientHeight || doc.clientHeight)
+			);
 		}
 	}
 }
