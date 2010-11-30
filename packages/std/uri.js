@@ -88,7 +88,7 @@ exports.resolveRelative = function(url) {
 
 exports.buildQuery = function(kvp) {
 	var pairs = [];
-	for (key in kvp) {
+	for (var key in kvp) {
 		pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(kvp[key]));
 	}
 	return pairs.join('&');
