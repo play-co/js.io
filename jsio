@@ -1,0 +1,259 @@
+#!/usr/local/bin/node
+
+require('./packages/jsio');
+var path = require('path');
+var fs = require('fs');
+var url = require('url');
+var spawn = require('child_process').spawn;
+
+jsio('import util.optparse');
+jsio('from base import *');
+jsio('import preprocessors.compiler');
+jsio('import lib.Enum');
+
+process.on('uncaughtException', function (err) {
+	console.log('Caught exception: ' + err);
+	console.log(err.stack);
+});
+
+var httpOpts = {
+	'-p': {
+		also: '--port',
+		name: 'port',
+		type: 'integer',
+		description: 'Port number to run js.io development server on',
+		default: 8080
+	},
+	'-i': {
+		also: '--index',
+		name: 'index',
+		type: 'string',
+		description: 'Path to a JS file that will be compiled and served when requesting /'
+	},
+	'-j': {
+		also: '--jsio',
+		name: 'jsio',
+		type: 'string',
+		description: 'Path to js.io/packages/'
+	},
+	'-c': {
+		also: '--compress',
+		name: 'compress',
+		type: 'boolean',
+		description: 'Run js.io compiler to merge dependencies for http requests'
+	},
+	'-d': {
+		also: '--directory',
+		name: 'directory',
+		type: 'string',
+		description: 'Path to directory for serving files (same as 3rd argument to "jsio serve <directory>")',
+		default: process.argv[3]
+	}
+};
+
+var cmd = process.argv[2],
+	cmds = ['compile', 'serve', 'help'],
+	where = '\n\twhere command is one of:\n\t\t' + cmds.join('\n\t\t');
+	
+if (!(cmd in lib.Enum(cmds))) {
+	util.optparse.printUsage('<node> jsio <command>' + where);	
+}
+
+switch(cmd) {
+	case 'serve':
+		var opts = util.optparse(process.argv, httpOpts).opts;
+		if (!opts.directory) { failOpts('<node> jsio serve <directory>', httpOpts); }
+		startServer(opts);
+		break;
+	case 'compile':
+		
+		// TODO: remove this path hackery!
+		var pathStat = jsio.__util.splitPath(__filename),
+			path = jsio.__util.makeRelativePath(pathStat.directory, process.cwd()),
+			oldPath = jsio.path.get();
+		
+		jsio.path.set(path);
+		
+		// the compiler expects args[2] == initial import
+		var args = process.argv.slice(1),
+			compileOpts = jsio('compilers/jsio_compile/optsDef'),
+			compiler = jsio('compilers/jsio_compile/compiler'),
+			result = util.optparse(args, compileOpts);
+		
+		jsio.path.set(oldPath);
+		jsio.path.add('lib');
+		
+		console.log(JSON.stringify(result));
+		
+		compiler.start(result.args, result.opts);
+		break;
+	case 'help':
+		var cmd = process.argv[3];
+		if (!cmd) { failOpts('<node> jsio help <command>' + where); }
+		// TODO
+		break;
+}
+
+function failOpts(msg, opts) {
+	util.optparse.printUsage('<node> jsio <command> <path>\n\twhere command is one of:\n\t\tserve\n\t\thelp', opts);
+	process.exit(1);
+}
+
+var MIME = {
+	'.txt': 'text/plain',
+	'.css': 'text/css; charset=utf-8',
+	'.js': 'text/javascript; charset=utf-8',
+	'.html': 'text/html; charset=utf-8',
+	'.jpg': 'image/jpeg',
+	'.jpeg': 'image/jepg',
+	'.gif': 'image/gif',
+	'.png': 'image/png'
+};
+
+function startServer(opts) {
+	if (opts.index) {
+		var result = opts.index.match(/^(.*)\.js$/);
+		if (result) {
+			opts.index = result[1];
+			if (opts.index.charAt(0) != '/' && opts.index.charAt(0) != '.') { opts.index = './' + opts.index; }
+		}
+	}
+	
+	var http = require('http'),
+		JsioServer = Class(function() {
+			this.init = function(opts) {
+				this._opts = opts;
+				this._compileOpts = {
+					path: JSON.stringify(['lib']),
+					jsio: opts.jsio
+				};
+				
+				if (opts.index) {
+					console.log('mapping / to "' + opts.index + '"');
+				}
+			}
+			
+			this.onRequest = function(request, response) {
+				var uri = url.parse(request.url, true),
+					pathname = uri.pathname;
+				
+				var req = {
+						uri: uri,
+						pathname: pathname,
+						filename: path.join(this._opts.directory, pathname),
+						response: response
+					};
+				
+				if (pathname == '/' && this._opts.index) { return this.sendIndexHTML(req, this._opts.index); }
+				if (pathname == '/.js') { return this.sendJS(req, this._opts.index); }
+				
+				if (pathname.substring(0, 6) == '/jsio/') {
+					req.filename = path.join(jsio.__env.getPath(), pathname.substring(6));
+				}
+				
+				path.exists(req.filename, bind(this, 'sendFileIfExists', req));
+			}
+			
+			this.sendIndexHTML = function(req, cmd) {
+				compress(this._opts.directory, this._compileOpts, cmd, bind(this, function(src) {
+					this.send200(req, "<!doctype html>\n<script>" + src + "</script><body onload='jsio(\"" + cmd + "\")'></body>", 'text/html; charset=utf-8');
+				}));
+			}
+			
+			this.sendJS = function(req, cmd) {
+				compress(this._opts.directory, this._compileOpts, cmd, bind(this, function(src) {
+					this.send200(req, src, 'text/javascript');
+				}));
+			}
+			
+			this.send200 = function(req, body, mime) {
+				// TODO: 'Content-Length': body.length <-- isn't accurate
+				req.response.writeHead(200, {'Content-Type': mime || this.getMime(req)});
+				req.response.write(body, 'utf8');
+				req.response.end();
+				console.log('200', req.pathname);
+			}
+			
+			this.sendFileIfExists = function(req, exists) {
+				if (!exists) {
+					this.onError(req, 404, 'File not found.');
+				} else {
+					this.sendFile(req);
+				}
+			}
+			
+			this.sendFile = function(req) {
+				fs.open(req.filename, 'r', bind(this, function(err, fd) {
+					if (err) { return this.onError(req, 500, 'Error opening file.', err); }
+					fs.readFile(req.filename, 'binary', bind(this, 'sendFile_onRead', fd, req));
+				}));
+			}
+			
+			this.sendFile_onRead = function(fd, req, err, contents) {
+				if (err) {
+					this.onError(req, 500, "Error reading file.", err);
+				} else {
+					req.response.writeHead(200, {'Content-Type': this.getMIME(req)});
+					req.response.write(contents, 'binary');
+					req.response.end();
+					console.log('200', req.filename);			
+				}
+				fs.close(fd);
+			}
+			
+			this.getMIME = function(req) {
+				return MIME[path.extname(req.filename)] || 'text/plain';
+			}
+			
+			this.onError = function(req, code, msg, err) {
+				msg += '<br><pre>pathname: ' + req.pathname + '\nfilename: ' + req.filename;
+				if (err) { msg += '\n\n' + JSON.stringify(err, null, '\t'); }
+				msg += '</pre>';
+				
+				req.response.writeHead(code, {
+					'Content-Type': 'text/html',
+					'Content-Length': msg.length
+				});
+				
+				req.response.write(msg);
+				req.response.end();
+				console.log(code, req.filename);
+			}
+		});
+	
+	var jsioServer = new JsioServer(opts);
+	http.createServer(bind(jsioServer, 'onRequest')).listen(opts.port);
+	
+	console.log('Server running at http://127.0.0.1:' + opts.port + '/');
+}
+
+var J = jsio;
+function compress(cwd, opts, cmd, cb) {
+	// TODO: remove this path hackery!
+	var base = path.dirname(__filename),
+		exec = path.join(base, 'jsio_compile'),
+		args = [cmd];
+		if (opts.path) {
+			args.push('--path');
+			args.push(opts.path);
+		}
+		if (opts.jsio) {
+			args.push('--jsio');
+			args.push(opts.jsio);
+		}
+		compiler = spawn(exec, args, {cwd: cwd}),
+		stdout = [],
+		stderr = [];
+	
+	console.log(exec + ' ' + args.join(' '));
+	compiler.stdout.on('data', function(data) { stdout.push(data); });
+	compiler.stderr.on('data', function(data) { stderr.push(data); });
+	compiler.on('exit', function(code) {
+		if (code == 0) {
+			cb(stdout.join(''));
+		} else {
+			cb('document.write("<h3>Compiler error</h3><pre>" + ' + JSON.stringify(stderr.join('')) + ' + "</pre>")');
+		}
+	});
+	compiler.stdin.end();
+}
