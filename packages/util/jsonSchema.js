@@ -23,7 +23,7 @@
 *	2. "message" - the error message
 */
 
-import std.JS as JS;
+import std.js as JS;
 
 // JSONSchema:
 exports = {
