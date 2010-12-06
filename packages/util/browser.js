@@ -80,7 +80,7 @@ if (jsio.__env.name == 'browser') {
 	}
 
 	$.create = function(params) {
-		var doc = (params.win || window).document;
+		var doc = ((params && params.win) || window).document;
 		if (!params || typeof params == 'string') {
 			return doc.createElement(params || 'div');
 		};
