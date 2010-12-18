@@ -3,6 +3,36 @@
 import net.interfaces;
 from util.browser import $;
 
+function findFrame() {
+	var target = window;
+	if (top == target) { return ''; }
+
+	var path = [],
+		search = function(win) {
+			for (var i = 0, len = win.length; i < len; ++i) {
+				if (win[i] == target || search(win[i])) {
+					path.unshift(i);
+					return true;
+				}
+			}
+		}
+
+	search(top);
+	return path.join('-');
+}
+
+function findTarget(target) {
+	try {
+		var path = target.split('-'),
+			target = top;
+		for (var i = 0, j; j = path[i]; ++i) { target = target[j]; }
+		return target && target.postMessage ? target : null;
+	} catch(e) {
+		logger.error(e, 'Could not find iframe target:', target, '(possibly a security error)');
+		return null;
+	}
+}
+
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
 	
@@ -84,6 +114,8 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		
 		this.onResize();
 	}
+	
+	this.findFrame = function() { return findFrame(); }
 	
 	this.getDOM = function() {
 		return this._serverContent;
@@ -194,6 +226,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var name = evt.source.name;
 		var target = this._clients[name];
 		var data = eval('(' + evt.data + ')');
+		
 		switch (data.type) {
 			case 'open':
 				this._clients[name] = new exports.Transport(evt.source);
@@ -214,8 +247,16 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
+		var target;
+		if (this._opts.target) {
+			target = findTarget(this._opts.target);
+		} else {
+			target = top;
+		}
+		
+		var self = findFrame();
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
-		window.parent.postMessage(JSON.stringify({type:"open"}), '*');
+		target.postMessage('{"type":"open"}', '*');
 	}
 	
 	this._onMessage = function(evt) {
