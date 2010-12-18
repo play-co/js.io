@@ -61,6 +61,11 @@ exports.run = function(args, opts) {
 		// force the path
 		jsio.path.set([opts.jsioPath]);
 		
+		// reset cached path
+		for (var key in jsio.path.cache) {
+			delete jsio.path.cache[key];
+		}
+		
 		// delete the cache copy
 		var sourceCache = jsio.__jsio.__srcCache;
 		for (var i in sourceCache) {

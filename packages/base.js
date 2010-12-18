@@ -33,7 +33,7 @@ exports.Class = function(parent, proto) {
 		var name = parent,
 			parent = proto,
 			proto = arguments[2],
-			logger = logging.get(parent);
+			logger = exports.logging.get(parent);
 	}
 	
 	if(!parent) { throw new Error('parent or prototype not provided'); }
