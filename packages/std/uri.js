@@ -1,3 +1,5 @@
+jsio('import std.js as JS');
+
 var attrs = [ 
 	"source",
 	"protocol",
@@ -46,6 +48,11 @@ var URI = exports = Class(function(supr) {
 	
 	this.query = function(key) { return exports.parseQuery(this._query)[key]; }
 	this.hash = function(key) { return exports.parseQuery(this._hash)[key]; }
+	
+	this.addQuery = function(kvp) {
+		this._query = exports.buildQuery(JS.merge(kvp, exports.parseQuery(this._query)));
+		return this;
+	}
 
 	this.toString = this.render = function(onlyBase) {
 		// XXX TODO: This is vaguely reasonable, but not complete. fix it...
