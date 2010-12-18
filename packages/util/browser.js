@@ -39,6 +39,7 @@ if (jsio.__env.name == 'browser') {
 			}
 		}
 		
+		if (params.id) { el.id = params.id; }
 		if (params.style) { $.style(el, params.style); }
 		if (params.src) { el.src = params.src; }
 		if (params['class'] || params['className']) {
