@@ -14,7 +14,7 @@ exports.listen = function(server, transportName, opts) {
 }
 
 exports.connect = function(protocolInstance, transportName, opts) {
-	var ctor = net.env.getConnector(transportName),
+	var ctor = typeof transportName == 'string' ? net.env.getConnector(transportName) : transportName,
 		connector = new ctor(protocolInstance, opts);
 	
 	connector.connect();
