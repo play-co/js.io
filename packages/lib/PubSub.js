@@ -1,3 +1,18 @@
+/**
+ * Summary: inherit from lib.PubSub if a class wants publish/subscribe ability
+ * Methods:
+ *  - publish(signal, args...) - all subscribers to signal will be called
+ *     with the list of arguments provided.
+ *  - subscribe(signal, ctx, method, args...) - register a bound method
+ *     to a signal.  Any args that are passed in will be the first args
+ *     when the method is invoked during a publish.
+ *  Usage notes: There is one special signal '__any'.  Any subscribers to
+ *     '__any' will be called on every publish with the first publish
+ *     argument being the signal itself (after any args passed in during
+ *     the corresponding subscribe). 
+ *     Calling the super constructor is not required for descendants of 
+ *     lib.PubSub. 
+ */
 var ctx = jsio.__env.global;
 
 exports = Class(function() {

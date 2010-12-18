@@ -1,4 +1,22 @@
 "use import";
+
+/**
+ * Summary: Provides an object for iterating over the keys and values of
+ * an object or array.  
+ * Methods: 
+ *  - init(src) - src is the object to iterate over
+ *  - next(): returns the current value and advances the iterator to the next value
+ *  - loop(cb): iterate over all items immediately, calling cb with each item
+ *  - asyncLoop(cb): iterate over all items asynchronously.  First argument to
+ *     the callback is the item.  Second argument is a function `nextItem` that, 
+ *     when called, will cause the iterator to advance to the next element and 
+ *     call cb again.
+ * Usage notes: asyncLoop is implemented to not be vulnerable to stack overflows.
+ *     If cb immediately calls the nextItem function, it will not immediately 
+ *     result in a call to cb -- the stack will unwind to the asyncLoop call 
+ *     before continuing.
+ */
+
 import std.js as JS;
 
 exports = Class(function() {
