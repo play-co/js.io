@@ -1,62 +1,157 @@
-// jsio/browser.js
+// Copyright (c) 2010
+// Michael Carter (cartermichael@gmail.com)
+// Martin Hunt (mghunt@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
+// Initialization of js.io occurs in a closure, preventing local variables
+// from entering the global scope.  During execution, the method `jsio` is
+// added to the global scope.
 ;(function() {
-	var SLICE = Array.prototype.slice,
-		DEBUG = true,
-		ENV,
-		rexpEndSlash = /\/$/,
-		makeModuleDef = function(path, baseMod, basePath) {
-			var def = util.splitPath(path + '.js');
-			if (baseMod) {
-				def.baseMod = baseMod;
-				def.basePath = basePath;
-			}
-			return def;
-		},
-		util = {
+	// We expect this code to be minified before production use, so we may
+	// write code slightly more verbosely than we otherwise would.
+	
+	// Should we parse syntax errors in the browser?
+	var DEBUG = true;
+	
+	// Store a reference to the slice function for converting objects of
+	// type arguments to type array.
+	var SLICE = Array.prototype.slice;
+	
+	// js.io supports multiple JavaScript environments such as node.js and
+	// most web browsers (IE, Firefox, WebKit).  The ENV object wraps 
+	// any utility functions that contain environment-specific code (e.g.
+	// reading a file using node's `fs` library or a browser's
+	// `XMLHttpRequest`).  Running js.io in other JavaScript environments
+	// is as easy as implementing an environment object that conforms to 
+	// the abstract interface for an environment (provided below) and 
+	// calling `jsio.setEnv()`.
+	var ENV;
+	
+	// Checks if the last character in a string is `/`.
+	var rexpEndSlash = /\/$/;
+	
+	// Creates an object containing metadata about a module.
+	function makeModuleDef(path, baseMod, basePath) {
+		var def = util.splitPath(path + '.js');
+		if (baseMod) {
+			def.baseMod = baseMod;
+			def.basePath = basePath;
+		}
+		return def;
+	}
+	
+	// Utility functions
+	var util = {
+			// `util.bind` returns a function that, when called, will execute
+			// the method passed in with the provided context and any additional
+			// arguments passed to `util.bind`.
+			//       util.bind(obj, 'f', a) -> function() { return obj.f(a); }
+			//       util.bind(obj, g, a, b, c) -> function() { return g.call(g, a, b, c); }
 			bind: function(context, method/*, args... */) {
-				var args = Array.prototype.slice.call(arguments, 2);
+				var args = SLICE.call(arguments, 2);
 				return function() {
 					method = (typeof method == 'string' ? context[method] : method);
-					return method.apply(context, args.concat(Array.prototype.slice.call(arguments, 0)));
+					return method.apply(context, args.concat(SLICE.call(arguments, 0)));
 				};
 			},
+			
+			// `util.addEndSlash` accepts a string.  That string is returned with a `/`
+			// appended if the string did not already end in a `/`.
 			addEndSlash: function(str) {
 				return rexpEndSlash.test(str) ? str : str + '/';
 			},
-			removeEndSlash: function(str) { return str.replace(rexpEndSlash, ''); },
+			
+			// `util.removeEndSlash` accepts a string.  It removes a trailing `/` if
+			// one is found.
+			removeEndSlash: function(str) {
+				return str.replace(rexpEndSlash, '');
+			},
+			
+			// `util.makeRelativePath` accepts two paths (strings) and returns the first path
+			// made relative to the second.  Note: this function needs some work.  It currently
+			// handles the most common use cases, but may fail in unexpected edge cases.
+			// 
+			//  - Simple case: if `path` starts with `relativeTo`, then we can strip `path` 
+			// off the `relativeTo` part and we're done.
+			//
+			//         util.makeRelativePath('abc/def/', 'abc') -> 'def'
+			//
+			//  - Harder case: `path` starts with some substring of `relativeTo`.  We want to remove this substring and then add `../` for each remaining segment of `relativeTo`.
+			//
+			//         util.makeRelativePath('abc/def/', 'abc/hij') -> '../def'
+			//
 			makeRelativePath: function(path, relativeTo) {
-				var i = path.match('^' + relativeTo);
-				if (i && i[0] == relativeTo) {
-					var len = relativeTo.length,
-						offset = path[len] == '/' ? 1 : 0;
-					return path.slice(len + offset);
+				var len = relativeTo.length;
+				if (path.substring(0, len) == relativeTo) {
+					/* Note: we're casting a boolean to an int by adding len to it */
+					return path.slice((path.charAt(len) == '/') + len);
 				}
 				
 				var sA = util.removeEndSlash(path).split('/'),
-					sB = util.removeEndSlash(relativeTo).split('/');
-				i = 0;
+					sB = util.removeEndSlash(relativeTo).split('/'),
+					i = 0;
 				
+				/* Count how many segments match. */
 				while(sA[i] == sB[i]) { ++i; }
+				
 				if (i) {
+					/* If at least some segments matched, remove them.  The result is our new path. */
 					path = sA.slice(i).join('/');
+					
+					/* Prepend `../` for each segment remaining in `relativeTo`. */
 					for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
 				}
 				
 				return path;
 			},
+			
+			// `buildPath` accepts an arbitrary number of string arguments to concatenate into a path.
+			//     util.buildPath('a', 'b', 'c/', 'd/') -> 'a/b/c/d/'
 			buildPath: function() {
 				return util.resolveRelativePath(Array.prototype.join.call(arguments, '/'));
 			},
+			
+			// `resolveRelativePath` removes relative path indicators.  For example:
+			//     util.resolveRelativePath('a/../b') -> b
 			resolveRelativePath: function(path) {
+				/* If the path starts with a protocol, store it and remove it (add it
+				   back later) so we don't accidently modify it. */
 				var protocol = path.match(/^(\w+:\/\/)(.*)$/);
 				if (protocol) { path = protocol[2]; }
 				
-				path = path.replace(/\/\//g, '/').replace(/\/\.\//g, '/');
+				/* Remove multiple slashes and trivial dots (`/./ -> /`). */
+				path = path.replace(/\/+/g, '/').replace(/\/\.\//g, '/');
+				
+				/* Loop to collapse instances of `../` in the path by matching a previous
+				   path segment.  Essentially, we find substrings of the form `/abc/../`
+				   where abc is not `.` or `..` and replace the substrings with `/`.
+				   We loop until the string no longer changes since after collapsing all
+				   possible instances once, we may have created more instances that can
+				   be collapsed.
+				*/
 				var o;
 				while((o = path) != (path = path.replace(/(^|\/)(?!\.?\.\/)([^\/]+)\/\.\.\//g, '$1'))) {}
+				/* Don't forget to prepend any protocol we might have removed earlier. */
 				return protocol ? protocol[1] + path : path;
 			},
+			
 			resolveRelativeModule: function(modulePath, directory) {
 				var result = [],
 					parts = modulePath.split('.'),
