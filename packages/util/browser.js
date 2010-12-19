@@ -55,8 +55,8 @@ if (jsio.__env.name == 'browser') {
 			parent.appendChild(el);
 		}
 		
-		if (params.html) { el.innerHTML = params.html; }
-		if (params.text) { $.setText(el, params.text); }
+		if ('html' in params) { el.innerHTML = params.html; }
+		if ('text' in params) { $.setText(el, params.text); }
 		return el;
 	}
 	
