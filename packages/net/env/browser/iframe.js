@@ -51,11 +51,28 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	this.init = function(server, opts) {
 		supr(this, 'init', arguments);
 		this._clients = {};
+		this._opts = opts;
 		this._numTabs = 0;
 		this._frames = [];
+	}
+	
+	this.buildTabUI = function() {
 		
-		$.style(document.documentElement, {overflow: 'hidden', margin: '0px', padding: '0px', width: '100%', height: '100%'});
-		$.style(document.body, {margin: '0px', padding: '0px', width: '100%', height: '100%'});
+		$.style(document.documentElement, {
+			overflow: 'hidden',
+			margin: '0px',
+			padding: '0px',
+			width: '100%',
+			height: '100%'
+		});
+		
+		$.style(document.body, {
+			margin: '0px',
+			padding: '0px',
+			width: '100%',
+			height: '100%'
+		});
+		
 		$.onEvent(window, 'resize', this, 'onResize');
 		
 		this._leftCol = $({
@@ -106,20 +123,20 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var el = this.createTab('server');
 		$.onEvent(el, 'click', this, 'showFrame', this._serverContent);
 		
-		if (opts && opts.clientURL) {
+		if (this._opts && this._opts.clientURL) {
 			var el = this.createTab('+ client', 1);
 			$.onEvent(el, 'click', this, 'onNewTabClick');
 			this._lastTab = el;
 		}
 		
 		this.onResize();
+		
+		return this._serverContent;
 	}
 	
 	this.findFrame = function() { return findFrame(); }
 	
-	this.getDOM = function() {
-		return this._serverContent;
-	}
+	this.getDOM = function() { return this._serverContent; }
 	
 	this.onResize = function() {
 		this._rightCol.style.width = $(window).width - 150 + 'px';
@@ -223,14 +240,17 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	}
 	
 	this._onMessage = function(evt) {
-		var name = evt.source.name;
-		var target = this._clients[name];
-		var data = eval('(' + evt.data + ')');
+		var name = evt.source.name,
+			target = this._clients[name],
+			data = evt.data;
 		
+		if (!/^iS>/.test(data)) { return; }
+		
+		data = eval('(' + data.substring(3) + ')');
 		switch (data.type) {
 			case 'open':
-				this._clients[name] = new exports.Transport(evt.source);
-				evt.source.postMessage('{type:"open"}','*');
+				this._clients[name] = new exports.Transport(evt.source, 'iC<');
+				evt.source.postMessage('iC<{type:"open"}','*');
 				this.onConnect(this._clients[name]);
 				break;
 			case 'data':
@@ -238,7 +258,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 				break;
 			case 'close':
 				target.onClose();
-				evt.source.postMessage('{type:"close"}','*');
+				evt.source.postMessage('iC<{type:"close"}','*');
 				delete this._clients[name];
 				break;
 		}
@@ -256,14 +276,17 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		
 		var self = findFrame();
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
-		target.postMessage('{"type":"open"}', '*');
+		target.postMessage('iS>{"type":"open"}', '*');
 	}
 	
 	this._onMessage = function(evt) {
-		var data = eval('(' + evt.data + ')');
+		var data = evt.data;
+		if (!/^iC</.test(data)) { return; }
+		
+		data = eval('(' + data.substring(3) + ')');
 		switch(data.type) {
 			case 'open':
-				this._transport = new exports.Transport(evt.source);
+				this._transport = new exports.Transport(evt.source, 'iS>');
 				this.onConnect(this._transport);
 				break;
 			case 'close':
@@ -277,8 +300,9 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 });
 
 exports.Transport = Class(net.interfaces.Transport, function() {
-	this.init = function(win) {
+	this.init = function(win, prefix) {
 		this._win = win;
+		this._prefix = prefix;
 	}
 	
 	this.makeConnection = function(protocol) {
@@ -287,16 +311,19 @@ exports.Transport = Class(net.interfaces.Transport, function() {
 	
 	this.write = function(data, encoding) {
 		if (this.encoding == 'utf8') {
-			this._win.postMessage(JSON.stringify({type: 'data', payload: utf8.encode(data)}), '*');
+			this._win.postMessage(this._prefix + JSON.stringify({type: 'data', payload: utf8.encode(data)}), '*');
 		} else {
-			this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
-		} 
+			this._win.postMessage(this._prefix + JSON.stringify({type: 'data', payload: data}), '*');
+		}
 	}
 	
 	this.loseConnection = function(protocol) {
 		this._win.postMessage(JSON.stringify({type: 'close', code: 301}), '*');
 	}
 	
-	this.onData = function() { this._protocol.dataReceived.apply(this._protocol, arguments); }
+	this.onData = function() {
+		this._protocol.dataReceived.apply(this._protocol, arguments);
+	}
+	
 	this.onClose = function() { this._protocol.connectionLost.apply(this._protocol, arguments); }
 });
