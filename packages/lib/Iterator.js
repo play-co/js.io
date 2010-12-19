@@ -29,9 +29,16 @@ exports = Class(function() {
 		this._calls = 0;
 		if (JS.isArray(src)) {
 			this._isArray = true;
-		} else {
+		} else if (Object.keys) {
 			this._keys = Object.keys(src);
+		} else {
+			var k = this._keys = [];
+			for (var i in src) { if (src.hasOwnProperty(i)) { k.push(i); } }
 		}
+	}
+	
+	this.nextKey = function() {
+		return this._keys[this._i++];
 	}
 	
 	this.next = function() {
@@ -44,13 +51,21 @@ exports = Class(function() {
 	}
 	
 	this.loop = function(cb) {
+		if (arguments.length > 1) { cb = bind.apply(this, arguments); }
 		var next;
-		while((next = this.next())) {
-			cb(next);
+		if (this._isArray) {
+			while((next = this.next())) {
+				cb(next);
+			}
+		} else {
+			while((next = this.nextKey())) {
+				cb(this._src[next], next);
+			}
 		}
 	}
 	
 	this.asyncLoop = function(cb) {
+		if (arguments.length > 1) { cb = bind.apply(this, arguments); }
 		this._next = bind(this, '_onReturn', cb);
 		this._calls++;
 		this._asyncLoop(cb);
