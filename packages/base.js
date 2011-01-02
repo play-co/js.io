@@ -30,10 +30,10 @@ exports.bind = function(context, method /*, VARGS*/) {
 
 exports.Class = function(parent, proto) {
 	if (typeof parent == 'string') {
-		var name = parent,
-			parent = proto,
+		var name = arguments[0],
+			parent = arguments[1],
 			proto = arguments[2],
-			logger = exports.logging.get(parent);
+			logger = exports.logging.get(name);
 	}
 	
 	if(!parent) { throw new Error('parent or prototype not provided'); }
@@ -63,7 +63,7 @@ exports.Class = function(parent, proto) {
 			}
 			throw new Error('method ' + method + ' does not exist');
 		} : null;
-	cls.prototype = new proto(logger || supr, !logger && supr);
+	cls.prototype = new proto(logger || supr, logger && supr);
 	cls.prototype.constructor = cls;
 	if (name) { cls.prototype.__class__ = name; }
 	return cls;
