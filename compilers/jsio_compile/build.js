@@ -53,7 +53,6 @@ walk('jsio', function(path, files, dirs) {
 	});
 });
 
-
 var exec = require('child_process').exec;
 
 exec("which " + node, function(error, stdout, stderr) {
@@ -98,3 +97,4 @@ function walk(path, callback) {
 	
 	return callback(path, items.files, items.dirs);
 }
+

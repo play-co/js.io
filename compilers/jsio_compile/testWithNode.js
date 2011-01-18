@@ -8,6 +8,8 @@ require(jsioPath + '/jsio');
 var pathStat = jsio.__util.splitPath(__filename),
 	path = jsio.__util.makeRelativePath(pathStat.directory, process.cwd());
 
+if (path === '') { path = '.'; }
+
 jsio.path.add(path);
 var compiler = jsio('import compiler');
 jsio.path.remove(path);
