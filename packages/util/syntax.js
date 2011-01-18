@@ -18,7 +18,7 @@ exports = function(code, opts) {
 }
 
 exports.display = function(result, title) {
-	var $ = jsio('util/browser').$,
+	var log = [title || ''],
 		html = ['<div class="_jsioLint_title">' + (title || '') + '</div>'],
 		css = [
 			 "._jsioLint_title { color: #FFF; padding-bottom: 6px; border-bottom: 3px dashed #888; margin-bottom: 30px }"
@@ -38,6 +38,7 @@ exports.display = function(result, title) {
 	}
 	
 	for (var i = 0, e; e = result[i]; ++i) {
+		log.push(e.line + '-' + e.character + ': ' + e.reason + '\n> ' + e.evidence)
 		html.push('<span class="_jsioLint_lineNum">line ' + e.line + '</span>');
 		html.push(': ');
 		html.push('<span class="_jsioLint_reason">' + e.reason + '</span>');
@@ -47,8 +48,10 @@ exports.display = function(result, title) {
 		}
 		html.push('\n');
 	}
-
-	$({
+	
+	logger.log(log.join('\n'));
+	
+	jsio('util/browser').$({
 		tag: 'pre',
 		id: 'syntaxCheck',
 		style: {
