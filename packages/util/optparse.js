@@ -47,7 +47,10 @@ function addArg(result, optsDef, argv, i) {
 	++i;
 	switch(itemType) {
 		case 'boolean':
-			if (argv[i].toLowerCase() in truthyValues) {
+			if (typeof argv[i] == 'undefined') {
+				val = true;
+				--i;
+			} else if (argv[i].toLowerCase() in truthyValues) {
 				val = true;
 			} else if (argv[i].toLowerCase() in falsyValues) {
 				val = false;
