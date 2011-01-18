@@ -1,6 +1,7 @@
 "use import";
 
 import util.jsonSchema
+import lib.Enum;
 
 /* optparser */
 
@@ -33,6 +34,9 @@ function addAlso(optsDef, also, value) {
 	}
 }
 
+var truthyValues = lib.Enum('true', '1', 'yes'),
+	falsyValues = lib.Enum('false', '0', 'no');
+
 function addArg(result, optsDef, argv, i) {
 	var val,
 		srcName = argv[i],
@@ -43,8 +47,14 @@ function addArg(result, optsDef, argv, i) {
 	++i;
 	switch(itemType) {
 		case 'boolean':
-			val = true;
-			--i;
+			if (argv[i].toLowerCase() in truthyValues) {
+				val = true;
+			} else if (argv[i].toLowerCase() in falsyValues) {
+				val = false;
+			} else {
+				val = true;
+				--i;
+			}
 			break;
 		case 'int':
 		case 'integer':
@@ -60,11 +70,11 @@ function addArg(result, optsDef, argv, i) {
 			var buf = argv[i];
 			while(true) {
 				try {
-					var val = eval(buf);
+					var val = eval('(' + buf + ')');
 					break;
 				} catch(e) {}
 				++i;
-				if (i >= len) { ERROR('Could not parse "' + argv[i] + '": ' + itemSchema.type + '\n' + buf + '\n' + JSON.stringify(argv)); }
+				if (i >= len) { ERROR('Could not parse "' + srcName + '": ' + itemSchema.type + '\n' + buf + '\n' + JSON.stringify(argv)); }
 				buf += argv[i];
 			}
 			break;
