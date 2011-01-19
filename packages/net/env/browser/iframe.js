@@ -147,7 +147,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			style: tabStyle
 		});
 		
-		$.style(el, { marginLeft: indent * 10 + 'px' });
+		$.style(el, { marginLeft: (indent || 0) * 10 + 'px' });
 		
 		el.text = $({
 			text: text,
@@ -174,12 +174,29 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		return el;
 	}
 	
+	this.createCloseableTab = function(text, indent) {
+		var el = this.createTab(text, indent);
+		
+		el.close = $({
+			text: 'X',
+			style: {
+				'float': 'right',
+				'border': '1px solid #AAF',
+				'background': '#000',
+				'padding': '1px'
+			},
+			before:el.firstChild
+		});
+		
+		return el;
+	}
+	
 	this.onNewTabClick = function() { this.newTab(); }
 	
-	this.newTab = function(url, text) {
+	this.newTab = function(url, text, indent) {
 		++this._numTabs;
 		var text = text || this._numTabs;
-		var el = this.createTab(text);
+		var el = this.createTab(text, indent);
 		el.status('loading...');
 		
 		var frame = $({
@@ -203,6 +220,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		frame.onload = bind(this, 'onFrameLoad', frame, el);
 		this._frames.push(frame);
 		
+		el._frame = frame;
 		$.onEvent(el, 'click', this, 'showFrame', frame);
 		
 		el.reload = $({
@@ -222,6 +240,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		});
 		
 		this.onResize();
+		return el;
 	}
 	
 	this.onFrameLoad = function(frame, el, text) {
