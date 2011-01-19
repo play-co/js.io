@@ -119,7 +119,7 @@ exports.run = function(args, opts) {
 			if (!/^\./.test(initial)) { initial = '.' + initial; }
 			
 			// 2. generate a statement to include at the bottom of the file
-			opts.footer = (opts.footer || '') + JSIO + '("import ' + initial + '")';
+			opts.appendImport = true;
 		}
 	
 
@@ -163,6 +163,7 @@ exports.run = function(args, opts) {
 	// which depends on runtime environment and desired transports.  This
 	// code does the same thing, building a list of imports that need to
 	// happen upon import of the net.env module.  
+	logger.info('dynamic imports: ', opts.dynamicImports);
 	if (!opts.dynamicImports) { opts.dynamicImports = {}; }
 	if (!opts.dynamicImports.ENV) { opts.dynamicImports.ENV = null; }
 	if (opts.transports && opts.environments) {
@@ -197,16 +198,24 @@ exports.run = function(args, opts) {
 		}
 	}
 	
-	logger.info('compiling main program', initial);
-	compiler.compile(initial, {
+	var compileOpts = {
 		autoDetectPaths: true,
 		dynamicImports: opts.dynamicImports
-	});
+	};
+	
+	logger.info('compiling main program', initial, JSON.stringify(compileOpts));
+	compiler.compile(initial, compileOpts);
 	
 	compiler.generateSrc(opts, function(src) {
+		if (opts.appendImport) {
+			src = src + JSIO + '("import ' + initial + '")';
+		}
+		
 		if (opts.footer) {
 			src = src + (opts.footer || '');
 		}
+		
 		interface.onFinish(opts, src);
 	});
 }
+

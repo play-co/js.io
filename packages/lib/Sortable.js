@@ -33,6 +33,8 @@ function ensurePadding(n) {
  * for efficient sorting with toString.  Unfortunately, this does not work for large floating
  * point values, but that functionality could theoretically be added if desired.
  */
+function sortIndex(i) { return this[i]; }
+
 exports.sort = function(arr, indexer) {
 	
 	var len = arr.length,
@@ -41,8 +43,6 @@ exports.sort = function(arr, indexer) {
 		toString = new Array(len),
 		indexers = Array.prototype.slice.call(arguments, 1),
 		haveMultiple = !!indexers[1];
-	
-	function sortIndex(i) { return this[i]; }
 	
 	if (haveMultiple) {
 		for (var i = 0; i < len; ++i) {

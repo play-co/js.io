@@ -9,6 +9,7 @@ exports = {
 		also: '--compress',
 		name: 'compressSources',
 		type: 'boolean',
+		default: false,
 		description: "Compress individual source files with Google's Closure Compiler"
 	},
 	'--closure': {
@@ -30,6 +31,11 @@ exports = {
 			'ERROR': 5
 		},
 		description: "Turn on the compiler logger. A value of i logs all levels i and higher. 1: DEBUG, 2: LOG, 3: INFO, 4: WARN, 5: ERROR"
+	},
+	'--dynamic': {
+		name: 'dynamicImports',
+		type: 'object',
+		description: 'Specify dynamic jsio imports'
 	},
 	'-p': {
 		name: 'package',
@@ -57,11 +63,23 @@ exports = {
 	'--preserveJsioSource': {
 		name: 'preserveJsioSource',
 		type: 'boolean',
+		default: false,
 		description: "(advanced option) Specify this option if the compiler shouldn't modify the core jsio JavaScript.  This option wraps compiled source in the jsio API call setCachedSrc rather than inserting the source into the jsio cache table."
 	},
 	'--includeJsio': {
 		name: 'includeJsio',
 		type: 'boolean',
+		default: true,
 		description: "(advanced option) Defaults to true.  Set to false to exclude jsio from the resulting source.  Setting to false enables --preserveJsioSource."
+	},
+	'--appendImport': {
+		name: 'appendImport',
+		type: 'boolean',
+		default: true,
+		description: "Defaults to true.  When true, the import statement passed to the compiler is appended to the end of the file."
+	},
+	'--help': {
+		type: 'boolean',
+		description: "prints this help message"
 	}
 }

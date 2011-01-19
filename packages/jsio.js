@@ -213,7 +213,13 @@
 		this.path = {
 			set: function(path) { this.value = (typeof path == 'string' ? [path] : path); },
 			get: function() { return this.value.slice(0); },
-			add: function(path) { this.value.push(path); },
+			add: function(path) {
+				var v = this.value, len = v.length;
+				for (var i = 0; i < len; ++i) {
+					if (v[i] == path) { return; }
+				}
+				v.push(path);
+			},
 			remove: function(path) {
 				var v = this.value, len = v.length;
 				for (var i = 0; i < len; ++i) {

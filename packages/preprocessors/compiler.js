@@ -4,7 +4,7 @@ jsio('import std.js as JS');
 var JSIO = jsio.__jsio; 
 
 var sourceCache = /jsio.__srcCache\s*=\s*\{\s*\}/,
-	jsioAddPath = /jsio\.addPath\s*\(\s*(['"][^'"]+?['"])\s*\)/g,
+	jsioAddPath = /jsio\.path\.add\s*\(\s*(['"][^'"]+?['"])\s*\)/g,
 	jsioNormal = /jsio\s*\(\s*(['"].+?['"])\s*(,\s*\{[^}]+\})?\)/g,
 	jsioDynamic = /jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/g,
 	gSrcTable = {};
@@ -12,13 +12,14 @@ var sourceCache = /jsio.__srcCache\s*=\s*\{\s*\}/,
 exports = function(path, moduleDef, opts) {
 	opts = opts || {};
 	
-	logger.info('compiling', moduleDef.path);
-	
-	// prevent double import
 	if (gSrcTable[moduleDef.path]) {
 		moduleDef.src = '';
 		return;
 	}
+	
+	logger.info('compiling', moduleDef.path);
+	
+	// prevent double import
 	gSrcTable[moduleDef.path] = true;
 	
 	var self = moduleDef.path;
@@ -39,11 +40,11 @@ exports = function(path, moduleDef, opts) {
 		while (true) {
 			var match = jsioAddPath.exec(moduleDef.src);
 			if (!match) { break; }
-			logger.debug('found path ' + match[1]);
 			try {
 				jsio.path.add(eval(match[1]));
+				logger.info('added path ' + match[1]);
 			} catch(e) {
-				logger.warn('failed to add path ' + match[1]);
+				logger.info('failed to add path ' + match[1]);
 			}
 		}
 	}
@@ -151,7 +152,7 @@ function buildJsio(opts, callback) {
 	// if we're not allowed to modify the jsio source or we're not including the jsio source
 	// then use jsio.setCachedSrc to include the source strings
 	if (opts.preserveJsioSource || !opts.includeJsio) {
-		logger.info('using setCachedSrc');
+		logger.info('source include method: jsio.setCachedSrc');
 		
 		var lines = [];
 		for (var i in gSrcTable) {
@@ -159,7 +160,7 @@ function buildJsio(opts, callback) {
 		}
 		src = jsioSrc + lines.join('\n');
 	} else {
-		logger.info('writing srcCache');
+		logger.info('source include method: setting jsio.__srcCache');
 		
 		// otherwise we can just look for the jsio.__srcCache variable and inline the compiled
 		// source as a JSON string.  We need to use a function here to avoid some ugly escaping

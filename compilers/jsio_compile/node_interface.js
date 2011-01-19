@@ -7,6 +7,10 @@ var closurePath = '';
 
 exports.logger = logger;
 
+function usage() {
+	util.optparse.printUsage('<node> compile.js <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
+}
+
 exports.init = function(compiler, args, opts) {
 	if (!args) {
 		var result = util.optparse(process.argv, optsDef),
@@ -14,6 +18,10 @@ exports.init = function(compiler, args, opts) {
 			opts = result.opts;
 	}
 	
+	if (opts.help) {
+		usage();
+		process.exit();
+	}
 	if (opts.closurePath) { closurePath = opts.closurePath; }
 	
 	opts.compressor = exports.compressor;
@@ -21,10 +29,11 @@ exports.init = function(compiler, args, opts) {
 };
 
 exports.onError = function(msg) {
-	util.optparse.printUsage('<node> compile.js <initial import>\n\t where <initial import> looks like "import .myModule"', optDef);
+	usage();
 	jsio.__env.log('');
 	logger.error('\n' + msg);
 	jsio.__env.log('');
+	process.exit(1);
 }
 
 exports.onFinish = function(opts, src) {
