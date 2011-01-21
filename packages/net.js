@@ -7,8 +7,10 @@ exports.listen = function(server, transportName, opts) {
 	if (!transportName) {
 		throw logger.error('No transport provided for net.listen');
 	}
-	var listenerClass = net.env.getListener(transportName);
-	var listener = new listenerClass(server, opts);
+	
+	var ctor = typeof transportName == 'string' ? net.env.getListener(transportName) : transportName,
+		listener = new ctor(server, opts);
+	
 	listener.listen();
 	return listener;
 }
