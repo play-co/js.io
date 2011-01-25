@@ -10,8 +10,8 @@ var Point = exports = Class(function() {
 				this.y = a.y || 0;
 				break;
 			case 2:
-				this.x = a;
-				this.y = b;
+				this.x = a || 0;
+				this.y = b || 0;
 				break;
 		}
 	}
