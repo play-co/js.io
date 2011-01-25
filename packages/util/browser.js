@@ -145,6 +145,8 @@ if (jsio.__env.name == 'browser') {
 		var s = el.style;
 		for(prop in style) {
 			switch(prop) {
+				case 'styleFloat':
+				case 'cssFloat':
 				case 'float':
 					s.styleFloat = s.cssFloat = style[prop];
 					break;
@@ -162,6 +164,9 @@ if (jsio.__env.name == 'browser') {
 							}
 						} catch(e) {}
 					}
+					break;
+				case 'borderRadius':
+					s.borderRadius = s.MozBorderRadius = style[prop];
 					break;
 				case 'boxSizing':
 					s.MsBoxSizing = s.MozBoxSizing = s.WebkitBoxSizing = style[prop];
