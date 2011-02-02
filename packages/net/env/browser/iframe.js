@@ -174,8 +174,12 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		return el;
 	}
 	
-	this.createCloseableTab = function(text, indent) {
-		var el = this.createTab(text, indent);
+	this.createCloseableTab = function(text, indent, url) {
+		if (url) {
+			var el = this.newTab(url, text, indent)
+		} else {
+			var el = this.createTab(text, indent);
+		}
 		
 		el.close = $({
 			text: 'X',
