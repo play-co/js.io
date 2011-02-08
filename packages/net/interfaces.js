@@ -84,6 +84,8 @@ exports.Connector = Class(function() {
 		this._state = exports.STATE.INITIAL;
 	}
 	
+	this.getState = function() { return this._state; }
+	
 	this.onConnect = function(transport) {
 		this._state = exports.STATE.CONNECTED;
 
