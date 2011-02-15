@@ -348,5 +348,5 @@ exports.Transport = Class(net.interfaces.Transport, function() {
 		this._protocol.dataReceived.apply(this._protocol, arguments);
 	}
 	
-	this.onClose = function() { this._protocol.connectionLost.apply(this._protocol, arguments); }
+	this.onClose = function() { this._protocol._connectionLost.apply(this._protocol, arguments); }
 });
