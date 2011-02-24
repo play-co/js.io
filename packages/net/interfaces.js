@@ -8,6 +8,22 @@ exports.Protocol = Class(function() {
 	this.connectionMade = function(isReconnect) {}
 	this.dataReceived = function(data) {}
 	this.connectionLost = function(reason) {}
+	
+	this._connectionMade = function() {
+		this._isConnected = true;
+		this.connectionMade.apply(this, arguments);
+	}
+
+	this._connectionLost = function() {
+		this._isConnected = true;
+		this.connectionLost.apply(this, arguments);
+	}
+
+	this.isConnected = function() {
+		return !!this._isConnected;
+	}
+	
+	
 });
 
 exports.Client = Class(function() {
@@ -66,7 +82,7 @@ exports.Listener = Class(function() {
 			p.server = this._server;
 			transport.protocol = p;
 			transport.makeConnection(p);
-			p.connectionMade();
+			p._connectionMade();
 //		} catch(e) {
 //			logger.error(e);
 //		}
@@ -92,7 +108,7 @@ exports.Connector = Class(function() {
 		transport.makeConnection(this._protocol);
 		this._protocol.transport = transport;
 		try {
-			this._protocol.connectionMade();
+			this._protocol._connectionMade();
 		} catch(e) {
 			throw logger.error(e);
 		}
@@ -103,7 +119,7 @@ exports.Connector = Class(function() {
 		this._state = exports.STATE.DISCONNECTED;
 		
 		try {
-			this._protocol.connectionLost(err, wasConnected);
+			this._protocol._connectionLost(err, wasConnected);
 		} catch(e) {
 			throw logger.error(e);
 		}

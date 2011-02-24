@@ -134,7 +134,7 @@ var baseTransport = Class(exports.Transport, function(supr) {
 	
 	this.send = function(url, sessionKey, lastEventId, data, options) {
 		logger.debug('send:', url, sessionKey, data, options);
-		args = {
+		var args = {
 			d: data,
 			s: sessionKey,
 			a: lastEventId

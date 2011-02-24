@@ -13,7 +13,7 @@ exports = Class(function() {
 	
 	this.fired = function() { return this._fired; } 
 	this.reset = function() { this._args = []; this._fired = false; }
-	
+	this.clear = function() { this.reset(); this._run = []; }
 	this.forward = function(arguments) { this.run.apply(this, arguments); }
 	this.run = function(ctx, method) {
 		var f = method ? bind.apply(this, arguments) : ctx;

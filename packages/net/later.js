@@ -7,11 +7,7 @@ exports.Later = Class(function() {
 		this.cancelback = null;
 	}
 	
-	this.succeed = function(data) {
-		this.callback(data);
-	}
-	
-	this.callback = function() {
+	this.succeed = this.callback = function() {
 		logger.debug('callback', [].slice.call(arguments, 0));
 		if (this.cb) {
 			var result = this.cb.apply(this, arguments);
@@ -23,7 +19,7 @@ exports.Later = Class(function() {
 		}
 	}
 
-	this.errback = function() {
+	this.fail = this.errback = function() {
 		logger.debug('eb', [].slice.call(arguments, 0));
 		if (this.eb) {
 			this.eb.apply(this, arguments);
@@ -61,3 +57,7 @@ exports.Later = Class(function() {
 		return this;
 	}
 })
+
+exports.Later.fail = function() { var l = new Later(); return l.fail.apply(l, arguments); }
+exports.Later.succeed = function() { var l = new Later(); return l.succeed.apply(l, arguments); }
+
