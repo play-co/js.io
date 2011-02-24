@@ -3,28 +3,32 @@ exports.GLOBAL = jsio.__env.global;
 
 var SLICE = Array.prototype.slice;
 
+exports.isArray = function(obj) {
+	return Object.prototype.toString.call(obj) === '[object Array]';
+}
+
 exports.bind = function(context, method /*, VARGS*/) {
 	if(arguments.length > 2) {
 		var args = SLICE.call(arguments, 2);
 		return typeof method == 'string'
-			? function $$boundMethod() {
+			? function __bound() {
 				if (context[method]) {
 					return context[method].apply(context, args.concat(SLICE.call(arguments, 0)));
 				} else {
 					throw logger.error('No method:', method, 'for context', context);
 				}
 			}
-			: function $$boundMethod() { return method.apply(context, args.concat(SLICE.call(arguments, 0))); }
+			: function __bound() { return method.apply(context, args.concat(SLICE.call(arguments, 0))); }
 	} else {
 		return typeof method == 'string'
-			? function $$boundMethod() {
+			? function __bound() {
 				if (context[method]) {
 					return context[method].apply(context, arguments);
 				} else {
 					throw logger.error('No method:', method, 'for context', context);
 				}
 			}
-			: function $$boundMethod() { return method.apply(context, arguments); }
+			: function __bound() { return method.apply(context, arguments); }
 	}
 }
 
@@ -36,38 +40,52 @@ exports.Class = function(parent, proto) {
 			logger = exports.logging.get(name);
 	}
 	
-	if(!parent) { throw new Error('parent or prototype not provided'); }
-	if(!proto) { proto = parent; parent = null; }
-	else if(parent instanceof Array) { // multiple inheritance, use at your own risk =)
+	if (!parent) { throw new Error('parent or prototype not provided'); }
+	if (!proto) { proto = parent; parent = null; }
+	else if (exports.isArray(parent)) { // multiple inheritance, use at your own risk =)
 		proto.prototype = {};
 		for(var i = 0, p; p = parent[i]; ++i) {
-			for(var item in p.prototype) {
-				if(!(item in proto.prototype)) {
+			if (p == Error && ErrorParentClass) { p = ErrorParentClass; }
+			for (var item in p.prototype) {
+				if (!(item in proto.prototype)) {
 					proto.prototype[item] = p.prototype[item];
 				}
 			}
 		}
 		parent = parent[0]; 
 	} else {
+		if (parent == Error && ErrorParentClass) { parent = ErrorParentClass; }
 		proto.prototype = parent.prototype;
 	}
-
-	var cls = function() { if(this.init) { return this.init.apply(this, arguments); }},
+	
+	var cls = function() { if (this.init) { return this.init.apply(this, arguments); }},
 		supr = parent ? function(context, method, args) {
 			var args = args || [];
 			var target = proto;
-			while(target = target.prototype) {
-				if(target[method]) {
+			while (target = target.prototype) {
+				if (target[method]) {
 					return target[method].apply(context, args);
 				}
 			}
 			throw new Error('method ' + method + ' does not exist');
 		} : null;
+	
 	cls.prototype = new proto(logger || supr, logger && supr);
 	cls.prototype.constructor = cls;
 	if (name) { cls.prototype.__class__ = name; }
 	return cls;
 }
+
+var ErrorParentClass = exports.Class(Error, function() {
+	this.init = function() {
+		var err = Error.prototype.constructor.apply(this, arguments);
+		for (var prop in err) {
+			if (err.hasOwnProperty(prop)) {
+				this[prop] = err[prop];
+			}
+		}
+	}
+});
 
 exports.$setTimeout = function(f, t/*, VARGS */) {
 	var args = SLICE.call(arguments, 2);

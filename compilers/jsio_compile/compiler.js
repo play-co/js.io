@@ -61,6 +61,9 @@ exports.run = function(args, opts) {
 		// force the path
 		jsio.path.set([opts.jsioPath]);
 		
+		// hack to 'set' the js.io source code
+		jsio.__jsio.__init__.toString = function() { return jsio.__env.fetch(jsio.__jsio.__util.buildPath(opts.jsioPath, 'jsio.js')); }
+		
 		// reset cached path
 		for (var key in jsio.path.cache) {
 			delete jsio.path.cache[key];
@@ -108,6 +111,8 @@ exports.run = function(args, opts) {
 	// parse the package contents
 	if (opts.package) {
 		var pkgDef = opts.package;
+		
+		logger.debug(pkgDef);
 		
 		// in pyjsiocompile, root does two things:
 		if ('root' in pkgDef) {

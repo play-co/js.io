@@ -333,16 +333,9 @@ exports.CometSession = Class(function(supr) {
 				logger.debug('after utf8 decode, _utf8ReadBuffer:', this._utf8ReadBuffer, 'data:', data );
 			}
 			logger.debug('dispatching data:', data);
-			try {
-				this._doOnRead(data);
-			} catch(e) {
-				logger.error('application code threw an error. (re-throwing in timeout):', e);
-				// throw the error later
-				setTimeout(function() {
-					logger.debug('timeout fired, throwing error', e);
-					throw e;
-				}, 0);
-			}
+
+			// TODO: possibly catch this error in production? but not in dev
+			this._doOnRead(data);
 		}
 		// reconnect comet last, after we process all of the packet ids
 		this._doConnectComet();
