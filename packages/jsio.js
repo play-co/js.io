@@ -734,7 +734,7 @@
 	
 	jsio.install = function(){
 		jsio('from base import *');
-		GLOBAL['logger'] = base.logging.get('jsiocore');
+		GLOBAL['logger'] = logging.get('jsiocore');
 	};
 
 })();
