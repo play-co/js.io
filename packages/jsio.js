@@ -201,7 +201,7 @@
 	
 	// explicitly use jsio.__srcCache to avoid obfuscation with closure compiler
 	var sourceCache = jsio.__srcCache = {};
-	
+
 	(function() {
 		this.__filename = 'jsio.js';
 		this.__preprocessors = {};
@@ -266,7 +266,7 @@
 	} else if (typeof XMLHttpRequest != 'undefined' || typeof ActiveXObject != 'undefined') {
 		jsio.setEnv('browser');
 	}
-	
+
 	/*
 	function ENV_abstract() {
 		this.global = null;
@@ -731,4 +731,10 @@
 			return true;
 		}
 	});
+	
+	jsio.install = function(){
+		jsio('from base import *');
+		GLOBAL['logger'] = logging.get('jsiocore');
+	};
+
 })();

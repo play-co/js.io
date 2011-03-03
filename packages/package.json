@@ -1,0 +1,24 @@
+{
+  "name"          : "js.io"
+, "version"       : "3.2.1"
+, "description"   : "Networking library for realtime browser communication"
+, "homepage"      : "https://github.com/mcarter/js.io"
+, "keywords"      : ["realtime", "networking"]
+, "author"        : "Martin Hunt <martin@gameclosure.com>"
+, "contributors"  : [ "Marcus Westin"
+                    , "Michael Carter <cartermichael@gmail.com>"
+                    , "Jacob Lyles <jacob.lyles@gmail.com>"
+                    , "Tom Fairfield <tom@gameclosure.com>"
+                    , "Matthew J. Desmarais"
+                    ]
+,"directories": {"lib":"./lib"
+                ,"math":"./math"
+                ,"math2D":"./math2D"
+                ,"net":"./net"
+                ,"preprocessors":"./preprocessors"
+                ,"std":"std"
+                ,"util":"util"
+                }
+,"files": [""]
+, "main"          : "jsio"
+}
