@@ -32,35 +32,29 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-var pad = '=';
-var padChar = alphabet.charAt(alphabet.length - 1);
+var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+	trailingPad = '=',
+	padChar = alphabet.charAt(alphabet.length - 1);
 
-var shorten = function (array, number) {
-	// remove 'number' characters from the end of 'array', in place (no return)
-	for (var i = number; i > 0; i--){ array.pop(); };
-};
-
-var decode_map = {};
-for (var i=0, n=alphabet.length; i < n; i++) {
-	decode_map[alphabet.charAt(i)] = i;
-};
-
+var decodeMap = {};
+for (var i = 0, len = alphabet.length; i < len; i++) {
+	decodeMap[alphabet.charAt(i)] = i;
+}
 
 // use this regexp in the decode function to sniff out invalid characters.
 var alphabet_inverse = new RegExp('[^' + alphabet.replace('-', '\\-') + ']');
 
-
-
-var Base64CodecError = exports.Base64CodecError = function (message) { 
-	this.message = message;
-};
-Base64CodecError.prototype.toString = function () {
-  return 'Base64CodecError' + (this.message ? ': ' + this.message : '');
-};
+exports.Base64CodecError = Class(Error, function(supr) {
+	this.name = 'Base64CodecError';
+	
+	this.init = function(message) {
+		supr(this, 'init', arguments);
+		this.message = message;
+	}
+});
 
 var assertOrBadInput = function (exp, message) {
-	if (!exp) { throw new Base64CodecError(message) };
+	if (!exp) { throw new exports.Base64CodecError(message) };
 };
 
 exports.encode = function (bytes) {
@@ -80,32 +74,59 @@ exports.encode = function (bytes) {
 			alphabet.charAt((newchars >> 6)  & 077), 
 			alphabet.charAt((newchars)	   & 077));	  
 	};
-	shorten(out_array, padding.length);
+	
+	out_array.length -= padding.length;
 	return out_array.join('');
 };
 
 exports.decode = function (b64text) {
 	logger.debug('decode', b64text);
-	b64text = b64text.replace(/\s/g, '') // kill whitespace
+	b64text = b64text.replace(/\s/g, ''); // kill whitespace
+	
 	// strip trailing pad characters from input; // XXX maybe some better way?
-	var i = b64text.length; while (b64text.charAt(--i) === pad) {}; b64text = b64text.slice(0, i + 1);
+	var i = b64text.length;
+	while (b64text.charAt(--i) === trailingPad) {};
+	b64text = b64text.slice(0, i + 1);
+	
 	assertOrBadInput(!alphabet_inverse.test(b64text), 'Input contains out-of-range characters.');
-	var padding = Array(5 - ((b64text.length % 4) || 4)).join(padChar);
+	
+	var padLength = 4 - ((b64text.length % 4) || 4),
+		padding = Array(padLength + 1).join(padChar);
+	
 	b64text += padding; // pad with last letter of alphabet
-	var out_array = [];
-	for (var i=0, n=b64text.length; i < n; i+=4) {
+	
+	var out_array = [],
+		length = i + padLength + 1; // length of b64text
+	
+	for (var i = 0; i < length; i += 4) {
 		newchars = (
-			(decode_map[b64text.charAt(i)]   << 18) +
-			(decode_map[b64text.charAt(i+1)] << 12) +
-			(decode_map[b64text.charAt(i+2)] << 6)  +
-			(decode_map[b64text.charAt(i+3)]));
+			(decodeMap[b64text.charAt(i)]   << 18) +
+			(decodeMap[b64text.charAt(i+1)] << 12) +
+			(decodeMap[b64text.charAt(i+2)] << 6)  +
+			(decodeMap[b64text.charAt(i+3)]));
 		out_array.push(
 			(newchars >> 020) & 0xFF,
 			(newchars >> 010) & 0xFF, 
 			(newchars)		& 0xFF);
 	};
-	shorten(out_array, padding.length);
-	var result = String.fromCharCode.apply(String, out_array);
+	
+	length = (out_array.length -= padLength);
+	
+	// Safari fromCharCode can't be passed more than 65536 arguments at once
+	var result,
+		MAX_CHUNK = 65536;
+	
+	if (length > MAX_CHUNK) {
+		result = [];
+		var i = 0, j = 0;
+		while (i < length) {
+			result[j++] = String.fromCharCode.apply(String, out_array.slice(i, i + MAX_CHUNK));
+			i += MAX_CHUNK;
+		}
+		result = result.join('');
+	} else {
+		result = String.fromCharCode.apply(String, out_array);
+	}
 	logger.debug('decoded', result);
 	return result;
 };
