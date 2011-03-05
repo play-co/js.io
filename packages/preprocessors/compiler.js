@@ -145,10 +145,18 @@ exports.getPathJS = function() {
 }
 
 function buildJsio(opts, callback) {
+	function getJsioSrc() {
+		var src = jsio.__jsio.__init__.toString(-1);
+		if (src.substring(0, 8) == 'function') {
+			src = ';(' + src + ')();';
+		}
+		return src;
+	}
+
 	var src,
-		jsioSrc = (opts.includeJsio ? ';(' + jsio.__jsio.__init__.toString(-1) + ')();' : '')
+		jsioSrc = (opts.includeJsio ? getJsioSrc() : '')
 				+ exports.getPathJS();
-	
+
 	// if we're not allowed to modify the jsio source or we're not including the jsio source
 	// then use jsio.setCachedSrc to include the source strings
 	if (opts.preserveJsioSource || !opts.includeJsio) {
