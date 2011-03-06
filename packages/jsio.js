@@ -561,9 +561,34 @@
 			cwd = ENV.getCwd();
 		
 		ctx.jsio = util.bind(this, importer, ctx, moduleDef.directory, moduleDef.filename);
-		ctx.require = ENV.require ? ENV.require : function(request, opts) {
+		ctx.require = function(request, opts) {
+			if (!opts) {
+				opts = {};
+			}
 			opts.dontExport = true;
-			return ctx.jsio(request, opts);
+			opts.suppressErrors = true;
+			
+			try {
+				var ret = ctx.jsio(request, opts);
+				if (!ret){
+					// need this to trigger require attempt due to suppresserrors = true
+					throw "module failed to load";
+				}else {
+					return ret;
+				}
+			} catch(e) {
+				try {
+					return require(request);
+				} catch(e2) {
+					ENV.log('Error loading request ' + request + ':');
+					ENV.log(e);
+
+					ENV.log('Also could not load using standard CommonJS');
+					ENV.log(e2);
+
+					throw e;
+				}
+			}
 		};
 		
 		ctx.module = {id: modulePath};
@@ -720,14 +745,25 @@
 
 	// CommonJS syntax
 	jsio.addCmd(function(context, request, opts, imports) {
+		
+		//		./../b -> ..b
+		// 		../../b -> ...b
+		// 		../b -> ..b
+		// 		./b -> .b
+		
 		var match = request.match(/^\s*[\w.0-9$\/]+\s*$/);
-		if(match) {
-			var req = match[0]
-				.replace(/^\//, '') // remove any leading slash
-				.replace(/\.\.?\//g, '.') // replace relative path indicators with dots
-				.replace(/\//g, '.'); // any remaining slashes are path separators
+		if (match) {
 			
-			imports[0] = { from: req };
+			var req = util.resolveRelativePath(match[0]),
+				isRelative = req.charAt(0) == '.';
+			
+			req = req	
+				// .replace(/^\//, '') // remove any leading slash
+				.replace(/\.\.\//g, '.') // replace relative path indicators with dots
+				.replace(/\.\//g, '')
+				.replace(/\//g, '.'); // any remaining slashes are path separators
+
+			imports[0] = { from: (isRelative ? '.' : '') + req };
 			return true;
 		}
 	});
