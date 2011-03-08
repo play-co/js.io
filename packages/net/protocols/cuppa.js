@@ -77,7 +77,7 @@ var ReceivedEvent = Class(function() {
 	}
 });
 
-exports.CuppaProtocol = Class(RTJPProtocol, function(supr) {
+exports = Class(RTJPProtocol, function(supr) {
 	this.init = function() {
 		supr(this, 'init', arguments);
 		
@@ -106,17 +106,26 @@ exports.CuppaProtocol = Class(RTJPProtocol, function(supr) {
 		this._onDisconnect.fire(err);
 	}
 	
-	this.sendRequest = function(name, args, cb, target) {
-		if (typeof(cb) != 'function') {
-			target = cb;
-			cb = null;
+	this.sendRequest = function(name, args, target, cb) {
+		if (arguments.length > 4) { // allow bound functions (e.g. [this, 'onResponse', 123])
+			cb = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 3));
 		}
-		var id = this.sendFrame('RPC', {name: name, args: args, target: target || null}),
+		
+		var frameArgs = {
+			name: name,
+			args: args
+		};
+		
+		if (target) { args.target = target; }
+		
+		var id = this.sendFrame('RPC', frameArgs),
 			req = this._requests[id] = new RPCRequest(this, id);
+		
 		if (cb) {
-			req.onSuccess(bind(GLOBAL, cb, true));
-			req.onError(bind(GLOBAL, cb, false));
+			req.onSuccess(GLOBAL, cb, false); // will call cb(false, args...)
+			req.onError(GLOBAL, cb); // will call cb(err)
 		}
+		
 		return req;
 	}
 	
