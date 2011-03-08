@@ -68,6 +68,7 @@ var Point = exports = Class(function() {
 		var m = this.getMagnitude();
 		this.x /= m;
 		this.y /= m;
+		return this;
 	}
 	
 	this.addMagnitude = function(m) { return this.setMagnitude(this.getMagnitude() + m); }
