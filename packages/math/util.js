@@ -6,6 +6,8 @@ exports.random = function(a, b, rand) { return a + ((rand || Math.random)() * (b
 exports.rand = Math.random;
 exports.int = exports.truncate = function(a) { return a | 0; }
 
+exports.clip = function(num, min, max) { return Math.max(Math.min(num, max), min); }
+
 var round = exports.round = function(a, precision, method) {
 	if (!method || method == round.ROUND_HALF_AWAY_FROM_ZERO) {
 		return a.toFixed(precision);
