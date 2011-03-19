@@ -518,26 +518,8 @@
 	function execModuleDef(context, moduleDef) {
 		var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\/.]/g, '_') + "(){" + moduleDef.src + "\n}}})";
 		var fn = ENV.eval(code, moduleDef.path, moduleDef.src);
-		try {
-			fn = fn(context);
-			fn.call(context.exports);
-		} catch(e) {
-			if(e.type == "syntax_error") {
-				throw new Error("error importing module: " + e.message);
-			} else if (!e.jsioLogged) {
-				e.jsioLogged = true;
-				if (e.type == "stack_overflow") {
-					ENV.log("Stack overflow in", moduleDef.friendlyPath, ':', e);
-				} else {
-					ENV.log(e.stack);
-					ENV.log(moduleDef.friendlyPath + ": enable 'break on error' in your debugger to debug. (" + moduleDef.path + ")");
-//					if (ENV.name == 'browser') {
-//						ENV.log(moduleDef.path + ':', e.message, "\n\n", e.stack.replace(new RegExp(util.resolveRelative(ENV.getCwd() + ENV.getPath() + '/jsio.js'), 'g'), ''));
-//					}
-				}
-			}
-			throw e;
-		}
+		fn = fn(context);
+		fn.call(context.exports);
 	};
 	
 	function resolveImportRequest(context, request, opts) {
@@ -556,24 +538,22 @@
 		return imports;
 	};
 	
-	function makeContext(modulePath, moduleDef, dontAddBase) {
-		var ctx = {exports: {}},
-			cwd = ENV.getCwd();
-		
+	function makeContext(ctx, modulePath, moduleDef, dontAddBase) {
+		if (!ctx) { ctx = {}; }
+		if (!ctx.exports) { ctx.exports = {}; }
+
 		ctx.jsio = util.bind(this, importer, ctx, moduleDef.directory, moduleDef.filename);
 		ctx.require = function(request, opts) {
-			if (!opts) {
-				opts = {};
-			}
+			if (!opts) { opts = {}; }
 			opts.dontExport = true;
 			opts.suppressErrors = true;
 			
 			try {
 				var ret = ctx.jsio(request, opts);
-				if (!ret){
+				if (ret === false) {
 					// need this to trigger require attempt due to suppresserrors = true
 					throw "module failed to load";
-				}else {
+				} else {
 					return ret;
 				}
 			} catch(e) {
@@ -613,11 +593,11 @@
 		fromFile = fromFile || '<initial file>';
 		
 		// importer is bound to a module's (or global) context -- we can override this
-		// by using opts.context
-		var context = opts.context || boundContext || ENV.global;
+		// by using opts.exportInto
+		var exportInto = opts.exportInto || boundContext || ENV.global;
 		
 		// parse the import request(s)
-		var imports = resolveImportRequest(context, request, opts),
+		var imports = resolveImportRequest(exportInto, request, opts),
 			numImports = imports.length,
 			retVal = numImports > 1 ? {} : null;
 		
@@ -641,7 +621,7 @@
 			// eval any packages that we don't know about already
 			var path = moduleDef.path;
 			if(!(path in modules)) {
-				var newContext = makeContext(modulePath, moduleDef, item.dontAddBase);
+				var newContext = makeContext(opts.context, modulePath, moduleDef, item.dontAddBase);
 				modules[path] = newContext.exports;
 				if(item.dontUseExports) {
 					var src = [';(function(){'], k = 1;
@@ -668,7 +648,7 @@
 					var as = item.as.match(/^\.*(.*?)\.*$/)[1],
 						segments = as.split('.'),
 						kMax = segments.length - 1,
-						c = context;
+						c = exportInto;
 				
 					// build the object in the context
 					for(var k = 0; k < kMax; ++k) {
@@ -688,10 +668,10 @@
 					// there can only be one module import with this syntax 
 					// (from foo import bar), so retVal will already be set here
 					if(item['import']['*']) {
-						for(var k in modules[path]) { context[k] = module[k]; }
+						for(var k in modules[path]) { exportInto[k] = module[k]; }
 					} else {
 						try {
-							for(var k in item['import']) { context[item['import'][k]] = module[k]; }
+							for(var k in item['import']) { exportInto[item['import'][k]] = module[k]; }
 						} catch(e) {
 							ENV.log('module: ', modules);
 							throw e;
@@ -772,5 +752,12 @@
 		jsio('from base import *');
 		GLOBAL['logger'] = logging.get('jsiocore');
 	};
+	
+	jsio.clone = function() {
+		var copy = exports.__init__();
+		if (ENV.name == 'browser') { window.jsio = jsio; }
+		return copy;
+	}
 
+	return jsio;
 })();
