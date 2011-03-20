@@ -39,17 +39,16 @@ function getPackage(fileName) {
 /**
  * args : array of arguments
  *   - args[0] : string - initial import string (optional if opts.package is provided)
- * opts : object
+ * opts : see optsDef.js
  *   - package : string - filename of a package definition
- *   - debug : integer - debug level (1 - 4)
+ *   - debug : integer - debug level (1 - 5)
  */
 exports.run = function(args, opts) {
 	
-	var debugLevel = 'debug' in opts ? opts.debug : 4;
+	var debugLevel = 'debug' in opts ? opts.debug : 5;
 
 	logger.setLevel(debugLevel);
 	interface.logger.setLevel(debugLevel);
-	logging.get('preprocessors.compiler').setLevel(debugLevel);
 	
 	if (debugLevel >= 3) {
 		var strOpts = JSON.stringify(opts, null, '\t');
@@ -190,6 +189,9 @@ exports.run = function(args, opts) {
 	
 	// run the actual compiler
 	var compiler = jsio('import preprocessors.compiler');
+	
+	compiler.setDebugLevel(debugLevel);
+	
 	if (opts.compressor) { compiler.setCompressor(opts.compressor); }
 	
 	compiler.compile('import base');
