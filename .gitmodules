@@ -1,0 +1,3 @@
+[submodule "packages/vendor/jsdom"]
+	path = packages/vendor/jsdom
+	url = https://github.com/tmpvar/jsdom.git
