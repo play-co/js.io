@@ -23,7 +23,7 @@
 // Initialization of js.io occurs in a closure, preventing local variables
 // from entering the global scope.  During execution, the method `jsio` is
 // added to the global scope.
-;(function() {
+;(function(envClone) {
 	// We expect this code to be minified before production use, so we may
 	// write code slightly more verbosely than we otherwise would.
 	
@@ -241,7 +241,9 @@
 		this.addCmd = function(processor) { this.__cmds.push(processor); }
 		
 		this.setEnv = function(envCtor) {
-			if(typeof envCtor == 'string') {
+			if (!envCtor && envClone) {
+				ENV = envClone;
+			} else if (typeof envCtor == 'string') {
 				switch(envCtor) {
 					case 'node':
 						ENV = new ENV_node(util);
@@ -261,7 +263,9 @@
 		}
 	}).call(exports);
 	
-	if (typeof process !== 'undefined' && process.version) {
+	if (envClone) {
+		jsio.setEnv();
+	} else if (typeof process !== 'undefined' && process.version) {
 		jsio.setEnv('node');
 	} else if (typeof XMLHttpRequest != 'undefined' || typeof ActiveXObject != 'undefined') {
 		jsio.setEnv('browser');
@@ -754,7 +758,7 @@
 	};
 	
 	jsio.clone = function() {
-		var copy = exports.__init__();
+		var copy = exports.__init__(ENV);
 		if (ENV.name == 'browser') { window.jsio = jsio; }
 		return copy;
 	}
