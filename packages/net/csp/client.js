@@ -91,7 +91,7 @@ exports.CometSession = Class(function(supr) {
 		this.readyState = READYSTATE.CONNECTING;
 		this._transport.handshake(this._url, this._options);
 		
-		this._handshakeTimeoutTimer = $setTimeout(bind(this, this._handshakeTimeout), 
+		this._handshakeTimeoutTimer = setTimeout(bind(this, this._handshakeTimeout), 
 			this._options.connectTimeout);
 	}
 
@@ -206,7 +206,7 @@ exports.CometSession = Class(function(supr) {
 		}
 		
 		logger.debug('trying again in ', this._handshakeBackoff);
-		this._handshakeRetryTimer = $setTimeout(bind(this, function() {
+		this._handshakeRetryTimer = setTimeout(bind(this, function() {
 			this._handshakeRetryTimer = null;
 			this._transport.handshake(this._url, this._options);
 		}), this._handshakeBackoff);
@@ -231,7 +231,7 @@ exports.CometSession = Class(function(supr) {
 	
 	this._writeFailure = function() {
 		if (this.readyState != READYSTATE.CONNECTED && this.READYSTATE != READYSTATE.DISCONNECTING) { return; }
-		this._writeTimer = $setTimeout(bind(this, function() {
+		this._writeTimer = setTimeout(bind(this, function() {
 			this._writeTimer = null;
 			this.__doWrite(this._nullInBuffer);
 		}), this._writeBackoff);
@@ -282,9 +282,7 @@ exports.CometSession = Class(function(supr) {
 			return this.close(new errors.ExpiredSession(data));
 		}
 		
-		this._cometTimer = $setTimeout(bind(this, function() {
-			this._doConnectComet();
-		}), this._cometBackoff);
+		this._cometTimer = setTimeout(bind(this, '_doConnectComet'), this._cometBackoff);
 		this._cometBackoff *= 2;
 	}
 	
@@ -380,7 +378,7 @@ exports.CometSession = Class(function(supr) {
 
 	this._resetTimeoutTimer = function() {
 		clearTimeout(this._timeoutTimer);
-		this._timeoutTimer = $setTimeout(bind(this, function() {
+		this._timeoutTimer = setTimeout(bind(this, function() {
 			logger.debug('connection timeout expired');
 			this.close(new errors.ConnectionTimeout())
 		}), this._getTimeoutInterval())
