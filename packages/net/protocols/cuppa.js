@@ -63,7 +63,7 @@ var ReceivedRequest = Class(function() {
         this.responded = true;
         this.protocol.sendFrame('RESPONSE', {
             id: this.id,
-            args: args
+            args: args == undefined ? {} : args // python cuppa ignores responses with undefined args
         });
     }
 });
@@ -91,6 +91,8 @@ exports = Class(RTJPProtocol, function(supr) {
 		this.onRequest = new lib.PubSub();
 	}
 	
+	this.disconnect = function() { this.transport.loseConnection(); }
+	
 	// pass something to call (ctx, method, args...) when connected
 	this.onConnect = function() { this._onConnect.forward(arguments); }
 	this.onDisconnect = function() { this._onDisconnect.forward(arguments); }
@@ -116,7 +118,7 @@ exports = Class(RTJPProtocol, function(supr) {
 			args: args
 		};
 		
-		if (target) { args.target = target; }
+		if (target) { frameArgs.target = target; }
 		
 		var id = this.sendFrame('RPC', frameArgs),
 			req = this._requests[id] = new RPCRequest(this, id);
