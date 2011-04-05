@@ -107,6 +107,8 @@ exports = function(path, moduleDef, opts) {
 	moduleDef.src = '';
 }
 
+exports.setDebugLevel = function(debugLevel) { logger.setLevel(debugLevel); }
+
 exports.reset = function() {
 	gSrcTable = {};
 }
