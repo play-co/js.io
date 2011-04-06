@@ -73,6 +73,7 @@ var Point = exports = Class(function() {
 	
 	this.addMagnitude = function(m) { return this.setMagnitude(this.getMagnitude() + m); }
 	this.getMagnitude = function() { return Math.sqrt(this.x * this.x + this.y * this.y); }
+	this.getSquaredMagnitude = function() { return this.x * this.x + this.y * this.y; }
 	this.getDirection =
 	this.getAngle = function() { return Math.atan2(this.y, this.x); }
 	
