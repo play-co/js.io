@@ -12,9 +12,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		
 		logger.debug('opening the connection');
 		if (!this._opts.encoding) { this._opts.encoding = 'plain'; }
-		var url = this._opts.url;
-		delete this._opts.url;
-		conn.connect(url, this._opts);//{encoding: 'plain'});
+		conn.connect(this._opts.url, this._opts);//{encoding: 'plain'});
 	}
 	
 	this.cometSessionOnConnect = function(conn) {

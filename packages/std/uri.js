@@ -20,7 +20,7 @@ var attrs = [
 var URI = exports = Class(function(supr) {
 	this.init = function(url, isStrict) {
 		if (url instanceof URI) {
-			for (var attr in attrs) {
+			for (var i = 0, attr; attr = attrs[i]; ++i) {
 				this['_' + attr] = url['_' + attr];
 			}
 			return;

@@ -38,6 +38,11 @@ jsio('from util.browserdetect import BrowserDetect');
 function isLocalFile(url) { return /^file:\/\//.test(url); }
 function isWindowDomain(url) { return uri.isSameDomain(url, window.location.href); }
 
+var xhrSupportsBinary = undefined;
+function checkXHRBinarySupport(xhr) {
+	xhrSupportsBinary = !!xhr.sendAsBinary;
+}
+
 function canUseXHR(url) {
 	// always use jsonp for local files
 	if (isLocalFile(url)) { return false; }
@@ -45,6 +50,8 @@ function canUseXHR(url) {
 	// try to create an XHR using the same function the XHR transport uses
 	var xhr = new exports.XHR();
 	if (!xhr) { return false; }
+	
+	checkXHRBinarySupport(xhr);
 	
 	// if the URL requested is the same domain as the window,
 	// then we can use same-domain XHRs
@@ -106,16 +113,15 @@ exports.Transport = Class(function(supr) {
 var baseTransport = Class(exports.Transport, function(supr) {
 	this.init = function() {
 		this._aborted = false;
-		this._handshakeArgs = {
-			d:'{}',
-			ct:'application/javascript'
-		};
+		this._handshakeArgs = {ct:'application/javascript'};
+		this._handshakeData = '{}'
 	};
 	
 	this.handshake = function(url, options) {
 		logger.debug('handshake:', url, options);
 		this._makeRequest('send', url + '/handshake', 
-						  this._handshakeArgs, 
+						  this._handshakeArgs,
+						  this._handshakeData,
 						  this.handshakeSuccess, 
 						  this.handshakeFailure);
 	};
@@ -127,20 +133,21 @@ var baseTransport = Class(exports.Transport, function(supr) {
 			a: lastEventId
 		};
 		this._makeRequest('comet', url + '/comet', 
-						  args, 
+						  args,
+						  null,
 						  this.cometSuccess, 
 						  this.cometFailure);
 	};
 	
 	this.send = function(url, sessionKey, lastEventId, data, options) {
-		logger.debug('send:', url, sessionKey, data, options);
+		//logger.debug('send:', url, sessionKey, data, options);
 		var args = {
-			d: data,
 			s: sessionKey,
 			a: lastEventId
 		};
 		this._makeRequest('send', url + '/send', 
-						  args, 
+						  args,
+						  data,
 						  this.sendSuccess, 
 						  this.sendFailure);
 	};
@@ -185,17 +192,12 @@ transports.xhr = Class(baseTransport, function(supr) {
 		this._xhr[type] = new exports.XHR();
 	};
 	
-	var mustEncode = !(exports.createXHR().sendAsBinary);
 	this.encodePacket = function(packetId, data, options) {
 		// we don't need to base64 encode things unless there's a null character in there
-		return mustEncode ? [ packetId, 1, base64.encode(data) ] : [ packetId, 0, data ];
+		return !xhrSupportsBinary ? [ packetId, 1, base64.encode(data) ] : [ packetId, 0, data ];
 	};
 
-	this._onReadyStateChange = function(rType, cb, eb) {
-		
-		var response = '',
-			xhr = this._xhr[rType];
-		
+	function onReadyStateChange(xhr, rType, cb, eb) {
 		try {
 			var data = {status: xhr.status};
 		} catch(e) { eb({response: 'Could not access status'}); }
@@ -225,28 +227,26 @@ transports.xhr = Class(baseTransport, function(supr) {
 	/**
 	 * even though we encode the POST body as in application/x-www-form-urlencoded
 	 */
-	this._makeRequest = function(rType, url, args, cb, eb) {
-		if (this._aborted) {
-			return;
-		}
-		var xhr = this._xhr[rType], data = args.d || null;
-		if('d' in args) { delete args.d; }
+	this._makeRequest = function(rType, url, args, data, cb, eb) {
+		if (this._aborted) { return; }
+		var xhr = this._xhr[rType];
 		xhr.open('POST', url + '?' + uri.buildQuery(args)); // must open XHR first
 		xhr.setRequestHeader('Content-Type', 'text/plain'); // avoid preflighting
 		if('onload' in xhr) {
-			xhr.onload = bind(this, '_onReadyStateChange', rType, cb, eb);
+			xhr.onload = bind(this, onReadyStateChange, xhr, rType, cb, eb);
 			xhr.onerror = xhr.ontimeout = eb;
 		} else if('onreadystatechange' in xhr) {
-			xhr.onreadystatechange = bind(this, '_onReadyStateChange', rType, cb, eb);
+			xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, rType, cb, eb);
 		}
 		// NOTE WELL: Firefox (and probably everyone else) likes to encode our nice
 		//						binary strings as utf8. Don't let them! Say no to double utf8
 		//						encoding. Once is good, twice isn't better.
-		var supportsBinary = !!xhr.sendAsBinary;
-		if (supportsBinary) {
-			// xhr.setRequestHeader('x-CSP-SendAsBinary', 'true');
-		}
-		setTimeout(bind(xhr, supportsBinary ? 'sendAsBinary' : 'send', data), 0);
+		// if (xhrSupportsBinary) {
+		// 		xhr.setRequestHeader('x-CSP-SendAsBinary', 'true');
+		// }
+		setTimeout(function() {
+			xhr[xhrSupportsBinary ? 'sendAsBinary' : 'send'](data || null)
+		}, 0);
 	};
 });
 
@@ -328,7 +328,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		}
 	};
 	
-	this._makeRequest = function(rType, url, args, cb, eb) {
+	this._makeRequest = function(rType, url, args, data, cb, eb) {
 		if(!this._isReady) { return this._onReady.push(arguments); }
 		
 		var ifr = this._ifr[rType],
@@ -343,6 +343,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 				completed: false
 			};
 		
+		args.d = data;
 		args.n = Math.random();	
 		switch(rType) {
 			case 'send': args.rs = ';'; args.rp = req.cbName; break;

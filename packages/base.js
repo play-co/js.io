@@ -87,31 +87,21 @@ var ErrorParentClass = exports.Class(Error, function() {
 	}
 });
 
-exports.$setTimeout = function(f, t/*, VARGS */) {
-	var args = SLICE.call(arguments, 2);
-	return setTimeout(function() {
-		try {
-			f.apply(this, args);
-		} catch(e) {
-			// log?
+exports.Class.defaults = 
+exports.merge = function(base, extra) {
+	base = base || {};
+	
+	for (var i = 1, len = arguments.length; i < len; ++i) {
+		var copyFrom = arguments[i];
+		for (var key in copyFrom) {
+			if (copyFrom.hasOwnProperty(key) && !base.hasOwnProperty(key)) {
+				base[key] = copyFrom[key];
+			}
 		}
-	}, t)
+	}
+	
+	return base;
 }
-
-exports.$setInterval = function(f, t/*, VARGS */) {
-	var args = SLICE.call(arguments, 2);
-	return setInterval(function() {
-		try {
-			f.apply(this, args);
-		} catch(e) {
-			// log?
-		}
-	}, t)
-}
-
-// node doesn't let you call clearTimeout(null)
-exports.$clearTimeout = function (timer) { return timer ? clearTimeout(timer) : null; };
-exports.$clearInterval = function (timer) { return timer ? clearInterval(timer) : null; };
 
 // keep logging local variables out of other closures in this file!
 exports.logging = (function() {
