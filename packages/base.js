@@ -103,6 +103,25 @@ exports.merge = function(base, extra) {
 	return base;
 }
 
+exports.Class.ctor = function(proto, supr, defaults, post) {
+	if (!supr) {
+		supr = function(ctx, method, args) {
+			ctx._opts = args[0];
+		}
+	}
+
+	if (post) {
+		proto.init = function(opts) {
+			supr(this, 'init', [opts = exports.merge(opts, defaults)]);
+			post.apply(this, [opts].concat(SLICE.call(arguments, 1)));
+		}
+	} else {
+		proto.init = function(opts) {
+			supr(this, 'init', [exports.merge(opts, defaults)]);
+		}
+	}
+}
+
 // keep logging local variables out of other closures in this file!
 exports.logging = (function() {
 	
@@ -150,7 +169,7 @@ exports.logging = (function() {
 			}
 		}
 	
-		this.setListener = function(listener) { log = listener; }
+		this.setListener = function(listener) { this._listener = listener; }
 		this.debug = makeLogFunction(logging.DEBUG, "DEBUG");
 		this.log = makeLogFunction(logging.LOG, "LOG");
 		this.info = makeLogFunction(logging.INFO, "INFO");
