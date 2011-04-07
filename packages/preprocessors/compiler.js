@@ -150,7 +150,7 @@ function buildJsio(opts, callback) {
 	function getJsioSrc() {
 		var src = jsio.__jsio.__init__.toString(-1);
 		if (src.substring(0, 8) == 'function') {
-			src = ';(' + src + ')();';
+			src = 'jsio=(' + src + ')();';
 		}
 		return src;
 	}

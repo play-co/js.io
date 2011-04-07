@@ -16,7 +16,7 @@ exports.start = function(/*optional*/ args, opts) {
 		return;
 	}
 	
-	var DYNAMIC_IMPORT_COMPILER = '.' + jsio.__env.name + '_interface';
+	var DYNAMIC_IMPORT_COMPILER = 'import .' + jsio.__env.name + '_interface';
 	
 	interface = jsio(DYNAMIC_IMPORT_COMPILER);
 	

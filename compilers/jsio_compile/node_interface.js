@@ -74,7 +74,7 @@ exports.compressor = function(src, callback) {
 	if (!closurePath) { return fail(); }
 	
 	var spawn = require('child_process').spawn,
-	    closure = spawn('java', ['-jar', closurePath || 'jsio_minify.jar']),
+	    closure = spawn('java', ['-jar', closurePath || 'jsio_minify.jar', '--compilation_level', 'SIMPLE_OPTIMIZATIONS']),
 		stdout = [],
 		stderr = [];
 	
