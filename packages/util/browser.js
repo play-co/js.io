@@ -57,6 +57,14 @@ if (jsio.__env.name == 'browser') {
 		
 		if ('html' in params) { el.innerHTML = params.html; }
 		if ('text' in params) { $.setText(el, params.text); }
+		
+		if (params.children) {
+			var c = params.children;
+			for (var i = 0, n = c.length; i < n; ++i) {
+				el.appendChild(c[i]);
+			}
+		}
+		
 		return el;
 	}
 	
