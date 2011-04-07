@@ -15,6 +15,9 @@ exports = Class(function() {
 		this._timer = null;
 	}
 	
+	this.stop = function() { this.jumpTo(this._s); }
+	this.play = function() { this.seekTo(this._end); }
+	
 	this.seekTo = function(s, dur) {
 		this._t0 = +new Date();
 		this._s0 = this._s;
