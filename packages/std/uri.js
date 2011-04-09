@@ -77,7 +77,7 @@ exports.relativeTo = function(url, base) {
 	if (url.charAt(0) == '/') {
 		var baseuri = new exports(base);
 		url = baseuri.toString(true) + url;
-	} else if(url.charAt(0) == '.') {
+	} else {
 		url = base + url;
 	}
 	
