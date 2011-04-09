@@ -15,8 +15,8 @@ exports.average = function(a, b, weight) {
 exports.normalize = function(a) {
 	
 	// TODO: don't use loops
-	while(a < -PI) { a += PI; }
-	while(a > PI) { a -= PI; }
+	while(a < -PI) { a += 2 * PI; }
+	while(a > PI) { a -= 2 * PI; }
 	return a;
 }
 
