@@ -79,6 +79,15 @@ var Point = exports = Class(function() {
 	
 });
 
+Point.getPolarR = function(x, y) { 
+	throw "notImplemented";
+}
+
+Point.getPolarTheta = function(x, y) { 
+	var val = Math.atan2(y,x) + (Math.PI * 2); 
+	return val > Math.PI * 2 ? val % (Math.PI * 2) : val;
+}
+
 Point.add = Point.translate = function(a, b, c, d) {
 	switch(arguments.length) {
 		case 2: return new Point(a).add(b);
