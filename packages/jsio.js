@@ -483,7 +483,7 @@
 				if (opts.suppressErrors) { return false; }
 				var paths = [];
 				for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.path); }
-				throw new Error('Error in ' + fromDir + fromFile + ": requested import (" + modulePath + ") not found.\n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t'));
+				throw new Error(fromDir + fromFile + ": \n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t') + '\n\tImport Stack:\n\t\t' + importStack.join('\n\t\t') + "\n\tError: requested import (" + modulePath + ") not found.");
 			}
 		
 			moduleDef.friendlyPath = modulePath;
@@ -592,7 +592,8 @@
 			ctx.jsio.path = jsio.path;
 			return ctx;
 		};
-	
+		
+		var importStack = [];
 		function importer(boundContext, fromDir, fromFile, request, opts) {
 			opts = opts || {};
 			fromDir = fromDir || './';
@@ -623,7 +624,9 @@
 					}
 					throw e;
 				}
-
+				
+				importStack.push(importStack.length + ' : ' + moduleDef.friendlyPath + ' (' + moduleDef.path + ')');
+				
 				// eval any packages that we don't know about already
 				var path = moduleDef.path;
 				if(!(path in modules)) {
@@ -641,6 +644,8 @@
 					execModuleDef(newContext, moduleDef);
 					modules[path] = newContext.exports;
 				}
+				
+				importStack.pop();
 			
 				var module = modules[path];
 			
