@@ -60,18 +60,14 @@ exports.Class = function(parent, proto) {
 	
 	var cls = function() { if (this.init) { return this.init.apply(this, arguments); }},
 		supr = parent ? function(context, method, args) {
-			var args = args || [];
-			var target = proto;
-			while (target = target.prototype) {
-				if (target[method]) {
-					return target[method].apply(context, args);
-				}
-			}
-			throw new Error('method ' + method + ' does not exist');
+			var f = parent.prototype[method];
+			if (!f) { throw new Error('method ' + method + ' does not exist'); }
+			return f.apply(context, args || []);
 		} : null;
 	
 	cls.prototype = new proto(logger || supr, logger && supr);
 	cls.prototype.constructor = cls;
+	cls.prototype.__parentClass__ = parent;
 	if (name) { cls.prototype.__class__ = name; }
 	return cls;
 }
