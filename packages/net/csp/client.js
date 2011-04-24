@@ -335,6 +335,9 @@ exports.CometSession = Class(function(supr) {
 			// TODO: possibly catch this error in production? but not in dev
 			this._doOnRead(data);
 		}
+		
+		if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) { return; }
+		
 		// reconnect comet last, after we process all of the packet ids
 		this._doConnectComet();
 		
