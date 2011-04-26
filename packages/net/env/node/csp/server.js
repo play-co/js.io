@@ -92,7 +92,7 @@ exports.Session = Class(function() {
 		this.resetTimeoutTimer();
 	};
 	this.teardownSession = function () {
-		$clearTimeout(this.durationTimer);
+		clearTimeout(this.durationTimer);
 		this.connection.readyState = (this.connection.readyState === 'open' ? 'writeOnly' : 'closed');
 		this.connection.emit('eof');
 		// XXX when the client calls close, do we want to allow the server to
@@ -146,22 +146,22 @@ exports.Session = Class(function() {
 	};
 	this.resetDurationTimer = function () {
 		var duration = 1000 * parseInt(this.variables.duration);
-		this.durationTimer = $setTimeout(bind(this, this.completeResponse), duration);
+		this.durationTimer = setTimeout(bind(this, this.completeResponse), duration);
 	};
 	this.resetIntervalTimer = function () {
-		$clearTimeout(this.intervalTimer);
+		clearTimeout(this.intervalTimer);
 		if (this.variables.interval === '0') {
 			return;
 		};
 		var interval = 1000 * parseInt(this.variables.interval);
-		this.intervalTimer = $setTimeout(bind(this, this.sendBatch), interval);
+		this.intervalTimer = setTimeout(bind(this, this.sendBatch), interval);
 	};
 	this.resetTimeoutTimer = function () {
-		$clearTimeout(this.timeoutTimer);
+		clearTimeout(this.timeoutTimer);
 		// Give the client 50% longer than the duration of a comet request before 
 		// we time them out.
 		var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
-		this.timeoutTimer = $setTimeout(bind(this, this.teardownSession), timeout);
+		this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
 	};
 	this.sendHeaders = function (response, contentLength) {
 		var allowOrigin = '*'; // XXX: Make Access-Control configurable
@@ -208,15 +208,15 @@ exports.Session = Class(function() {
 			this.cometResponse.write(body);
 			this.cometResponse.end();
 			this.cometResponse = null;
-			$clearTimeout(this.durationTimer);
+			clearTimeout(this.durationTimer);
 		};
 	};
 	this.completeResponse = function() {
 		if (this.isStreaming()) {
 			this.cometResponse.end(); // close a stream
 			this.cometResponse = null;
-			$clearTimeout(this.durationTimer);
-			$clearTimeout(this.intervalTimer);
+			clearTimeout(this.durationTimer);
+			clearTimeout(this.intervalTimer);
 		} else {
 			this.sendBatch() // send empty batch to poll/longpoll
 		};
