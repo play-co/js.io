@@ -1,5 +1,3 @@
-jsio('import std.js as JS');
-
 var attrs = [ 
 	"source",
 	"protocol",
@@ -47,10 +45,32 @@ var URI = exports = Class(function(supr) {
 	};
 	
 	this.query = function(key) { return exports.parseQuery(this._query)[key]; }
-	this.hash = function(key) { return exports.parseQuery(this._hash)[key]; }
+	this.hash = function(key) { return exports.parseQuery(this._anchor)[key]; }
+	
+	this.addHash = function(kvp) {
+		var hash = exports.parseQuery(this._anchor);
+		for (var i in kvp) { hash[i] = kvp[i]; }
+		this._anchor = exports.buildQuery(hash);
+		return this;
+	}
 	
 	this.addQuery = function(kvp) {
-		this._query = exports.buildQuery(JS.merge(kvp, exports.parseQuery(this._query)));
+		var query = exports.parseQuery(this._query);
+		for (var i in kvp) { query[i] = kvp[i]; }
+		this._query = exports.buildQuery(query);
+		return this;
+	}
+	
+	this.removeQuery = function(keys) {
+		var query = exports.parseQuery(this._query);
+		if (isArray(keys)) {
+			for (var i = 0, n = keys.length; i < n; ++i) {
+				delete query[keys[i]];
+			}
+		} else {
+			delete query[keys];
+		}
+		this._query = exports.buildQuery(query);
 		return this;
 	}
 
