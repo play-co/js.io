@@ -282,7 +282,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 	};
 
 	var removeIframe = function(ifr) {
-		$setTimeout(function() {
+		setTimeout(function() {
 			if(ifr && ifr.parentNode) { ifr.parentNode.removeChild(ifr); }
 		}, 60000);
 	};
@@ -302,7 +302,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 			comet: createIframe()
 		};
 		
-		if(this._ifr.send === false) { return $setTimeout(bind(this, '_createIframes'), 100); }
+		if(this._ifr.send === false) { return setTimeout(bind(this, '_createIframes'), 100); }
 		
 		this._isReady = true;
 
@@ -352,7 +352,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		
 		req.url = url + '?' + uri.buildQuery(args)
 		
-		$setTimeout(bind(this, '_request', req), 0);
+		setTimeout(bind(this, '_request', req), 0);
 	}
 	
 	this._request = function(req) {
