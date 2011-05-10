@@ -159,7 +159,11 @@ exports.logging = (function() {
 			return function() {
 				if (!production && level >= this._level) {
 					var prefix = type + ' ' + gPrefix + this._name;
-					return this._listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
+					if (this._listener) {
+						return this._listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
+					} else { 
+						return function() {}
+					}
 				}
 				return arguments[0];
 			}
