@@ -15,6 +15,7 @@ exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
 	}
 	
 	this.dataReceived = function(data) {
+		logger.log('called datareceived with data ', JSON.stringify(data));
 		if (!data) { return; }
 		logger.debug('dataReceived:(' + data.length + ')', data);
 		logger.debug('last 2:', data.slice(data.length-2));

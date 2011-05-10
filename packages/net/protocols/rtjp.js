@@ -26,7 +26,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 		if (!args) {
 			args = {}
 		}
-		logger.debug('sendFrame', name, args);
+		logger.debug('sendFrame', name, JSON.stringify(args));
 		this.sendLine(JSON.stringify([++this.frameId, name, args]));
 		return this.frameId;
 	}
@@ -43,7 +43,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 			if (typeof(frame[1]) != "string") {
 				return error.call(this, "Invalid frame name");
 			}
-			logger.debug("frameReceived:", frame[0], frame[1], frame[2]);
+			logger.debug("frameReceived:", frame[0], frame[1], JSON.stringify(frame[2]));
 		} catch(e) {
 			error.call(this, e);
 		}
