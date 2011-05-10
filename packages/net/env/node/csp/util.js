@@ -57,7 +57,7 @@ exports.assert = function (exp, message) {
 // schedule a callback to run at the next available moment,
 // equivalent to setTimeout(callback, 0)
 exports.reschedule = function (callback) {
-	return $setTimeout(callback, 0);
+	return setTimeout(callback, 0);
 };
 
 // cached static files

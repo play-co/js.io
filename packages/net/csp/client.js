@@ -174,11 +174,15 @@ exports.CometSession = Class(function(supr) {
 		
 		this._doOnDisconnect(err);
 	}
-
 	
 	this._handshakeTimeout = function() {
 		logger.debug('handshake timeout');
 		this._handshakeTimeoutTimer = null;
+		clearTimeout(this._handshakeRetryTimer);
+		if (this.readyState == READYSTATE.CONNECTING) {
+			this.readyState = READYSTATE.DISCONNECTED;
+		}
+		
 		this._doOnDisconnect(new errors.ServerUnreachable());
 	}
 	
