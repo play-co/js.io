@@ -333,6 +333,12 @@
 			this.log = function() {
 				var args = SLICE.call(arguments, 0);
 				if (typeof console != 'undefined' && console.log) {
+					//for iOS mobile safari w/ debugger console enabled,
+					//uncomment the following two lines for more useful
+					//messages
+					//console.log(args.join(' '));
+					//return;
+					
 					if (console.log.apply) {
 						console.log.apply(console, arguments);
 					} else { // IE doesn't support log.apply, and the argument cannot be arguments - it must be an array
