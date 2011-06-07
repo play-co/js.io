@@ -80,7 +80,7 @@ intersect.util.rectAndRect = function(rect1, rect2) {
 			y1 = Math.max(rect1.y, rect2.y),
 			x2 = Math.min(rect1.x + rect1.width, rect2.x + rect2.width),
 			y2 = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
-		return new Rect(x, y, x2 - x1, y2 - y1);
+		return new Rect(x1, y1, x2 - x1, y2 - y1);
 	}
 	return null;
 }
