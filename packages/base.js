@@ -150,7 +150,6 @@ exports.logging = (function() {
 		this.init = function(name, level) {
 			this._name = name;
 			this._level = level || logging.LOG;
-			this._listener = exports.log;
 		}
 		
 		this.setLevel = function(level) { this._level = level; }
@@ -158,12 +157,10 @@ exports.logging = (function() {
 		function makeLogFunction(level, type) {
 			return function() {
 				if (!production && level >= this._level) {
-					var prefix = type + ' ' + gPrefix + this._name;
-					if (this._listener) {
-						return this._listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
-					} else { 
-						return function() {}
-					}
+					var prefix = type + ' ' + gPrefix + this._name,
+						listener = this._listener || exports.log;
+					
+					return listener && listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
 				}
 				return arguments[0];
 			}

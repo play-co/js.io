@@ -94,7 +94,7 @@ if (jsio.__env.name == 'browser') {
 			return doc.createElement(params || 'div');
 		};
 
-		return $.apply(doc.createElement(params.tag || params.tagName || 'div'), params);
+		return $.apply(params.el || doc.createElement(params.tag || params.tagName || 'div'), params);
 	}
 
 	$.show = function(el, how) { $.id(el).style.display = how || 'block'; }
@@ -218,9 +218,11 @@ if (jsio.__env.name == 'browser') {
 	}
 
 	$.stopEvent = function(e) {
-		e.cancelBubble = true;
-		if(e.stopPropagation) e.stopPropagation();
-		if(e.preventDefault) e.preventDefault();
+		if (e) {
+			e.cancelBubble = true;
+			if(e.stopPropagation) e.stopPropagation();
+			if(e.preventDefault) e.preventDefault();
+		}
 	}
 
 	$.setText = function(el, text) {
