@@ -218,9 +218,11 @@ if (jsio.__env.name == 'browser') {
 	}
 
 	$.stopEvent = function(e) {
-		e.cancelBubble = true;
-		if(e.stopPropagation) e.stopPropagation();
-		if(e.preventDefault) e.preventDefault();
+		if (e) {
+			e.cancelBubble = true;
+			if(e.stopPropagation) e.stopPropagation();
+			if(e.preventDefault) e.preventDefault();
+		}
 	}
 
 	$.setText = function(el, text) {
