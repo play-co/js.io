@@ -40,6 +40,7 @@ var URI = exports = Class(function(supr) {
 			};
 			this['set' + fNameSuffix] = function(val) {
 				this['_' + attr] = val;
+				return this;
 			};
 		}).call(this, attr);
 	};
