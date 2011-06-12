@@ -36,36 +36,57 @@ var RPCRequest = Class(function() {
 });
 
 var ReceivedRequest = Class(function() {
-    this.type = "request"
+	this.type = "request"
 
-   this.init = function(protocol, id, name, args, target) {
-        this.protocol = protocol
-        this.id = id;
-        this.name = name
-        this.responded = false;
-        this.args = args;
+	this.init = function(protocol, id, name, args, target) {
+		this.protocol = protocol
+		this.id = id;
+		this.name = name
+		this.responded = false;
+		this.args = args;
 		this.target = target;
-    }
+	}
 
-    this.error = function(msg, details) {
-        if (this.responded) { throw new Error("already responded"); }
-        args = {
-            id: this.id,
-            msg: msg + ""
-        }
-        if (details !== undefined) { args.details = details }
-        this.responded = true;        
-        this.protocol.sendFrame('ERROR', args);
-    }
+	this.error = function(msg, details) {
+		if (this.responded) { throw new Error("already responded"); }
+		if (this._timer) { 
+			clearTimeout(this._timer); 
+			this._timer = null; 
+		}
+		args = {
+			id: this.id,
+			msg: msg + ""
+		}
+		if (details !== undefined) { args.details = details }
+		this.responded = true;        
+		this.protocol.sendFrame('ERROR', args);
+	}
 
-    this.respond = function(args) {
-        if (this.responded) { throw new Error("already responded"); }
-        this.responded = true;
-        this.protocol.sendFrame('RESPONSE', {
-            id: this.id,
-            args: args == undefined ? {} : args // python cuppa ignores responses with undefined args
-        });
-    }
+	this.respond = function(args) {
+		if (this.responded) { throw new Error("already responded"); }
+		if (this._timer) { 
+			clearTimeout(this._timer); 
+			this._timer = null; 
+		}
+		this.responded = true;
+		this.protocol.sendFrame('RESPONSE', {
+			id: this.id,
+			args: args == undefined ? {} : args // python cuppa ignores responses with undefined args
+		});
+	}
+	
+	this.timeoutAfter = function(duration, msg) {
+		if (this.responded) { return; }
+		if (this._timer) { clearTimeout(this._timer); }
+		this._timer = setTimeout(bind(this, '_timeout', msg), duration);
+	}
+	
+	this._timeout = function(msg) {
+		if (!this.responded) {
+			this.error(msg);
+		}
+	}
+    
 });
 
 var ReceivedEvent = Class(function() {
