@@ -42,6 +42,7 @@ exports.get = function(opts, cb) {
 	var url = opts.url;
 	var isObject = opts.data && typeof opts.data == 'object';
 	if (!opts.url) { logger.error('no url provided'); return; }
+	
 	var data = method == 'POST' ? isObject ? JSON.stringify(opts.data) : opts.data : null;
 	if (method == 'GET' && opts.data) {
 		url = new URI(url).addQuery(isObject ? opts.data : URI.parseQuery(opts.data)).toString();
@@ -51,7 +52,7 @@ exports.get = function(opts, cb) {
 	xhr.open(method, url, !(opts.async == false));
 	xhr.setRequestHeader('Content-Type', 'text/plain');
 	xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, opts.type, cb);
-	xhr.send(opts.data || null);
+	xhr.send(data || null);
 }
 
 function onReadyStateChange(xhr, type, cb) {
