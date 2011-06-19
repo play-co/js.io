@@ -1,3 +1,58 @@
+var SyncTimer = Class(function() {
+	this.init = function() {
+		this._items = [];
+		this._tick = bind(this, 'tick');
+		this._length = 0;
+	}
+	
+	this.tick = function() {
+		var now = +new Date();
+		var dt = now - this._last;
+		this._last = now;
+		
+		// items might get removed as we iterate, so this._length can change
+		for (var i = 0; i < this._length; ++i) {
+			this._items[i](dt);
+		}
+	}
+	
+	this.add = function(cb) { 
+		if (cb) {
+			this._items.push(cb);
+			++this._length;
+			cb(0);
+			this.start();
+		}
+	}
+	
+	this.remove = function(cb) {
+		for (var i = 0, n = this._items.length; i < n; ++i) {
+			if (this._items[i] == cb) {
+				this._items.splice(i, 1);
+				if (!--this._length) { this.stop(); }
+				return;
+			}
+		}
+	}
+	
+	this.start = function() {
+		if (!this._isRunning) {
+			this._isRunning = true;
+			this._last = +new Date();
+			this._timer = setInterval(this._tick, 15);
+		}
+	}
+	
+	this.stop = function() {
+		if (this._isRunning) {
+			this._isRunning = false;
+			clearInterval(this._timer);
+		}
+	}
+});
+
+var timer = new SyncTimer();
+
 exports = Class(function() {
 	this.init = function(params) {
 		this._start = 'start' in params ? params.start : 0;
@@ -19,7 +74,9 @@ exports = Class(function() {
 	this.play = function() { this.seekTo(this._end); }
 	
 	this.seekTo = function(s, dur) {
-		this._t0 = +new Date();
+		if (s == this._s) { return; }
+		
+		this._t0 = 0;
 		this._s0 = this._s;
 		this._s1 = s;
 		if(dur) this._duration = dur;
@@ -30,7 +87,7 @@ exports = Class(function() {
 		
 		if(!this._isAnimating) {
 			this._isAnimating = true;
-			this._timer = setInterval(this._animate, 15);
+			timer.add(this._animate);
 		}
 		
 		return this;
@@ -43,12 +100,13 @@ exports = Class(function() {
 		this._t0 = 0;
 		this._dt = 1;
 		this._ds = 0;
-		this.animate();
+		this.animate(0);
 		return this; 
 	}
 	
-	this.animate = function() {
-		var dt = (new Date() - this._t0) / this._dt;
+	this.animate = function(dt) {
+		var elapsed = (this._t0 += dt);
+		var dt = elapsed / this._dt;
 		if(dt > 1) { dt = 1; }
 		this._s = this._s0 + dt * this._ds;
 		
@@ -56,7 +114,7 @@ exports = Class(function() {
 		this._subject(this._start + this._range * x, this._s);
 		
 		if(dt == 1) {
-			clearInterval(this._timer);
+			timer.remove(this._animate);
 			this._isAnimating = false;
 			if(this._onFinish) {
 				this._onFinish();
