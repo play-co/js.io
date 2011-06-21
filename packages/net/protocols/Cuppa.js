@@ -105,7 +105,6 @@ exports = Class(RTJPProtocol, function(supr) {
 		this._onConnect = new lib.Callback();
 		this._onDisconnect = new lib.Callback();
 		
-		this._connected = false;
 		this._requests = {};
 		
 		this.onEvent = new lib.PubSub();
@@ -120,12 +119,12 @@ exports = Class(RTJPProtocol, function(supr) {
 	
 	// called when we're connected
 	this.connectionMade = function() {
-		this._connected = true;
+		this._isConnected = true;
 		this._onConnect.fire();
 	}
 	
 	this.connectionLost = function(err) {
-		this._connected = false;
+		this._isConnected = false;
 		this._onDisconnect.fire(err);
 	}
 	
