@@ -37,6 +37,35 @@ var Rect = exports = Class(function() {
 		}
 	}
 	
+	this.normalize = function() {
+		if (this.width < 0) {
+			this.x -= this.width;
+			this.width = -this.width;
+		}
+		
+		if (this.height < 0) {
+			this.y -= this.height;
+			this.height = -this.height;
+		}
+	}
+	
+	this.unionRect = function(rect) {
+		this.normalize();
+		rect.normalize();
+		
+		var x2 = this.x + this.width,
+			y2 = this.y + this.height;
+		
+		var rx2 = rect.x + rect.width,
+			ry2 = rect.y + rect.height;
+		
+		this.x = this.x < rect.x ? this.x : rect.x;
+		this.y = this.y < rect.y ? this.y : rect.y;
+		
+		this.width = (x2 > rx2 ? x2 : rx2) - this.x;
+		this.height = (y2 > ry2 ? y2 : ry2) - this.y;
+	}
+	
 	this.getCorner = function(i) {
 		switch(i) {
 			case CORNERS.TOP_LEFT:
@@ -61,6 +90,10 @@ var Rect = exports = Class(function() {
 			case SIDES.LEFT:
 				return new Line(this.getCorner(CORNERS.BOTTOM_LEFT), this.getCorner(CORNERS.TOP_LEFT));
 		}
+	}
+	
+	this.getCenter = function() {
+		return new Point(this.x + this.width / 2, this.y + this.height / 2);
 	}
 });
 
