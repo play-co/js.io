@@ -583,7 +583,7 @@
 				}
 			};
 		
-			ctx.module = {id: modulePath};
+			ctx.module = {id: modulePath, exports: ctx.exports};
 			if (!dontAddBase && modulePath != 'base') {
 				ctx.jsio('from base import *');
 				ctx.logging.__create(modulePath, ctx);
