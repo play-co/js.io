@@ -65,8 +65,7 @@ exports.onFinish = function(opts, src) {
 exports.compressor = function(src, callback) {
 	function fail(err) {
 		if (err) {
-			var sys = require('sys');
-			sys.print(err);
+			logger.error(err);
 		}
 		callback(src);
 	}
