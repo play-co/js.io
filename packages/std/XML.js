@@ -11,8 +11,6 @@ exports.parseString = function(str){
 			return parser.parseFromString(str, 'text/xml');
 		}
 	}else if(jsio.__env.name == 'node'){
-		jsio('import ..vendor.jsdom.lib.jsdom as jsdom');
-		return jsdom.jsdom(str);
 	};
 
 };
