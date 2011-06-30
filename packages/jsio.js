@@ -25,7 +25,7 @@
 // added to the global scope.
 
 ;(function() {
-	function init(envClone) {
+	function init(cloneFrom) {
 		// We expect this code to be minified before production use, so we may
 		// write code slightly more verbosely than we otherwise would.
 	
@@ -202,7 +202,7 @@
 		jsio.__init__ = init;
 	
 		// explicitly use jsio.__srcCache to avoid obfuscation with closure compiler
-		var sourceCache = jsio.__srcCache = {};
+		var sourceCache = jsio.__srcCache = cloneFrom ? cloneFrom.__srcCache : {};
 
 		(function() {
 			this.__filename = 'jsio.js';
@@ -243,8 +243,8 @@
 			this.addCmd = function(processor) { this.__cmds.push(processor); }
 		
 			this.setEnv = function(envCtor) {
-				if (!envCtor && envClone) {
-					ENV = envClone;
+				if (!envCtor && cloneFrom) {
+					ENV = cloneFrom.__env;
 				} else if (typeof envCtor == 'string') {
 					switch(envCtor) {
 						case 'node':
@@ -265,7 +265,7 @@
 			}
 		}).call(jsio);
 	
-		if (envClone) {
+		if (cloneFrom) {
 			jsio.setEnv();
 		} else if (typeof process !== 'undefined' && process.version) {
 			jsio.setEnv('node');
@@ -440,7 +440,7 @@
 			for (var i = 0, possible; possible = possibilities[i]; ++i) {
 				var path = possible.path,
 					cachedVersion = sourceCache[path];
-			
+				
 				if (cachedVersion) {
 					possible.src = cachedVersion.src;
 					return possible;
@@ -503,11 +503,11 @@
 				moduleDef.src = moduleDef.src.substring(match[0].length - 1);
 				applyPreprocessors(fromDir, moduleDef, match[1].split(','), opts);
 			}
-		
+			
 			if (opts.preprocessors) {
 				applyPreprocessors(fromDir, moduleDef, opts.preprocessors, opts);
 			}
-		
+			
 			return moduleDef;
 		}
 	
@@ -519,7 +519,7 @@
 				}
 			}
 		}
-	
+		
 		function getPreprocessor(name) {
 			return typeof name == 'function'
 				? name
@@ -533,7 +533,7 @@
 			fn = fn(context);
 			fn.call(context.exports);
 		};
-	
+		
 		function resolveImportRequest(context, request, opts) {
 			var cmds = jsio.__cmds,
 				imports = [],
@@ -771,7 +771,7 @@
 		};
 	
 		jsio.clone = function() {
-			var copy = jsio.__init__(ENV);
+			var copy = jsio.__init__(jsio);
 			if (ENV.name == 'browser') { window.jsio = jsio; }
 			return copy;
 		}
