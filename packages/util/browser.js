@@ -47,7 +47,9 @@ if (jsio.__env.name == 'browser') {
 		}
 		
 		var parent = params.parent || params.parentNode;
-		if (params.before) {
+		if (parent && params.first) {
+			$.insertBefore(parent, el, parent.firstChild);
+		} else if (params.before) {
 			$.insertBefore(params.before.parentNode || parent, el, params.before);
 		} else if (params.after) {
 			$.insertAfter(params.after.parentNode || parent, el, params.after);
