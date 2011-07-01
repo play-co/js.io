@@ -200,9 +200,10 @@
 		var jsio = util.bind(this, importer, null, null, null);
 		jsio.__util = util;
 		jsio.__init__ = init;
-	
+		
 		// explicitly use jsio.__srcCache to avoid obfuscation with closure compiler
-		var sourceCache = jsio.__srcCache = cloneFrom ? cloneFrom.__srcCache : {};
+		var sourceCache = jsio.__srcCache = {};
+		if (cloneFrom && cloneFrom.__srcCache) { sourceCache = jsio.__srcCache = cloneFrom.__srcCache; }
 
 		(function() {
 			this.__filename = 'jsio.js';
