@@ -180,15 +180,14 @@ exports = Class(RTJPProtocol, function(supr) {
 			case 'RPC':
 			case 'EVENT':
 				if (!args.name) {
-					return self.sendFrame('ERROR', { 'id': id, 'msg': 'missing "name"' });
+					return self.sendFrame('ERROR', { 'id': args.id || id, 'msg': 'missing "name"' });
 				}
-				
 				var frameArgs = args.args || {},
 					target = args.target || null,
 					isRPC = name.toUpperCase() == 'RPC',
 					reqCtor = isRPC ? ReceivedRequest : ReceivedEvent,
 					pubTarget = isRPC ? this.onRequest : this.onEvent,
-					req = new reqCtor(this, id, args.name, frameArgs, target);
+					req = new reqCtor(this, args.id || id, args.name, frameArgs, target);
 				
 				pubTarget.publish(req.name, req);
 				break;
