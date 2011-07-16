@@ -99,6 +99,18 @@ exports.merge = function(base, extra) {
 	return base;
 }
 
+exports.delay = function(orig, timeout) {
+	var _timer = null;
+	var ctx, args;
+	var f = function() { orig.apply(ctx, arguments); }
+	return function() {
+		ctx = this;
+		args = arguments;
+		if (_timer) { clearTimeout(_timer); }
+		_timer = setTimeout(f, timeout || 0);
+	}
+}
+
 exports.Class.ctor = function(proto, supr, defaults, post) {
 	if (!supr) {
 		supr = function(ctx, method, args) {
