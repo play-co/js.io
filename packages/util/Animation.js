@@ -111,13 +111,15 @@ exports = Class(function() {
 		this._s = this._s0 + dt * this._ds;
 		
 		var x = this._transition ? this._transition(this._s) : this._s;
-		this._subject(this._start + this._range * x, this._s);
-		
-		if(dt == 1) {
-			timer.remove(this._animate);
-			this._isAnimating = false;
-			if(this._onFinish) {
-				this._onFinish();
+		try {
+			this._subject(this._start + this._range * x, this._s);
+		} finally {
+			if(dt == 1) {
+				timer.remove(this._animate);
+				this._isAnimating = false;
+				if(this._onFinish) {
+					this._onFinish();
+				}
 			}
 		}
 	}
