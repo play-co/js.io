@@ -19,6 +19,7 @@ exports.Protocol = Class(function() {
 		this.connectionLost.apply(this, arguments);
 	}
 
+	this._isConnected = false;
 	this.isConnected = function() {
 		return !!this._isConnected;
 	}
