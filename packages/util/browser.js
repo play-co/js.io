@@ -24,11 +24,9 @@ if (jsio.__env.name == 'browser') {
 	}
 	
 	var DOM2 = typeof HTMLElement === "object";
-	$.isElement = function(el) {
-		return el && 
-			(DOM2 ? el instanceof HTMLElement
-				: typeof el.nodeType == 'number' && typeof el.nodeName == 'string');
-	}
+	$.isElement = DOM2
+		? function(el) { return el && el instanceof HTMLElement; }
+		: function(el) { return el && typeof el.nodeType == 'number' && typeof el.nodeName == 'string' };
 	
 	$.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
 
@@ -63,7 +61,7 @@ if (jsio.__env.name == 'browser') {
 		if (params.children) {
 			var c = params.children;
 			for (var i = 0, n = c.length; i < n; ++i) {
-				el.appendChild(c[i]);
+				el.appendChild($.isElement(c[i]) ? c[i] : $(c[i]));
 			}
 		}
 		
