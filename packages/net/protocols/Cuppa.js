@@ -117,6 +117,11 @@ exports = Class(RTJPProtocol, function(supr) {
 	this.onConnect = function() { this._onConnect.forward(arguments); }
 	this.onDisconnect = function() { this._onDisconnect.forward(arguments); }
 	
+	this.reset = function() {
+		this._onConnect.reset();
+		this._onDisconnect.reset();
+	}
+	
 	// called when we're connected
 	this.connectionMade = function() {
 		this._isConnected = true;
@@ -124,6 +129,12 @@ exports = Class(RTJPProtocol, function(supr) {
 	}
 	
 	this.connectionLost = function(err) {
+		for (var i in this._requests) {
+			var req = this._requests[i];
+			delete this._requests[i];
+			req._onError.fire(err);
+		}
+		
 		this._isConnected = false;
 		this._onDisconnect.fire(err);
 	}
@@ -161,7 +172,7 @@ exports = Class(RTJPProtocol, function(supr) {
 			case 'RESPONSE':
 				var req = this._requests[args.id];
 				if (!req) { return; }
-				delete this._requests[requestId];
+				delete this._requests[args.id];
 				req._onSuccess.fire(args.args);
 				break;
 			case 'ERROR':
