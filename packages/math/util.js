@@ -4,7 +4,8 @@ exports.interpolate = function(a, b, x) { return a * (1 - x) + b * x; }
 
 exports.random = function(a, b, rand) { return a + ((rand || Math.random)() * (b - a) | 0); }
 exports.rand = Math.random;
-exports.int = exports.truncate = function(a) { return a | 0; }
+//FIXME integer is a reserved word XXX
+exports.integer = exports.truncate = function(a) { return a | 0; }
 
 exports.clip = function(num, min, max) { return Math.max(Math.min(num, max), min); }
 
@@ -15,29 +16,30 @@ var round = exports.round = function(a, precision, method) {
 	
 	if(!precision) {
 		if (method == round.ROUND_HALF_UP) { Math.round(a); }
-		
-		var int = a | 0,
-			frac = a - int,
+	
+		//FIXME integer is a reserved word XXX	
+		var integer = a | 0,
+			frac = a - integer 
 			half = frac == 0.5 || frac == -0.5;
 		if (!half) { return Math.round(a); }
 		
 		var sign = a < 0 ? -1 : 1;
 		switch(method) {
 			case round.ROUND_HALF_TO_EVEN:
-				return int % 2 ? int + sign : int;
+				return integer % 2 ? integer + sign : integer 
 			case round.ROUND_HALF_TO_ODD:
-				return int % 2 ? int : int + sign;
+				return integer % 2 ? integer : integer + sign;
 			case round.ROUND_HALF_STOCHASTIC:
-				return Math.random() < 0.5 ? int + sign : int;
+				return Math.random() < 0.5 ? integer + sign : integer 
 			case round.ROUND_HALF_ALTERNATE:
-				return (round.alt = !round.alt) ? int + sign : int;
+				return (round.alt = !round.alt) ? integer + sign : integer 
 		}
 	}
 	
-	var int = a | 0,
-		frac = a - int,
+	var integer = a | 0,
+		frac = a - integer 
 		p = Math.pow(10, precision);
-	return (int + round(frac * p, 0, method) / p).toFixed(precision);
+	return (integer + round(frac * p, 0, method) / p).toFixed(precision);
 }
 
 round.alt = true;
