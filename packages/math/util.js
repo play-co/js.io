@@ -2,7 +2,7 @@ jsio('import lib.Enum as Enum');
 
 exports.interpolate = function(a, b, x) { return a * (1 - x) + b * x; }
 
-exports.random = function(a, b, rand) { return a + ((rand || Math.random)() * (b - a) | 0); }
+exports.random = function(a, b, rand) { return a + ((rand || Math.random)() * (b - a) + 0.5 | 0); }
 exports.rand = Math.random;
 //FIXME integer is a reserved word XXX
 exports.integer = exports.truncate = function(a) { return a | 0; }
