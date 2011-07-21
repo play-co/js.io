@@ -19,7 +19,11 @@ var Vec2D = exports = Class(function() {
 						angle: angle});}
 						
 	this.dot = function(vec) {
-		return (this.x * vec.x) + (this.y + vec.y);
+		return (this.x * vec.x) + (this.y * vec.y);
+	}
+
+	this.add = function(vec) {
+		return new Vec2D({x:this.x + vec.x, y:this.y+vec.y});
 	}
 	
 	this.minus = function(vec) {
