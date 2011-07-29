@@ -105,13 +105,17 @@ exports.sort = function(arr, indexer) {
 			result[i] = result[i].join('|');
 		}
 		
-		toString[i] = arr[i].toString;
+		toString[i] = arr[i].hasOwnProperty('toString') && arr[i].toString || null;
 		arr[i].toString = bind(result, sortIndex, i);
 	}
 	
 	Array.prototype.sort.apply(arr);
 	
 	for (var i = 0; i < len; ++i) {
-		arr[i].toString = toString[i];
+		if (toString[i]) {
+			arr[i].toString = toString[i];
+		} else {
+			delete arr[i].toString;
+		}
 	}
 }
