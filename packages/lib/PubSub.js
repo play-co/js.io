@@ -67,7 +67,7 @@ exports = Class(function() {
 				}
 			});
 		
-		this.subscribe(signal, cb);
+		return this.subscribe(signal, cb);
 	}
 	
 	// if no method is specified, all subscriptions with a callback context of ctx will be removed
