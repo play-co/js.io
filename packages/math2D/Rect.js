@@ -47,11 +47,12 @@ var Rect = exports = Class(function() {
 			this.y -= this.height;
 			this.height = -this.height;
 		}
+		return this;
 	}
 	
 	this.unionRect = function(rect) {
 		this.normalize();
-		rect.normalize();
+		if (rect.normalize) { rect.normalize(); }
 		
 		var x2 = this.x + this.width,
 			y2 = this.y + this.height;
