@@ -3,6 +3,9 @@
 import util.optparse;
 import .optsDef;
 
+var fs = require('fs');
+var path = require('path');
+
 var closurePath = '';
 (function() {
 	var path = require('path');
@@ -62,7 +65,9 @@ exports.onFinish = function(opts, src) {
 	}
 }
 
-exports.compressor = function(src, callback) {
+exports.compressor = function(filename, src, callback, opts) {
+	
+	
 	function fail(err) {
 		if (err) {
 			logger.error(err);
@@ -71,6 +76,28 @@ exports.compressor = function(src, callback) {
 	}
 	
 	if (!closurePath) { return fail(); }
+	
+	if (opts.compressorCachePath && filename) {
+		try {
+			var stat = fs.statSync(filename);
+			var mtime = stat.mtime;
+			
+			cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename).replace(/\//g, '---')
+			var cachePath = path.join(opts.compressorCachePath, cacheFilename);
+
+			if (path.existsSync(cachePath)) {
+				var cachedContents = fs.readFileSync(cachePath, 'utf8');
+				var i = cachedContents.indexOf('\n');
+				var cachedMtime = cachedContents.substring(0, i);
+				if (mtime == cachedMtime) {
+					callback(cachedContents.substring(i + 1));
+					return;
+				}
+			}
+		} catch(e) {
+			logger.error(e);
+		}
+	}
 	
 	var spawn = require('child_process').spawn,
 	    closure = spawn('java', ['-jar', closurePath || 'jsio_minify.jar', '--compilation_level', 'SIMPLE_OPTIMIZATIONS']),
@@ -81,7 +108,16 @@ exports.compressor = function(src, callback) {
 	closure.stderr.on('data', function(data) { stderr.push(data); });
 	closure.on('exit', function(code) {
 		if (code == 0) {
-			callback(stdout.join(''));
+			var compressedSrc = stdout.join('');
+			try {
+				if (cachePath) {
+					fs.writeFileSync(cachePath, mtime + '\n' + compressedSrc);
+				}
+			} catch(e) {
+				logger.error(e);
+			}
+			
+			callback(compressedSrc);
 		} else {
 			fail(stderr.join(''));
 		}

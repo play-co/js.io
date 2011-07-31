@@ -180,7 +180,7 @@ function buildJsio(opts, callback) {
 	
 	if (opts.compressResult) {
 		logger.info('compressing final code...');
-		gActiveCompressor(src, callback);
+		gActiveCompressor(null, src, callback, opts);
 	} else {
 		callback(src);
 	}
@@ -192,16 +192,16 @@ function compressTable(table, opts, callback) {
 	var queue = [];
 	for (var i in table) { queue.push(i); }
 	
-	compressStep(queue, table, queue.pop(), callback);
+	compressStep(queue, table, opts, queue.pop(), callback);
 }
 
-function compressStep(queue, table, key, callback) {
+function compressStep(queue, table, opts, key, callback) {
 	if (key) {
 		logger.log('compressing', key + '...');
-		gActiveCompressor(table[key].src, function(result) {
+		gActiveCompressor(key, table[key].src, function(result) {
 			table[key].src = result;
-			compressStep(queue, table, queue.pop(), callback);
-		});
+			compressStep(queue, table, opts, queue.pop(), callback);
+		}, opts);
 	} else {
 		callback();
 	}

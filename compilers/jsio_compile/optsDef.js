@@ -78,6 +78,11 @@ exports = {
 		default: true,
 		description: "Defaults to true.  When true, the import statement passed to the compiler is appended to the end of the file."
 	},
+	'--compressorCachePath': {
+		name: 'compressorCachePath',
+		type: 'string',
+		description: "Provide a path to cache compressed source."
+	},
 	'--help': {
 		type: 'boolean',
 		description: "prints this help message"
