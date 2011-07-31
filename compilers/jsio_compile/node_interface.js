@@ -82,7 +82,10 @@ exports.compressor = function(filename, src, callback, opts) {
 			var stat = fs.statSync(filename);
 			var mtime = stat.mtime;
 			
-			cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename).replace(/\//g, '---')
+			cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename)
+				.replace(/\.\.\//g, '--U--')
+				.replace(/\//g, '---');
+
 			var cachePath = path.join(opts.compressorCachePath, cacheFilename);
 
 			if (path.existsSync(cachePath)) {
