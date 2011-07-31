@@ -107,7 +107,7 @@ exports = function(argv, origDef) {
 		result = {};
 	for (var i in optsDef) {
 		var opt = optsDef[i];
-		if ('default' in opt) { result[opt.name] = opt.default; }
+		if ('default' in opt) { result[opt.name] = opt['default']; }
 		
 		var also = opt.also;
 		if (also) {

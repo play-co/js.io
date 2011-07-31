@@ -44,7 +44,7 @@ var errorCodes = {
 	Unauthorized: 106,
 	RemoteConnectionFailed: 108,
 	RemoteConnectionClosed: 109,
-	ProtocolError: 110,
+	ProtocolError: 110
 };
 msp.ProxyConnection = Class(function() {
 	this.init = function (inConnection) {
@@ -135,7 +135,7 @@ msp.ProxyConnection = Class(function() {
 		data: function (connectionId, data) {
 			data = unescape(data);
 			this.outConnections[connectionId].send(data, 'bytes');
-		},
+		}
 	};	
 });
 

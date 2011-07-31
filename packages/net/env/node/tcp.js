@@ -49,9 +49,10 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		   		this.onConnect(new Transport(socket));
    			}));
    		}));
-		var listenString = (this._opts.interface || "" ) + ":" + this._opts.port;
+		
+		var listenString = (this._opts['interface'] || "") + ":" + this._opts.port;
 		// TODO: Show class name
 		logger.info("Listening tcp@" + listenString);
-		s.listen(this._opts.port, this._opts.interface || "");
+		s.listen(this._opts.port, this._opts['interface'] || "");
 	}
 });

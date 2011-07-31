@@ -8,7 +8,7 @@ var supportedEnvs = {
 	browser: true
 };
 
-var interface = null;
+var _interface = null;
 
 exports.start = function(/*optional*/ args, opts) {
 	if (!jsio.__env.name in supportedEnvs) {
@@ -18,10 +18,10 @@ exports.start = function(/*optional*/ args, opts) {
 	
 	var DYNAMIC_IMPORT_COMPILER = 'import .' + jsio.__env.name + '_interface';
 	
-	interface = jsio(DYNAMIC_IMPORT_COMPILER);
+	_interface = jsio(DYNAMIC_IMPORT_COMPILER);
 	
 	// expects the interface to eventually call startWithOpts to do the actual compile
-	interface.init(exports, args, opts);
+	_interface.init(exports, args, opts);
 }
 
 function getPackage(fileName) {
@@ -48,7 +48,7 @@ exports.run = function(args, opts) {
 	var debugLevel = 'debug' in opts ? opts.debug : 5;
 
 	logger.setLevel(debugLevel);
-	interface.logger.setLevel(debugLevel);
+	_interface.logger.setLevel(debugLevel);
 	
 	if (debugLevel >= 3) {
 		var strOpts = JSON.stringify(opts, null, '\t');
@@ -98,18 +98,18 @@ exports.run = function(args, opts) {
 		// (our test would also return true for "import foo.bar.pkg")
 		if (pkg != false) {
 			args.splice(2, 1); // consume the argument
-			opts.package = pkg; // treat the package the same as if it was specified on the command line
+			opts['package'] = pkg; // treat the package the same as if it was specified on the command line
 		}
 	}
 	
 	// opts.package is probably the filename of the package
-	if (typeof opts.package == 'string' && /\.pkg$/.test(opts.package)) {
-		opts.package = getPackage(opts.package);
+	if (typeof opts['package'] == 'string' && /\.pkg$/.test(opts['package'])) {
+		opts['package'] = getPackage(opts['package']);
 	} 
 
 	// parse the package contents
-	if (opts.package) {
-		var pkgDef = opts.package;
+	if (opts['package']) {
+		var pkgDef = opts['package'];
 		
 		logger.debug(pkgDef);
 		
@@ -159,7 +159,7 @@ exports.run = function(args, opts) {
 	if (args.length > 2) { initial = args[2]; }
 	
 	if (!initial) {
-		interface.onError('No initial import specified');
+		_interface.onError('No initial import specified');
 		return;
 	}
 	
@@ -222,7 +222,7 @@ exports.run = function(args, opts) {
 			src = src + (opts.footer || '');
 		}
 		
-		interface.onFinish(opts, src);
+		_interface.onFinish(opts, src);
 	});
 }
 

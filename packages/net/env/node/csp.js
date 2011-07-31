@@ -34,11 +34,11 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			}));
 		}));
 		this._cspServer = s;
-		var listenString = (this._opts.interface || "" ) + ":" + this._opts.port;
+		var listenString = (this._opts['interface'] || "" ) + ":" + this._opts.port;
 		// TODO: Show class name
 		if (!this._opts.skipListen) {
 			logger.info("Listening csp@" + listenString);
-			s.listen(this._opts.port, this._opts.interface || "");
+			s.listen(this._opts.port, this._opts['interface'] || "");
 		}
 	}
 });

@@ -9,7 +9,7 @@ exports = {
 		also: '--compress',
 		name: 'compressSources',
 		type: 'boolean',
-		default: false,
+		'default': false,
 		description: "Compress individual source files with Google's Closure Compiler"
 	},
 	'--closure': {
@@ -63,19 +63,19 @@ exports = {
 	'--preserveJsioSource': {
 		name: 'preserveJsioSource',
 		type: 'boolean',
-		default: false,
+		'default': false,
 		description: "(advanced option) Specify this option if the compiler shouldn't modify the core jsio JavaScript.  This option wraps compiled source in the jsio API call setCachedSrc rather than inserting the source into the jsio cache table."
 	},
 	'--includeJsio': {
 		name: 'includeJsio',
 		type: 'boolean',
-		default: true,
+		'default': true,
 		description: "(advanced option) Defaults to true.  Set to false to exclude jsio from the resulting source.  Setting to false enables --preserveJsioSource."
 	},
 	'--appendImport': {
 		name: 'appendImport',
 		type: 'boolean',
-		default: true,
+		'default': true,
 		description: "Defaults to true.  When true, the import statement passed to the compiler is appended to the end of the file."
 	},
 	'--compressorCachePath': {

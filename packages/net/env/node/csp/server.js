@@ -53,7 +53,7 @@ var sessionDict = {},
 		'du' : 'duration',
 		'is' : 'isStreaming',
 		'g'	 : 'gzipOk',
-		'se' : 'sse',
+		'se' : 'sse'
 		// 's'	: 'sessionKey', // per request, handled at the csp.Server level
 		// 'a'	: 'ackId',			// left here to instruct other implementors.
 		// 'd'	: 'data',
@@ -87,7 +87,7 @@ exports.Session = Class(function() {
 			'duration'	  : '30',
 			'isStreaming'   : '0',
 			'gzipOk'		: '',
-			'sse'		   : '',
+			'sse'		   : ''
 		};
 		this.resetTimeoutTimer();
 	};
@@ -297,7 +297,7 @@ exports.Session = Class(function() {
 		},
 		streamtest: function (request, response) {
 			logger.debug('streamtest'); // XXX who knows what this does...?
-		},
+		}
 	};
 });
 
