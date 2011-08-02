@@ -92,6 +92,8 @@ var URI = exports = Class(function(supr) {
 });
 
 exports.relativeTo = function(url, base) {
+	if (!base) { return url; }
+	
 	url = String(url);
 	
 	if (/^http(s?):\/\//.test(url)) { return url; }
