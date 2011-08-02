@@ -837,3 +837,8 @@
   };
 
 })();
+
+
+exports = {
+	'_': module.exports
+}
