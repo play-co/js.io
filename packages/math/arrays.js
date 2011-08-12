@@ -35,7 +35,7 @@ exports.stddev = function (a, n) {
 		var diff = (a[i] - avg);
 		s += diff * diff;
 	}
-	return Math.sqrt(sum / (1 - n));
+	return Math.sqrt(s / (n - 1));
 }
 
 exports.shuffle = function(a, randGen) {
