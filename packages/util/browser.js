@@ -104,18 +104,19 @@ if (jsio.__env.name == 'browser') {
 	$.addClass = function(el, classNames) {
 		if (!el) { return; }
 		var el = $.id(el);
-		if(typeof classNames == "string") {
+		if (typeof classNames == "string") {
 			classNames = classNames.split(' ');
 		}
 	
 		var current = ' ' + el.className + ' ';
-		for(var i = 0, len = classNames.length, c; (c = classNames[i]) || i < len; ++i) {
-			if(current.indexOf(' '+c+' ') == -1) {
+		for (var i = 0, len = classNames.length; i < len; ++i) {
+			var c = classNames[i];
+			if (current.indexOf(' ' + c + ' ') == -1) {
 				current += c + ' ';
 			}
 		}
-	
-		el.className = current;
+		
+		el.className = current.replace(/^\s+|\s+$/g, '');
 		return $;
 	}
 	
@@ -126,7 +127,7 @@ if (jsio.__env.name == 'browser') {
 		var el = $.id(el);
 		el.className = (' ' + el.className + ' ')
 			.replace(' ', '  ')
-			.replace(new RegExp('( ' + classNames.replace('\s+', ' | ').replace('-','\-') + ' )', 'g'), '')
+			.replace(new RegExp('( ' + classNames.replace('\s+', ' | ').replace('-','\-') + ' )', 'g'), ' ')
 			.replace(/\s+/, ' ')
 			.replace(/^\s+|\s+%/, '');
 	}
