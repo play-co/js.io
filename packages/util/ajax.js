@@ -51,14 +51,16 @@ exports.get = function(opts, cb) {
 	var xhr = exports.createXHR();
 	xhr.open(method, url, !(opts.async == false));
 	xhr.setRequestHeader('Content-Type', 'text/plain');
-	xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, opts.type, cb);
+	if (cb) {
+		xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, opts.type, cb);
+	}
 	xhr.send(data || null);
 }
 
 function onReadyStateChange(xhr, type, cb) {
 	if (xhr.readyState != 4) { return; }
 	if (xhr.status != 200) {
-		cb(xhr.response, null);
+		cb({status: xhr.status, response: xhr.response}, null);
 	} else {
 		var data = xhr.responseText;
 		if (type == 'json') {
