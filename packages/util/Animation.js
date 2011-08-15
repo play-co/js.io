@@ -112,7 +112,7 @@ exports = Class(function() {
 		
 		var x = this._transition ? this._transition(this._s) : this._s;
 		try {
-			this._subject(this._start + this._range * x, this._s);
+			this._subject(x, this._s);
 		} finally {
 			if(dt == 1) {
 				timer.remove(this._animate);
