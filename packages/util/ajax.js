@@ -59,7 +59,8 @@ exports.get = function(opts, cb) {
 
 function onReadyStateChange(xhr, type, cb) {
 	if (xhr.readyState != 4) { return; }
-	if (xhr.status != 200) {
+	// .status will be 0 when requests are filled via app cache on at least iOS 4.x
+	if (xhr.status != 200 && xhr.status != 0) {
 		cb({status: xhr.status, response: xhr.response}, null);
 	} else {
 		var data = xhr.responseText;
