@@ -51,6 +51,11 @@ exports.get = function(opts, cb) {
 	var xhr = exports.createXHR();
 	xhr.open(method, url, !(opts.async == false));
 	xhr.setRequestHeader('Content-Type', 'text/plain');
+	if (opts.headers) {
+		for (var key in opts.headers) if (opts.headers.hasOwnProperty(key)) {
+			xhr.setRequestHeader(key, opts.headers[key]);
+		}
+	}
 	if (cb) {
 		xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, opts.type, cb);
 	}
