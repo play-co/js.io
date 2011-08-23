@@ -91,7 +91,7 @@ exports.compressor = function(filename, src, callback, opts) {
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
 				var cachedMtime = cachedContents.substring(0, i);
-				logger.info(cachePath, 'current:', mtime, 'cached at:', cachedMtime);
+				logger.debug(cachePath, 'current:', mtime, 'cached at:', cachedMtime);
 				if (mtime == cachedMtime) {
 					callback(cachedContents.substring(i + 1));
 					return;
@@ -114,7 +114,7 @@ exports.compressor = function(filename, src, callback, opts) {
 			var compressedSrc = stdout.join('');
 			try {
 				if (cachePath) {
-					logger.info('updating cache for', cachePath);
+					logger.debug('updating cache for', cachePath);
 					fs.writeFileSync(cachePath, mtime + '\n' + compressedSrc);
 				}
 			} catch(e) {
