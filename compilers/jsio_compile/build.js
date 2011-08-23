@@ -35,6 +35,8 @@ function doCompile() {
 	var compiler = jsio('import preprocessors.compiler');
 
 	var interface = jsio('import .node_interface');
+	interface.logger.setLevel(0);
+
 	compiler.setCompressor(interface.compressor);
 
 	compiler.compile('import preprocessors.compiler');

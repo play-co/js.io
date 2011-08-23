@@ -36,6 +36,11 @@ function getPackage(fileName) {
 	return false;
 }
 
+exports.setDebugLevel = function(level) {
+	logger.setLevel(level);
+	_interface.logger.setLevel(level);
+}
+
 /**
  * args : array of arguments
  *   - args[0] : string - initial import string (optional if opts.package is provided)
@@ -46,9 +51,7 @@ function getPackage(fileName) {
 exports.run = function(args, opts) {
 	
 	var debugLevel = 'debug' in opts ? opts.debug : 5;
-
-	logger.setLevel(debugLevel);
-	_interface.logger.setLevel(debugLevel);
+	exports.setDebugLevel(debugLevel);
 	
 	if (debugLevel >= 3) {
 		var strOpts = JSON.stringify(opts, null, '\t');

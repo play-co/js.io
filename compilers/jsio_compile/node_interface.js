@@ -5,6 +5,9 @@ import .optsDef;
 
 var fs = require('fs');
 var path = require('path');
+try {
+	var crypto = require('crypto');
+} catch(e) {}
 
 var closurePath = '';
 (function() {
@@ -79,8 +82,6 @@ exports.compressor = function(filename, src, callback, opts) {
 	
 	if (opts.compressorCachePath && filename) {
 		try {
-			var stat = fs.statSync(filename);
-			var mtime = '' + stat.mtime;
 			var cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename)
 				.replace(/\.\.\//g, '--U--')
 				.replace(/\//g, '---');
@@ -88,11 +89,20 @@ exports.compressor = function(filename, src, callback, opts) {
 			cachePath = path.join(opts.compressorCachePath, cacheFilename);
 
 			if (path.existsSync(cachePath)) {
+				if (crypto) {
+					var hash = crypto.createHash('md5');
+					hash.update(src);
+					var checksum = hash.digest('hex');
+				} else {
+					var stat = fs.statSync(filename);
+					var checksum = '' + stat.mtime;
+				}
+
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
-				var cachedMtime = cachedContents.substring(0, i);
-				logger.debug(cachePath, 'current:', mtime, 'cached at:', cachedMtime);
-				if (mtime == cachedMtime) {
+				var cachedChecksum = cachedContents.substring(0, i);
+				logger.debug(cachePath, 'current:', checksum, 'cached:', cachedChecksum);
+				if (checksum == cachedChecksum) {
 					callback(cachedContents.substring(i + 1));
 					return;
 				}
@@ -114,8 +124,8 @@ exports.compressor = function(filename, src, callback, opts) {
 			var compressedSrc = stdout.join('');
 			try {
 				if (cachePath) {
-					logger.debug('updating cache for', cachePath, mtime);
-					fs.writeFileSync(cachePath, mtime + '\n' + compressedSrc);
+					logger.debug('updating cache for', cachePath, checksum);
+					fs.writeFileSync(cachePath, checksum + '\n' + compressedSrc);
 				}
 			} catch(e) {
 				logger.error(e);
