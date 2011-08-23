@@ -114,7 +114,7 @@ exports.compressor = function(filename, src, callback, opts) {
 			var compressedSrc = stdout.join('');
 			try {
 				if (cachePath) {
-					logger.debug('updating cache for', cachePath);
+					logger.debug('updating cache for', cachePath, mtime);
 					fs.writeFileSync(cachePath, mtime + '\n' + compressedSrc);
 				}
 			} catch(e) {
