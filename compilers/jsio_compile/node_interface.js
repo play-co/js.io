@@ -66,7 +66,7 @@ exports.onFinish = function(opts, src) {
 }
 
 exports.compressor = function(filename, src, callback, opts) {
-	
+	var cachePath;
 	
 	function fail(err) {
 		if (err) {
@@ -80,18 +80,18 @@ exports.compressor = function(filename, src, callback, opts) {
 	if (opts.compressorCachePath && filename) {
 		try {
 			var stat = fs.statSync(filename);
-			var mtime = stat.mtime;
-			
-			cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename)
+			var mtime = '' + stat.mtime;
+			var cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename)
 				.replace(/\.\.\//g, '--U--')
 				.replace(/\//g, '---');
 
-			var cachePath = path.join(opts.compressorCachePath, cacheFilename);
+			cachePath = path.join(opts.compressorCachePath, cacheFilename);
 
 			if (path.existsSync(cachePath)) {
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
 				var cachedMtime = cachedContents.substring(0, i);
+				logger.info(cachePath, 'current:', mtime, 'cached at:', cachedMtime);
 				if (mtime == cachedMtime) {
 					callback(cachedContents.substring(i + 1));
 					return;
@@ -114,6 +114,7 @@ exports.compressor = function(filename, src, callback, opts) {
 			var compressedSrc = stdout.join('');
 			try {
 				if (cachePath) {
+					logger.info('updating cache for', cachePath);
 					fs.writeFileSync(cachePath, mtime + '\n' + compressedSrc);
 				}
 			} catch(e) {
