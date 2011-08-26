@@ -55,6 +55,13 @@ var URI = exports = Class(function(supr) {
 		return this;
 	}
 	
+	this.push = function(path) {
+		if (path) {
+			this._path = (this._path + '/' + path).replace(/\/\//g, '/');
+		}
+		return this;
+	}
+	
 	this.addQuery = function(kvp) {
 		var query = exports.parseQuery(this._query);
 		for (var i in kvp) { query[i] = kvp[i]; }
