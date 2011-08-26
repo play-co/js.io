@@ -75,6 +75,9 @@ intersect.util.ptToLine = function(pt, line) {
 
 // returns rectangle of intersection
 intersect.util.rectAndRect = function(rect1, rect2) {
+	if (rect1 === true) { return new Rect(rect2); }
+	if (rect2 === true) { return new Rect(rect2); }
+	
 	if (intersect.rectAndRect(rect1, rect2)) {
 		var x1 = Math.max(rect1.x, rect2.x),
 			y1 = Math.max(rect1.y, rect2.y),
