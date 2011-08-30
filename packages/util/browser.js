@@ -129,7 +129,7 @@ if (jsio.__env.name == 'browser') {
 			.replace(' ', '  ')
 			.replace(new RegExp('( ' + classNames.replace('\s+', ' | ').replace('-','\-') + ' )', 'g'), ' ')
 			.replace(/\s+/, ' ')
-			.replace(/^\s+|\s+%/, '');
+			.replace(/^\s+|\s+$/g, '');
 	}
 
 	function ieGetAlpha(el) {
