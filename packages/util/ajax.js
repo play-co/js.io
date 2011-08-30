@@ -38,7 +38,7 @@ exports.post = function(opts, cb) {
 
 exports.get = function(opts, cb) {
 	if (typeof opts == 'string') { opts = {url: opts}; }
-	var method = opts.method || 'GET';
+	var method = (opts.method || 'GET').toUpperCase();
 	var url = opts.url;
 	var isObject = opts.data && typeof opts.data == 'object';
 	if (!opts.url) { logger.error('no url provided'); return; }
