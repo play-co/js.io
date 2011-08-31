@@ -27,6 +27,32 @@ exports = Class(function() {
 		return this;
 	}
 	
+	this.runOrTimeout = function(onFire, onTimeout, duration) {
+		if (!onFire && !onTimeout) { return; }
+		
+		if (this._fired) {
+			onFire.apply(this, this._args);
+		} else {
+			var f = bind(this, function() {
+				clearTimeout(timeout);
+				onFire.apply(this, this._args);
+			});
+			
+			this.run(f);
+			
+			var timeout = setTimeout(bind(this, function() {
+				for (var i = 0, n = this._run.length; i < n; ++i) {
+					if (this._run[i] == f) {
+						this._run.splice(i, 1);
+						break;
+					}
+				}
+				
+				onTimeout();
+			}), duration);
+		}
+	}
+	
 	this.fire = function() {
 		if (this._fired) { return; }
 		this._fired = true;
