@@ -57,12 +57,22 @@ exports.get = function(opts, cb) {
 		}
 	}
 	if (cb) {
-		xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, opts.type, cb);
+		xhr.onreadystatechange = bind(this, onReadyStateChange, url, xhr, opts.type, cb);
 	}
+
+	if (opts.timeout) {
+		setTimeout(bind(this, cancel, xhr, cb), opts.timeout);
+	}
+	
 	xhr.send(data || null);
 }
 
-function onReadyStateChange(xhr, type, cb) {
+function cancel(xhr, cb) {
+	xhr.onreadystatechange = null;
+	cb({timeout: true}, null);
+}
+
+function onReadyStateChange(url, xhr, type, cb) {
 	if (xhr.readyState != 4) { return; }
 	// .status will be 0 when requests are filled via app cache on at least iOS 4.x
 	if (xhr.status != 200 && xhr.status != 0) {
