@@ -2,6 +2,9 @@
 
 import std.uri as URI;
 
+var SIMULTANEOUS = 4;
+var _inflight = 0;
+
 var doc;
 exports.getDoc = function() {
 	if (doc) { return doc; }
@@ -36,51 +39,134 @@ exports.post = function(opts, cb) {
 	return exports.get(merge({method: 'POST'}, opts), cb);
 }
 
-exports.get = function(opts, cb) {
-	if (typeof opts == 'string') { opts = {url: opts}; }
-	var method = (opts.method || 'GET').toUpperCase();
-	var url = opts.url;
-	var isObject = opts.data && typeof opts.data == 'object';
-	if (!opts.url) { logger.error('no url provided'); return; }
+var Request = Class(function() {
+	var _UID = 0;
 	
-	var data = method == 'POST' ? isObject ? JSON.stringify(opts.data) : opts.data : null;
-	if (method == 'GET' && opts.data) {
-		url = new URI(url).addQuery(isObject ? opts.data : URI.parseQuery(opts.data)).toString();
-	}
-	
-	var xhr = exports.createXHR();
-	xhr.open(method, url, !(opts.async == false));
-	xhr.setRequestHeader('Content-Type', 'text/plain');
-	if (opts.headers) {
-		for (var key in opts.headers) if (opts.headers.hasOwnProperty(key)) {
-			xhr.setRequestHeader(key, opts.headers[key]);
+	this.init = function(opts, cb) {
+		if (!opts || !opts.url) { logger.error('no url provided'); return; }
+		
+		this.method = (opts.method || 'GET').toUpperCase();
+		this.url = opts.url;
+		this.type = opts.type;
+		this.async = opts.async;
+		this.timeout = opts.timeout;
+		this.id = ++_UID;
+		this.headers = {};
+		this.cb = cb;
+		
+		if (opts.headers) {
+			for (var key in opts.headers) if (opts.headers.hasOwnProperty(key)) {
+				var value = opts.headers[key];
+				this.headers[key] = value;
+			}
+		}
+		
+		var isObject = opts.data && typeof opts.data == 'object';
+		
+		if (this.method == 'GET' && opts.data) {
+			this.url = new URI(this.url).addQuery(isObject ? opts.data : URI.parseQuery(opts.data)).toString();
+		}
+		
+		try {
+			this.data = (this.method == 'POST' ? (isObject ? JSON.stringify(opts.data) : opts.data) : null);
+		} catch(e) {
+			cb && cb({invalidData: true});
+			return;
 		}
 	}
-	if (cb) {
-		xhr.onreadystatechange = bind(this, onReadyStateChange, url, xhr, opts.type, cb);
-	}
+});
 
-	if (opts.timeout) {
-		setTimeout(bind(this, cancel, xhr, cb), opts.timeout);
+var _pending = [];
+
+exports.get = function(opts, cb) {
+	var request = new Request(opts, cb);
+	
+	if (_inflight >= SIMULTANEOUS) {
+		_pending.push(request);
+	} else {
+		_send(request);
+	}
+}
+
+function _sendNext() {
+	//logger.log('====INFLIGHT', _inflight, SIMULTANEOUS, 'might send next?');
+	if (_inflight < SIMULTANEOUS) {
+		var request = _pending.shift();
+		if (request) {
+			_send(request);
+		}
+	}
+}
+
+function _send(request) {
+	++_inflight;
+	//logger.log('====INFLIGHT', _inflight, 'sending request', request.id);
+	
+	var xhr = exports.createXHR();
+	xhr.open(request.method, request.url, !(request.async == false));
+	xhr.setRequestHeader('Content-Type', 'text/plain');
+	for (var key in request.headers) {
+		xhr.setRequestHeader(key, request.headers[key]);
 	}
 	
-	xhr.send(data || null);
+	xhr.onreadystatechange = bind(this, onReadyStateChange, request, xhr);
+	if (request.timeout) {
+		request.timeoutRef = setTimeout(bind(this, cancel, xhr, request), request.timeout);
+		//logger.log('==== setting timeout for', request.timeout, request.timeoutRef, '<<');
+	}
+	
+	request.ts = +new Date();
+	xhr.send(request.data || null);
 }
 
-function cancel(xhr, cb) {
+function cancel(xhr, request) {
+	--_inflight;
+	// logger.log('====INFLIGHT', _inflight, 'timeout (cancelled)', request.id);
+	if (request.timedOut) {
+		logger.log('already timed out?!');
+	}
+	
 	xhr.onreadystatechange = null;
-	cb({timeout: true}, null);
+	request.timedOut = true;
+	request.cb && request.cb({timeout: true}, null);
 }
 
-function onReadyStateChange(url, xhr, type, cb) {
+function onReadyStateChange(request, xhr) {
 	if (xhr.readyState != 4) { return; }
+	
+	if (request.timedOut) { throw 'Unexpected?!'; }
+	
+	--_inflight;
+	
+	// logger.log('====INFLIGHT', _inflight, 'received response', request.ts, request.id, (+new Date() - request.ts) / 1000);
+	setTimeout(_sendNext, 0);
+	
+	var cb = request.cb;
+	if ('timeoutRef' in request) {
+		// logger.log('==== AJAX CLEARING TIMEOUT', request.id);
+		clearTimeout(request.timeoutRef);
+		request.timeoutRef = null;
+	}
+	
+	if (!cb) { return; }
+	
 	// .status will be 0 when requests are filled via app cache on at least iOS 4.x
 	if (xhr.status != 200 && xhr.status != 0) {
 		cb({status: xhr.status, response: xhr.response}, null);
 	} else {
 		var data = xhr.responseText;
-		if (type == 'json') {
-			data = JSON.parse(data);
+		if (request.type == 'json') {
+			if (!data) {
+				cb({status: xhr.status, response: xhr.response});
+				return;
+			} else {
+				try {
+					data = JSON.parse(data);
+				} catch(e) {
+					cb({status: xhr.status, response: xhr.response, parseError: true});
+					return;
+				}
+			}
 		}
 		cb(null, data);
 	}
