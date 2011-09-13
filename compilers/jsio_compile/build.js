@@ -90,7 +90,7 @@ function walk(path, callback) {
 		items = {files: [], dirs: []};
 	
 	files.forEach(function(name) {
-		var absPath = util.path.buildPath(path, name);
+		var absPath = util.path.join(path, name);
 		if (fs.statSync(absPath).isDirectory()) {
 			if (walk(absPath, callback) == true) { return false; }
 			items.dirs.push(absPath);

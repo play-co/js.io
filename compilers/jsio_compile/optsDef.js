@@ -43,6 +43,12 @@ exports = {
 		type: 'object',
 		description: "Specifies a package file.  The compiler looks for configuration parameters from the command line as well as the package file.  Command line options have precedence over package settings provided in the package file."
 	},
+	'--no-ie': {
+		name: 'noIE',
+		type: 'boolean',
+		'default': false,
+		description: 'Disables IE checks like trailing commas'
+	},
 	'-j': {
 		name: 'jsioPath',
 		type: 'string',

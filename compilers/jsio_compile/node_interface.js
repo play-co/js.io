@@ -112,10 +112,17 @@ exports.compressor = function(filename, src, callback, opts) {
 		}
 	}
 	
-	var spawn = require('child_process').spawn,
-	    closure = spawn('java', ['-jar', closurePath || 'jsio_minify.jar', '--compilation_level', 'SIMPLE_OPTIMIZATIONS']),
-		stdout = [],
-		stderr = [];
+	// http://code.google.com/p/closure-compiler/wiki/Warnings
+	
+	var spawn = require('child_process').spawn;
+	var cmd = ['-jar', closurePath || 'jsio_minify.jar', '--compilation_level', 'SIMPLE_OPTIMIZATIONS'];
+	if (opts.noIE) {
+		cmd.push('--jscomp_off=internetExplorerChecks')
+	}
+
+	var closure = spawn('java', cmd);
+	var stdout = [];
+	var stderr = [];
 	
 	closure.stdout.on('data', function(data) { stdout.push(data); });
 	closure.stderr.on('data', function(data) { stderr.push(data); });

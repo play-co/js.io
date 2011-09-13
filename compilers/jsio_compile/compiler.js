@@ -218,7 +218,7 @@ exports.run = function(args, opts) {
 	
 	compiler.generateSrc(opts, function(src) {
 		if (opts.appendImport) {
-			src = src + JSIO + '("import ' + initial + '")';
+			src = src + JSIO + '("' + initial + '")';
 		}
 		
 		if (opts.footer) {
