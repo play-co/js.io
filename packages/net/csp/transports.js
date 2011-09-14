@@ -360,7 +360,8 @@ transports.jsonp = Class(baseTransport, function(supr) {
 			win = ifr.contentWindow,
 			doc = win.document,
 			body = doc.body;
-
+                /*added by skysbird for opera support*/
+                if (!body){return setTimeout(bind(this,'_request',req),100); }
 		win[req.ebName] = bind(this, checkForError, req);
 		win[req.cbName] = bind(this, onSuccess, req);
 		
