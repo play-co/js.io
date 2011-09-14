@@ -264,7 +264,7 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; position = 'absolute'; top = left = '-999px'; }
 		i.cbId = 0;
 		doc.body.appendChild(i);
-		i.src = 'javascript:var d=document;d.open();d.write("<html><body></body></html>");d.close();';
+		i.src = 'about:blank';
 		return i;
 	};
 
