@@ -3,14 +3,12 @@
 import std.js as JS;
 
 exports = Class(function() {
-	this.init = function() {
-		this._fired = false;
-		this._run = [];
-		this._id = 0;
-		this._pending = 0;
-		this._stat = {};
-	}
+
+	this._fired = false;
+	this._id = 0;
+	this._pending = 0;
 	
+	this.init = function() { this._run = []; }
 	this.fired = function() { return this._fired; } 
 	this.reset = function() { this._args = []; this._fired = false; }
 	this.clear = function() { this.reset(); this._run = []; }
@@ -72,6 +70,7 @@ exports = Class(function() {
 	}
 
 	this._deferred = function(id) {
+		if (!this._stat) { this._stat = {}; }
 		if (this._stat.hasOwnProperty(id)) { return; }
 
 		this._stat[id] = JS.vargs(arguments, 1);
