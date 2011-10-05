@@ -1,5 +1,3 @@
-jsio('import std.js as JS');
-
 // compiler should be able to compile itself, so use a different name for calls to jsio that we don't want to try to compile
 var JSIO = jsio.__jsio; 
 
@@ -25,7 +23,7 @@ exports = function(path, moduleDef, opts) {
 	var self = moduleDef.path;
 	
 	if (opts.path) {
-		if (JS.isArray(opts.path)) {
+		if (isArray(opts.path)) {
 			for (var i = 0, len = opts.path.length; i < len; ++i) {
 				jsio.path.add(opts.path);
 			}
@@ -89,7 +87,7 @@ exports = function(path, moduleDef, opts) {
 			if (!dynamicImports) {
 				logger.debug('Dynamic import ' + cmd + ': <nothing>');
 				continue;
-			} else if (JS.isArray(dynamicImports)) {
+			} else if (isArray(dynamicImports)) {
 				for (var j = 0, line; line = dynamicImports[j]; ++j) {
 					logger.debug('Dynamic import ' + cmd + ': ' + line);
 					run(moduleDef, line, opts, inlineOpts);
@@ -103,7 +101,7 @@ exports = function(path, moduleDef, opts) {
 		}
 	}
 	
-	gSrcTable[moduleDef.path] = JS.shallowCopy(moduleDef);
+	gSrcTable[moduleDef.path] = merge({}, moduleDef);
 	moduleDef.src = '';
 }
 
@@ -128,7 +126,7 @@ exports.setCompressor = function(compressor) { gActiveCompressor = compressor; }
  */
 exports.generateSrc = function(opts, callback) {
 	
-	var opts = JS.merge(opts, {
+	var opts = merge(opts, {
 			compressSources: false,
 			includeJsio: true,
 			preserveJsioSource: false
@@ -220,7 +218,7 @@ function run(moduleDef, cmd, opts, inlineOpts) {
 }
 
 function mergeOpts(opts, inlineOpts) {
-	var newOpts = JS.merge(JS.shallowCopy(opts), inlineOpts);
+	var newOpts = merge({}, opts, inlineOpts);
 	
 	// add compiler to the end of the preprocessors list
 	if (newOpts.preprocessors) {
