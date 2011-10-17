@@ -97,8 +97,8 @@ h1, h2, h3, h4, h5, h6, h7, h8 { font-family: "Trebuchet MS";}
 </style>
 <script src="jsio/jsio.js"></script>
 <script type="text/javascript">
-jsio('import bind');
-jsio('from jsio.util.browser import $');
+jsio('from base import *');
+jsio('from util.browser import $');
 
 window.onload = function() {
   var expBoxes = $('#examples .expBox'), left = 0;
@@ -107,7 +107,7 @@ window.onload = function() {
     left += 235;
   }
   
-  jsio('import examples.world.index as worldDemo');
+  jsio('import .examples.world.index as worldDemo');
   worldDemo.init();
 }
 
@@ -134,9 +134,9 @@ function selectLink(id) {
   if(id == selectLink.last) { return; }
   selectLink.last = id;
   
-  var hidden = $('#hiddenContent')[0];
-  var content = $(('#c_'+id).toLowerCase())[0] || $('#c_error')[0];
-  var selected = $('#mainSwappableContent')[0];
+  var hidden = $('#hiddenContent');
+  var content = $(('#c_'+id).toLowerCase()) || $('#c_error');
+  var selected = $('#mainSwappableContent');
   if(selected.childNodes[0]) {
     hidden.appendChild(selected.childNodes[0]);
   }
@@ -156,7 +156,7 @@ selectLink.last = '';
       <li><a href="#downloads">downloads</a></li>
       <li><a href="#documentation">documentation</a></li>
       <li><a href="#compilation">compilation</a></li>
-      <li><a href="http://github.com/mcarter/js.io">github &#x279A;</a></li>
+      <li><a href="http://github.com/gameclosure/js.io">github &#x279A;</a></li>
       <li><a href="https://groups.google.com/group/jsio">google group &#x279A;</a></li>
     </ul>
   </div>
