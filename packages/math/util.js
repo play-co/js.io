@@ -11,6 +11,10 @@ exports.integer = exports.truncate = function(a) { return a | 0; }
 
 exports.clip = function(num, min, max) { return Math.max(Math.min(num, max), min); }
 
+exports.sign = function (num) {
+	return num && num / Math.abs(num);
+};
+
 var round = exports.round = function(a, precision, method) {
 	if (!method || method == round.ROUND_HALF_AWAY_FROM_ZERO) {
 		return a.toFixed(precision);
