@@ -288,7 +288,7 @@
 		function ENV_node() {
 			var fs = require('fs'),
 				sys = require('sys');
-		
+			
 			this.name = 'node';
 			this.global = GLOBAL;
 			this.getCwd = process.cwd;
@@ -306,19 +306,28 @@
 				}
 				return msg;
 			}
-		
+			
 			this.getPath = function() {
 				var segments = __filename.split('/');
 				segments.pop();
 				return util.makeRelativePath(segments.join('/') || '.', this.getCwd());
 			}
-			this.eval = process.compile;
-		
+			
+			if (process.compile) {
+				this.eval = process.compile;
+			} else {
+				var vm = require('vm');
+				
+				this.eval = function (code, path) {
+					return vm.runInThisContext(code, path);
+				}
+			}
+			
 			this.fetch = function(path) {
 				try { return fs.readFileSync(path, 'utf8'); } catch(e) {}
 				return false;
 			}
-		
+			
 			this.require = require;
 		}
 	
