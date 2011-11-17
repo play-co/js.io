@@ -58,7 +58,7 @@ exports = Class(function() {
 	this.subscribeOnce = function(signal, ctx, method) {
 		var args = arguments,
 			cb = bind(this, function() {
-				this.unsubscribe(this, cb);
+				this.unsubscribe(signal, cb);
 				if (args.length == 2) {
 					ctx.apply(GLOBAL, arguments);
 				} else {
