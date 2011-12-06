@@ -152,7 +152,14 @@ function onReadyStateChange(request, xhr) {
 	
 	// .status will be 0 when requests are filled via app cache on at least iOS 4.x
 	if (xhr.status != 200 && xhr.status != 0) {
-		cb({status: xhr.status, response: xhr.response}, null);
+		var response = xhr.response;
+		if (xhr.getResponseHeader('Content-Type') == 'application/json') {
+			try {
+				response = JSON.parse(response);
+			} catch(e) {
+			}
+		}
+		cb({status: xhr.status, response: response}, null);
 	} else {
 		var data = xhr.responseText;
 		if (request.type == 'json') {
