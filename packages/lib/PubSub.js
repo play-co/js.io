@@ -30,7 +30,7 @@ exports = Class(function() {
 				}
 			}
 			
-			if(!this._subscribers[signal]) { return; }
+			if(!this._subscribers[signal]) { return this; }
 			
 			var subs = this._subscribers[signal].slice(0);
 			for(var i = 0, sub; sub = subs[i]; ++i) {
@@ -66,13 +66,18 @@ exports = Class(function() {
 						.apply(GLOBAL, arguments);
 				}
 			});
+			
+		if ( args.length === 3 ) {
+			cb._ctx = ctx;
+			cb._method = method;
+		}
 		
 		return this.subscribe(signal, cb);
 	}
 	
 	// if no method is specified, all subscriptions with a callback context of ctx will be removed
 	this.unsubscribe = function(signal, ctx, method) {
-		if (!this._subscribers || !this._subscribers[signal]) { return; }
+		if (!this._subscribers || !this._subscribers[signal]) { return this; }
 		var subs = this._subscribers[signal];
 		for (var i = 0, c; c = subs[i]; ++i) {
 			if (c == ctx || c._ctx == ctx && (!method || c._method == method)) {
