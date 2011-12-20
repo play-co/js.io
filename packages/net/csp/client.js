@@ -168,11 +168,12 @@ exports.CometSession = Class(function(supr) {
 				break;
 		}
 		
-		this._sessionKey = null;
+		
 		this._opened = false; // what is this used for???
 		this.readyState = READYSTATE.DISCONNECTED;
 		
 		this._doOnDisconnect(err);
+		this._sessionKey = null;
 	}
 	
 	this._handshakeTimeout = function() {
