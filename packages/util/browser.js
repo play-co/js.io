@@ -239,6 +239,15 @@ if (jsio.__env.name == 'browser') {
 		}
 	}
 
+	$.setValue = function(el, value) {
+		el = $.id(el);
+		if ('value' in el) {
+			el.value = value;
+		} else if ('value' in el.firstChild) {
+			el.firstChild.value = value;
+		}
+	};
+
 	$.remove = function(el) {
 		el = $.id(el);
 		if(el && el.parentNode) {
