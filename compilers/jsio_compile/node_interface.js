@@ -88,16 +88,16 @@ exports.compressor = function(filename, src, callback, opts) {
 
 			cachePath = path.join(opts.compressorCachePath, cacheFilename);
 
+			if (crypto) {
+				var hash = crypto.createHash('md5');
+				hash.update(src);
+				var checksum = hash.digest('hex');
+			} else {
+				var stat = fs.statSync(filename);
+				var checksum = '' + stat.mtime;
+			}
+			
 			if (path.existsSync(cachePath)) {
-				if (crypto) {
-					var hash = crypto.createHash('md5');
-					hash.update(src);
-					var checksum = hash.digest('hex');
-				} else {
-					var stat = fs.statSync(filename);
-					var checksum = '' + stat.mtime;
-				}
-
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
 				var cachedChecksum = cachedContents.substring(0, i);
