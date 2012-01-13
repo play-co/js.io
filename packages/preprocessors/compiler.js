@@ -1,8 +1,7 @@
 // compiler should be able to compile itself, so use a different name for calls to jsio that we don't want to try to compile
 var JSIO = jsio.__jsio; 
 
-var sourceCache = /jsio.__srcCache\s*=\s*\{\s*\}/,
-	jsioAddPath = /jsio\.path\.add\s*\(\s*(['"][^'"]+?['"])\s*\)/g,
+var jsioAddPath = /jsio\.path\.add\s*\(\s*(['"][^'"]+?['"])\s*\)/g,
 	jsioNormal = /jsio\s*\(\s*(['"].+?['"])\s*(,\s*\{[^}]+\})?\)/g,
 	jsioDynamic = /jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/g,
 	gSrcTable = {};
@@ -122,14 +121,12 @@ exports.setCompressor = function(compressor) { gActiveCompressor = compressor; }
  * opts.compressSources: compress each source file ** requires an active compressor (see exports.setCompressor)
  * opts.compressResult: compress the resulting file ** requires an active compressor (see exports.setCompressor)
  * opts.includeJsio: include a copy of jsio.js in the output
- * opts.preserveJsioSource: don't modify the included copy of jsio.js (useful if the code will be used in another run of the jsio compiler)
  */
 exports.generateSrc = function(opts, callback) {
 	
 	var opts = merge(opts, {
 			compressSources: false,
-			includeJsio: true,
-			preserveJsioSource: false
+			includeJsio: true
 		});
 
 	var cb = bind(this, buildJsio, opts, callback);
@@ -159,7 +156,7 @@ function buildJsio(opts, callback) {
 
 	// if we're not allowed to modify the jsio source or we're not including the jsio source
 	// then use jsio.setCachedSrc to include the source strings
-	if (opts.preserveJsioSource || !opts.includeJsio) {
+	if (!opts.includeJsio) {
 		logger.info('source include method: jsio.setCachedSrc');
 		
 		var lines = [];
@@ -168,12 +165,9 @@ function buildJsio(opts, callback) {
 		}
 		src = jsioSrc + lines.join('\n');
 	} else {
-		logger.info('source include method: setting jsio.__srcCache');
-		
-		// otherwise we can just look for the jsio.__srcCache variable and inline the compiled
-		// source as a JSON string.  We need to use a function here to avoid some ugly escaping
-		// of '$' in the replacement string.
-		src = jsioSrc.replace(sourceCache, function(match) { return "jsio.__srcCache=" +  JSON.stringify(gSrcTable); });
+		logger.info('source include method: jsio.setCache');
+
+		src = jsioSrc + "jsio.setCache(" + JSON.stringify(gSrcTable) + ");";
 	}
 	
 	if (opts.compressResult) {

@@ -175,12 +175,12 @@
 						baseMod = pathSegments[0],
 						pathString = pathSegments.join('/');
 				
-					if (jsio.path.cache.hasOwnProperty(baseMod)) {
-						return [makeModuleDef(util.buildPath(jsio.path.cache[baseMod], pathString))];
+					if (jsioPath.cache.hasOwnProperty(baseMod)) {
+						return [makeModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString))];
 					}
 				
 					var out = [],
-						paths = jsio.path.get(),
+						paths = jsioPath.get(),
 						len = paths.length;
 					for (var i = 0; i < len; ++i) {
 						out.push(makeModuleDef(util.buildPath(paths[i], pathString), baseMod, paths[i]));
@@ -196,35 +196,34 @@
 					};
 				}
 			};
-	
+		
+		// construct the top-level jsio object
 		var jsio = util.bind(this, importer, null, null, null);
+
 		jsio.__util = util;
 		jsio.__init__ = init;
-		
-		// explicitly use jsio.__srcCache to avoid obfuscation with closure compiler
-		var sourceCache = jsio.__srcCache = {};
-		if (cloneFrom && cloneFrom.__srcCache) { sourceCache = jsio.__srcCache = cloneFrom.__srcCache; }
 
-		(function() {
-			this.__filename = 'jsio.js';
-			this.__preprocessors = {};
-			this.__cmds = [];
-			this.__jsio = this;
-			this.__importer = importer;
-			this.__modules = {preprocessors:{}};
-		
-			this.path = {
-				set: function(path) { this.value = (typeof path == 'string' ? [path] : path); },
-				get: function() { return this.value.slice(0); },
+		var srcCache = {};
+		if (cloneFrom && cloneFrom.__srcCache) { srcCache = jsio.__srcCache = cloneFrom.__srcCache; }
+
+		jsio.__srcCache = srcCache;
+		jsio.__filename = 'jsio.js';
+		jsio.__cmds = [];
+		jsio.__jsio = this;
+		jsio.__importer = importer;
+		jsio.__modules = {preprocessors:{}};
+		var jsioPath = {
+				set: function(path) { jsioPath.value = (typeof path == 'string' ? [path] : path); },
+				get: function() { return jsioPath.value.slice(0); },
 				add: function(path) {
-					var v = this.value, len = v.length;
+					var v = jsioPath.value, len = v.length;
 					for (var i = 0; i < len; ++i) {
 						if (v[i] == path) { return; }
 					}
 					v.push(path);
 				},
 				remove: function(path) {
-					var v = this.value, len = v.length;
+					var v = jsioPath.value, len = v.length;
 					for (var i = 0; i < len; ++i) {
 						if (v[i] == path) {
 							v.splice(i, 1);
@@ -235,37 +234,33 @@
 				cache: {}
 			};
 		
-			this.addPath = util.bind(this.path, 'add');
+		jsio.path = jsioPath;
+		jsio.addPath = util.bind(jsioPath, 'add');
 		
-			this.setCachedSrc = function(path, src) { sourceCache[path] = { path: path, src: src }; }
-			this.getCachedSrc = function(path) { return sourceCache[path]; }
+		jsio.setCache = function(cache) { srcCache = cache; }
+		jsio.setCachedSrc = function(path, src) { srcCache[path] = { path: path, src: src }; }
+		jsio.getCachedSrc = function(path) { return srcCache[path]; }
+		jsio.addCmd = util.bind(jsio.__cmds, 'push');
 		
-			this.addPreprocessor = function(name, preprocessor) { this.__preprocessors[name] = preprocessor; }
-			this.addCmd = function(processor) { this.__cmds.push(processor); }
-		
-			this.setEnv = function(envCtor) {
-				if (!envCtor && cloneFrom) {
-					ENV = cloneFrom.__env;
-				} else if (typeof envCtor == 'string') {
-					switch(envCtor) {
-						case 'node':
-							ENV = new ENV_node(util);
-							break;
-						case 'browser':
-						default:
-							ENV = new ENV_browser(util);
-							break;
-					}
-				} else {
-					ENV = new envCtor(util);
+		jsio.setEnv = function(envCtor) {
+			if (!envCtor && cloneFrom) {
+				ENV = cloneFrom.__env;
+			} else {
+				if (typeof envCtor == 'string') {
+					envCtor = ({
+							node: ENV_node,
+							browser: ENV_browser
+						})[envCtor] || ENV_browser;
 				}
-			
-				this.__env = ENV;
-				this.__dir = ENV.getCwd();
-				this.path.set(ENV.getPath());
+
+				ENV = new envCtor(util);
 			}
-		}).call(jsio);
-	
+
+			this.__env = ENV;
+			this.__dir = ENV.getCwd();
+			this.path.set(ENV.getPath());
+		}
+		
 		if (cloneFrom) {
 			jsio.setEnv();
 		} else if (typeof process !== 'undefined' && process.version) {
@@ -338,7 +333,7 @@
 		
 			this.name = 'browser';
 			this.global = window;
-			this.global.jsio = jsio;
+			if (!this.global.jsio) { this.global.jsio = jsio; }
 		
 			this.log = function() {
 				var args = SLICE.call(arguments, 0);
@@ -449,7 +444,7 @@
 			var src;
 			for (var i = 0, possible; possible = possibilities[i]; ++i) {
 				var path = possible.path,
-					cachedVersion = sourceCache[path];
+					cachedVersion = srcCache[path];
 				
 				if (cachedVersion) {
 					possible.src = cachedVersion.src;
@@ -504,8 +499,8 @@
 		
 			moduleDef.friendlyPath = modulePath;
 		
-			if (moduleDef.baseMod && !(moduleDef.baseMod in jsio.path.cache)) {
-				jsio.path.cache[moduleDef.baseMod] = moduleDef.basePath;
+			if (moduleDef.baseMod && !(moduleDef.baseMod in jsioPath.cache)) {
+				jsioPath.cache[moduleDef.baseMod] = moduleDef.basePath;
 			}
 		
 			// the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
@@ -592,7 +587,7 @@
 					}
 				}
 			};
-		
+			
 			ctx.module = {id: modulePath, exports: ctx.exports};
 			if (!dontAddBase && modulePath != 'base') {
 				ctx.jsio('from base import *');
@@ -604,8 +599,7 @@
 			ctx.jsio.__env = jsio.__env;
 			ctx.jsio.__dir = moduleDef.directory;
 			ctx.jsio.__filename = moduleDef.filename;
-			ctx.jsio.__path = modulePath;
-			ctx.jsio.path = jsio.path;
+			ctx.jsio.path = jsioPath;
 			return ctx;
 		};
 		
@@ -774,19 +768,15 @@
 				return true;
 			}
 		});
-	
-		jsio.install = function(){
+		
+		jsio.install = function() {
 			jsio('from base import *');
 			GLOBAL['logger'] = logging.get('jsiocore');
 		};
-	
-		jsio.clone = function() {
-			var copy = jsio.__init__(jsio);
-			if (ENV.name == 'browser') { window.jsio = jsio; }
-			return copy;
-		}
+		
+		jsio.clone = util.bind(init, jsio);
 
 		return jsio;
 	}
-	jsio = init();
+	jsio = init(null, {});
 })();

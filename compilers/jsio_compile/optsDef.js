@@ -66,12 +66,6 @@ exports = {
 		also: '--output',
 		description: "The filename to write the compiled code to.  Defaults to stdout (prints to the console)."
 	},
-	'--preserveJsioSource': {
-		name: 'preserveJsioSource',
-		type: 'boolean',
-		'default': false,
-		description: "(advanced option) Specify this option if the compiler shouldn't modify the core jsio JavaScript.  This option wraps compiled source in the jsio API call setCachedSrc rather than inserting the source into the jsio cache table."
-	},
 	'--includeJsio': {
 		name: 'includeJsio',
 		type: 'boolean',
