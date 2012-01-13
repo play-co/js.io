@@ -90,11 +90,12 @@ msp.ProxyConnection = Class(function() {
 			} else {
 				this.closeOutgoing(connectionId, 'UserConnectionReset');
 			}
-			var outConn = this.outConnections[connectionId];
-			outConn.listeners('connect') = [];
-			outConn.listeners('receive') = [];
-			outConn.listeners('eof') = [];
-			outConn.listeners('disconnect') = [];
+			// ???? this is not valid JS
+			// var outConn = this.outConnections[connectionId];
+			// outConn.listeners('connect') = [];
+			// outConn.listeners('receive') = [];
+			// outConn.listeners('eof') = [];
+			// outConn.listeners('disconnect') = [];
 		};
 	};
 	this.send = function (frame) {
