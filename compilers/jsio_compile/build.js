@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 
 // run "node build.js" to generate a self-contained jsio_compile script
 
@@ -58,23 +58,15 @@ function doCompile() {
 		});
 	});
 
-	exec("which " + node, function(error, stdout, stderr) {
-		var nodeLocation = stdout.replace(/\n/g, '');
-		logger.info('Found node at', nodeLocation)
-		exec(nodeLocation + " --version", function(error, stdout, stderr) {
-			var nodeVersion = stdout.replace(/\n/g, '');;
-			logger.info('Using node version', nodeVersion);
-			compiler.generateSrc({compressorCachePath: CACHE_PATH, compressSources: true, compressResult: true, preserveJsioSource: true}, function(src) {
-				var fd = fs.openSync(TARGET, 'w');
-				fs.writeSync(fd, '#!' + nodeLocation + '\n');
-				fs.writeSync(fd, src);
-				fs.writeSync(fd, 'jsio("import .compiler").start()');
-				fs.closeSync(fd);
+	compiler.generateSrc({compressorCachePath: CACHE_PATH, compressSources: true, compressResult: true}, function(src) {
+		var fd = fs.openSync(TARGET, 'w');
+		fs.writeSync(fd, '#!/usr/bin/env node\n');
+		fs.writeSync(fd, src);
+		fs.writeSync(fd, 'jsio("import .compiler").start()');
+		fs.closeSync(fd);
 
-				exec("chmod +x " + TARGET);
-				logger.info('Wrote', TARGET);
-			});
-		});
+		exec("chmod +x " + TARGET);
+		logger.info('Wrote', TARGET);
 	});
 }
 
