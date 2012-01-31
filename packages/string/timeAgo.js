@@ -20,12 +20,20 @@ var FORMATS = [
 exports = function(dateString, formats) {
 	formats = formats || FORMATS;
 	
-	var time = ('' + dateString).replace(/-/g, '/').replace(/[TZ]/g, ' ').replace(/^\s+|\s+$/g, '');
-	if (time.charAt(time.length - 4) == '.') {
-		time = time.substr(0, time.length - 4);
+	var date;
+	if (dateString instanceof Date) {
+		date = dateString;
+	} else if (typeof dateString == 'string') {
+		var time = ('' + dateString).replace(/-/g, '/').replace(/[TZ]/g, ' ').replace(/^\s+|\s+$/g, '');
+		if (time.charAt(time.length - 4) == '.') {
+			time = time.substr(0, time.length - 4);
+		}
+		date = new Date(time);
+	} else {
+		date = new Date(dateString);
 	}
-	
-	var seconds = (new Date - new Date(time)) / 1000 + new Date().getTimezoneOffset() * 60;
+
+	var seconds = (new Date - date) / 1000 + new Date().getTimezoneOffset() * 60;
 	var postfix = 'ago', listChoice = 1;
 	if (seconds < 0) {
 		seconds = -seconds;
@@ -43,5 +51,5 @@ exports = function(dateString, formats) {
 		}
 	}
 	
-	return time;
+	return date;
 };
