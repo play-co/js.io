@@ -193,28 +193,28 @@ exports.run = function(args, opts) {
 	// run the actual compiler
 	var compiler = jsio('import preprocessors.compiler');
 	
-	compiler.setDebugLevel(debugLevel);
+	compiler.setCompilerOpts({
+		debugLevel: debugLevel,
+		compressor: opts.compressor,
+		autoDetectPaths: true,
+		dynamicImports: opts.dynamicImports
+	});
 	
-	if (opts.compressor) { compiler.setCompressor(opts.compressor); }
-	
-	compiler.compile('import base');
+	compiler.compile('import base', opts);
 	
 	if (opts.additionalDeps) {
-		var deps = opts.additionalDeps,
-			n = deps.length;
+		var deps = opts.additionalDeps;
+		var n = deps.length;
+
 		logger.info('compiling dependencies...');
 		for (var i = 0; i < n; ++i) {
-			compiler.compile(deps[i]);
+			compiler.compile(deps[i], opts);
 		}
 	}
 	
-	var compileOpts = {
-		autoDetectPaths: true,
-		dynamicImports: opts.dynamicImports
-	};
-	
-	logger.info('compiling main program', initial, JSON.stringify(compileOpts));
-	compiler.compile(initial, compileOpts);
+	logger.info('compiling main program', initial);
+
+	compiler.compile(initial);
 	
 	compiler.generateSrc(opts, function(src) {
 		if (opts.appendImport) {

@@ -17,6 +17,11 @@ exports = {
 		type: 'string',
 		description: "Path to closure.jar, if using compression (default: cwd)"
 	},
+	'--environment': {
+		name: 'environment',
+		type: 'string',
+		description: 'runtime environment to target'
+	},
 	'-d': {
 		also: '--debug',
 		name: 'debug',

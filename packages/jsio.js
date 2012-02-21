@@ -281,24 +281,27 @@
 		*/
 	
 		function ENV_node() {
-			var fs = require('fs'),
-				sys = require('sys');
+			var fs = require('fs');
 			
 			this.name = 'node';
 			this.global = GLOBAL;
 			this.getCwd = process.cwd;
+
+
 			this.log = function() {
 				var msg;
 				try {
-					sys.error(msg = Array.prototype.map.call(arguments, function(a) {
-						if ((a instanceof Error) && a.message) {
-							return 'Error:' + a.message + '\nStack:' + a.stack + '\nArguments:' + a.arguments;
-						}
-						return typeof a == 'string' ? a : JSON.stringify(a);
-					}).join(' '));
+					msg = Array.prototype.map.call(arguments, function(a) {
+							if ((a instanceof Error) && a.message) {
+								return 'Error:' + a.message + '\nStack:' + a.stack + '\nArguments:' + a.arguments;
+							}
+							return (typeof a == 'string' ? a : JSON.stringify(a));
+						}).join(' ') + '\n';
 				} catch(e) {
-					sys.error(msg = Array.prototype.join.call(arguments, ' ') + '\n');
+					msg = Array.prototype.join.call(arguments, ' ') + '\n';
 				}
+
+				process.stderr.write(msg);
 				return msg;
 			}
 			
@@ -312,9 +315,13 @@
 				this.eval = process.compile;
 			} else {
 				var vm = require('vm');
-				
 				this.eval = function (code, path) {
-					return vm.runInThisContext(code, path);
+					try {
+						return vm.runInThisContext(code, path);
+					} catch(e) {
+						this.log('In ' + path + ':\n' + e.message);
+						throw e;
+					}
 				}
 			}
 			
