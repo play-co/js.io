@@ -17,11 +17,12 @@ var FORMATS = [
 ];
 
 // based on http://webdesign.onyou.ch/2010/08/04/javascript-time-ago-pretty-date/
-exports = function(dateString, formats) {
+exports = function(dateString, formats, isLocal) {
 	formats = formats || FORMATS;
 	
 	var date;
 	if (dateString instanceof Date) {
+		isLocal = false;
 		date = dateString;
 	} else if (typeof dateString == 'string') {
 		var time = ('' + dateString).replace(/-/g, '/').replace(/[TZ]/g, ' ').replace(/^\s+|\s+$/g, '');
@@ -30,10 +31,11 @@ exports = function(dateString, formats) {
 		}
 		date = new Date(time);
 	} else {
+		isLocal = false;
 		date = new Date(dateString);
 	}
 
-	var seconds = (new Date - date) / 1000 + new Date().getTimezoneOffset() * 60;
+	var seconds = (new Date - date) / 1000 + (isLocal ? new Date().getTimezoneOffset() * 60 : 0);
 	var postfix = 'ago', listChoice = 1;
 	if (seconds < 0) {
 		seconds = -seconds;
