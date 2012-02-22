@@ -68,7 +68,7 @@ var Request = Class(function() {
 		}
 		
 		try {
-			this.data = (this.method == 'POST' ? (isObject ? JSON.stringify(opts.data) : opts.data) : null);
+			this.data = (this.method != 'GET' ? (isObject ? JSON.stringify(opts.data) : opts.data) : null);
 		} catch(e) {
 			cb && cb({invalidData: true});
 			return;
