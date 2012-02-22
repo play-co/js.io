@@ -31,20 +31,26 @@ cb.run(doCompile);
 function doCompile() {
 	// get access to jsio path util functions
 	jsio('import util.path');
-
+	
+	logger.log('building jsio_compile...');
 	var compiler = jsio('import preprocessors.compiler');
 
 	var interface = jsio('import .node_interface');
 	interface.logger.setLevel(0);
 
-	compiler.setCompressor(interface.compressor);
-
-	compiler.compile('import preprocessors.compiler');
-	compiler.compile('import .compiler', {
+	compiler.setCompilerOpts({
+		compressor: interface.compressor,
+		environment: jsio.__env.name,
 		dynamicImports: {
 			COMPILER: 'import .node_interface'
 		}
 	});
+
+	logger.log('processing compiler preprocessor...');
+	compiler.compile('import preprocessors.compiler');
+
+	logger.log('processing compiler...');
+	compiler.compile('import .compiler');
 
 	// grab a full copy of jsio
 	walk('jsio', function(path, files, dirs) {
