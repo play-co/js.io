@@ -53,10 +53,8 @@ exports.run = function(args, opts) {
 	var debugLevel = 'debug' in opts ? opts.debug : 5;
 	exports.setDebugLevel(debugLevel);
 	
-	if (debugLevel >= 3) {
-		var strOpts = JSON.stringify(opts, null, '\t');
-		logger.info('Starting compiler with args: ', args, 'and options:', strOpts.substring(1, strOpts.length - 1));
-	}
+	var strOpts = JSON.stringify(opts, null, '\t');
+	logger.info('Starting compiler with args: ', args, 'and options:', strOpts.substring(1, strOpts.length - 1));
 	
 	// use external copy of jsio rather than cached copy
 	if (opts.jsioPath) {
@@ -197,6 +195,7 @@ exports.run = function(args, opts) {
 		debugLevel: debugLevel,
 		compressor: opts.compressor,
 		autoDetectPaths: true,
+		environment: opts.environment,
 		dynamicImports: opts.dynamicImports
 	});
 	
