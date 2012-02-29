@@ -70,7 +70,7 @@ var Request = Class(function() {
 		try {
 			this.data = (this.method != 'GET' ? (isObject ? JSON.stringify(opts.data) : opts.data) : null);
 		} catch(e) {
-			cb && cb({invalidData: true});
+			cb && cb({invalidData: true}, null, '');
 			return;
 		}
 	}
@@ -128,7 +128,7 @@ function cancel(xhr, request) {
 	
 	xhr.onreadystatechange = null;
 	request.timedOut = true;
-	request.cb && request.cb({timeout: true}, null);
+	request.cb && request.cb({timeout: true}, null, xhr.getAllResponseHeaders());
 }
 
 function onReadyStateChange(request, xhr) {
@@ -159,22 +159,22 @@ function onReadyStateChange(request, xhr) {
 			} catch(e) {
 			}
 		}
-		cb({status: xhr.status, response: response}, null);
+		cb({status: xhr.status, response: response}, null, xhr.getAllResponseHeaders());
 	} else {
 		var data = xhr.responseText;
 		if (request.type == 'json') {
 			if (!data) {
-				cb({status: xhr.status, response: xhr.response});
+				cb({status: xhr.status, response: xhr.response}, null, xhr.getAllResponseHeaders());
 				return;
 			} else {
 				try {
 					data = JSON.parse(data);
 				} catch(e) {
-					cb({status: xhr.status, response: xhr.response, parseError: true});
+					cb({status: xhr.status, response: xhr.response, parseError: true}, null, xhr.getAllResponseHeaders());
 					return;
 				}
 			}
 		}
-		cb(null, data);
+		cb(null, data, xhr.getAllResponseHeaders());
 	}
 }
