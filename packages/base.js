@@ -108,7 +108,7 @@ exports.merge = function(base, extra) {
 exports.delay = function(orig, timeout) {
 	var _timer = null;
 	var ctx, args;
-	var f = function() { orig.apply(ctx, arguments); }
+	var f = function() { orig.apply(ctx, args); }
 	return function() {
 		ctx = this;
 		args = arguments;
