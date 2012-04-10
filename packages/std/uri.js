@@ -82,7 +82,9 @@ var URI = exports = Class(function(supr) {
 		return this;
 	}
 
-	this.toString = this.render = function(onlyBase) {
+	this.toJSON = function() { return this.toString(false); }
+
+	this.toString = function(onlyBase) {
 		// XXX TODO: This is vaguely reasonable, but not complete. fix it...
 		var a = this._protocol ? this._protocol + "://" : ""
 		var b = this._host ? this._host + ((this._port || 80) == 80 ? "" : ":" + this._port) : "";
@@ -104,14 +106,14 @@ exports.relativeTo = function(url, base) {
 	url = String(url);
 	
 	if (/^http(s?):\/\//.test(url)) { return url; }
-	if (url.charAt(0) == '/') {
-		var baseuri = new exports(base);
-		url = baseuri.toString(true) + url;
-	} else {
-		url = base + url;
-	}
-	
-	return exports.resolveRelative(url);
+
+	var baseURI = new exports(base)
+		.setAnchor('')
+		.setQuery('')
+		.setFile('')
+		.toString(url.charAt(0) == '/');
+
+	return new URI(exports.resolveRelative(baseURI + url));
 }
 
 exports.resolveRelative = function(url) {
