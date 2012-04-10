@@ -19,7 +19,7 @@ var FORMATS = [
 // based on http://webdesign.onyou.ch/2010/08/04/javascript-time-ago-pretty-date/
 exports = function(dateString, formats, isLocal, offset) {
 	formats = formats || FORMATS;
-	offset = offset || 0
+	offset = offset || 0;
 	
 	var date;
 	if (dateString instanceof Date) {
@@ -36,7 +36,7 @@ exports = function(dateString, formats, isLocal, offset) {
 		date = new Date(dateString);
 	}
 
-	var seconds = (new Date - date - offset) / 1000 + (isLocal ? new Date().getTimezoneOffset() * 60 : 0);
+	var seconds = (new Date() - date - offset) / 1000 + (isLocal ? new Date().getTimezoneOffset() * 60 : 0);
 	var postfix = 'ago', listChoice = 1;
 	if (seconds < 0) {
 		seconds = -seconds;
