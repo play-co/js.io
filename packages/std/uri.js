@@ -57,7 +57,7 @@ var URI = exports = Class(function(supr) {
 	
 	this.push = function(path) {
 		if (path) {
-			this._path = (this._path + '/' + path).replace(/\/\//g, '/');
+			this._path = (this._path + '/' + path).replace(/\/\/+/g, '/');
 		}
 		return this;
 	}
