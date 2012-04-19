@@ -128,7 +128,10 @@ function cancel(xhr, request) {
 	
 	xhr.onreadystatechange = null;
 	request.timedOut = true;
-	request.cb && request.cb({timeout: true}, null, xhr.getAllResponseHeaders());
+	try {
+		var headers = xhr.getAllResponseHeaders();
+	} catch (e) {}
+	request.cb && request.cb({timeout: true}, null, headers);
 }
 
 function onReadyStateChange(request, xhr) {
