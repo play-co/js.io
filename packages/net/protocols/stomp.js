@@ -1,6 +1,9 @@
 jsio('from net.protocols.buffered import BufferedProtocol');
 jsio('from util.sprintf import sprintf');
 
+/**
+ * @extends net.protocols.buffered.BufferedProtocol
+ */
 exports.StompProtocol = Class(BufferedProtocol, function(supr) {
 
 	this.init = function() {

@@ -98,6 +98,9 @@ var ReceivedEvent = Class(function() {
 	}
 });
 
+/**
+ * @extends net.protocols.rtjp.RTJPProtocol;
+ */
 exports = Class(RTJPProtocol, function(supr) {
 	this.init = function() {
 		supr(this, 'init', arguments);

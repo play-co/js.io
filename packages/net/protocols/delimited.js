@@ -1,5 +1,8 @@
 jsio('import net.interfaces');
 
+/**
+ * @extends net.interfaces.Protocol
+ */
 exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
 
 	this.init = function(delimiter) {

@@ -1,5 +1,9 @@
 jsio('import lib.Enum as Enum');
 
+/**
+ * @namespace
+ */
+
 exports.interpolate = function(a, b, x) { return a * (1 - x) + b * x; }
 
 exports.random = function(a, b, rand) { return a + ((rand || Math.random)() * (b - a) | 0); }

@@ -4,6 +4,9 @@ import .Point;
 import .Line;
 import .Rect;
 
+/**
+ * @namespace
+ */
 var intersect = exports;
 
 intersect.rectAndPt = function(rect, pt) { return intersect.ptAndRect(pt, rect); }

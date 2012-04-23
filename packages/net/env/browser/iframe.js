@@ -33,6 +33,9 @@ function findTarget(target) {
 	}
 }
 
+/**
+ * @extends net.interfaces.Listener
+ */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
 	
@@ -288,6 +291,9 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	}
 });
 
+/**
+ * @extends net.interfaces.Connector
+ */
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		var target;

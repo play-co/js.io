@@ -1,5 +1,9 @@
 jsio('import .util');
 
+/**
+ * @namespace
+ */
+
 exports.weightedAverage = function (a, w, n) {
 	n = n || a.length;
 	var s = 0;

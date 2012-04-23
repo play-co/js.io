@@ -2,6 +2,9 @@ jsio('import net.interfaces');
 jsio('import std.utf8 as utf8');
 jsio('import net.errors as Errors');
 
+/**
+ * @extends net.interfaces.Connector
+ */
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		this._state = net.interfaces.STATE.CONNECTING;
