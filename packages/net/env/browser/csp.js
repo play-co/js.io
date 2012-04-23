@@ -2,6 +2,9 @@ jsio('import net.interfaces');
 jsio('from net.csp.client import CometSession');
 jsio('import std.utf8 as utf8');
 
+/**
+ * @extends net.interfaces.Connector
+ */
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		this._state = net.interfaces.STATE.CONNECTING;

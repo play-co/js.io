@@ -1,6 +1,9 @@
 jsio('import net.interfaces');
 jsio('from net.protocols.delimited import DelimitedProtocol');
 
+/**
+ * @extends net.protocols.delimited.DelimitedProtocol
+ */
 exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	this.init = function() {
 		var delimiter = '\r\n';

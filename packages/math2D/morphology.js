@@ -1,4 +1,6 @@
-
+/**
+ * @namespace
+ */
 
 exports.open = function(img, mask) {
 	return exports.dilate(exports.erode(img, mask), mask);

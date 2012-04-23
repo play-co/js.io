@@ -1,5 +1,8 @@
 jsio('import net.interfaces');
 
+/**
+ * @extends net.interfaces.Protocol
+ */
 exports.Protocol = Class(net.interfaces.Protocol, function() {
 	this.connectionMade = function() {
 		logger.debug('in connectionMade');
