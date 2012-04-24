@@ -24,6 +24,9 @@ var Transport = Class(net.interfaces.Transport, function() {
 	}
 });
 
+/**
+ * @extends net.interfaces.Listener
+ */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	this.listen = function() {
 		var s = createServer(bind(this, function(socket) {

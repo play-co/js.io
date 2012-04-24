@@ -2,6 +2,9 @@
 
 import .Point;
 
+/**
+ * @extends math2D.Point
+ */
 exports = Class(Point, function(supr) {
 	this.init = function(a, b, c) {
 		switch(arguments.length) {

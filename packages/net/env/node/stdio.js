@@ -30,7 +30,9 @@ var Transport = Class(net.interfaces.Transport, function(supr) {
     }
 });
 
-
+/**
+ * @extends net.interfaces.Connector
+ */
 exports.Connector = Class(net.interfaces.Connector, function() {
     this.connect = function() {
         var stdin = process.openStdin();

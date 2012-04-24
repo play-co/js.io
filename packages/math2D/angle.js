@@ -1,3 +1,7 @@
+/**
+ * @namespace
+ */
+
 var PI = Math.PI,
 	TWOPI = Math.PI * 2;
 

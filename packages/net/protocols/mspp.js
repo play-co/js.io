@@ -87,6 +87,9 @@ state.closed = 0;
 state.connecting = 1;
 state.consuming = 2;
 
+/**
+ * @extends net.protocols.buffered.BufferedProtocol
+ */
 exports.MSPPProtocol = Class(BufferedProtocol, function(supr) {
 	this.init = function() {
 		loggers.protocol.debug('new MSPPProtocol');

@@ -22,7 +22,9 @@ var Transport = Class(net.interfaces.Transport, function() {
 	}
 });
 
-
+/**
+ * @extends net.interfaces.Connector
+ */
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		
@@ -40,6 +42,9 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 	}
 });
 
+/**
+ * @extends net.interfaces.Listener
+ */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	this.listen = function() {
 		var s = nodeTcp.createServer(bind(this, function(socket) {

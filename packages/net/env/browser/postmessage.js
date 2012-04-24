@@ -1,6 +1,9 @@
 jsio('import net.interfaces');
 jsio('from util.browser import $');
 
+/**
+ * @extends net.interfaces.Listener
+ */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
 	
@@ -60,6 +63,9 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	}
 });
 
+/**
+ * @extends net.interfaces.Connector
+ */
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
@@ -83,6 +89,9 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 	}
 });
 
+/**
+ * @extends net.interfaces.Transport
+ */
 exports.Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(win) {
 		this._win = win;
