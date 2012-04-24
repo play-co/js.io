@@ -287,7 +287,6 @@
 			this.global = GLOBAL;
 			this.getCwd = process.cwd;
 
-
 			this.log = function() {
 				var msg;
 				try {
@@ -336,30 +335,30 @@
 		function ENV_browser() {
 			var XHR = window.XMLHttpRequest || function() { return new ActiveXObject("Msxml2.XMLHTTP"); },
 				cwd = null,
-				path = null;
-		
+				path = null,
+				JOIN = Array.prototype.join;
+			
 			this.name = 'browser';
 			this.global = window;
 			if (!this.global.jsio) { this.global.jsio = jsio; }
 		
-			this.log = function() {
-				var args = SLICE.call(arguments, 0);
-				if (typeof console != 'undefined' && console.log) {
-					//for iOS mobile safari w/ debugger console enabled,
-					//uncomment the following two lines for more useful
-					//messages
-					//console.log(args.join(' '));
-					//return;
-					
-					if (console.log.apply) {
-						console.log.apply(console, arguments);
-					} else { // IE doesn't support log.apply, and the argument cannot be arguments - it must be an array
+			if (window.console && console.log) {
+				if (!console.log.apply || /Android|iPhone|iPad|iPod/.test(navigator.userAgent)) {
+					this.log = function () {
+						var args = JOIN.call(arguments, ' ');
 						console.log(args);
+						return args;
+					}
+				} else {
+					this.log = function () {
+						console.log.apply(console, arguments);
+						return JOIN.call(arguments, ' ');
 					}
 				}
-				return args.join(' ');
+			} else {
+				this.log = function () { return JOIN.call(arguments, ' '); }
 			}
-		
+
 			this.getCwd = function() {
 				if(!cwd) {
 					var loc = window.location, path = loc.pathname;
