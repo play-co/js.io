@@ -104,9 +104,14 @@ function _send(request) {
 	
 	var xhr = exports.createXHR();
 	xhr.open(request.method, request.url, !(request.async == false));
-	xhr.setRequestHeader('Content-Type', 'text/plain');
+	var setContentType = false;
 	for (var key in request.headers) {
+		if (key.toLowerCase() == 'content-type') { setContentType = true; }
 		xhr.setRequestHeader(key, request.headers[key]);
+	}
+
+	if (!setContentType) {
+		xhr.setRequestHeader('Content-Type', 'text/plain');
 	}
 	
 	xhr.onreadystatechange = bind(this, onReadyStateChange, request, xhr);
