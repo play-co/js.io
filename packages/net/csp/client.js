@@ -338,7 +338,11 @@ exports.CometSession = Class(function(supr) {
 			logger.debug('dispatching data:', data);
 
 			// TODO: possibly catch this error in production? but not in dev
-			this._doOnRead(data);
+			try{
+    			    this._doOnRead(data);
+			}catch(e){
+			    logger.warn(e);
+			}
 		}
 		
 		if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) { return; }
