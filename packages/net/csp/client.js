@@ -4,6 +4,7 @@ jsio('import std.uri as uri');
 jsio('import net.errors as errors');
 jsio('import .transports');
 jsio('import lib.Enum as Enum');
+jsio('from util.browserdetect import BrowserDetect');
 
 var READYSTATE = exports.READYSTATE = Enum({
 	INITIAL: 0,
@@ -49,6 +50,13 @@ exports.CometSession = Class(function(supr) {
 		this._nullInFlight= false;
 		this._nullSent = false;
 		this._nullReceived = false;
+		
+		this._maxWriteLength = -1;
+		
+		if( BrowserDetect.isIE ) {
+			this._maxWriteLength = 1900; // IE don't like packages over 2048, let's play it safe and set to 1900
+										 // TODO: Max length could differ depending on transport
+		}
 	}
 	
 	
@@ -257,8 +265,15 @@ exports.CometSession = Class(function(supr) {
 	this.__doWrite = function(sendNull) {
 		logger.debug('_writeBuffer:', this._writeBuffer);
 		if (!this._packetsInFlight && this._writeBuffer) {
-			this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
-			this._writeBuffer = "";
+			if ( this._maxWriteLength !== -1 && this._writeBuffer.length > this._maxWriteLength  )  {  
+				_parts = this._writeBuffer.match(/.{1,1900}/g);
+				this._writeBuffer     = _parts.shift();
+				this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
+				this._writeBuffer     = _parts.join('');
+			}else{
+				this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
+				this._writeBuffer = "";
+			}
 		}
 		if (sendNull && !this._writeBuffer) {
 			if (!this._packetsInFlight) {
@@ -339,7 +354,7 @@ exports.CometSession = Class(function(supr) {
 
 			// TODO: possibly catch this error in production? but not in dev
 			try{
-    			    this._doOnRead(data);
+    			this._doOnRead(data);
 			}catch(e){
 			    logger.warn(e);
 			}

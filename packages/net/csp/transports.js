@@ -428,4 +428,3 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		b.removeChild(killLoadingBar.iframe);
 	} : function() {};
 });
-	
