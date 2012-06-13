@@ -2,8 +2,7 @@
 
 // run "node build.js" to generate a self-contained jsio_compile script
 
-var sys = require('sys'),
-	fs = require('fs'),
+var fs = require('fs'),
 	path = require('path'),
 	node = process.argv[0];
 
