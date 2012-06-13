@@ -19,8 +19,6 @@ optsDef = {
 
 */
 
-import std.js as JS;
-
 function ERROR(msg) {
 	logger.error(msg);
 	process.exit(1);
@@ -103,7 +101,7 @@ function addArg(result, optsDef, argv, i) {
 }
 
 exports = function(argv, origDef) {
-	var optsDef = JS.shallowCopy(origDef),
+	var optsDef = merge({}, origDef),
 		result = {};
 	for (var i in optsDef) {
 		var opt = optsDef[i];
@@ -111,7 +109,7 @@ exports = function(argv, origDef) {
 		
 		var also = opt.also;
 		if (also) {
-			if (JS.isArray(also)) {
+			if (isArray(also)) {
 				for (var j = 0, len = also.length; j < len; ++j) {
 					addAlso(optsDef, also[j], opt);
 				}
@@ -150,7 +148,7 @@ exports.printUsage = function(usage, optsDef) {
 	for (var i in optsDef) {
 		var opt = [i];
 		if (optsDef[i].also) {
-			if (JS.isArray(optsDef[i].also)) {
+			if (isArray(optsDef[i].also)) {
 				opt = opt.concat(optsDef[i].also);
 			} else {
 				opt.push(optsDef[i].also);
