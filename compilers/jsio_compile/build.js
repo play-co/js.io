@@ -4,7 +4,7 @@ import child_process;
 
 var node = process.argv[0];
 
-var BUILD_DIR = 'out';
+var BUILD_DIR = 'build';
 var TARGET = path.join(BUILD_DIR, 'jsio_compile');
 var CACHE_PATH = path.join(BUILD_DIR, '.cache');
 
