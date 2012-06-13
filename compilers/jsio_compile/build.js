@@ -1,44 +1,37 @@
-#!/usr/bin/env node
+import fs;
+import path;
+import child_process;
 
-// run "node build.js" to generate a self-contained jsio_compile script
+var node = process.argv[0];
 
-var fs = require('fs'),
-	path = require('path'),
-	node = process.argv[0];
-
-var exec = require('child_process').exec;
-
-var BUILD_DIR = 'build';
+var BUILD_DIR = 'out';
 var TARGET = path.join(BUILD_DIR, 'jsio_compile');
 var CACHE_PATH = path.join(BUILD_DIR, '.cache');
 
-require('./jsio/jsio');
-
 // setup logging
-jsio('from base import *');
 logger = logging.get('compiler');
 logging.get('preprocessors.compiler').setLevel(0);
 
-jsio('import lib.Callback');
+import lib.Callback;
 var cb = new lib.Callback();
 
-exec('mkdir -p ' + BUILD_DIR, null, cb.chain());
-exec('mkdir -p ' + CACHE_PATH, null, cb.chain());
+child_process.exec('mkdir -p ' + BUILD_DIR, null, cb.chain());
+child_process.exec('mkdir -p ' + CACHE_PATH, null, cb.chain());
 
 cb.run(doCompile);
 
 function doCompile() {
 	// get access to jsio path util functions
-	jsio('import util.path');
+	import util.path;
 	
 	logger.log('building jsio_compile...');
-	var compiler = jsio('import preprocessors.compiler');
+	import preprocessors.compiler as compiler;
+	import .node_interface as nodeInterface;
 
-	var interface = jsio('import .node_interface');
-	interface.logger.setLevel(0);
+	nodeInterface.logger.setLevel(0);
 
 	compiler.setCompilerOpts({
-		compressor: interface.compressor,
+		compressor: nodeInterface.compressor,
 		environment: jsio.__env.name,
 		dynamicImports: {
 			COMPILER: 'import .node_interface'
@@ -70,7 +63,7 @@ function doCompile() {
 		fs.writeSync(fd, 'jsio("import .compiler").start()');
 		fs.closeSync(fd);
 
-		exec("chmod +x " + TARGET);
+		child_process.exec("chmod +x " + TARGET);
 		logger.info('Wrote', TARGET);
 	});
 }

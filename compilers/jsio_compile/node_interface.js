@@ -64,7 +64,7 @@ exports.onFinish = function(opts, src) {
 		fs.writeFileSync(opts.outputFile, src);
 	} else {
 		logger.info('Writing output to stdout');
-		require('sys').print(src);
+		process.stdout.write(src);
 	}
 }
 
