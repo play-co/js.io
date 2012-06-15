@@ -667,6 +667,8 @@
 					} catch (e2) {
 						if (!err) { err = e2; }
 					}
+				} else if (moduleDef == false) {
+					return false;
 				}
 
 				if (err) {
