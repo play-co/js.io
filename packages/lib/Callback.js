@@ -1,18 +1,25 @@
 "use import";
 
-import std.js as JS;
-
 exports = Class(function() {
 
 	this._fired = false;
 	this._id = 0;
-	this._pending = 0;
+	this._pending = null;
 	
 	this.init = function() { this._run = []; }
 	this.fired = function() { return this._fired; } 
+
+	// preserve pending callbacks, but clear fired status
 	this.reset = function() { this._args = []; this._fired = false; }
-	this.clear = function() { this.reset(); this._run = []; }
+
+	// clear fired status and remove any pending callbacks
+	this.clear = function() { this.reset(); this._run = []; this._pending = null; this._stat = null; }
+
+	// a convenience function to proxy arguments to `this.run`: arguments passed as the first argument
 	this.forward = function(args) { this.run.apply(this, args); }
+
+	// when the lib.Callback object fires, run a ctx, method, and
+	// (optional) curried arguments or a single callback function
 	this.run = function(ctx, method) {
 		var f = method ? bind.apply(this, arguments) : ctx;
 		if (f) {
@@ -64,17 +71,25 @@ exports = Class(function() {
 	}
 	
 	this.chain = function(id) {
-		++this._pending;
+		if (!this._pending) { this._pending = {}; }
+		if (id === undefined) { id = this._id++; }
+		this._pending[id] = true;
+
 		this.reset();
-		return bind(this, '_deferred', id || (this._id++));
+		return bind(this, '_deferred', id);
 	}
 
 	this._deferred = function(id) {
 		if (!this._stat) { this._stat = {}; }
 		if (this._stat.hasOwnProperty(id)) { return; }
 
-		this._stat[id] = JS.vargs(arguments, 1);
-		if (this._pending) { --this._pending; }
-		if (!this._pending) { this.fire(this._stat); }
+		this._stat[id] = Array.prototype.slice.call(arguments, 1);
+		var pending = this._pending;
+		delete pending[id];
+		for (var id in pending) {
+			if (pending.hasOwnProperty(id)) { return; }
+		}
+		
+		this.fire(this._stat);
 	}
 });
