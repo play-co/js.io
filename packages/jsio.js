@@ -210,10 +210,13 @@
 		jsio.__util = util;
 		jsio.__init__ = init;
 
-		var srcCache = {};
-		if (cloneFrom && cloneFrom.__srcCache) { srcCache = jsio.__srcCache = cloneFrom.__srcCache; }
+		var srcCache;
+		jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; }
+		jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
 
-		jsio.__srcCache = srcCache;
+		jsio.setCachedSrc = function(path, src) { srcCache[path] = { path: path, src: src }; }
+		jsio.getCachedSrc = function(path) { return srcCache[path]; }
+
 		jsio.__filename = 'jsio.js';
 		jsio.__cmds = [];
 		jsio.__jsio = this;
@@ -243,10 +246,6 @@
 		
 		jsio.path = jsioPath;
 		jsio.addPath = util.bind(jsioPath, 'add');
-		
-		jsio.setCache = function(cache) { srcCache = cache; }
-		jsio.setCachedSrc = function(path, src) { srcCache[path] = { path: path, src: src }; }
-		jsio.getCachedSrc = function(path) { return srcCache[path]; }
 		jsio.addCmd = util.bind(jsio.__cmds, 'push');
 		
 		jsio.setEnv = function(envCtor) {
