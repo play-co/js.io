@@ -1,5 +1,6 @@
 "use import";
 
+import .intersect;
 import lib.Enum;
 import .Point;
 import .Line;
@@ -48,6 +49,23 @@ var Rect = exports = Class(function() {
 			this.height = -this.height;
 		}
 		return this;
+	}
+
+	this.intersectRect = function (rect) {
+		if (intersect.rectAndRect(this, rect)) {
+			var x1 = this.x;
+			var y1 = this.y;
+			var x2 = this.x + this.width;
+			var y2 = this.y + this.height;
+
+			this.x = Math.max(x1, rect.x),
+			this.y = Math.max(y1, rect.y),
+			this.width = Math.min(x2, rect.x + rect.width) - this.x;
+			this.height = Math.min(y2, rect.y + rect.height) - this.y;
+		} else {
+			this.width = 0;
+			this.height = 0;
+		}
 	}
 	
 	this.unionRect = function(rect) {
