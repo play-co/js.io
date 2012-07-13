@@ -260,14 +260,25 @@ function checkDynamicImports(moduleDef) {
 		logger.info("Checking directory", directory, "for dynamic imports... (" + gCompilerOpts.environment + ")");
 
 		// try to do a commonJS-style import
-		var module = JSIO(util.path.join(directory, '__imports__'), {dontExport: true, suppressErrors: true});
-	
+		var filename = util.path.join(directory, '__imports__');
+		var module = JSIO(filename, {dontExport: true, suppressErrors: true});
 		if (module && module.resolve) {
-			var imports = module.resolve(gCompilerOpts.environment, gCompilerOpts);
+			try {
+				var imports = module.resolve(gCompilerOpts.environment, gCompilerOpts);
+			} catch (e) {
+				logger.error("Error running module.resolve for", filename, "\n\n", e, "\n\n");
+				process.exit(1);
+			}
+
 			if (imports && imports.forEach) {
 				imports.forEach(function(imp) {
-					logger.debug("dynamic import:", imp);
-					run(moduleDef, "import " + imp, {});
+					logger.log("dynamic import:", imp);
+					try {
+						run(moduleDef, "import " + imp, {});
+					} catch (e) {
+						logger.error("module", imp, "does not exist\n\n\trequested from", filename, "\n\n");
+						process.exit(1);
+					}
 				});
 			}
 		} else {
