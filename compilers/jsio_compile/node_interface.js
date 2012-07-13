@@ -13,7 +13,7 @@ var closurePath = '';
 (function() {
 	var path = require('path');
 	var defaultPath = path.join(path.dirname(jsio.__filename), 'jsio_minify.jar');
-	if (path.existsSync(defaultPath)) {
+	if (fs.existsSync(defaultPath)) {
 		closurePath = defaultPath;
 	}
 })();
@@ -22,7 +22,7 @@ exports.logger = logger;
 
 function findMinifier(jarPath) {
 	var path = require('path');
-	if (path.existsSync(jarPath)) {
+	if (fs.existsSync(jarPath)) {
 		closurePath = jarPath;
 	}
 }
@@ -97,7 +97,7 @@ exports.compressor = function(filename, src, callback, opts) {
 				var checksum = '' + stat.mtime;
 			}
 			
-			if (path.existsSync(cachePath)) {
+			if (fs.existsSync(cachePath)) {
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
 				var cachedChecksum = cachedContents.substring(0, i);
