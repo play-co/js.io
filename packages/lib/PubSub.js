@@ -86,5 +86,12 @@ exports = Class(function() {
 		}
 		return this;
 	}
+	
+	// alternate common convention for events (used in Node, jQuery, Backbone, etc.)
+	this.emit = this.publish;
+	this.on = this.subscribe;
+	this.off = this.unsubscribe;
+	this.once = this.subscribeOnce;
+	
 });
 
