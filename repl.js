@@ -42,7 +42,7 @@ var preprocessEval = function(cmd, context, filename, callback) {
 };
 
 /*
- * By passing global: true we use the existing global namespace.  This means,
+ * By passing global: true we use the existing global namespace.  This means
  * that our jsio environment that we set up will exist.
  */
 console.log('js.io repl starting\n');
