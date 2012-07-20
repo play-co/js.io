@@ -28,7 +28,7 @@ var preprocessEval = function(cmd, context, filename, callback) {
 	var src = cmd.toString();
 	if (src.match(/^\(.*\)/)) {
 		console.log('matched');
-		src = src.slice(1, cmd.length-2)	;
+		src = src.slice(1, cmd.length-2);
 	}
 	var def = {
 		path: filename,
