@@ -10,8 +10,12 @@ Support and networking libraries that can be used on either platform.
 
 run the js.io repl:
 
-    jsio
+    $ jsio
+
+or run a js.io-flavored script:
+
+	$ jsio file.js	
 
 or the js.io compiler:
 
-    jsio_compile
+    $ jsio_compile
