@@ -25,13 +25,19 @@ jsio('import preprocessors.import as importc');
  * as well as properly named Class intances.
  */
 var preprocessEval = function(cmd, context, filename, callback) {
+	var src = cmd.toString();
+	if (src.match(/^\(.*\)/)) {
+		console.log('matched');
+		src = src.slice(1, cmd.length-2)	;
+	}
 	var def = {
 		path: filename,
-		src: cmd.slice(1, cmd.length-2)
+		src: src
 	};
 	cls(filename, def);
 	importc(filename, def);
 	var err, result;
+	console.log('evaling', def.src);
 	try {
 		result = vm.runInThisContext(def.src, def.path);
 	} catch (e) {
@@ -41,12 +47,23 @@ var preprocessEval = function(cmd, context, filename, callback) {
     callback(err, result);
 };
 
-/*
- * By passing global: true we use the existing global namespace.  This means
- * that our jsio environment that we set up will exist.
- */
-console.log('js.io repl starting\n');
-require('repl').start({
-	global: true,
-	eval: preprocessEval
-});
+var startRepl = function() {
+	/*
+	 * By passing global: true we use the existing global namespace.  This means
+	 * that our jsio environment that we set up will exist.
+	 */
+	console.log('js.io repl starting\n');
+	require('repl').start({
+		global: true,
+		eval: preprocessEval
+	});
+};
+
+
+if (process.argv.length > 2) {
+	var fs = require('fs');
+	var src = fs.readFileSync(process.argv[2]);
+	preprocessEval(src, null, process.argv[2], function() {});
+} else {
+	startRepl();
+}
