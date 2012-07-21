@@ -27,7 +27,6 @@ jsio('import preprocessors.import as importc');
 var preprocessEval = function(cmd, context, filename, callback) {
 	var src = cmd.toString();
 	if (src.match(/^\(.*\)/)) {
-		console.log('matched');
 		src = src.slice(1, cmd.length-2);
 	}
 	var def = {
@@ -37,7 +36,6 @@ var preprocessEval = function(cmd, context, filename, callback) {
 	cls(filename, def);
 	importc(filename, def);
 	var err, result;
-	console.log('evaling', def.src);
 	try {
 		result = vm.runInThisContext(def.src, def.path);
 	} catch (e) {
