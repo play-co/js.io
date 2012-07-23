@@ -28,7 +28,7 @@ function findMinifier(jarPath) {
 }
 
 function usage() {
-	util.optparse.printUsage('<node> compile.js <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
+	util.optparse.printUsage('jsio_compile <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
 }
 
 var _compiler;
