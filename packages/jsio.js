@@ -796,7 +796,7 @@
 			// 		../b -> ..b
 			// 		./b -> .b
 		
-			var match = request.match(/^\s*[\w.0-9$\/]+\s*$/);
+			var match = request.match(/^\s*[\w.0-9$\/\-]+\s*$/);
 			if (match) {
 			
 				var req = util.resolveRelativePath(match[0]),
