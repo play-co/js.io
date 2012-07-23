@@ -31,7 +31,7 @@ function doCompile() {
 	nodeInterface.logger.setLevel(0);
 
 	compiler.setCompilerOpts({
-		compressor: nodeInterface.compressor,
+		compressor: bind(nodeInterface, 'compress'),
 		environment: jsio.__env.name,
 		dynamicImports: {
 			COMPILER: 'import .node_interface'

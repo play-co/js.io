@@ -31,7 +31,12 @@ function usage() {
 	util.optparse.printUsage('<node> compile.js <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
 }
 
-exports.init = function(compiler, args, opts) {
+var _compiler;
+exports.setCompiler = function (compiler) {
+	_compiler = compiler;
+}
+
+exports.run = function(args, opts) {
 	if (!args) {
 		var result = util.optparse(process.argv, optsDef),
 			args = result.args,
@@ -45,11 +50,10 @@ exports.init = function(compiler, args, opts) {
 	
 	findMinifier(opts.closurePath);
 	
-	opts.compressor = exports.compressor;
-	compiler.run(args, opts);
+	_compiler.run(args, opts);
 };
 
-exports.onError = function(msg) {
+exports.onError = function(opts, msg) {
 	usage();
 	jsio.__env.log('');
 	logger.error('\n' + msg);
@@ -68,7 +72,7 @@ exports.onFinish = function(opts, src) {
 	}
 }
 
-exports.compressor = function(filename, src, callback, opts) {
+exports.compress = function(filename, src, opts, callback) {
 	var cachePath;
 	
 	function fail(err) {

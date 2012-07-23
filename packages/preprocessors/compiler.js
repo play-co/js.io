@@ -191,7 +191,7 @@ function buildJsio(opts, callback) {
 	
 	if (opts.compressResult && gCompilerOpts.compressor) {
 		logger.info('compressing final code...');
-		gCompilerOpts.compressor(null, src, callback, opts);
+		gCompilerOpts.compressor(null, src, opts, callback);
 	} else {
 		callback(src);
 	}
@@ -209,10 +209,10 @@ function compressTable(table, opts, callback) {
 function compressStep(queue, table, opts, key, callback) {
 	if (key && gCompilerOpts.compressor) {
 		logger.log('compressing', key + '...');
-		gCompilerOpts.compressor(key, table[key].src, function(result) {
+		gCompilerOpts.compressor(key, table[key].src, opts, function(result) {
 			table[key].src = result;
 			compressStep(queue, table, opts, queue.pop(), callback);
-		}, opts);
+		});
 	} else {
 		callback();
 	}

@@ -11,17 +11,26 @@ var supportedEnvs = {
 var _interface = null;
 
 exports.start = function(/*optional*/ args, opts) {
-	if (!jsio.__env.name in supportedEnvs) {
-		logger.error("autostart failed: unknown environment.\n\n\tTry using compiler.run(args, opts) instead.");
-		return;
+	if (opts['interface']) {
+		_interface = opts['interface'];
+	} else {
+		if (!jsio.__env.name in supportedEnvs) {
+			logger.error("autostart failed: unknown environment.\n\n\tTry using compiler.run(args, opts) instead.");
+			return;
+		}
+		
+		var DYNAMIC_IMPORT_COMPILER = 'import .' + jsio.__env.name + '_interface';
+		
+		_interface = jsio(DYNAMIC_IMPORT_COMPILER);
 	}
+
+	// expects the interface to eventually call run to do the actual compile
+	_interface.setCompiler(this);
+	_interface.run(args, opts);
+}
+
+exports.compile = function (opts) {
 	
-	var DYNAMIC_IMPORT_COMPILER = 'import .' + jsio.__env.name + '_interface';
-	
-	_interface = jsio(DYNAMIC_IMPORT_COMPILER);
-	
-	// expects the interface to eventually call startWithOpts to do the actual compile
-	_interface.init(exports, args, opts);
 }
 
 function getPackage(fileName) {
@@ -38,7 +47,7 @@ function getPackage(fileName) {
 
 exports.setDebugLevel = function(level) {
 	logger.setLevel(level);
-	_interface.logger.setLevel(level);
+	_interface.logger && _interface.logger.setLevel(level);
 }
 
 /**
@@ -160,7 +169,7 @@ exports.run = function(args, opts) {
 	if (args.length > 2) { initial = args[2]; }
 	
 	if (!initial) {
-		_interface.onError('No initial import specified');
+		_interface.onError(opts, 'No initial import specified');
 		return;
 	}
 	
@@ -190,10 +199,9 @@ exports.run = function(args, opts) {
 	
 	// run the actual compiler
 	var compiler = jsio('import preprocessors.compiler');
-	
 	compiler.setCompilerOpts({
 		debugLevel: debugLevel,
-		compressor: opts.compressor,
+		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
 		autoDetectPaths: true,
 		environment: opts.environment,
 		dynamicImports: opts.dynamicImports
