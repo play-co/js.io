@@ -11,7 +11,7 @@ var supportedEnvs = {
 var _interface = null;
 
 exports.start = function(/*optional*/ args, opts) {
-	if (opts['interface']) {
+	if (opts && opts['interface']) {
 		_interface = opts['interface'];
 	} else {
 		if (!jsio.__env.name in supportedEnvs) {
