@@ -1,6 +1,6 @@
 if (jsio.__env.name == 'browser') {
 	jsio('external .sizzle import Sizzle');
-	jsio('import math2D.Rect');
+	jsio('import math.geom.Rect as Rect');
 	
 	function isWindow(el) {
 		return el && !$.isElement(el) && $.isElement(el.document);
@@ -282,7 +282,7 @@ if (jsio.__env.name == 'browser') {
 			return {width: el.offsetWidth, height: el.offsetHeight};
 		} else if (el.document) {
 			var doc = el.document.documentElement || el.document.body;
-			return new math2D.Rect(
+			return new Rect(
 				doc.offsetTop,
 				doc.offsetLeft,
 				el.innerWidth || (doc.clientWidth || doc.clientWidth),

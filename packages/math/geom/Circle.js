@@ -3,7 +3,7 @@
 import .Point;
 
 /**
- * @extends math2D.Point
+ * @extends math.geom.Point
  */
 exports = Class(Point, function(supr) {
 	this.init = function(a, b, c) {
