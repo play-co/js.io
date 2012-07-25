@@ -1,57 +1,66 @@
-"use import";
-
-import math2D.Point as Point;
-import math2D.Line as Line;
-import math2D.Rect as Rect;
+import math.geom.Point as Point;
+import math.geom.Line as Line;
+import math.geom.Rect as Rect;
 
 /**
- * @namespace
+ * @package math.geom.intersect
  */
 var intersect = exports;
 
-intersect.rectAndPt = function(rect, pt) { return intersect.ptAndRect(pt, rect); }
-intersect.ptAndRect = function(pt, rect) {
+intersect.pointAndRect = intersect.ptAndRect = function (pt, rect) {
 	var x = pt.x,
-		y = pt.y;
-	
-	return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
-}
+			y = pt.y;
+	return (x >= rect.x &&
+					x <= rect.x + rect.width &&
+					y >= rect.y &&
+					y <= rect.y + rect.height);
+};
 
-intersect.circAndPt = function(circ, pt) { return intersect.ptAndCirc(pt, circ); }
-intersect.ptAndCirc = function(pt, circ) {
+intersect.rectAndPoint = intersect.rectAndPt = function (rect, pt) {
+	return intersect.pointAndRect(pt, rect);
+};
+
+intersect.pointAndCircle = intersect.ptAndCirc = function(pt, circ) {
 	var dx = pt.x - circ.x,
-		dy = pt.y - circ.y;
+			dy = pt.y - circ.y;
 	return dx * dx + dy * dy < circ.radius * circ.radius;
-}
+};
 
-intersect.rectAndRect = function(rect1, rect2) {
-	return !(
-		   (rect1.y + rect1.height < rect2.y)
-		|| (rect2.y + rect2.height < rect1.y)
-		|| (rect1.x + rect1.width < rect2.x)
-		|| (rect2.x + rect2.width < rect1.x)
-	);
-}
+intersect.circleAndPoint = intersect.circAndPt = function (circ, pt) {
+	return intersect.pointAndCircle(pt, circ);
+};
 
-var SIDES = Rect.SIDES;
+intersect.rectAndRect = function (rect1, rect2) {
+	return !((rect1.y + rect1.height < rect2.y) ||
+					 (rect2.y + rect2.height < rect1.y) ||
+					 (rect1.x + rect1.width < rect2.x) ||
+					 (rect2.x + rect2.width < rect1.x));
+};
 
-intersect.rectAndCircle = function(rect, circle) { return intersect.rectAndCircle(circle, circ); }
+var SIDE = Rect.SIDE;
+
 intersect.circleAndRect = function(circle, rect) {
-	if (intersect.ptAndRect(circle, rect)) {
+	if (intersect.pointAndRect(circle, rect)) {
 		return true;
 	}
-	
-	return intersect.lineAndCircle(rect.getSide(1), circle)
-		|| intersect.lineAndCircle(rect.getSide(2), circle)
-		|| intersect.lineAndCircle(rect.getSide(3), circle)
-		|| intersect.lineAndCircle(rect.getSide(4), circle);
-}
+	return (intersect.lineAndCircle(rect.getSide(1), circle) ||
+					intersect.lineAndCircle(rect.getSide(2), circle) ||
+					intersect.lineAndCircle(rect.getSide(3), circle) ||
+					intersect.lineAndCircle(rect.getSide(4), circle));
+};
 
-intersect.circleAndLine = function(circle, line) { return intersect.lineAndCircle(line, circle); }
-intersect.lineAndCircle = function(line, circle) {
-	var vec = intersect.util.ptToLine(circle, line);
+intersect.rectAndCircle = function(rect, circle) {
+	return intersect.circleAndRect(circle, rect);
+};
+
+intersect.lineAndCircle = function (line, circle) {
+	var vec = intersect.pointToLine(circle, line);
 	return vec.getMagnitude() < circle.radius;
-}
+};
+
+intersect.circleAndLine = function (circle, line) {
+	return intersect.lineAndCircle(line, circle);
+};
 
 // Return the minimum displacement vector in case of collision
 intersect.polyAndPoly = function(poly1, poly2) {
@@ -156,18 +165,15 @@ intersect.polyAndPoly = function(poly1, poly2) {
   }
 
   return {overlap: MTV2, normal: MN};
-}
-// util -- does not return a true/false intersection
+};
 
-intersect.util = {};
 
 // returns line from pt to nearest pt on line
-intersect.util.ptToLine = function(pt, line) {
+intersect.pointToLine = intersect.ptToLine = function (pt, line) {
 	var dx = (line.end.x - line.start.x),
-		dy = (line.end.y - line.start.y),
-		u = ((pt.x - line.start.x) * dx	// TODO can we abstract this from 2D to 2D/3D?
-			+ (pt.y - line.start.y) * dy) / 
-			  (dx * dx + dy * dy);
+			dy = (line.end.y - line.start.y),
+			u = ((pt.x - line.start.x) * dx	// TODO can we abstract this from 2D to 2D/3D?
+					 + (pt.y - line.start.y) * dy) / (dx * dx + dy * dy);
 
 	var i;
 	if (u < 0) {
@@ -178,20 +184,19 @@ intersect.util.ptToLine = function(pt, line) {
 		i = new Point(line.start.x + u * dx, line.start.y + u * dy);
 	}
 	return new Line(i, pt);
-}
+};
 
 // returns rectangle of intersection
-intersect.util.rectAndRect = function(rect1, rect2) {
+intersect.rectAndRect = function(rect1, rect2) {
 	if (rect1 === true) { return new Rect(rect2); }
 	if (rect2 === true) { return new Rect(rect2); }
 	
 	if (intersect.rectAndRect(rect1, rect2)) {
 		var x1 = Math.max(rect1.x, rect2.x),
-			y1 = Math.max(rect1.y, rect2.y),
-			x2 = Math.min(rect1.x + rect1.width, rect2.x + rect2.width),
-			y2 = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
+				y1 = Math.max(rect1.y, rect2.y),
+				x2 = Math.min(rect1.x + rect1.width, rect2.x + rect2.width),
+				y2 = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
 		return new Rect(x1, y1, x2 - x1, y2 - y1);
 	}
 	return null;
-}
-
+};
