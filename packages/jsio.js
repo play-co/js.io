@@ -288,6 +288,7 @@
 	
 		function ENV_node() {
 			var fs = require('fs');
+			var path = require('path');
 			
 			this.name = 'node';
 			this.global = GLOBAL;
@@ -330,9 +331,27 @@
 				}
 			}
 			
-			this.fetch = function(path) {
-				try { return fs.readFileSync(path, 'utf8'); } catch(e) {}
-				return false;
+			this.fetch = function(p) {
+				try {
+					var dirname = path.dirname(p);
+					var filename = path.basename(p);
+					var lowerFilename = filename.toLowerCase();
+					var files = fs.readdirSync(dirname);
+				} catch (e) {
+					return false;
+				}
+
+				for (var i = 0, testName; testName = files[i]; ++i) {
+					if (testName.toLowerCase() == lowerFilename && testName != filename) {
+						throw "Invalid case when importing [" + p + "].  You probably meant" + testName;
+					}
+				}
+
+				try {
+					return fs.readFileSync(p, 'utf8');
+				} catch(e) {
+					return false;
+				}
 			}
 			
 			this.require = require;
