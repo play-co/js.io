@@ -1,9 +1,10 @@
-"use import";
-
-import .Point;
+import math.geom.Point as Point;
 
 /**
- * @extends math2D.Point
+ * @extends math.geom.Point
+ * Models a circle given a radius.
+ *   Circle(x, y, radius)
+ *   Circle({x: default 0, y: default 0, radius: default 0})
  */
 exports = Class(Point, function(supr) {
 	this.init = function(a, b, c) {
@@ -26,6 +27,10 @@ exports = Class(Point, function(supr) {
 				break;
 		}
 	}
+
+	/**
+	 * Scale the position and radius of this circle by a percentage.
+	 */
 	
 	this.scale = function(s) {
 		supr(this, 'scale', arguments);

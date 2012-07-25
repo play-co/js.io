@@ -3,7 +3,7 @@
  */
 
 var PI = Math.PI,
-	TWOPI = Math.PI * 2;
+		TWOPI = Math.PI * 2;
 
 exports.average = function(a, b, weight) {
 	if (weight === undefined) { weight = 0.5; }
@@ -36,7 +36,7 @@ exports.difference = function(a, b) {
 }
 
 // angular range from a to b, returns float between [0, 2PI]
-exports.getRange = function(a, b) {
+exports.range = function(a, b) {
 	var r = b - a;
 	return r < 0 ? r + TWOPI : r;
 }
