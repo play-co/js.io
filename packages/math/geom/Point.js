@@ -1,3 +1,8 @@
+/**
+ * @package math.geom.Point;
+ * Models a Point in 2D space.
+ */
+
 var Point = exports = Class(function() {
 	this.init = function(a, b) {
 		switch(arguments.length) {
@@ -15,6 +20,10 @@ var Point = exports = Class(function() {
 				break;
 		}
 	}
+
+	/**
+	 * Rotates this point around the origin by a value in radians.
+	 */
 	
 	this.rotate = function(r) {
 		var x = this.x,
@@ -27,9 +36,12 @@ var Point = exports = Class(function() {
 		
 		return this;
 	}
+
+	/**
+	 * Translate this point by two scalars or by another point.
+	 */
 	
-	this.translate = 
-	this.add = function(x, y) {
+	this.translate = this.add = function(x, y) {
 		if (typeof x == 'number') {
 			this.x += x;
 			this.y += y;
@@ -39,6 +51,10 @@ var Point = exports = Class(function() {
 		}
 		return this;
 	}
+
+	/**
+	 * Subtract this point by two scalars or by another point.
+	 */
 	
 	this.subtract = function(x, y) {
 		if (typeof x == 'number') {
@@ -51,31 +67,57 @@ var Point = exports = Class(function() {
 		return this;
 	}
 
+	/**
+	 * Scale this number.
+	 */
+
 	this.scale = function(s) {
 		this.x *= s;
 		this.y *= s;
 		return this;
 	}
+
+	/**
+	 * Set the magnitude of this point at a constant angle.
+	 */
 	
 	this.setMagnitude = function(m) {
-		var theta = Math.atan2(this.y, this.x);
+		var theta = this.getAngle();
 		this.x = m * Math.cos(theta);
 		this.y = m * Math.sin(theta);
 		return this;
 	}
+
+	/**
+	 * Normalize this point to the unit circle.
+	 */
 	
 	this.normalize = function() {
 		var m = this.getMagnitude();
 		this.x /= m;
 		this.y /= m;
 		return this;
-	}
+	};
+
+	/**
+	 * Add magnitude to this point.
+	 */
 	
-	this.addMagnitude = function(m) { return this.setMagnitude(this.getMagnitude() + m); }
-	this.getMagnitude = function() { return Math.sqrt(this.x * this.x + this.y * this.y); }
-	this.getSquaredMagnitude = function() { return this.x * this.x + this.y * this.y; }
-	this.getDirection =
-	this.getAngle = function() { return Math.atan2(this.y, this.x); }
+	this.addMagnitude = function(m) {
+		return this.setMagnitude(this.getMagnitude() + m);
+	};
+
+	this.getMagnitude = function() {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	};
+
+	this.getSquaredMagnitude = function() {
+		return this.x * this.x + this.y * this.y;
+	};
+
+	this.getDirection = this.getAngle = function() {
+		return Math.atan2(this.y, this.x);
+	};
 	
 });
 

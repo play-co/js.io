@@ -1,6 +1,4 @@
-"use import";
-
-import .Point;
+import math.geom.Point as Point;
 
 exports = Class(function() {
 	this.init = function(a, b, c, d) {

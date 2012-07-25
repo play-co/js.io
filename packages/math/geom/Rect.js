@@ -1,9 +1,10 @@
-"use import";
-
-import .intersect;
 import lib.Enum;
-import .Point;
-import .Line;
+import math.geom.Point as Point;
+import math.geom.Line as Line;
+
+/**
+ * Model a rectangle.
+ */
 
 var Rect = exports = Class(function() {
 	this.init = function(a, b, c, d) {
@@ -37,6 +38,11 @@ var Rect = exports = Class(function() {
 				break;
 		}
 	}
+
+	/**
+	 * Normalize negative height and width dimensions by adjusting the position
+	 * of the rect.
+	 */
 	
 	this.normalize = function() {
 		if (this.width < 0) {
@@ -51,22 +57,9 @@ var Rect = exports = Class(function() {
 		return this;
 	}
 
-	this.intersectRect = function (rect) {
-		if (intersect.rectAndRect(this, rect)) {
-			var x1 = this.x;
-			var y1 = this.y;
-			var x2 = this.x + this.width;
-			var y2 = this.y + this.height;
-
-			this.x = Math.max(x1, rect.x),
-			this.y = Math.max(y1, rect.y),
-			this.width = Math.min(x2, rect.x + rect.width) - this.x;
-			this.height = Math.min(y2, rect.y + rect.height) - this.y;
-		} else {
-			this.width = 0;
-			this.height = 0;
-		}
-	}
+	/**
+	 * Generate the union of a rectange with another rectangle.
+	 */
 	
 	this.unionRect = function(rect) {
 		this.normalize();
@@ -83,38 +76,50 @@ var Rect = exports = Class(function() {
 		
 		this.width = (x2 > rx2 ? x2 : rx2) - this.x;
 		this.height = (y2 > ry2 ? y2 : ry2) - this.y;
-	}
+	};
+
+	/**
+	 * Get a point for the given corner.
+	 */
 	
 	this.getCorner = function(i) {
 		switch(i) {
-			case CORNERS.TOP_LEFT:
+			case CORNER.TOP_LEFT:
 				return new Point(this.x, this.y);
-			case CORNERS.TOP_RIGHT:
+			case CORNER.TOP_RIGHT:
 				return new Point(this.x + this.width, this.y);
-			case CORNERS.BOTTOM_LEFT:
+			case CORNER.BOTTOM_LEFT:
 				return new Point(this.x, this.y + this.height);
-			case CORNERS.BOTTOM_RIGHT:
+			case CORNER.BOTTOM_RIGHT:
 				return new Point(this.x + this.width, this.y + this.height);
 		}
 	}
+
+	/**
+	 * Return a line corresponding to the given side.
+	 */
 	
 	this.getSide = function(i) {
 		switch(i) {
-			case SIDES.TOP:
-				return new Line(this.getCorner(CORNERS.TOP_LEFT), this.getCorner(CORNERS.TOP_RIGHT));
-			case SIDES.RIGHT:
-				return new Line(this.getCorner(CORNERS.TOP_RIGHT), this.getCorner(CORNERS.BOTTOM_RIGHT));
-			case SIDES.BOTTOM:
-				return new Line(this.getCorner(CORNERS.BOTTOM_RIGHT), this.getCorner(CORNERS.BOTTOM_LEFT));
-			case SIDES.LEFT:
-				return new Line(this.getCorner(CORNERS.BOTTOM_LEFT), this.getCorner(CORNERS.TOP_LEFT));
+			case SIDE.TOP:
+				return new Line(this.getCorner(CORNER.TOP_LEFT), this.getCorner(CORNER.TOP_RIGHT));
+			case SIDE.RIGHT:
+				return new Line(this.getCorner(CORNER.TOP_RIGHT), this.getCorner(CORNER.BOTTOM_RIGHT));
+			case SIDE.BOTTOM:
+				return new Line(this.getCorner(CORNER.BOTTOM_RIGHT), this.getCorner(CORNER.BOTTOM_LEFT));
+			case SIDE.LEFT:
+				return new Line(this.getCorner(CORNER.BOTTOM_LEFT), this.getCorner(CORNER.TOP_LEFT));
 		}
 	}
+
+	/**
+	 * Return the center point of a rectangle.
+	 */
 	
 	this.getCenter = function() {
 		return new Point(this.x + this.width / 2, this.y + this.height / 2);
 	}
 });
 
-var SIDES = Rect.SIDES = lib.Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT'),
-	CORNERS = Rect.CORNERS = lib.Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');
+var SIDE = Rect.SIDE = lib.Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT'),
+	CORNER = Rect.CORNER = lib.Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');
