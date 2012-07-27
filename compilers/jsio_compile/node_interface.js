@@ -1,5 +1,3 @@
-"use import";
-
 import util.optparse;
 import .optsDef;
 

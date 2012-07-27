@@ -18,9 +18,12 @@ var cb = new lib.Callback();
 child_process.exec('mkdir -p ' + BUILD_DIR, null, cb.chain());
 child_process.exec('mkdir -p ' + CACHE_PATH, null, cb.chain());
 
-cb.run(doCompile);
 
-function doCompile() {
+exports.run = function (compress) {
+	cb.run(bind(this, run, compress));
+}
+
+function run (compress) {
 	// get access to jsio path util functions
 	import util.path;
 	
@@ -56,7 +59,7 @@ function doCompile() {
 		});
 	});
 
-	compiler.generateSrc({compressorCachePath: CACHE_PATH, compressSources: true, compressResult: true}, function(src) {
+	compiler.generateSrc({compressorCachePath: CACHE_PATH, compressSources: compress, compressResult: compress}, function(src) {
 		var fd = fs.openSync(TARGET, 'w');
 		fs.writeSync(fd, '#!/usr/bin/env node\n');
 		fs.writeSync(fd, src);
