@@ -105,7 +105,6 @@ exports = Class(function () {
 		return (this.hasOwnProperty.call(this._subscribers, type))
 			? this._subscribers[type]
 			: (this._subscribers[type] = []);
-		}
 	};
 
 	this.addListener = this.on = function (type, f) {
