@@ -16,8 +16,8 @@ run the js.io repl:
 
 or run a js.io-flavored script:
 
-	$ jsio file.js	
+    $ jsio file.js	
 
 or the js.io compiler:
 
-    $ jsio_compile
+    $ jsio-compile
