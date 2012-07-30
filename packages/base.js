@@ -156,10 +156,13 @@ var ErrorParentClass = exports.__class__(function ErrorCls() {
 			}
 		}
 	}, function() {});
+<<<<<<< HEAD
 
 /**
  * Merge two objects together.
  */
+=======
+>>>>>>> master
 
 exports.Class.defaults = 
 exports.merge = function(base, extra) {
