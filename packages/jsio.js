@@ -219,7 +219,7 @@
 
 		jsio.__filename = 'jsio.js';
 		jsio.__cmds = [];
-		jsio.__jsio = this;
+		jsio.__jsio = jsio;
 		jsio.__importer = importer;
 		jsio.__modules = {preprocessors:{}};
 		var jsioPath = {
@@ -837,7 +837,7 @@
 			GLOBAL['logger'] = logging.get('jsiocore');
 		};
 		
-		jsio.clone = util.bind(init, jsio);
+		jsio.clone = util.bind(null, init, jsio);
 
 		return jsio;
 	}

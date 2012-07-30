@@ -35,11 +35,10 @@ function run (compress) {
 
 	compiler.setCompilerOpts({
 		compressor: bind(nodeInterface, 'compress'),
-		environment: jsio.__env.name,
-		dynamicImports: {
-			COMPILER: 'import .node_interface'
-		}
+		environment: jsio.__env.name
 	});
+
+	compiler.compile('import .node_interface');
 
 	logger.log('processing compiler preprocessor...');
 	compiler.compile('import preprocessors.compiler');
