@@ -1,7 +1,6 @@
-jsio('from base import *');
-var logger = logging.get('jsio_compiler');
-
 var JSIO = 'jsio';
+
+var J = jsio.__jsio.clone();
 
 var supportedEnvs = {
 	node: true,
@@ -14,14 +13,13 @@ exports.start = function(/*optional*/ args, opts) {
 	if (opts && opts['interface']) {
 		_interface = opts['interface'];
 	} else {
-		if (!jsio.__env.name in supportedEnvs) {
+		if (!J.__env.name in supportedEnvs) {
 			logger.error("autostart failed: unknown environment.\n\n\tTry using compiler.run(args, opts) instead.");
 			return;
 		}
 		
-		var DYNAMIC_IMPORT_COMPILER = 'import .' + jsio.__env.name + '_interface';
-		
-		_interface = jsio(DYNAMIC_IMPORT_COMPILER);
+		J.path.add('../../packages/');
+		_interface = J('import .' + J.__env.name + '_interface');
 	}
 
 	// expects the interface to eventually call run to do the actual compile
@@ -29,17 +27,13 @@ exports.start = function(/*optional*/ args, opts) {
 	_interface.run(args, opts);
 }
 
-exports.compile = function (opts) {
-	
-}
-
 function getPackage(fileName) {
 	try {
-		var pkg = eval('(' + jsio.__env.fetch(fileName) + ')');
+		var pkg = eval('(' + J.__env.fetch(fileName) + ')');
 		logger.info('Package definition loaded from', fileName);
 		return pkg;
 	} catch(e) {
-		logger.log(jsio.__env.getCwd())
+		logger.log(J.__env.getCwd())
 		logger.warn('If "' + fileName + '" is a package file, it could not be read.', e);
 	}
 	return false;
@@ -68,18 +62,18 @@ exports.run = function(args, opts) {
 	// use external copy of jsio rather than cached copy
 	if (opts.jsioPath) {
 		// force the path
-		jsio.path.set([opts.jsioPath]);
+		J.path.set([opts.jsioPath]);
 		
 		// hack to 'set' the js.io source code
-		jsio.__jsio.__init__.toString = function() { return jsio.__env.fetch(jsio.__jsio.__util.buildPath(opts.jsioPath, 'jsio.js')); }
+		J.__jsio.__init__.toString = function() { return J.__env.fetch(J.__jsio.__util.buildPath(opts.jsioPath, 'jsio.js')); }
 		
 		// reset cached path
-		for (var key in jsio.path.cache) {
-			delete jsio.path.cache[key];
+		for (var key in J.path.cache) {
+			delete J.path.cache[key];
 		}
 		
 		// delete the cache copy
-		var sourceCache = jsio.__jsio.__srcCache;
+		var sourceCache = J.__jsio.__srcCache;
 		for (var i in sourceCache) {
 			delete sourceCache[i];
 		}
@@ -88,12 +82,12 @@ exports.run = function(args, opts) {
 	if (opts.path) {
 		for(var i = 0, len = opts.path.length; i < len; ++i) {
 			if (opts.path[i]) {
-				jsio.path.add(opts.path[i]);
+				J.path.add(opts.path[i]);
 			}
 		}
 	}
 	
-	logger.info('js.io path:', JSON.stringify(jsio.path.get()));
+	logger.info('js.io path:', JSON.stringify(J.path.get()));
 	
 	var initial;
 	
@@ -198,7 +192,7 @@ exports.run = function(args, opts) {
 	}
 	
 	// run the actual compiler
-	var compiler = jsio('import preprocessors.compiler');
+	var compiler = J('import preprocessors.compiler');
 	compiler.setCompilerOpts({
 		debugLevel: debugLevel,
 		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
