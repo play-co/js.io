@@ -823,8 +823,8 @@
 		return jsio;
 	}
 	var J= init(null, {});
-	if (J.__env.global.module && j.__env.global.module.exports) {
-		exports.jsio = J;
+	if (typeof exports != 'undefined') {
+		module.exports = J;
 	} else {
 		jsio = J;
 	}
