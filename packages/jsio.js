@@ -841,5 +841,10 @@
 
 		return jsio;
 	}
-	jsio = init(null, {});
+	var J= init(null, {});
+	if (typeof exports != 'undefined') {
+		module.exports = J;
+	} else {
+		jsio = J;
+	}
 })();
