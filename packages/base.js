@@ -1,5 +1,58 @@
+/**
+ * base.js
+ * This file contains all global functions provided by js.io.
+ */
+
 exports.log = jsio.__env.log;
 exports.GLOBAL = jsio.__env.global;
+
+/**
+ * Various polyfill methods to ensure js.io implementations provide
+ * a baseline of JavaScript functionality. Feature compatibility (localStorage,
+ * etc.) should be provided elsewhere.
+ */
+
+// Array.isArray
+// Not available before ECMAScript 5.
+// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/isArray
+
+if (!Array.isArray) {
+	Array.isArray = function (arg) {
+		return Object.prototype.toString.call(arg) === '[object Array]';
+	}
+};
+
+// Function.prototype.bind
+// Not available before ECMAScript 5.
+// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
+
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5 internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var aArgs = Array.prototype.slice.call(arguments, 1), 
+        fToBind = this, 
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP
+                                 ? this
+                                 : oThis,
+                               aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+
+/**
+ * DEPRECATED. Old js.io polyfills.
+ */
 
 var SLICE = Array.prototype.slice;
 
@@ -37,6 +90,10 @@ exports.bind = function(context, method /*, VARGS*/) {
 			: function __bound() { return method.apply(context, arguments); }
 	}
 }
+
+/**
+ * Class constructor.
+ */
 
 exports.Class = function(name, parent, proto) {
 	return exports.__class__(function() { return this.init && this.init.apply(this, arguments); }, name, parent, proto);
@@ -100,6 +157,10 @@ var ErrorParentClass = exports.__class__(function ErrorCls() {
 		}
 	}, function() {});
 
+/**
+ * Merge two objects together.
+ */
+
 exports.Class.defaults = 
 exports.merge = function(base, extra) {
 	base = base || {};
@@ -116,6 +177,10 @@ exports.merge = function(base, extra) {
 	return base;
 }
 
+/**
+ * Create a timer delay.
+ */
+
 exports.delay = function(orig, timeout) {
 	var _timer = null;
 	var ctx, args;
@@ -128,7 +193,10 @@ exports.delay = function(orig, timeout) {
 	}
 }
 
-// keep logging local variables out of other closures in this file!
+/**
+ * Log constructor and default "logger".
+ */
+
 exports.logging = (function() {
 	
 	// logging namespace, this is what is exported

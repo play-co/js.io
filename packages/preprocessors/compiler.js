@@ -261,7 +261,7 @@ function checkDynamicImports(moduleDef) {
 
 		// try to do a commonJS-style import
 		var filename = util.path.join(directory, '__imports__');
-		var module = JSIO(filename, {dontExport: true, suppressErrors: true});
+		var module = JSIO.__importer(null, filename, null, '.__imports__', {dontExport: true, suppressErrors: true});
 		if (module && module.resolve) {
 			try {
 				var imports = module.resolve(gCompilerOpts.environment, gCompilerOpts);
