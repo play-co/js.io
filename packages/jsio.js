@@ -823,4 +823,5 @@
 		return jsio;
 	}
 	jsio = init(null, {});
+	if (exports) { exports.jsio = jsio; }
 })();
