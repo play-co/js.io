@@ -1,5 +1,6 @@
-jsio('import net.interfaces');
-jsio('from util.browser import $');
+import net.interfaces;
+from util.browser import $;
+import std.uuid;
 
 /**
  * @extends net.interfaces.Listener
@@ -13,6 +14,8 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		if (!this._opts.clientUrl) {
 			this._opts.clientUrl = jsio.__dir + '/networkConsole.html';
 		}
+
+		this._port = '' + (this._opts.port || '');
 	}
 
 	this.listen = function() {
@@ -30,7 +33,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	}
 	
 	var uniqueId = 1;
-	this.openWindow = function(url) {
+	this.openWindow = function (url) {
 		var options = { menubar: 'no', location: 'no', toolbar: 'no',
 			width: 550, height: 350, // left: 200, top: 200,
 			scrollbars: 'yes', status: 'yes', resizable: 'yes' };
@@ -41,23 +44,32 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		win.focus();
 	}
 	
-	this._onMessage = function(evt) {
-		var name = evt.source.name;
-		var target = this._clients[name];
-		var data = eval('(' + evt.data + ')');
+	this._onMessage = function (evt) {
+		if (this._port != evt.data.substring(0, this._port.length)) { return; }
+		var data = evt.data.substring(this._port.length);
+
+		try {
+			data = JSON.parse(data);
+		} catch (e) {
+			logger.warn('invalid packet', evt.data);
+			return;
+		}
+
 		switch (data.type) {
 			case 'open':
-				this._clients[name] = new exports.Transport(evt.source);
-				evt.source.postMessage('{type:"open"}','*');
-				this.onConnect(this._clients[name]);
+				var transport = this._clients[data.id] = new exports.Transport(evt.source, this._port);
+				evt.source.postMessage(this._port + '{"type":"open"}','*');
+				this.onConnect(transport);
 				break;
 			case 'data':
-				target.onData(data.payload);
+				var transport = this._clients[data.id];
+				if (transport) { transport.onData(data.payload); }
 				break;
 			case 'close':
-				target.onClose();
-				evt.source.postMessage('{type:"close"}','*');
-				delete this._clients[name];
+				var transport = this._clients[data.id];
+				if (transport) { transport.onClose(); }
+				evt.source.postMessage(this._port + '{"type":"close"}','*');
+				delete this._clients[data.id];
 				break;
 		}
 	}
@@ -68,15 +80,28 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
  */
 exports.Connector = Class(net.interfaces.Connector, function() {
 	this.connect = function() {
+		this._port = '' + (this._opts.port || '');
+		this._win = this._opts.win || window.opener || window.parent;
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
-		window.opener.postMessage(JSON.stringify({type:"open"}), '*');
+
+		this._uid = std.uuid.uuid();
+		this._win.postMessage(this._port + JSON.stringify({type: 'open', id: this._uid}), '*');
 	}
 	
 	this._onMessage = function(evt) {
-		var data = eval('(' + evt.data + ')');
-		switch(data.type) {
+		if (this._port != evt.data.substring(0, this._port.length)) { return; }
+		var data = evt.data.substring(this._port.length);
+
+		try {
+			data = JSON.parse(data);
+		} catch (e) {
+			logger.warn('invalid packet', evt.data);
+			return;
+		}
+
+		switch (data.type) {
 			case 'open':
-				this._transport = new exports.Transport(evt.source);
+				this._transport = new exports.Transport(evt.source, this._port, this._uid);
 				this.onConnect(this._transport);
 				break;
 			case 'close':
@@ -93,26 +118,28 @@ exports.Connector = Class(net.interfaces.Connector, function() {
  * @extends net.interfaces.Transport
  */
 exports.Transport = Class(net.interfaces.Transport, function() {
-	this.init = function(win) {
+	this.init = function (win, port, uid) {
 		this._win = win;
+		this._port = port;
+		this._uid = uid; // unique identifier for clients
 	}
 	
-	this.makeConnection = function(protocol) {
+	this.makeConnection = function (protocol) {
 		this._protocol = protocol;
 	}
 	
-	this.write = function(data, encoding) {
+	this.write = function (data, encoding) {
 		if (this.encoding == 'utf8') {
-			this._win.postMessage(JSON.stringify({type: 'data', payload: utf8.encode(data)}), '*');
+			this._win.postMessage(this._port + JSON.stringify({type: 'data', id: this._uid, payload: utf8.encode(data)}), '*');
 		} else {
-			this._win.postMessage(JSON.stringify({type: 'data', payload: data}), '*');
+			this._win.postMessage(this._port + JSON.stringify({type: 'data', id: this._uid, payload: data}), '*');
 		} 
 	}
 	
-	this.loseConnection = function(protocol) {
-		this._win.postMessage(JSON.stringify({type: 'close', code: 301}), '*');
+	this.loseConnection = function (protocol) {
+		this._win.postMessage(this._port + JSON.stringify({type: 'close', id: this._uid, code: 301}), '*');
 	}
 	
-	this.onData = function() { this._protocol.dataReceived.apply(this._protocol, arguments); }
-	this.onClose = function() { this._protocol._connectionLost.apply(this._protocol, arguments); }
+	this.onData = function () { this._protocol.dataReceived.apply(this._protocol, arguments); }
+	this.onClose = function () { this._protocol._connectionLost.apply(this._protocol, arguments); }
 });
