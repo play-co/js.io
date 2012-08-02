@@ -1,4 +1,4 @@
-import math.geom.Point as Point;
+import .Point;
 
 /**
  * @extends math.geom.Point

@@ -1,6 +1,7 @@
 import lib.Enum;
-import math.geom.Point as Point;
-import math.geom.Line as Line;
+import .Point;
+import .Line;
+import .intersect;
 
 /**
  * Model a rectangle.
@@ -58,6 +59,27 @@ var Rect = exports = Class(function() {
 	}
 
 	/**
+	 * Generate the intersection of a rectange with another rectangle.
+	 */
+
+	this.intersectRect = function (rect) {
+		if (intersect.rectAndRect(this, rect)) {
+			var x1 = this.x;
+			var y1 = this.y;
+			var x2 = this.x + this.width;
+			var y2 = this.y + this.height;
+
+			this.x = Math.max(x1, rect.x),
+			this.y = Math.max(y1, rect.y),
+			this.width = Math.min(x2, rect.x + rect.width) - this.x;
+			this.height = Math.min(y2, rect.y + rect.height) - this.y;
+		} else {
+			this.width = 0;
+			this.height = 0;
+		}
+	}
+	
+	/**
 	 * Generate the union of a rectange with another rectangle.
 	 */
 	
@@ -84,31 +106,31 @@ var Rect = exports = Class(function() {
 	
 	this.getCorner = function(i) {
 		switch(i) {
-			case CORNER.TOP_LEFT:
+			case CORNERS.TOP_LEFT:
 				return new Point(this.x, this.y);
-			case CORNER.TOP_RIGHT:
+			case CORNERS.TOP_RIGHT:
 				return new Point(this.x + this.width, this.y);
-			case CORNER.BOTTOM_LEFT:
+			case CORNERS.BOTTOM_LEFT:
 				return new Point(this.x, this.y + this.height);
-			case CORNER.BOTTOM_RIGHT:
+			case CORNERS.BOTTOM_RIGHT:
 				return new Point(this.x + this.width, this.y + this.height);
 		}
 	}
-
+	
 	/**
 	 * Return a line corresponding to the given side.
 	 */
 	
 	this.getSide = function(i) {
 		switch(i) {
-			case SIDE.TOP:
-				return new Line(this.getCorner(CORNER.TOP_LEFT), this.getCorner(CORNER.TOP_RIGHT));
-			case SIDE.RIGHT:
-				return new Line(this.getCorner(CORNER.TOP_RIGHT), this.getCorner(CORNER.BOTTOM_RIGHT));
-			case SIDE.BOTTOM:
-				return new Line(this.getCorner(CORNER.BOTTOM_RIGHT), this.getCorner(CORNER.BOTTOM_LEFT));
-			case SIDE.LEFT:
-				return new Line(this.getCorner(CORNER.BOTTOM_LEFT), this.getCorner(CORNER.TOP_LEFT));
+			case SIDES.TOP:
+				return new Line(this.getCorner(CORNERS.TOP_LEFT), this.getCorner(CORNERS.TOP_RIGHT));
+			case SIDES.RIGHT:
+				return new Line(this.getCorner(CORNERS.TOP_RIGHT), this.getCorner(CORNERS.BOTTOM_RIGHT));
+			case SIDES.BOTTOM:
+				return new Line(this.getCorner(CORNERS.BOTTOM_RIGHT), this.getCorner(CORNERS.BOTTOM_LEFT));
+			case SIDES.LEFT:
+				return new Line(this.getCorner(CORNERS.BOTTOM_LEFT), this.getCorner(CORNERS.TOP_LEFT));
 		}
 	}
 
@@ -121,5 +143,5 @@ var Rect = exports = Class(function() {
 	}
 });
 
-var SIDE = Rect.SIDE = lib.Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT'),
-	CORNER = Rect.CORNER = lib.Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');
+var SIDES = Rect.SIDES = lib.Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT');
+var CORNERS = Rect.CORNERS = lib.Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');

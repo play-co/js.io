@@ -1,6 +1,6 @@
-import math.geom.Point as Point;
-import math.geom.Line as Line;
-import math.geom.Rect as Rect;
+import .Point;
+import .Line;
+import .Rect;
 
 /**
  * @package math.geom.intersect
