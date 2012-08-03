@@ -52,6 +52,7 @@ exports.setDebugLevel = function(level) {
  *   - debug : integer - debug level (1 - 5)
  */
 exports.run = function(args, opts) {
+	J = jsio.__jsio.clone();
 	
 	var debugLevel = 'debug' in opts ? opts.debug : 5;
 	exports.setDebugLevel(debugLevel);
