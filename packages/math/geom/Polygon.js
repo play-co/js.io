@@ -102,7 +102,7 @@ exports = Class(function() {
 		}
 
 		theta = Math.abs(theta);
-		return approx(theta, 2 * Math.PI, 1e - 6); 
+		return approx(theta, 2 * Math.PI, 1e-6); 
 	};
 	
 	/* 
