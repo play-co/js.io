@@ -1,5 +1,5 @@
 if (jsio.__env.name == 'browser') {
-	jsio('external .sizzle import Sizzle');
+	jsio('external ..util.sizzle import Sizzle');
 	jsio('import math2D.Rect');
 	
 	function isWindow(el) {
