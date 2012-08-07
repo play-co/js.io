@@ -1,6 +1,11 @@
 exports.map = {
-	'node': ['net.env.node.stdio'],
-	'browser': ['net.env.browser.csp'],
+	'node': [
+		'net.env.node.stdio'
+	],
+	'browser': [
+		'net.env.browser.csp',
+		'net.env.browser.postmessage'
+	],
 	'mobile': []
 }
 
