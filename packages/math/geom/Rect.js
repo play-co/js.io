@@ -63,7 +63,7 @@ var Rect = exports = Class(function() {
 	 */
 
 	this.intersectRect = function (rect) {
-		if (intersect.rectAndRect(this, rect)) {
+		if (intersect.isRectAndRect(this, rect)) {
 			var x1 = this.x;
 			var y1 = this.y;
 			var x2 = this.x + this.width;
