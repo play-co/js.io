@@ -57,10 +57,11 @@ var assertOrBadInput = function (exp, message) {
 	if (!exp) { throw new exports.Base64CodecError(message) };
 };
 
-exports.encode = function (bytes) {
+exports.encode = function (bytes, addPadding) {
 	assertOrBadInput(!(/[^\x00-\xFF]/.test(bytes)), // disallow two-byte chars
 		'Input contains out-of-range characters.');
-	var padding = '\x00\x00\x00'.slice((bytes.length % 3) || 3);
+	var paddingSize = bytes.length % 3;
+	var padding = '\x00\x00\x00'.slice(paddingSize || 3);
 	bytes += padding; // pad with null bytes
 	var out_array = [];
 	for (var i=0, n=bytes.length; i < n; i+=3) {
@@ -76,7 +77,12 @@ exports.encode = function (bytes) {
 	};
 	
 	out_array.length -= padding.length;
-	return out_array.join('');
+	var ret = out_array.join('');
+	if (addPadding) {
+		ret += "===".slice(0, paddingSize);
+	}
+	
+	return ret;
 };
 
 exports.decode = function (b64text) {
