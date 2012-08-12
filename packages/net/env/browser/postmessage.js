@@ -57,19 +57,19 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 
 		switch (data.type) {
 			case 'open':
-				var transport = this._clients[data.id] = new exports.Transport(evt.source, this._port);
-				evt.source.postMessage(this._port + '{"type":"open"}','*');
+				var transport = this._clients[data.uid] = new exports.Transport(evt.source, this._port, data.uid);
+				evt.source.postMessage(this._port + JSON.stringify({"type":"open", uid: data.uid}), '*');
 				this.onConnect(transport);
 				break;
 			case 'data':
-				var transport = this._clients[data.id];
+				var transport = this._clients[data.uid];
 				if (transport) { transport.onData(data.payload); }
 				break;
 			case 'close':
-				var transport = this._clients[data.id];
+				var transport = this._clients[data.uid];
 				if (transport) { transport.onClose(); }
-				evt.source.postMessage(this._port + '{"type":"close"}','*');
-				delete this._clients[data.id];
+				evt.source.postMessage(this._port + JSON.stringify({"type":"close", uid: data.uid}), '*');
+				delete this._clients[data.uid];
 				break;
 		}
 	}
@@ -85,13 +85,16 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		$.onEvent(window, 'message', bind(this, '_onMessage'));
 
 		this._uid = std.uuid.uuid();
-		this._win.postMessage(this._port + JSON.stringify({type: 'open', id: this._uid}), '*');
+		this._win.postMessage(this._port + JSON.stringify({type: 'open', uid: this._uid}), '*');
 	}
 	
 	this._onMessage = function(evt) {
 		if (this._port != evt.data.substring(0, this._port.length)) { return; }
 		var data = evt.data.substring(this._port.length);
 
+		// At the moment, we include the uid in the data.  If we have many clients
+		// on the same port with different UIDs then this would get expensive, but
+		// this is a very rare use case for postmessage.
 		try {
 			data = JSON.parse(data);
 		} catch (e) {
@@ -105,9 +108,11 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 				this.onConnect(this._transport);
 				break;
 			case 'close':
+				if (data.uid != this._uid) { return; }
 				this._transport.onClose();
 				break;
 			case 'data':
+				if (data.uid != this._uid) { return; }
 				this._transport.onData(data.payload);
 				break;
 		}
@@ -118,7 +123,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
  * @extends net.interfaces.Transport
  */
 exports.Transport = Class(net.interfaces.Transport, function() {
-	this.init = function (win, port, uid) {
+	this.init = function (win, port, uid) {if (!uid) debugger
 		this._win = win;
 		this._port = port;
 		this._uid = uid; // unique identifier for clients
@@ -130,14 +135,14 @@ exports.Transport = Class(net.interfaces.Transport, function() {
 	
 	this.write = function (data, encoding) {
 		if (this.encoding == 'utf8') {
-			this._win.postMessage(this._port + JSON.stringify({type: 'data', id: this._uid, payload: utf8.encode(data)}), '*');
+			this._win.postMessage(this._port + JSON.stringify({type: 'data', uid: this._uid, payload: utf8.encode(data)}), '*');
 		} else {
-			this._win.postMessage(this._port + JSON.stringify({type: 'data', id: this._uid, payload: data}), '*');
+			this._win.postMessage(this._port + JSON.stringify({type: 'data', uid: this._uid, payload: data}), '*');
 		} 
 	}
 	
 	this.loseConnection = function (protocol) {
-		this._win.postMessage(this._port + JSON.stringify({type: 'close', id: this._uid, code: 301}), '*');
+		this._win.postMessage(this._port + JSON.stringify({type: 'close', uid: this._uid, code: 301}), '*');
 	}
 	
 	this.onData = function () { this._protocol.dataReceived.apply(this._protocol, arguments); }
