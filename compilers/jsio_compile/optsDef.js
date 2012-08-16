@@ -50,6 +50,7 @@ exports = {
 	},
 	'--no-ie': {
 		name: 'noIE',
+		also: '--noIE',
 		type: 'boolean',
 		'default': false,
 		description: 'Disables IE checks like trailing commas'
@@ -57,7 +58,7 @@ exports = {
 	'-j': {
 		name: 'jsioPath',
 		type: 'string',
-		also: '--jsio',
+		also: ['--jsio', '--jsioPath'],
 		description: "Provides an alternative path for jsio.  This path must contain the file 'jsio.js'.  The compiler contains a copy of jsio, so this is optional (can be used to compile against custom versions of jsio)."
 	},
 	'--path': {

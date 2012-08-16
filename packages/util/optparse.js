@@ -27,6 +27,10 @@ function ERROR(msg) {
 function addAlso(optsDef, also, value) {
 	if (typeof also == 'string') {
 		optsDef[also] = value;
+	} else if (isArray(also)) {
+		also.forEach(function (key) {
+			optsDef[key] = value;
+		});
 	} else {
 		logger.warn('Key specified in option', optsDef.name, 'is invalid.  Ignoring:', also);
 	}
