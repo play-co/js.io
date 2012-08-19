@@ -19,6 +19,10 @@ jsio.path.add('./packages');
 jsio('import preprocessors.cls as cls');
 jsio('import preprocessors.import as importc');
 
+
+//in the repl, or when running `jsio`, we want jsio to be global
+global.jsio = jsio;
+
 /*
  * use a custom eval function to run the class and import preprocessors
  * on code entered to the repl.  This allows for 'import foo.bar' syntax
@@ -49,8 +53,6 @@ var startRepl = function() {
 	console.log('js.io repl starting\n');
 	//By passing global: true we use the existing global namespace.  This means
 	//that our jsio environment that we set up will exist.
-	//in the repl, we want jsio to be global
-	global.jsio = jsio;
 
 	require('repl').start({
 		global: true,
