@@ -10,7 +10,7 @@
 var vm = require('vm');
 
 //base jsio stuff
-require('./packages/jsio.js');
+var jsio = require('./packages/jsio.js');
 //this puts various jsio objects in the global namespace
 jsio('from base import *');
 //add these paths so we can use the built-in functionality
@@ -18,6 +18,10 @@ jsio.path.add('.');
 jsio.path.add('./packages');
 jsio('import preprocessors.cls as cls');
 jsio('import preprocessors.import as importc');
+
+
+//in the repl, or when running `jsio`, we want jsio to be global
+global.jsio = jsio;
 
 /*
  * use a custom eval function to run the class and import preprocessors
@@ -46,11 +50,10 @@ var preprocessEval = function(cmd, context, filename, callback) {
 };
 
 var startRepl = function() {
-	/*
-	 * By passing global: true we use the existing global namespace.  This means
-	 * that our jsio environment that we set up will exist.
-	 */
 	console.log('js.io repl starting\n');
+	//By passing global: true we use the existing global namespace.  This means
+	//that our jsio environment that we set up will exist.
+
 	require('repl').start({
 		global: true,
 		eval: preprocessEval

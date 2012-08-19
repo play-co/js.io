@@ -75,10 +75,15 @@ exports = function(path, moduleDef, opts) {
 			continue;
 		}
 		
-		try {
-			inlineOpts = eval("(" + inlineOpts + ")") || {};
-		} catch(e) {
-			logger.warn('could not parse opts for jsio in', self + ':', inlineOpts);
+		if (inlineOpts) {
+			try {
+				inlineOpts = eval("(" + inlineOpts + ")") || {};
+			} catch(e) {
+				logger.warn('could not parse opts for jsio in', self + ':', inlineOpts);
+			}
+		}
+
+		if (!inlineOpts) {
 			inlineOpts = {};
 		}
 		
