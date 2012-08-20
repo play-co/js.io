@@ -38,7 +38,8 @@ exports = function(ctx, name, def) {
 	} else {
 		if (!def.get) { def.get = createGetter(ctx, '_' + name); }
 		if (!def.set) { def.set = createSetter(ctx, '_' + name, def.cb, def.value); }
-		
+		if ('value' in def) { ctx['_' + name] = def.value; }
+
 		delete def.value;
 		if (Object.defineProperty) {
 			Object.defineProperty(ctx, name, def);
@@ -50,7 +51,7 @@ exports = function(ctx, name, def) {
 			ctx.__defineSetter__(name, def.set);
 			ctx.__defineGetter__(name, def.get);
 		} else {
-			ctx.name = def.value;
+			ctx[name] = def.value;
 		}
 	}
 }
