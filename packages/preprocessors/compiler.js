@@ -76,7 +76,7 @@ exports = function(path, moduleDef, opts) {
 		}
 		
 		try {
-			inlineOpts = eval(inlineOpts) || {};
+			inlineOpts = eval("(" + inlineOpts + ")") || {};
 		} catch(e) {
 			logger.warn('could not parse opts for jsio in', self + ':', inlineOpts);
 			inlineOpts = {};
