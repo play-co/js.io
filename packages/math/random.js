@@ -73,12 +73,12 @@ var RNG = Class(function() {
 	}
 
 	// Produce a floating-point number in the range [a ... b] inclusive
-	this.range_real = function(a, b) {
+	this.rangeReal = function(a, b) {
 		return ( this.uint32() * (1.0/4294967296.0) ) * (b - a) + a;
 	}
 
 	// Produce an integer number in the range [a ... b] inclusive
-	this.range_int = function(a, b) {
+	this.rangeInteger = function(a, b) {
 		return ( ( this.uint32() * (1.0/4294967296.0) ) * (b - a) + a + 0.5 ) >>> 0;
 	}
 
@@ -103,7 +103,7 @@ var RNG = Class(function() {
 	}
 
 	// Same as kiss96_gauss except it also clamps to a specified range
-	this.gaussian_clamp = function(mean, stddev, clamp_lo, clamp_hi) {
+	this.gaussianClamp = function(mean, stddev, clamp_lo, clamp_hi) {
 		var x = stddev * this.normal() + mean;
 
 		// Clamp to range
