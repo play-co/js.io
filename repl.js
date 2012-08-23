@@ -12,6 +12,7 @@ var vm = require('vm');
 //base jsio stuff
 var jsio = require('./packages/jsio.js');
 //this puts various jsio objects in the global namespace
+console.log(require);
 jsio('from base import *');
 //add these paths so we can use the built-in functionality
 jsio.path.add('.');
@@ -55,7 +56,7 @@ var startRepl = function() {
 	//that our jsio environment that we set up will exist.
 
 	require('repl').start({
-		global: true,
+		useGlobal: true,
 		eval: preprocessEval
 	});
 };
