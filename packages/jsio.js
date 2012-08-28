@@ -250,7 +250,7 @@
 		
 		jsio.setEnv = function(envCtor) {
 			if (!envCtor && cloneFrom) {
-				ENV = cloneFrom.__env;
+				ENV = new cloneFrom.__env.constructor(util);
 			} else {
 				if (typeof envCtor == 'string') {
 					envCtor = ({
@@ -332,6 +332,7 @@
 			}
 			
 			this.fetch = function (p) {
+				this.log(p, '->', util.buildPath(this.getCwd(), p));
 				if (p.charAt(0) != '/') { p = util.buildPath(this.getCwd(), p); }
 
 				try {
