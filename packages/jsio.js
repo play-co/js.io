@@ -332,7 +332,6 @@
 			}
 			
 			this.fetch = function (p) {
-				this.log(p, '->', util.buildPath(this.getCwd(), p));
 				if (p.charAt(0) != '/') { p = util.buildPath(this.getCwd(), p); }
 
 				try {
