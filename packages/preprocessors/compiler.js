@@ -153,6 +153,10 @@ exports.generateSrc = function(opts, callback) {
 			includeJsio: true
 		});
 
+	if (opts.preCompress) {
+		opts.preCompress(gSrcTable);
+	}
+
 	var cb = bind(this, buildJsio, opts, callback);
 	if (opts.compressSources) {
 		compressTable(gSrcTable, opts, cb);

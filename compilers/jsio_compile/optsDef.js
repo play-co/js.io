@@ -12,6 +12,10 @@ exports = {
 		'default': false,
 		description: "Compress individual source files with Google's Closure Compiler"
 	},
+	'--cwd': {
+		name: 'cwd',
+		description: "sets the current working directory"
+	},
 	'--closure': {
 		name: 'closurePath',
 		type: 'string',

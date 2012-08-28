@@ -1,6 +1,8 @@
+import util.path;
+
 var JSIO = 'jsio';
 
-var J = jsio.__jsio.clone();
+var J;
 
 var supportedEnvs = {
 	node: true,
@@ -54,6 +56,10 @@ exports.setDebugLevel = function(level) {
 exports.run = function(args, opts) {
 	J = jsio.__jsio.clone();
 	
+	if (opts.cwd) {
+		J.__env.getCwd = function () { return opts.cwd; };
+	}
+
 	var debugLevel = 'debug' in opts ? opts.debug : 5;
 	exports.setDebugLevel(debugLevel);
 	
@@ -81,9 +87,11 @@ exports.run = function(args, opts) {
 	}
 	
 	if (opts.path) {
+		var cwd = J.__env.getCwd();
 		for(var i = 0, len = opts.path.length; i < len; ++i) {
 			if (opts.path[i]) {
-				J.path.add(opts.path[i]);
+				var relPath = util.path.makeRelativePath(opts.path[i], cwd);
+				J.path.add(relPath);
 			}
 		}
 	}
@@ -217,7 +225,7 @@ exports.run = function(args, opts) {
 	logger.info('compiling main program', initial);
 
 	compiler.compile(initial);
-	
+
 	compiler.generateSrc(opts, function(src) {
 		if (opts.appendImport) {
 			src = src + JSIO + '("' + initial + '")';

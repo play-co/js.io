@@ -331,7 +331,9 @@
 				}
 			}
 			
-			this.fetch = function(p) {
+			this.fetch = function (p) {
+				if (p.charAt(0) != '/') { p = util.buildPath(this.getCwd(), p); }
+
 				try {
 					var dirname = path.dirname(p);
 					var filename = path.basename(p);
@@ -692,9 +694,10 @@
 				if (err) {
 					if (opts.suppressErrors) { return false; }
 					if (!err.jsioLogged) {
-						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n');
+						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n\n', err, '\n');
 						err.jsioLogged = true;
 					}
+
 					throw err;
 				}
 				
