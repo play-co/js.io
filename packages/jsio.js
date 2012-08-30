@@ -530,7 +530,12 @@
 				if (opts.suppressErrors) { return false; }
 				var paths = [];
 				for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.path); }
-				throw new Error(fromDir + fromFile + ": \n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t') + '\n\tImport Stack:\n\t\t' + importStack.join('\n\t\t') + "\n\tError: requested import (" + modulePath + ") not found.");
+				throw new Error(
+					"requested import (" + modulePath + ") not found\n"
+					+ "\tlooked in:\n"
+						+ "\t\t" + paths.join('\n\t\t') + "\n"
+						+ "\tImport Stack:\n"
+						+ "\t\t" + importStack.join("\n\t\t"));
 			}
 		
 			// a (potentially) nicer way to refer to a module -- how it was referenced in code when it was first imported
@@ -695,7 +700,12 @@
 				if (err) {
 					if (opts.suppressErrors) { return false; }
 					if (!err.jsioLogged) {
-						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n\n', err, '\n');
+						ENV.log(
+							'\nError loading module:\n',
+							'\t[[', request, ']]\n',
+							'\trequested by:', fromDir + fromFile, '\n',
+							'\tcurrent directory:', jsio.__env.getCwd(),
+							'\n\t' + err + '\n');
 						err.jsioLogged = true;
 					}
 
@@ -825,7 +835,7 @@
 				var req = util.resolveRelativePath(match[0]),
 					isRelative = req.charAt(0) == '.';
 			
-				req = req	
+				req = req
 					// .replace(/^\//, '') // remove any leading slash
 					.replace(/\.\.\//g, '.') // replace relative path indicators with dots
 					.replace(/\.\//g, '')
