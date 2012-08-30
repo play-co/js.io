@@ -33,7 +33,7 @@ exports = function(path, moduleDef, opts) {
 	if (opts.path) {
 		if (isArray(opts.path)) {
 			for (var i = 0, len = opts.path.length; i < len; ++i) {
-				jsio.path.add(opts.path);
+				jsio.path.add(opts.path[i]);
 			}
 		} else if (typeof opts.path == 'string') {
 			jsio.path.add(opts.path);

@@ -94,6 +94,8 @@ exports.run = function(args, opts) {
 				J.path.add(relPath);
 			}
 		}
+
+		delete opts.path;
 	}
 	
 	logger.info('js.io path:', JSON.stringify(J.path.get()));
