@@ -133,7 +133,8 @@
 				// `buildPath` accepts an arbitrary number of string arguments to concatenate into a path.
 				//     util.buildPath('a', 'b', 'c/', 'd/') -> 'a/b/c/d/'
 				buildPath: function() {
-					return util.resolveRelativePath(Array.prototype.join.call(arguments, '/'));
+					var args = Array.prototype.filter.call(arguments, function (x) { return x; });
+					return util.resolveRelativePath(args.join('/'));
 				},
 			
 				// `resolveRelativePath` removes relative path indicators.  For example:
@@ -150,7 +151,7 @@
 					/* Loop to collapse instances of `../` in the path by matching a previous
 					   path segment.  Essentially, we find substrings of the form `/abc/../`
 					   where abc is not `.` or `..` and replace the substrings with `/`.
-					   We loop until the string no longer changes since after collapsing all
+					   We loop until the string no longer changes since after collapsing
 					   possible instances once, we may have created more instances that can
 					   be collapsed.
 					*/
