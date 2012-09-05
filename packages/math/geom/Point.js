@@ -71,9 +71,12 @@ var Point = exports = Class(function() {
 	 * Scale this number.
 	 */
 
-	this.scale = function(s) {
-		this.x *= s;
-		this.y *= s;
+	this.scale = function(sx, sy) {
+		//if no scaleY specified
+		if(sy === undefined) sy = sx;
+
+		this.x *= sx;
+		this.y *= sy;
 		return this;
 	}
 
