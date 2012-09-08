@@ -48,16 +48,22 @@
 	
 		// Checks if the last character in a string is `/`.
 		var rexpEndSlash = /\/$/;
+
+		function getModuleDef (path) {
+			path += '.js';
+			return jsio.__modules[path] || new ModuleDef(path);
+		}
 	
 		// Creates an object containing metadata about a module.
-		function makeModuleDef(path, baseMod, basePath) {
-			var def = util.splitPath(path + '.js');
-			if (baseMod) {
-				def.baseMod = baseMod;
-				def.basePath = basePath;
-			}
-			return def;
-		}
+		function ModuleDef (path) {
+			this.path = path;
+			util.splitPath(path, this);
+		};
+
+		ModuleDef.prototype.setBase = function (baseMod, basePath) {
+			this.baseMod = baseMod;
+			this.basePath = basePath;
+		};
 	
 		// Utility functions
 		var util = {
@@ -154,7 +160,7 @@
 					return protocol ? protocol[1] + path : path;
 				},
 			
-				resolveRelativeModule: function(modulePath, directory) {
+				resolveRelativeModule: function (modulePath, directory) {
 					var result = [],
 						parts = modulePath.split('.'),
 						len = parts.length,
@@ -164,36 +170,37 @@
 					while(++i < len) { result.push(parts[i] ? parts[i] : '..'); }
 					return util.buildPath(relative ? directory : '', result.join('/'));
 				},
-				resolveModulePath: function(modulePath, directory) {
+				resolveModulePath: function (modulePath, directory) {
 					// resolve relative paths
-					if(modulePath.charAt(0) == '.') {
-						return [makeModuleDef(util.resolveRelativeModule(modulePath, directory))];
+					if (modulePath.charAt(0) == '.') {
+						return [getModuleDef(util.resolveRelativeModule(modulePath, directory))];
 					}
 				
 					// resolve absolute paths with respect to jsio packages/
-					var pathSegments = modulePath.split('.'),
-						baseMod = pathSegments[0],
-						pathString = pathSegments.join('/');
-				
+					var pathSegments = modulePath.split('.');
+					var baseMod = pathSegments[0];
+					var pathString = pathSegments.join('/');
+					
 					if (jsioPath.cache.hasOwnProperty(baseMod)) {
-						return [makeModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString))];
+						return [getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString))];
 					}
 				
-					var out = [],
-						paths = jsioPath.get(),
-						len = paths.length;
+					var defs = [];
+					var paths = jsioPath.get();
+					var len = paths.length;
 					for (var i = 0; i < len; ++i) {
-						out.push(makeModuleDef(util.buildPath(paths[i], pathString), baseMod, paths[i]));
+						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString));
+						moduleDef.setBase(baseMod, paths[i]);
+						defs.push(moduleDef);
 					}
-					return out;
+					return defs;
 				},
-				splitPath: function(path) {
+				splitPath: function(path, result) {
+					if (!result) { result = {}; }
 					var i = path.lastIndexOf('/') + 1;
-					return {
-						path: path,
-						directory: path.substring(0, i),
-						filename: path.substring(i)
-					};
+					result.directory = path.substring(0, i);
+					result.filename = path.substring(i);
+					return result;
 				}
 			};
 		
@@ -203,13 +210,16 @@
 		jsio.__util = util;
 		jsio.__init__ = init;
 
-		var srcCache = {};
-		if (cloneFrom && cloneFrom.__srcCache) { srcCache = jsio.__srcCache = cloneFrom.__srcCache; }
+		var srcCache;
+		jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; }
+		jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
 
-		jsio.__srcCache = srcCache;
+		jsio.setCachedSrc = function(path, src) { srcCache[path] = { path: path, src: src }; }
+		jsio.getCachedSrc = function(path) { return srcCache[path]; }
+
 		jsio.__filename = 'jsio.js';
 		jsio.__cmds = [];
-		jsio.__jsio = this;
+		jsio.__jsio = jsio;
 		jsio.__importer = importer;
 		jsio.__modules = {preprocessors:{}};
 		var jsioPath = {
@@ -236,10 +246,6 @@
 		
 		jsio.path = jsioPath;
 		jsio.addPath = util.bind(jsioPath, 'add');
-		
-		jsio.setCache = function(cache) { srcCache = cache; }
-		jsio.setCachedSrc = function(path, src) { srcCache[path] = { path: path, src: src }; }
-		jsio.getCachedSrc = function(path) { return srcCache[path]; }
 		jsio.addCmd = util.bind(jsio.__cmds, 'push');
 		
 		jsio.setEnv = function(envCtor) {
@@ -282,6 +288,7 @@
 	
 		function ENV_node() {
 			var fs = require('fs');
+			var path = require('path');
 			
 			this.name = 'node';
 			this.global = GLOBAL;
@@ -317,16 +324,34 @@
 				this.eval = function (code, path) {
 					try {
 						return vm.runInThisContext(code, path);
-					} catch(e) {
+					} catch (e) {
 						this.log('In ' + path + ':\n' + e.message);
 						throw e;
 					}
 				}
 			}
 			
-			this.fetch = function(path) {
-				try { return fs.readFileSync(path, 'utf8'); } catch(e) {}
-				return false;
+			this.fetch = function(p) {
+				try {
+					var dirname = path.dirname(p);
+					var filename = path.basename(p);
+					var lowerFilename = filename.toLowerCase();
+					var files = fs.readdirSync(dirname);
+				} catch (e) {
+					return false;
+				}
+
+				for (var i = 0, testName; testName = files[i]; ++i) {
+					if (testName.toLowerCase() == lowerFilename && testName != filename) {
+						throw "Invalid case when importing [" + p + "].  You probably meant" + testName;
+					}
+				}
+
+				try {
+					return fs.readFileSync(p, 'utf8');
+				} catch(e) {
+					return false;
+				}
 			}
 			
 			this.require = require;
@@ -454,6 +479,7 @@
 				
 				if (cachedVersion) {
 					possible.src = cachedVersion.src;
+					possible.pre = true;
 					return possible;
 				}
 			
@@ -476,13 +502,14 @@
 		}
 	
 		// load a module from a file
-		function loadModule(fromDir, fromFile, modulePath, opts) {
+		function loadModule (fromDir, fromFile, modulePath, opts) {
 			var possibilities = util.resolveModulePath(modulePath, fromDir);
 			for (var i = 0, p; p = possibilities[i]; ++i) {
 				var path = possibilities[i].path;
 				if (!opts.reload && (path in jsio.__modules)) {
 					return possibilities[i];
 				}
+
 				if (path in failedFetch) { possibilities.splice(i--, 1); }
 			}
 		
@@ -503,22 +530,36 @@
 				throw new Error(fromDir + fromFile + ": \n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t') + '\n\tImport Stack:\n\t\t' + importStack.join('\n\t\t') + "\n\tError: requested import (" + modulePath + ") not found.");
 			}
 		
+			// a (potentially) nicer way to refer to a module -- how it was referenced in code when it was first imported
 			moduleDef.friendlyPath = modulePath;
-		
+			
+			// cache the base module's path in the path cache so we don't have to
+			// try out all paths the next time we see the same base module.
 			if (moduleDef.baseMod && !(moduleDef.baseMod in jsioPath.cache)) {
 				jsioPath.cache[moduleDef.baseMod] = moduleDef.basePath;
 			}
-		
-			// the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
-			while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
-				moduleDef.src = moduleDef.src.substring(match[0].length - 1);
-				applyPreprocessors(fromDir, moduleDef, match[1].split(','), opts);
+
+			// don't apply the standard preprocessors to base.js.  If we're reloading
+			// the source code, always apply them.  We also don't want to run them
+			// if they've been run once -- moduleDef.pre is set to true already
+			// if we're reading the code from the source cache.
+			if (modulePath != 'base' && (opts.reload || !opts.dontPreprocess && !moduleDef.pre)) {
+				moduleDef.pre = true;
+
+				applyPreprocessors(fromDir, moduleDef, ["import", "cls"], opts);
+
+				// the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
+				// while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
+				// 	moduleDef.src = moduleDef.src.substring(match[0].length - 1);
+				// 	applyPreprocessors(fromDir, moduleDef, match[1].split(','), opts);
+				// }
 			}
-			
+
+			// any additional preprocessors?
 			if (opts.preprocessors) {
 				applyPreprocessors(fromDir, moduleDef, opts.preprocessors, opts);
 			}
-			
+
 			return moduleDef;
 		}
 	
@@ -532,15 +573,19 @@
 		}
 		
 		function getPreprocessor(name) {
+			var module = jsio.__modules['preprocessors.' + name];
 			return typeof name == 'function'
 				? name
-				: (jsio.__modules['preprocessors.' + name] 
-					|| jsio('import preprocessors.' + name, {dontExport: true}));
+				: (module && module.exports
+					|| jsio('import preprocessors.' + name, {dontExport: true, dontPreprocess: true}));
 		}
 	
 		function execModuleDef(context, moduleDef) {
-			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\/.]/g, '_') + "(){" + moduleDef.src + "\n}}})";
-			var fn = ENV.eval(code, moduleDef.path, moduleDef.src);
+			var src = moduleDef.src;
+			delete moduleDef.src;
+
+			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\/.]/g, '_') + "(){" + src + "\n}}})";
+			var fn = ENV.eval(code, moduleDef.path, src);
 			fn = fn(context);
 			fn.call(context.exports);
 		};
@@ -569,8 +614,8 @@
 			ctx.require = function(request, opts) {
 				if (!opts) { opts = {}; }
 				opts.dontExport = true;
-				opts.suppressErrors = true;
-			
+				// opts.suppressErrors = true;
+				
 				try {
 					var ret = ctx.jsio(request, opts);
 					if (ret === false) {
@@ -580,23 +625,14 @@
 						return ret;
 					}
 				} catch(e) {
-					try {
-						return require(request);
-					} catch(e2) {
-						ENV.log('Error loading request ' + request + ':');
-						ENV.log(e);
-
-						ENV.log('Also could not load using standard CommonJS');
-						ENV.log(e2);
-
-						throw e;
-					}
+					ENV.log('Error loading request ' + request + ':');
+					ENV.log(e);
 				}
 			};
 			
 			ctx.module = {id: modulePath, exports: ctx.exports};
 			if (!dontAddBase && modulePath != 'base') {
-				ctx.jsio('from base import *');
+				ctx.jsio('from base import *', {dontPreprocess: true});
 				ctx.logging.__create(modulePath, ctx);
 			}
 		
@@ -625,30 +661,55 @@
 				retVal = numImports > 1 ? {} : null;
 		
 			// import each requested item
-			for(var i = 0; i < numImports; ++i) {
-				var item = imports[i],
-					modulePath = item.from,
-					modules = jsio.__modules;
-			
+			for (var i = 0; i < numImports; ++i) {
+				var item = imports[i];
+				var modulePath = item.from;
+				var modules = jsio.__modules;
+				var path;
+				var moduleDef;
+				var err;
+				
 				try {
-					var moduleDef = loadModule(fromDir, fromFile, modulePath, opts);
-					if (moduleDef === false) { return false; }
+					moduleDef = loadModule(fromDir, fromFile, modulePath, opts);
 				} catch(e) {
-					if (!e.jsioLogged) {
-						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n');
-						e.jsioLogged = true;
+					err = e;
+				}
+
+				if (moduleDef) {
+					path = moduleDef.path;
+				} else if (jsio.__env.require) {
+					path = modulePath;
+					try {
+						modules[path] = {exports: jsio.__env.require(modulePath)};
+						err = null;
+					} catch (e2) {
+						if (!err) { err = e2; }
 					}
-					throw e;
+				} else if (moduleDef == false) {
+					return false;
+				}
+
+				if (err) {
+					if (opts.suppressErrors) { return false; }
+					if (!err.jsioLogged) {
+						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n');
+						err.jsioLogged = true;
+					}
+					throw err;
 				}
 				
-				importStack.push(importStack.length + ' : ' + moduleDef.friendlyPath + ' (' + moduleDef.path + ')');
+				if (moduleDef) {
+					importStack.push(importStack.length + ' : ' + moduleDef.friendlyPath + ' (' + moduleDef.path + ')');
+				}
 				
 				// eval any packages that we don't know about already
-				var path = moduleDef.path;
-				if(!(path in modules)) {
+				if (!(path in modules)) {
 					var newContext = makeContext(opts.context, modulePath, moduleDef, item.dontAddBase);
-					modules[path] = newContext.exports;
-					if(item.dontUseExports) {
+
+					modules[path] = moduleDef;
+
+					moduleDef.exports = newContext.exports;
+					if (item.dontUseExports) {
 						var src = [';(function(){'], k = 1;
 						for (var j in item['import']) {
 							newContext.exports[j] = undefined;
@@ -657,13 +718,14 @@
 						src[k] = '})();';
 						moduleDef.src += src.join('');
 					}
+
 					execModuleDef(newContext, moduleDef);
-					modules[path] = newContext.exports;
+					moduleDef.exports = newContext.exports;
 				}
 				
 				importStack.pop();
 			
-				var module = modules[path];
+				var module = modules[path].exports;
 			
 				// return the module if we're only importing one module
 				if (numImports == 1) { retVal = module; }
@@ -691,18 +753,13 @@
 						if (numImports > 1) {
 							retVal[as] = module;
 						}
-					} else if(item['import']) {
+					} else if (item['import']) {
 						// there can only be one module import with this syntax 
 						// (from foo import bar), so retVal will already be set here
-						if(item['import']['*']) {
-							for(var k in modules[path]) { exportInto[k] = module[k]; }
+						if (item['import']['*']) {
+							for (var k in modules[path].exports) { exportInto[k] = module[k]; }
 						} else {
-							try {
-								for(var k in item['import']) { exportInto[item['import'][k]] = module[k]; }
-							} catch(e) {
-								ENV.log('module: ', modules);
-								throw e;
-							}
+							for (var k in item['import']) { exportInto[item['import'][k]] = module[k]; }
 						}
 					}
 				}
@@ -758,7 +815,7 @@
 			// 		../b -> ..b
 			// 		./b -> .b
 		
-			var match = request.match(/^\s*[\w.0-9$\/]+\s*$/);
+			var match = request.match(/^\s*[\w.0-9$\/\-]+\s*$/);
 			if (match) {
 			
 				var req = util.resolveRelativePath(match[0]),
@@ -780,9 +837,14 @@
 			GLOBAL['logger'] = logging.get('jsiocore');
 		};
 		
-		jsio.clone = util.bind(init, jsio);
+		jsio.clone = util.bind(null, init, jsio);
 
 		return jsio;
 	}
-	jsio = init(null, {});
+	var J = init(null, {});
+	if (typeof exports != 'undefined') {
+		module.exports = J;
+	} else {
+		jsio = J;
+	}
 })();

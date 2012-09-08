@@ -133,9 +133,12 @@ function cancel(xhr, request) {
 	
 	xhr.onreadystatechange = null;
 	request.timedOut = true;
-	try {
-		var headers = xhr.getAllResponseHeaders();
-	} catch (e) {}
+	if (xhr.readyState >= xhr.HEADERS_RECEIVED) {
+		try {
+			var headers = xhr.getAllResponseHeaders();
+		} catch (e) {}
+	}
+	
 	request.cb && request.cb({timeout: true}, null, headers);
 }
 

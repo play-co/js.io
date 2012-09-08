@@ -231,7 +231,7 @@ var J = jsio;
 function compress(cwd, opts, cmd, cb) {
 	// TODO: remove this path hackery!
 	var base = path.dirname(__filename),
-		exec = path.join(base, 'jsio_compile'),
+		exec = path.join(base, 'jsio-compile'),
 		args = [cmd];
 		if (opts.path) {
 			args.push('--path');

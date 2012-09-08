@@ -1,5 +1,3 @@
-"use import";
-
 import util.optparse;
 import .optsDef;
 
@@ -13,7 +11,7 @@ var closurePath = '';
 (function() {
 	var path = require('path');
 	var defaultPath = path.join(path.dirname(jsio.__filename), 'jsio_minify.jar');
-	if (path.existsSync(defaultPath)) {
+	if (fs.existsSync(defaultPath)) {
 		closurePath = defaultPath;
 	}
 })();
@@ -22,16 +20,21 @@ exports.logger = logger;
 
 function findMinifier(jarPath) {
 	var path = require('path');
-	if (path.existsSync(jarPath)) {
+	if (fs.existsSync(jarPath)) {
 		closurePath = jarPath;
 	}
 }
 
 function usage() {
-	util.optparse.printUsage('<node> compile.js <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
+	util.optparse.printUsage('jsio_compile <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
 }
 
-exports.init = function(compiler, args, opts) {
+var _compiler;
+exports.setCompiler = function (compiler) {
+	_compiler = compiler;
+}
+
+exports.run = function(args, opts) {
 	if (!args) {
 		var result = util.optparse(process.argv, optsDef),
 			args = result.args,
@@ -45,11 +48,10 @@ exports.init = function(compiler, args, opts) {
 	
 	findMinifier(opts.closurePath);
 	
-	opts.compressor = exports.compressor;
-	compiler.run(args, opts);
+	_compiler.run(args, opts);
 };
 
-exports.onError = function(msg) {
+exports.onError = function(opts, msg) {
 	usage();
 	jsio.__env.log('');
 	logger.error('\n' + msg);
@@ -64,11 +66,11 @@ exports.onFinish = function(opts, src) {
 		fs.writeFileSync(opts.outputFile, src);
 	} else {
 		logger.info('Writing output to stdout');
-		require('sys').print(src);
+		process.stdout.write(src);
 	}
 }
 
-exports.compressor = function(filename, src, callback, opts) {
+exports.compress = function(filename, src, opts, callback) {
 	var cachePath;
 	
 	function fail(err) {
@@ -97,7 +99,7 @@ exports.compressor = function(filename, src, callback, opts) {
 				var checksum = '' + stat.mtime;
 			}
 			
-			if (path.existsSync(cachePath)) {
+			if (fs.existsSync(cachePath)) {
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
 				var cachedChecksum = cachedContents.substring(0, i);

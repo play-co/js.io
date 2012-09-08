@@ -1,50 +1,44 @@
-#!/usr/bin/env node
+import fs;
+import path;
+import child_process;
 
-// run "node build.js" to generate a self-contained jsio_compile script
-
-var sys = require('sys'),
-	fs = require('fs'),
-	path = require('path'),
-	node = process.argv[0];
-
-var exec = require('child_process').exec;
+var node = process.argv[0];
 
 var BUILD_DIR = 'build';
 var TARGET = path.join(BUILD_DIR, 'jsio_compile');
 var CACHE_PATH = path.join(BUILD_DIR, '.cache');
 
-require('./jsio/jsio');
-
 // setup logging
-jsio('from base import *');
 logger = logging.get('compiler');
 logging.get('preprocessors.compiler').setLevel(0);
 
-jsio('import lib.Callback');
+import lib.Callback;
 var cb = new lib.Callback();
 
-exec('mkdir -p ' + BUILD_DIR, null, cb.chain());
-exec('mkdir -p ' + CACHE_PATH, null, cb.chain());
+child_process.exec('mkdir -p ' + BUILD_DIR, null, cb.chain());
+child_process.exec('mkdir -p ' + CACHE_PATH, null, cb.chain());
 
-cb.run(doCompile);
 
-function doCompile() {
+exports.run = function (compress) {
+	cb.run(bind(this, run, compress));
+}
+
+function run (compress) {
 	// get access to jsio path util functions
-	jsio('import util.path');
+	import util.path;
 	
 	logger.log('building jsio_compile...');
-	var compiler = jsio('import preprocessors.compiler');
+	import preprocessors.compiler as compiler;
+	import .node_interface as nodeInterface;
 
-	var interface = jsio('import .node_interface');
-	interface.logger.setLevel(0);
+	nodeInterface.logger.setLevel(0);
 
 	compiler.setCompilerOpts({
-		compressor: interface.compressor,
-		environment: jsio.__env.name,
-		dynamicImports: {
-			COMPILER: 'import .node_interface'
-		}
+		compressor: bind(nodeInterface, 'compress'),
+		environment: jsio.__env.name
 	});
+
+	compiler.compile('import .node_interface');
 
 	logger.log('processing compiler preprocessor...');
 	compiler.compile('import preprocessors.compiler');
@@ -64,14 +58,14 @@ function doCompile() {
 		});
 	});
 
-	compiler.generateSrc({compressorCachePath: CACHE_PATH, compressSources: true, compressResult: true}, function(src) {
+	compiler.generateSrc({compressorCachePath: CACHE_PATH, compressSources: compress, compressResult: compress}, function(src) {
 		var fd = fs.openSync(TARGET, 'w');
 		fs.writeSync(fd, '#!/usr/bin/env node\n');
 		fs.writeSync(fd, src);
 		fs.writeSync(fd, 'jsio("import .compiler").start()');
 		fs.closeSync(fd);
 
-		exec("chmod +x " + TARGET);
+		child_process.exec("chmod +x " + TARGET);
 		logger.info('Wrote', TARGET);
 	});
 }

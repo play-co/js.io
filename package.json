@@ -1,0 +1,21 @@
+{
+  "author": "Game Closure",
+  "name": "jsio",
+  "description": "js.io module and class system",
+  "version": "1.0.0",
+  "homepage": "http://www.github.com/gameclosure/js.io",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gameclosure/js.io.git"
+  },
+  "main": "./packages/jsio.js",
+  "bin": {
+	  "jsio": "./repl.js",
+	  "jsio_compile": "./jsio_compile"
+  },
+  "engines": {
+    "node": ">0.6.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
