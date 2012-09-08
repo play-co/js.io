@@ -75,12 +75,20 @@ var Base64 = {
  
 	}
  
-	output = Base64._utf8_decode(output);
+ 	// utf8 decode only if utf8 bytes are detected
+ 	if(Base64.containsSurrogatePair(output)) {
+		output = Base64._utf8_decode(output); 		
+ 	}
  
 	return output;
  
     },
  
+    // private method to check for utf8
+    containsSurrogatePair : function(str) {
+    	return /[\uD800-\uDFFF]/.test(str);
+	},
+
     // private method for UTF-8 encoding
     _utf8_encode : function (string) {
 	string = string.replace(/\r\n/g,"\n");
