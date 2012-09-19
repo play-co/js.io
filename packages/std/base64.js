@@ -51,6 +51,21 @@ var Base64 = {
 	var enc1, enc2, enc3, enc4;
 	var i = 0;
  
+	/* 
+		Test for url safe b64 (better to be safe they sorry)
+		CSP protocol (in python) uses urlsafe b64, not regular. 
+		urlsafe_b64encode(s)
+		Encode a string using a url-safe Base64 alphabet.
+		 
+		s is the string to encode.  The encoded string is returned.  The alphabet
+		uses '-' instead of '+' and '_' instead of '/'.
+	*/
+	
+	if ( input.indexOf('-') > -1 || input.indexOf('/') > -1 ) {
+		input = input.replace('-', '+');
+		input = input.replace('_', '/');	
+	}
+
 	input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
  
 	while (i < input.length) {
