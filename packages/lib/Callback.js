@@ -1,22 +1,20 @@
-"use import";
-
 exports = Class(function() {
 
 	this._fired = false;
 	this._id = 0;
 	this._pending = null;
-	
-	this.init = function() { this._run = []; }
-	this.fired = function() { return this._fired; } 
+
+	this.init = function() { this._run = []; };
+	this.fired = function() { return this._fired; } ;
 
 	// preserve pending callbacks, but clear fired status
-	this.reset = function() { this._args = []; this._fired = false; }
+	this.reset = function() { this._args = []; this._fired = false; };
 
 	// clear fired status and remove any pending callbacks
-	this.clear = function() { this.reset(); this._run = []; this._pending = null; this._stat = null; }
+	this.clear = function() { this.reset(); this._run = []; this._pending = null; this._stat = null; };
 
 	// a convenience function to proxy arguments to `this.run`: arguments passed as the first argument
-	this.forward = function(args) { this.run.apply(this, args); }
+	this.forward = function(args) { this.run.apply(this, args); };
 
 	// when the lib.Callback object fires, run a ctx, method, and
 	// (optional) curried arguments or a single callback function
@@ -30,11 +28,11 @@ exports = Class(function() {
 			}
 		}
 		return this;
-	}
-	
+	};
+
 	this.runOrTimeout = function(onFire, onTimeout, duration) {
 		if (!onFire && !onTimeout) { return; }
-		
+
 		if (this._fired) {
 			onFire.apply(this, this._args);
 		} else {
@@ -42,9 +40,9 @@ exports = Class(function() {
 				clearTimeout(timeout);
 				onFire.apply(this, this._args);
 			});
-			
+
 			this.run(f);
-			
+
 			var timeout = setTimeout(bind(this, function() {
 				for (var i = 0, n = this._run.length; i < n; ++i) {
 					if (this._run[i] == f) {
@@ -52,24 +50,23 @@ exports = Class(function() {
 						break;
 					}
 				}
-				
+
 				onTimeout();
 			}), duration);
 		}
-	}
-	
+	};
+
 	this.fire = function() {
 		if (this._fired) { return; }
 		this._fired = true;
-		
+
 		var cbs = this._run;
-		this._run = [];
 		this._args = arguments;
 		for(var i = 0, len = cbs.length; i < len; ++i) {
 			if (cbs[i]) { cbs[i].apply(this, arguments); }
 		}
-	}
-	
+	};
+
 	this.chain = function(id) {
 		if (!this._pending) { this._pending = {}; }
 		if (id === undefined) { id = this._id++; }
@@ -77,7 +74,7 @@ exports = Class(function() {
 
 		this.reset();
 		return bind(this, '_deferred', id);
-	}
+	};
 
 	this._deferred = function(id) {
 		if (!this._stat) { this._stat = {}; }
@@ -89,7 +86,7 @@ exports = Class(function() {
 		for (var id in pending) {
 			if (pending.hasOwnProperty(id)) { return; }
 		}
-		
+
 		this.fire(this._stat);
-	}
+	};
 });
