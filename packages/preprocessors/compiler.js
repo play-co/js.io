@@ -33,7 +33,7 @@ exports = function(path, moduleDef, opts) {
 	if (opts.path) {
 		if (isArray(opts.path)) {
 			for (var i = 0, len = opts.path.length; i < len; ++i) {
-				jsio.path.add(opts.path);
+				jsio.path.add(opts.path[i]);
 			}
 		} else if (typeof opts.path == 'string') {
 			jsio.path.add(opts.path);
@@ -75,10 +75,15 @@ exports = function(path, moduleDef, opts) {
 			continue;
 		}
 		
-		try {
-			inlineOpts = eval("(" + inlineOpts + ")") || {};
-		} catch(e) {
-			logger.warn('could not parse opts for jsio in', self + ':', inlineOpts);
+		if (inlineOpts) {
+			try {
+				inlineOpts = eval("(" + inlineOpts + ")") || {};
+			} catch(e) {
+				logger.warn('could not parse opts for jsio in', self + ':', inlineOpts);
+			}
+		}
+
+		if (!inlineOpts) {
 			inlineOpts = {};
 		}
 		
@@ -147,6 +152,10 @@ exports.generateSrc = function(opts, callback) {
 			compressSources: false,
 			includeJsio: true
 		});
+
+	if (opts.preCompress) {
+		opts.preCompress(gSrcTable);
+	}
 
 	var cb = bind(this, buildJsio, opts, callback);
 	if (opts.compressSources) {

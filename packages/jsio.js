@@ -133,7 +133,8 @@
 				// `buildPath` accepts an arbitrary number of string arguments to concatenate into a path.
 				//     util.buildPath('a', 'b', 'c/', 'd/') -> 'a/b/c/d/'
 				buildPath: function() {
-					return util.resolveRelativePath(Array.prototype.join.call(arguments, '/'));
+					var args = Array.prototype.filter.call(arguments, function (x) { return x; });
+					return util.resolveRelativePath(args.join('/'));
 				},
 			
 				// `resolveRelativePath` removes relative path indicators.  For example:
@@ -150,7 +151,7 @@
 					/* Loop to collapse instances of `../` in the path by matching a previous
 					   path segment.  Essentially, we find substrings of the form `/abc/../`
 					   where abc is not `.` or `..` and replace the substrings with `/`.
-					   We loop until the string no longer changes since after collapsing all
+					   We loop until the string no longer changes since after collapsing
 					   possible instances once, we may have created more instances that can
 					   be collapsed.
 					*/
@@ -250,7 +251,7 @@
 		
 		jsio.setEnv = function(envCtor) {
 			if (!envCtor && cloneFrom) {
-				ENV = cloneFrom.__env;
+				ENV = new cloneFrom.__env.constructor(util);
 			} else {
 				if (typeof envCtor == 'string') {
 					envCtor = ({
@@ -331,7 +332,9 @@
 				}
 			}
 			
-			this.fetch = function(p) {
+			this.fetch = function (p) {
+				if (p.charAt(0) != '/') { p = util.buildPath(this.getCwd(), p); }
+
 				try {
 					var dirname = path.dirname(p);
 					var filename = path.basename(p);
@@ -527,7 +530,12 @@
 				if (opts.suppressErrors) { return false; }
 				var paths = [];
 				for (var i = 0, p; p = possibilities[i]; ++i) { paths.push(p.path); }
-				throw new Error(fromDir + fromFile + ": \n\tcurrent directory: " + ENV.getCwd() + "\n\tlooked in:\n\t\t" + paths.join('\n\t\t') + '\n\tImport Stack:\n\t\t' + importStack.join('\n\t\t') + "\n\tError: requested import (" + modulePath + ") not found.");
+				throw new Error(
+					"requested import (" + modulePath + ") not found\n"
+					+ "\tlooked in:\n"
+						+ "\t\t" + paths.join('\n\t\t') + "\n"
+						+ "\tImport Stack:\n"
+						+ "\t\t" + importStack.join("\n\t\t"));
 			}
 		
 			// a (potentially) nicer way to refer to a module -- how it was referenced in code when it was first imported
@@ -692,9 +700,15 @@
 				if (err) {
 					if (opts.suppressErrors) { return false; }
 					if (!err.jsioLogged) {
-						ENV.log('\nError loading module:\n\trequested:', modulePath, '\n\tfrom:', fromDir + fromFile, '\n\tfull request:', request, '\n');
+						ENV.log(
+							'\nError loading module:\n',
+							'\t[[', request, ']]\n',
+							'\trequested by:', fromDir + fromFile, '\n',
+							'\tcurrent directory:', jsio.__env.getCwd(),
+							'\n\t' + err + '\n');
 						err.jsioLogged = true;
 					}
+
 					throw err;
 				}
 				
@@ -821,7 +835,7 @@
 				var req = util.resolveRelativePath(match[0]),
 					isRelative = req.charAt(0) == '.';
 			
-				req = req	
+				req = req
 					// .replace(/^\//, '') // remove any leading slash
 					.replace(/\.\.\//g, '.') // replace relative path indicators with dots
 					.replace(/\.\//g, '')
