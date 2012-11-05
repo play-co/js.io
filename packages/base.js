@@ -140,11 +140,11 @@ exports.__class__ = function (cls, name, parent, proto) {
 			return f.apply(context, args || []);
 		} : null;
 	
-	cls.prototype = new clsProto();
-	proto.call(cls.prototype, logger || supr, logger && supr);
-	cls.prototype.constructor = cls;
-	cls.prototype.__parentClass__ = parent;
-	if (name) { cls.prototype.__class__ = name; }
+	var p = cls.prototype = new clsProto();
+	p.constructor = cls;
+	p.__parentClass__ = parent;
+	if (name) { p.__class__ = name; }
+	proto.call(p, logger || supr, logger && supr);
 	return cls;
 }
 
