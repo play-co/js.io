@@ -205,7 +205,8 @@ exports.logging = (function() {
 			LOG: 2,
 			INFO: 3,
 			WARN: 4,
-			ERROR: 5
+			ERROR: 5,
+			NONE: 10
 		},
 		loggers = {}, // effectively globals - all loggers and a global production state
 		production = false;
