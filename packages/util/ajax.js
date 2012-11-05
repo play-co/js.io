@@ -1,5 +1,3 @@
-"use import";
-
 import std.uri as URI;
 
 var SIMULTANEOUS = 4;
@@ -159,7 +157,9 @@ function onReadyStateChange(request, xhr) {
 		request.timeoutRef = null;
 	}
 	
-	if (!cb) { return; }
+	// only fire callback once
+	if (!cb || request.handled) { return; }
+	request.handled = true;
 	
 	// .status will be 0 when requests are filled via app cache on at least iOS 4.x
 	if (xhr.status != 200 && xhr.status != 0) {
