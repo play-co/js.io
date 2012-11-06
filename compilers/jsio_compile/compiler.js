@@ -201,12 +201,13 @@ exports.run = function(args, opts) {
 			initial = './' + initial;
 		}
 	}
-	
+
 	// run the actual compiler
 	var compiler = J('import preprocessors.compiler');
 	compiler.setCompilerOpts({
 		debugLevel: debugLevel,
 		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
+		defines: opts.defines,
 		autoDetectPaths: true,
 		environment: opts.environment,
 		dynamicImports: opts.dynamicImports
