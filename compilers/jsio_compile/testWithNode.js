@@ -1,6 +1,6 @@
 var jsioPath = './jsio';
 
-require(jsioPath + '/jsio');
+var jsio = require(jsioPath + '/jsio');
 
 // reset the current directory so we can load the compiler when 
 // this script is run from a different directory

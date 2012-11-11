@@ -15,6 +15,10 @@ exports.start = function(/*optional*/ args, opts) {
 	if (opts && opts['interface']) {
 		_interface = opts['interface'];
 	} else {
+		if (!J) {
+			J = jsio.__jsio.clone();
+		}
+
 		if (!J.__env.name in supportedEnvs) {
 			logger.error("autostart failed: unknown environment.\n\n\tTry using compiler.run(args, opts) instead.");
 			return;
