@@ -26,14 +26,16 @@ var RNG = Class(function() {
 		}
 
 		// XOR Shift
-		this.x = seed ^ 1453667877;
+		if (this.x !== 234567891) {
+			this.x = seed ^ 234567891;
+		}
 
 		// Weyl Generator
-		this.y = seed ^ 1223235218;
+		this.y = seed ^ 123456789;
 
 		// Add-With-Carry
-		this.z = 2686646964 >>> 0;
-		this.w = 3741327162 >>> 0;
+		this.z = 345678912 >>> 0;
+		this.w = 456789123 >>> 0;
 		this.c = 0;
 	}
 
@@ -48,7 +50,7 @@ var RNG = Class(function() {
 
 		// Weyl Generator
 		var y = this.y;
-		y += 2654435769;
+		y += 1411392427;
 		this.y = y >>> 0;
 
 		// Add-With-Carry
