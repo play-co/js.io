@@ -101,19 +101,18 @@ var URI = exports = Class(function(supr) {
 });
 
 exports.relativeTo = function(url, base) {
-	if (!base) { return url; }
-	
-	url = String(url);
-	
-	if (/^http(s?):\/\//.test(url)) { return url; }
+	var url = String(url);
+	if (base && !/^http(s?):\/\//.test(url)) {
+		var baseURI = new exports(base)
+			.setAnchor('')
+			.setQuery('')
+			.setFile('')
+			.toString(url.charAt(0) == '/');
 
-	var baseURI = new exports(base)
-		.setAnchor('')
-		.setQuery('')
-		.setFile('')
-		.toString(url.charAt(0) == '/');
+		url = exports.resolveRelative(baseURI + url);
+	}
 
-	return new URI(exports.resolveRelative(baseURI + url));
+	return new URI(url);
 }
 
 exports.resolveRelative = function(url) {
