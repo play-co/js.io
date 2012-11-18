@@ -147,5 +147,9 @@ exports = Class(function () {
 	this.setMaxListeners = function (_maxListeners) {
 		this._maxListeners = _maxListeners;
 	};
+
+	this.hasListeners = function (type) {
+		return this._subscribers[type] && this._subscribers[type].length;
+	}
 });
 
