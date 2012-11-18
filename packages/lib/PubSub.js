@@ -140,7 +140,7 @@ exports = Class(function () {
 	this.emit = function (type) {
 		this.publish.apply(this, arguments);
 		return this.listeners(type).length > 0;
-	}
+	};
 
 	this._maxListeners = 10;
 
@@ -149,7 +149,7 @@ exports = Class(function () {
 	};
 
 	this.hasListeners = function (type) {
-		return this._subscribers[type] && this._subscribers[type].length;
-	}
+		return this._subscribers && this._subscribers[type] && this._subscribers[type].length;
+	};
 });
 
