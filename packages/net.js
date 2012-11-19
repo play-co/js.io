@@ -14,7 +14,7 @@ exports.listen = function(server, transportName, opts) {
 	
 	var ctor = typeof transportName == 'string' ? net.env.getListener(transportName) : transportName,
 		listener = new ctor(server, opts);
-	
+
 	listener.listen();
 	return listener;
 }

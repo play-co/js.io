@@ -465,7 +465,7 @@ exports.Server = Class(process.EventEmitter, function () {
 				if (err instanceof CSPError) {
 					renderError(response, err.code, err.message);					 
 				} else {
-					logger.warn('Unexpected Error: ', err.message);
+					logger.warn('Unexpected Error: ', err.message, err.stack);
 					renderError(response, 500, 'Unknown Server error');
 				};
 			};

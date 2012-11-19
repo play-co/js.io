@@ -11,7 +11,7 @@ var Transport = Class(net.interfaces.Transport, function() {
 		logger.debug('makeConnection:', protocol);
 		this._socket.addListener("receive", bind(protocol, 'dataReceived'));
 
-		this._socket.addListener("eof", this._socket.close);
+//		this._socket.addListener("eof", this._socket.close);
 		this._socket.addListener("close", bind(protocol, 'connectionLost')); // TODO: map error codes
 	}
 
