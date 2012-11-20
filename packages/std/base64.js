@@ -57,7 +57,7 @@ var assertOrBadInput = function (exp, message) {
 	if (!exp) { throw new exports.Base64CodecError(message) };
 };
 
-exports.encode = function (bytes, addPadding) {
+exports.encode = function (bytes, skipPadding) {
 	assertOrBadInput(!(/[^\x00-\xFF]/.test(bytes)), // disallow two-byte chars
 		'Input contains out-of-range characters.');
 	var paddingSize = bytes.length % 3;
@@ -78,7 +78,7 @@ exports.encode = function (bytes, addPadding) {
 	
 	out_array.length -= padding.length;
 	var ret = out_array.join('');
-	if (addPadding) {
+	if (!skipPadding) {
 		if (paddingSize == 1) {
 			ret += '==';
 		} else if (paddingSize == 2) {
