@@ -13,7 +13,7 @@ function replacer(base, prefix, name) {
 }
 
 exports = function(path, moduleDef, opts) {
-	var moduleCtor = moduleDef.path.replace(/(^[.\/]+|\.([^.]+?)$)/g, '').replace(/[\/\-\.]/g, '_');
+	var moduleCtor = moduleDef.path.replace(/(^[.\/]+|\.([^.]+?)$)/g, '').replace(/[\:\\\/\-\.]/g, '_');
 	moduleDef.src = moduleDef.src
 		.replace(classExport, 'var ' + moduleCtor + '=__class__;$1exports=' + moduleCtor + '(function ' + moduleCtor + '(){return this.init&&this.init.apply(this,arguments)},')
 		.replace(class2Export, replacer);
