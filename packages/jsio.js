@@ -575,7 +575,11 @@
 		function applyPreprocessors(path, moduleDef, names, opts) {
 			for (var i = 0, len = names.length; i < len; ++i) {
 				p = getPreprocessor(names[i]);
-				if (p) {
+
+				// if we have a recursive import and p isn't a function, just
+				// skip it (handles the case where a preprocessor imports
+				// other modules).
+				if (p && typeof p == 'function') {
 					p(path, moduleDef, opts);
 				}
 			}
@@ -705,8 +709,9 @@
 							'\nError loading module:\n',
 							'\t[[', request, ']]\n',
 							'\trequested by:', fromDir + fromFile, '\n',
-							'\tcurrent directory:', jsio.__env.getCwd(),
-							'\n\t' + err + '\n');
+							'\tcurrent directory:', jsio.__env.getCwd(), '\n',
+							'\t' + err, '\n',
+							'\t' + err.stack);
 						err.jsioLogged = true;
 					}
 
@@ -851,11 +856,20 @@
 			jsio('from base import *');
 			GLOBAL['logger'] = logging.get('jsiocore');
 		};
+
+		jsio.eval = function (src, path) {
+			path = ENV.getCwd() || '/';
+			var moduleDef = new ModuleDef(path);
+			moduleDef.src = src;
+			applyPreprocessors(path, moduleDef, ["import", "cls"], {});
+			execModuleDef(ENV.global, moduleDef);
+		};
 		
 		jsio.clone = util.bind(null, init, jsio);
 
 		return jsio;
 	}
+
 	var J = init(null, {});
 	if (typeof exports != 'undefined') {
 		module.exports = J;
