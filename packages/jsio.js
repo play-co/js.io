@@ -47,7 +47,7 @@
 		var ENV;
 	
 		// Checks if the last character in a string is `/`.
-		var rexpEndSlash = /\/$/;
+		var rexpEndSlash = /\/|\\$/;
 
 		function getModuleDef (path) {
 			path += '.js';
@@ -110,11 +110,11 @@
 					var len = relativeTo.length;
 					if (path.substring(0, len) == relativeTo) {
 						/* Note: we're casting a boolean to an int by adding len to it */
-						return path.slice((path.charAt(len) == '/') + len);
+						return path.slice((path.charAt(len) == ENV.pathSep) + len);
 					}
 				
-					var sA = util.removeEndSlash(path).split('/'),
-						sB = util.removeEndSlash(relativeTo).split('/'),
+					var sA = util.removeEndSlash(path).split(ENV.pathSep),
+						sB = util.removeEndSlash(relativeTo).split(ENV.pathSep),
 						i = 0;
 				
 					/* Count how many segments match. */
@@ -122,7 +122,7 @@
 				
 					if (i) {
 						/* If at least some segments matched, remove them.  The result is our new path. */
-						path = sA.slice(i).join('/');
+						path = sA.slice(i).join(ENV.pathSep);
 					
 						/* Prepend `../` for each segment remaining in `relativeTo`. */
 						for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
@@ -295,6 +295,7 @@
 			this.name = 'node';
 			this.global = GLOBAL;
 			this.getCwd = process.cwd;
+			this.pathSep = path.sep;
 
 			this.log = function() {
 				var msg;
@@ -314,9 +315,7 @@
 			}
 			
 			this.getPath = function() {
-				var segments = __filename.split('/');
-				segments.pop();
-				return util.makeRelativePath(segments.join('/') || '.', this.getCwd());
+				return path.relative(this.getCwd(), path.dirname(__filename) || '.');
 			}
 			
 			if (process.compile) {
@@ -334,7 +333,7 @@
 			}
 			
 			this.fetch = function (p) {
-				if (p.charAt(0) != '/') { p = util.buildPath(this.getCwd(), p); }
+				p = path.resolve(this.getCwd(), p);
 
 				try {
 					var dirname = path.dirname(p);
@@ -369,6 +368,8 @@
 			
 			this.name = 'browser';
 			this.global = window;
+			this.pathSep = "/";
+
 			if (!this.global.jsio) { this.global.jsio = jsio; }
 		
 			if (window.console && console.log) {
