@@ -39,8 +39,26 @@ exports.sign = function (num) {
 };
 
 /**
- * Rounding a value with the given precision, given the provided rounding
- * method.
+ * Rounding a value with the given precision, given the provided rounding method.
+ * NOTE: Number.toFixed returns a string, I'm not sure this is desired.
+ 
+ ### util.round (n [, precision, method])
+ 1. `n {number} value`
+ 2. `precision {number} = null` ---Optional.
+ 3. `method {number}` ---Optional enum from `util.round`.
+ 4. Return `{number}`
+ 
+ Round a number to a given precision, or by a given method.
+ 
+ The precision method can be one of the following:
+ 
+   * `util.round.ROUND_HALF_UP` ---Round 0.5 to 1.
+   * `util.round.ROUND_HALF_AWAY_FROM_ZERO`
+   * `util.round.ROUND_HALF_TO_EVEN` ---Round to the nearest even number.
+   * `util.round.ROUND_HALF_TO_ODD` ---Round to the nearest odd number.
+   * `util.round.ROUND_HALF_STOCHASTIC` ---Round at random.
+   * `util.round.ROUND_HALF_ALTERNATE` ---Alternate rounding up/down with sequential uses of this function.
+ *
  */
 
 var round = exports.round = function(a, precision, method) {
@@ -51,29 +69,28 @@ var round = exports.round = function(a, precision, method) {
 	if(!precision) {
 		if (method == round.ROUND_HALF_UP) { Math.round(a); }
 	
-		//FIXME integer is a reserved word XXX	
-		var integer = a | 0,
-			frac = a - integer 
-			half = frac == 0.5 || frac == -0.5;
+		var i = a | 0,
+				frac = a - i,
+				half = frac == 0.5 || frac == -0.5;
 		if (!half) { return Math.round(a); }
 		
 		var sign = a < 0 ? -1 : 1;
 		switch(method) {
 			case round.ROUND_HALF_TO_EVEN:
-				return integer % 2 ? integer + sign : integer 
+				return i % 2 ? i + sign : i;
 			case round.ROUND_HALF_TO_ODD:
-				return integer % 2 ? integer : integer + sign;
+				return i % 2 ? i : i + sign;
 			case round.ROUND_HALF_STOCHASTIC:
-				return Math.random() < 0.5 ? integer + sign : integer 
+				return Math.random() < 0.5 ? i + sign : i;
 			case round.ROUND_HALF_ALTERNATE:
-				return (round.alt = !round.alt) ? integer + sign : integer 
+				return (round.alt = !round.alt) ? i + sign : i;
 		}
 	}
 	
-	var integer = a | 0,
-		frac = a - integer 
-		p = Math.pow(10, precision);
-	return (integer + round(frac * p, 0, method) / p).toFixed(precision);
+	var i = a | 0,
+			frac = a - i,
+			p = Math.pow(10, precision);
+	return (i + round(frac * p, 0, method) / p).toFixed(precision);
 }
 
 /**

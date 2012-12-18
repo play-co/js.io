@@ -124,15 +124,32 @@ var Point = exports = Class(function() {
 	
 });
 
+/*
+ */
 Point.getPolarR = function(x, y) { 
 	throw "notImplemented";
 }
 
+/*
+	### Class Method: Point.getPolarTheta (x, y)
+	1. `x {number}`
+	2. `y {number}`
+	3. Return: `{number}`
+*/
 Point.getPolarTheta = function(x, y) { 
 	var val = Math.atan2(y,x) + (Math.PI * 2); 
 	return val > Math.PI * 2 ? val % (Math.PI * 2) : val;
 }
 
+/*
+	### Class Method: Point.add (a, b, c, d)
+	### Class Method: Point.translate (a, b, c, d)
+	1. `a {number}`
+	2. `b {number}`
+	3. `c {number}`
+	4. `d {number}`
+	5. Return: `{Point}`
+ */
 Point.add = Point.translate = function(a, b, c, d) {
 	switch(arguments.length) {
 		case 2: return new Point(a).add(b);
@@ -141,6 +158,14 @@ Point.add = Point.translate = function(a, b, c, d) {
 	}
 }
 
+/*
+	### Class Method: Point.subtract (a, b, c, d)
+	1. `a {number}`
+	2. `b {number}`
+	3. `c {number}`
+	4. `d {number}`
+	5. Return: `{Point}`
+ */
 Point.subtract = function(a, b, c, d) {
 	switch(arguments.length) {
 		case 2: return new Point(a).subtract(b);
@@ -149,6 +174,13 @@ Point.subtract = function(a, b, c, d) {
 	}
 }
 
+/*
+	### Class Method: Point.scale (a, b, c) 
+	1. `a {number}`
+	2. `b {number}`
+	3. `c {number}`
+	4. Return: `{Point}`
+ */
 Point.scale = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: return new Point(a).scale(b);
@@ -156,6 +188,13 @@ Point.scale = function(a, b, c) {
 	}
 }
 
+/*
+	### Class Method: Point.setMagnitude (a, b, c)
+	1. `a {number}`
+	2. `b {number}`
+	3. `c {number}`
+	4. Return: `{Point}`
+*/
 Point.setMagnitude = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: return new Point(a).setMagnitude(c);
@@ -163,6 +202,13 @@ Point.setMagnitude = function(a, b, c) {
 	}
 }
 
+/*
+	### Class Method: Point.addMagnitude (a, b, c)
+	1. `a {number}`
+	2. `b {number}`
+	3. `c {number}`
+	4. Return: `{Point}`
+ */
 Point.addMagnitude = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: pt = new Point(a); break;
@@ -172,8 +218,21 @@ Point.addMagnitude = function(a, b, c) {
 	return pt.addMagnitude(b);
 }
 
+/*
+	### Class Method: Point.getMagnitude (a, b)
+	1. `a {number}`
+	2. `b {number}`
+	3. Return: `{Point}`
+ */
 Point.getMagnitude = function(a, b) { return new Point(a, b).getMagnitude(); }
 
+/*
+	### Class Method: Point.rotate (a, b, c)
+	1. `a {number}`
+	2. `b {number}`
+	3. `c {number}`
+	4. Return: `{Point}`
+ */
 Point.rotate = function(a, b, c) {
 	switch(arguments.length) {
 		case 2: return new Point(a).rotate(b);
