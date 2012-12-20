@@ -5,6 +5,8 @@ exports = Class(function() {
 	this._pending = null;
 
 	this.init = function() { this._run = []; };
+	
+	/* fired is @deprecated in favor of hasFired*/
 	this.hasFired = this.fired = function() { return this._fired; } ;
 
 	// preserve pending callbacks, but clear fired status
