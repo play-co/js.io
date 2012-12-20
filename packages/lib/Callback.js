@@ -5,7 +5,7 @@ exports = Class(function() {
 	this._pending = null;
 
 	this.init = function() { this._run = []; };
-	this.fired = function() { return this._fired; } ;
+	this.hasFired = this.fired = function() { return this._fired; } ;
 
 	// preserve pending callbacks, but clear fired status
 	this.reset = function() { this._args = []; this._fired = false; };
