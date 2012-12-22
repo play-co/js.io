@@ -48,7 +48,6 @@ exports.Base64CodecError = Class(Error, function(supr) {
 	this.name = 'Base64CodecError';
 	
 	this.init = function(message) {
-		supr(this, 'init', arguments);
 		this.message = message;
 	}
 });
