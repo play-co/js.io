@@ -185,7 +185,7 @@ exports = Class(RTJPProtocol, function(supr) {
 					err = new Error(this, id, msg, args.details, requestId);
 				
 				if (!req) {
-					return this.errorReceived(err);
+					return this.errorReceived && this.errorReceived(err);
 				} else {
 					delete this._requests[requestId];
 					req._onError.fire(err);
