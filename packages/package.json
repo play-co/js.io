@@ -1,6 +1,6 @@
 {
   "name"          : "js.io"
-, "version"       : "3.2.1"
+, "version"       : "3.3.0"
 , "description"   : "Networking library for realtime browser communication"
 , "homepage"      : "https://github.com/mcarter/js.io"
 , "keywords"      : ["realtime", "networking"]

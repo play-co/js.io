@@ -10,7 +10,6 @@ var Transport = Class(net.interfaces.Transport, function() {
 	this.makeConnection = function(protocol) {
 		this._socket.addListener("data", bind(protocol, 'dataReceived'));
 		this._socket.addListener("close", bind(protocol, 'connectionLost')); // TODO: map error codes
-		this._socket.addListener("end", this._socket.close);
 	}
 
 	this.write = function(data) {

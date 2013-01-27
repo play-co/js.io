@@ -47,7 +47,7 @@
 		var ENV;
 	
 		// Checks if the last character in a string is `/`.
-		var rexpEndSlash = /\/$/;
+		var rexpEndSlash = /\/|\\$/;
 
 		function getModuleDef (path) {
 			path += '.js';
@@ -57,6 +57,7 @@
 		// Creates an object containing metadata about a module.
 		function ModuleDef (path) {
 			this.path = path;
+			this.friendlyPath = path;
 			util.splitPath(path, this);
 		};
 
@@ -109,11 +110,11 @@
 					var len = relativeTo.length;
 					if (path.substring(0, len) == relativeTo) {
 						/* Note: we're casting a boolean to an int by adding len to it */
-						return path.slice((path.charAt(len) == '/') + len);
+						return path.slice((path.charAt(len) == ENV.pathSep) + len);
 					}
 				
-					var sA = util.removeEndSlash(path).split('/'),
-						sB = util.removeEndSlash(relativeTo).split('/'),
+					var sA = util.removeEndSlash(path).split(ENV.pathSep),
+						sB = util.removeEndSlash(relativeTo).split(ENV.pathSep),
 						i = 0;
 				
 					/* Count how many segments match. */
@@ -121,7 +122,7 @@
 				
 					if (i) {
 						/* If at least some segments matched, remove them.  The result is our new path. */
-						path = sA.slice(i).join('/');
+						path = sA.slice(i).join(ENV.pathSep);
 					
 						/* Prepend `../` for each segment remaining in `relativeTo`. */
 						for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
@@ -294,6 +295,7 @@
 			this.name = 'node';
 			this.global = GLOBAL;
 			this.getCwd = process.cwd;
+			this.pathSep = path.sep;
 
 			this.log = function() {
 				var msg;
@@ -313,9 +315,7 @@
 			}
 			
 			this.getPath = function() {
-				var segments = __filename.split('/');
-				segments.pop();
-				return util.makeRelativePath(segments.join('/') || '.', this.getCwd());
+				return path.relative(this.getCwd(), path.dirname(__filename) || '.');
 			}
 			
 			if (process.compile) {
@@ -333,7 +333,7 @@
 			}
 			
 			this.fetch = function (p) {
-				if (p.charAt(0) != '/') { p = util.buildPath(this.getCwd(), p); }
+				p = path.resolve(this.getCwd(), p);
 
 				try {
 					var dirname = path.dirname(p);
@@ -368,6 +368,8 @@
 			
 			this.name = 'browser';
 			this.global = window;
+			this.pathSep = "/";
+
 			if (!this.global.jsio) { this.global.jsio = jsio; }
 		
 			if (window.console && console.log) {
@@ -574,7 +576,11 @@
 		function applyPreprocessors(path, moduleDef, names, opts) {
 			for (var i = 0, len = names.length; i < len; ++i) {
 				p = getPreprocessor(names[i]);
-				if (p) {
+
+				// if we have a recursive import and p isn't a function, just
+				// skip it (handles the case where a preprocessor imports
+				// other modules).
+				if (p && typeof p == 'function') {
 					p(path, moduleDef, opts);
 				}
 			}
@@ -592,7 +598,7 @@
 			var src = moduleDef.src;
 			delete moduleDef.src;
 
-			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\/.]/g, '_') + "(){" + src + "\n}}})";
+			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\:\\\/.]/g, '_') + "(){" + src + "\n}}})";
 			var fn = ENV.eval(code, moduleDef.path, src);
 			fn = fn(context);
 			fn.call(context.exports);
@@ -704,8 +710,9 @@
 							'\nError loading module:\n',
 							'\t[[', request, ']]\n',
 							'\trequested by:', fromDir + fromFile, '\n',
-							'\tcurrent directory:', jsio.__env.getCwd(),
-							'\n\t' + err + '\n');
+							'\tcurrent directory:', jsio.__env.getCwd(), '\n',
+							'\t' + err, '\n',
+							'\t' + err.stack);
 						err.jsioLogged = true;
 					}
 
@@ -850,11 +857,20 @@
 			jsio('from base import *');
 			GLOBAL['logger'] = logging.get('jsiocore');
 		};
+
+		jsio.eval = function (src, path) {
+			path = ENV.getCwd() || '/';
+			var moduleDef = new ModuleDef(path);
+			moduleDef.src = src;
+			applyPreprocessors(path, moduleDef, ["import", "cls"], {});
+			execModuleDef(ENV.global, moduleDef);
+		};
 		
 		jsio.clone = util.bind(null, init, jsio);
 
 		return jsio;
 	}
+
 	var J = init(null, {});
 	if (typeof exports != 'undefined') {
 		module.exports = J;

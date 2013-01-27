@@ -77,16 +77,16 @@ exports.Listener = Class(function() {
 	}
 	
 	this.onConnect = function(transport) {
-//		try {
+		//try {
 			var p = this._server.buildProtocol();
 			p.transport = transport;
 			p.server = this._server;
 			transport.protocol = p;
 			transport.makeConnection(p);
 			p._connectionMade();
-//		} catch(e) {
-//			logger.error(e);
-//		}
+		//} catch(e) {
+		//	logger.error(e);
+		//}
 	}
 	
 	this.listen = function() { throw new Error('Abstract class'); }
