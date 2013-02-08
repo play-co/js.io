@@ -598,7 +598,7 @@
 			var src = moduleDef.src;
 			delete moduleDef.src;
 
-			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\:\\\/.]/g, '_') + "(){" + src + "\n}}})";
+			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\:\\\/.-]/g, '_') + "(){" + src + "\n}}})";
 			var fn = ENV.eval(code, moduleDef.path, src);
 			fn = fn(context);
 			fn.call(context.exports);
