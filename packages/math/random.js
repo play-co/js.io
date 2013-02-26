@@ -26,7 +26,7 @@ var RNG = Class(function() {
 		}
 
 		// XOR Shift
-		if (this.x !== 234567891) {
+		if (seed !== 234567891) {
 			this.x = seed ^ 234567891;
 		}
 
