@@ -1,5 +1,5 @@
-jsio('import net.interfaces');
-jsio('from .csp.server import createServer');
+import net.interfaces;
+import .csp.server;
 
 var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(socket) {
@@ -27,20 +27,28 @@ var Transport = Class(net.interfaces.Transport, function() {
  * @extends net.interfaces.Listener
  */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
-	this.listen = function() {
-		var s = createServer(bind(this, function(socket) {
-			logger.info("Incoming connection");
-			socket.setEncoding("utf8");
-			socket.addListener("connect", bind(this, function() {
-				this.onConnect(new Transport(socket));
-			}));
-		}));
+	this.listen = function () {
+		var s = csp.server.createServer(bind(this, '_onConnect'));
 		this._cspServer = s;
 		var listenString = (this._opts['interface'] || "" ) + ":" + this._opts.port;
+
 		// TODO: Show class name
 		if (!this._opts.skipListen) {
 			logger.info("Listening csp@" + listenString);
 			s.listen(this._opts.port, this._opts['interface'] || "");
 		}
+	}
+
+	this._onConnect = function (socket) {
+		logger.info("Incoming connection");
+		socket.setEncoding("utf8");
+		socket.addListener("connect", bind(this, function() {
+			this.onConnect(new Transport(socket));
+		}));
+	}
+
+	// for express middleware
+	this.createMiddleware = function () {
+		return bind(this._cspServer, '_handleRequest');
 	}
 });
