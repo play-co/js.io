@@ -1,12 +1,12 @@
 
 // var F = exports = Class
 // exports = Class
-var classExport = /^(.*?)exports[ \t]*=[ \t]*Class\(/gm;
+var classExport = /^(.*?)exports\s*=\s*Class\s*\(/gm;
 
 // var F = Class
 // exports.F = Class
 // var F = exports.F = Class
-var class2Export = /^(.*?[ \t]+)?([a-zA-Z0-9\.$]+)[ \t]*=[ \t]*Class\(/gm;
+var class2Export = /^(.*?[ \t]+)?([a-zA-Z0-9\.$]+)\s*=\s*Class\s*\(/gm;
 
 function replacer(base, prefix, name) {
 	return name + '=__class__;' + (prefix || '') + name + '=' + name + '(function ' + name.replace(/[\.]/g, '_') + '(){return this.init&&this.init.apply(this,arguments)},';
