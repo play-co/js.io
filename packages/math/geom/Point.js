@@ -239,3 +239,12 @@ Point.rotate = function(a, b, c) {
 		case 3: return new Point(a, b).rotate(c);
 	}
 }
+
+/**
+ * Treat two points as vectors and project a onto b
+ *  (a dot unit(b)) * unit(b)
+ */
+Point.project = function (a, b) {
+	var unitB = new Point(b).normalize();
+	return unitB.scale(unitB.x * a.x + unitB.y * a.y);
+}
