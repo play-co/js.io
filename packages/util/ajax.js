@@ -67,6 +67,9 @@ var Request = Class(function() {
 		
 		try {
 			this.data = (this.method != 'GET' ? (isObject ? JSON.stringify(opts.data) : opts.data) : null);
+			if (isObject && !this.headers['Content-Type']) {
+				this.headers['Content-Type'] = 'application/json';
+			}
 		} catch(e) {
 			cb && cb({invalidData: true}, null, '');
 			return;
