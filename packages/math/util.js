@@ -39,6 +39,13 @@ exports.sign = function (num) {
 };
 
 /**
+ * An actual modulo operator.
+ */
+exports.mod = function(m, n) {
+    return ((m % n) + n) % n;
+};
+
+/**
  * Rounding a value with the given precision, given the provided rounding method.
  * NOTE: Number.toFixed returns a string, I'm not sure this is desired.
  
