@@ -62,7 +62,15 @@ var Request = Class(function() {
 		var isObject = opts.data && typeof opts.data == 'object';
 		
 		if (this.method == 'GET' && opts.data) {
-			this.url = new URI(this.url).addQuery(isObject ? opts.data : URI.parseQuery(opts.data)).toString();
+			this.url = new URI(this.url)
+							.addQuery(isObject ? opts.data : URI.parseQuery(opts.data))
+							.toString();
+		}
+
+		if (opts.query) {
+			this.url = new URI(this.url)
+							.addQuery(typeof opts.query == 'object' ? opts.query : URI.parseQuery(opts.query))
+							.toString();
 		}
 		
 		try {
