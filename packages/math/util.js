@@ -15,7 +15,7 @@ exports.interpolate = function(a, b, x) { return a * (1 - x) + b * x; }
  * given.
  */
 
-exports.random = function(a, b, rand) { return a + ((rand || Math.random)() * (b - a) | 0); }
+exports.random = function(a, b, rand) { return a + ((rand || Math.random()) * (b - a) | 0); }
 
 /**
  * Return a random integer between a and b, inclusive. Optionally, a random seed
