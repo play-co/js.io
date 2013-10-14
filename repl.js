@@ -59,7 +59,7 @@ var startRepl = function() {
 
 
 if (process.argv.length > 2) {
-	var fs = require('fs');
+	var fs = require('graceful-fs');
 	var src = fs.readFileSync(process.argv[2]);
 	preprocessEval(src, null, process.argv[2], function(error, result) {
 		if (error) {

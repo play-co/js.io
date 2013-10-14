@@ -1,7 +1,7 @@
 import util.optparse;
 import .optsDef;
 
-var fs = require('fs');
+var fs = require('graceful-fs');
 var path = require('path');
 try {
 	var crypto = require('crypto');
@@ -62,7 +62,7 @@ exports.onError = function(opts, msg) {
 exports.onFinish = function(opts, src) {
 	if (opts.outputFile) {
 		logger.info('Writing output to', opts.outputFile);
-		var fs = require('fs');
+		var fs = require('graceful-fs');
 		fs.writeFileSync(opts.outputFile, src);
 	} else {
 		logger.info('Writing output to stdout');

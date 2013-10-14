@@ -2,7 +2,7 @@
 
 require('./packages/jsio');
 var path = require('path');
-var fs = require('fs');
+var fs = require('graceful-fs');
 var url = require('url');
 var spawn = require('child_process').spawn;
 
