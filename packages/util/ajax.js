@@ -62,11 +62,22 @@ var Request = Class(function() {
 		var isObject = opts.data && typeof opts.data == 'object';
 		
 		if (this.method == 'GET' && opts.data) {
-			this.url = new URI(this.url).addQuery(isObject ? opts.data : URI.parseQuery(opts.data)).toString();
+			this.url = new URI(this.url)
+							.addQuery(isObject ? opts.data : URI.parseQuery(opts.data))
+							.toString();
+		}
+
+		if (opts.query) {
+			this.url = new URI(this.url)
+							.addQuery(typeof opts.query == 'object' ? opts.query : URI.parseQuery(opts.query))
+							.toString();
 		}
 		
 		try {
 			this.data = (this.method != 'GET' ? (isObject ? JSON.stringify(opts.data) : opts.data) : null);
+			if (isObject && !this.headers['Content-Type']) {
+				this.headers['Content-Type'] = 'application/json';
+			}
 		} catch(e) {
 			cb && cb({invalidData: true}, null, '');
 			return;
