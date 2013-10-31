@@ -44,7 +44,7 @@ function addArg(result, optsDef, argv, i) {
 		srcName = argv[i],
 		itemSchema = optsDef[argv[i]],
 		len = argv.length,
-		itemType = itemSchema.type.toLowerCase();
+		itemType = itemSchema && itemSchema.type && itemSchema.type.toLowerCase();
 	
 	++i;
 	switch(itemType) {
