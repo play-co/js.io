@@ -17,7 +17,7 @@ var Transport = Class(net.interfaces.Transport, function() {
 	}
 
 	this.loseConnection = function() {
-		this._socket.forceClose();
+		this._socket.end();
 	}
 });
 
