@@ -7,7 +7,7 @@ import std.uuid;
  */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
 	var ID = 0;
-	
+
 	this.init = function() {
 		supr(this, 'init', arguments);
 		this._clients = {};
@@ -29,23 +29,23 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			className: 'clientButton'
 		});
 		$.onEvent(button, 'click', bind(this, 'openWindow', url || this._opts.clientUrl));
-		return button; 
+		return button;
 	}
-	
+
 	var uniqueId = 1;
 	this.openWindow = function (url) {
 		var options = { menubar: 'no', location: 'no', toolbar: 'no',
 			width: 550, height: 350, // left: 200, top: 200,
 			scrollbars: 'yes', status: 'yes', resizable: 'yes' };
-		
+
 		var arr = [];
 		for (var i in options) { arr.push(i + '=' + options[i]) }
 		var win = window.open(url, 'W' + uniqueId++, arr.join(','));
 		win.focus();
 	}
-	
+
 	this._onMessage = function (evt) {
-		if (this._port != evt.data.substring(0, this._port.length)) { return; }
+		if (typeof evt.data != 'string' || this._port != evt.data.substring(0, this._port.length)) { return; }
 		var data = evt.data.substring(this._port.length);
 
 		try {
@@ -87,9 +87,9 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		this._uid = std.uuid.uuid();
 		this._win.postMessage(this._port + JSON.stringify({type: 'open', uid: this._uid}), '*');
 	}
-	
+
 	this._onMessage = function(evt) {
-		if (this._port != evt.data.substring(0, this._port.length)) { return; }
+		if (typeof evt.data != 'string' || this._port != evt.data.substring(0, this._port.length)) { return; }
 		var data = evt.data.substring(this._port.length);
 
 		// At the moment, we include the uid in the data.  If we have many clients
@@ -128,23 +128,23 @@ exports.Transport = Class(net.interfaces.Transport, function() {
 		this._port = port;
 		this._uid = uid; // unique identifier for clients
 	}
-	
+
 	this.makeConnection = function (protocol) {
 		this._protocol = protocol;
 	}
-	
+
 	this.write = function (data, encoding) {
 		if (this.encoding == 'utf8') {
 			this._win.postMessage(this._port + JSON.stringify({type: 'data', uid: this._uid, payload: utf8.encode(data)}), '*');
 		} else {
 			this._win.postMessage(this._port + JSON.stringify({type: 'data', uid: this._uid, payload: data}), '*');
-		} 
+		}
 	}
-	
+
 	this.loseConnection = function (protocol) {
 		this._win.postMessage(this._port + JSON.stringify({type: 'close', uid: this._uid, code: 301}), '*');
 	}
-	
+
 	this.onData = function () { this._protocol.dataReceived.apply(this._protocol, arguments); }
 	this.onClose = function () { this._protocol._connectionLost.apply(this._protocol, arguments); }
 });
