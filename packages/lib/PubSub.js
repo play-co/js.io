@@ -70,8 +70,8 @@ exports = Class(function () {
 						.apply(GLOBAL, arguments);
 				}
 			});
-			
-		if (args.length === 3) {
+
+		if (args.length >= 3) {
 			cb._ctx = ctx;
 			cb._method = method;
 		}
