@@ -161,36 +161,46 @@
 					/* Don't forget to prepend any protocol we might have removed earlier. */
 					return protocol ? protocol[1] + path : path;
 				},
-			
+
 				resolveRelativeModule: function (modulePath, directory) {
 					var result = [],
 						parts = modulePath.split('.'),
 						len = parts.length,
 						relative = (len > 1 && !parts[0]),
 						i = relative ? 0 : -1;
-				
+
 					while(++i < len) { result.push(parts[i] ? parts[i] : '..'); }
 					return util.buildPath(relative ? directory : '', result.join('/'));
 				},
 				resolveModulePath: function (modulePath, directory) {
 					// resolve relative paths
 					if (modulePath.charAt(0) == '.') {
-						return [getModuleDef(util.resolveRelativeModule(modulePath, directory))];
+						return [
+							getModuleDef(util.resolveRelativeModule(modulePath + '.index', directory)),
+							getModuleDef(util.resolveRelativeModule(modulePath, directory))
+						];
 					}
-				
+
 					// resolve absolute paths with respect to jsio packages/
 					var pathSegments = modulePath.split('.');
 					var baseMod = pathSegments[0];
 					var pathString = pathSegments.join('/');
-					
+
 					if (jsioPath.cache.hasOwnProperty(baseMod)) {
-						return [getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString))];
+						return [
+							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString + '/index')),
+							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString))
+						];
 					}
-				
+
 					var defs = [];
 					var paths = jsioPath.get();
 					var len = paths.length;
 					for (var i = 0; i < len; ++i) {
+						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString + '/index'));
+						moduleDef.setBase(baseMod, paths[i]);
+						defs.push(moduleDef);
+
 						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString));
 						moduleDef.setBase(baseMod, paths[i]);
 						defs.push(moduleDef);
