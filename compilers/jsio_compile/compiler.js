@@ -214,7 +214,8 @@ exports.run = function(args, opts) {
 		defines: opts.defines,
 		autoDetectPaths: true,
 		environment: opts.environment,
-		dynamicImports: opts.dynamicImports
+		dynamicImports: opts.dynamicImports,
+		rawOpts: opts
 	});
 	
 	compiler.compile('import base', opts);
