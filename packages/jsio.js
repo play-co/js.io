@@ -176,8 +176,8 @@
 					// resolve relative paths
 					if (modulePath.charAt(0) == '.') {
 						return [
-							getModuleDef(util.resolveRelativeModule(modulePath + '.index', directory)),
-							getModuleDef(util.resolveRelativeModule(modulePath, directory))
+							getModuleDef(util.resolveRelativeModule(modulePath, directory)),
+							getModuleDef(util.resolveRelativeModule(modulePath + '.index', directory))
 						];
 					}
 
@@ -188,8 +188,8 @@
 
 					if (jsioPath.cache.hasOwnProperty(baseMod)) {
 						return [
-							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString + '/index')),
-							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString))
+							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString)),
+							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString + '/index'))
 						];
 					}
 
@@ -197,11 +197,11 @@
 					var paths = jsioPath.get();
 					var len = paths.length;
 					for (var i = 0; i < len; ++i) {
-						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString + '/index'));
+						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString));
 						moduleDef.setBase(baseMod, paths[i]);
 						defs.push(moduleDef);
 
-						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString));
+						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString + '/index'));
 						moduleDef.setBase(baseMod, paths[i]);
 						defs.push(moduleDef);
 					}
