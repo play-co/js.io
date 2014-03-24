@@ -735,31 +735,38 @@
 
 				// eval any packages that we don't know about already
 				if (!(path in modules)) {
-					var newContext = makeContext(opts.context, modulePath, moduleDef, item.dontAddBase);
 
-					modules[path] = moduleDef;
+				}
 
-					moduleDef.exports = newContext.exports;
-					if (item.dontUseExports) {
-						var src = [';(function(){'], k = 1;
-						for (var j in item['import']) {
-							newContext.exports[j] = undefined;
-							src[k++] = 'if(typeof '+j+'!="undefined"&&exports.'+j+'==undefined)exports.'+j+'='+j+';';
+				var getModule = util.bind(this, function getModule(path, modulePath, moduleDef, item) {
+					if ((!modules[path] || !modules[path].exports) && moduleDef) {
+						var newContext = makeContext(opts.context, modulePath, moduleDef, item.dontAddBase);
+						modules[path] = moduleDef;
+
+						moduleDef.exports = newContext.exports;
+						if (item.dontUseExports) {
+							var src = [';(function(){'], k = 1;
+							for (var j in item['import']) {
+								newContext.exports[j] = undefined;
+								src[k++] = 'if(typeof '+j+'!="undefined"&&exports.'+j+'==undefined)exports.'+j+'='+j+';';
+							}
+							src[k] = '})();';
+							moduleDef.src += src.join('');
 						}
-						src[k] = '})();';
-						moduleDef.src += src.join('');
+
+						execModuleDef(newContext, moduleDef);
+						moduleDef.exports = newContext.exports;
 					}
 
-					execModuleDef(newContext, moduleDef);
-					moduleDef.exports = newContext.exports;
-				}
+					return modules[path].exports;
+				}, path, modulePath, moduleDef, item);
 
 				importStack.pop();
 
-				var module = modules[path].exports;
+				// var module = modules[path].exports;
 
 				// return the module if we're only importing one module
-				if (numImports == 1) { retVal = module; }
+				if (!opts.skipReturn && numImports == 1) { console.log("RETURNING FOR", modulePath); retVal = getModule(); }
 
 				if (!opts.dontExport) {
 					// add the module to the current context
@@ -778,13 +785,15 @@
 							c = c[segment];
 						}
 
-						c[segments[kMax]] = module;
+						c.__defineGetter__(segments[kMax], getModule);
 
 						// there can be multiple module imports with this syntax (import foo, bar)
 						if (numImports > 1) {
-							retVal[as] = module;
+							// retVal[as] = module;
 						}
 					} else if (item['import']) {
+						var module = getModule();
+
 						// there can only be one module import with this syntax
 						// (from foo import bar), so retVal will already be set here
 						if (item['import']['*']) {
