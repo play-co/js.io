@@ -1,17 +1,17 @@
 // Copyright (c) 2010
 // Michael Carter (cartermichael@gmail.com)
 // Martin Hunt (mghunt@gmail.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,24 +28,24 @@
 	function init(cloneFrom) {
 		// We expect this code to be minified before production use, so we may
 		// write code slightly more verbosely than we otherwise would.
-	
+
 		// Should we parse syntax errors in the browser?
 		var DEBUG = true;
-	
+
 		// Store a reference to the slice function for converting objects of
 		// type arguments to type array.
 		var SLICE = Array.prototype.slice;
-	
+
 		// js.io supports multiple JavaScript environments such as node.js and
-		// most web browsers (IE, Firefox, WebKit).  The ENV object wraps 
+		// most web browsers (IE, Firefox, WebKit).  The ENV object wraps
 		// any utility functions that contain environment-specific code (e.g.
 		// reading a file using node's `fs` library or a browser's
 		// `XMLHttpRequest`).  Running js.io in other JavaScript environments
-		// is as easy as implementing an environment object that conforms to 
-		// the abstract interface for an environment (provided below) and 
+		// is as easy as implementing an environment object that conforms to
+		// the abstract interface for an environment (provided below) and
 		// calling `jsio.setEnv()`.
 		var ENV;
-	
+
 		// Checks if the last character in a string is `/`.
 		var rexpEndSlash = /\/|\\$/;
 
@@ -53,7 +53,7 @@
 			path += '.js';
 			return jsio.__modules[path] || new ModuleDef(path);
 		}
-	
+
 		// Creates an object containing metadata about a module.
 		function ModuleDef (path) {
 			this.path = path;
@@ -65,7 +65,7 @@
 			this.baseMod = baseMod;
 			this.basePath = basePath;
 		};
-	
+
 		// Utility functions
 		var util = {
 				// `util.bind` returns a function that, when called, will execute
@@ -80,24 +80,24 @@
 						return method.apply(context, args.concat(SLICE.call(arguments, 0)));
 					};
 				},
-			
+
 				// `util.addEndSlash` accepts a string.  That string is returned with a `/`
 				// appended if the string did not already end in a `/`.
 				addEndSlash: function(str) {
 					return rexpEndSlash.test(str) ? str : str + '/';
 				},
-			
+
 				// `util.removeEndSlash` accepts a string.  It removes a trailing `/` if
 				// one is found.
 				removeEndSlash: function(str) {
 					return str.replace(rexpEndSlash, '');
 				},
-			
+
 				// `util.makeRelativePath` accepts two paths (strings) and returns the first path
 				// made relative to the second.  Note: this function needs some work.  It currently
 				// handles the most common use cases, but may fail in unexpected edge cases.
-				// 
-				//  - Simple case: if `path` starts with `relativeTo`, then we can strip `path` 
+				//
+				//  - Simple case: if `path` starts with `relativeTo`, then we can strip `path`
 				// off the `relativeTo` part and we're done.
 				//
 				//         util.makeRelativePath('abc/def/', 'abc') -> 'def'
@@ -112,32 +112,32 @@
 						/* Note: we're casting a boolean to an int by adding len to it */
 						return path.slice((path.charAt(len) == ENV.pathSep) + len);
 					}
-				
+
 					var sA = util.removeEndSlash(path).split(ENV.pathSep),
 						sB = util.removeEndSlash(relativeTo).split(ENV.pathSep),
 						i = 0;
-				
+
 					/* Count how many segments match. */
 					while(sA[i] == sB[i]) { ++i; }
-				
+
 					if (i) {
 						/* If at least some segments matched, remove them.  The result is our new path. */
 						path = sA.slice(i).join(ENV.pathSep);
-					
+
 						/* Prepend `../` for each segment remaining in `relativeTo`. */
 						for (var j = sB.length - i; j > 0; --j) { path = '../' + path; }
 					}
-				
+
 					return path;
 				},
-			
+
 				// `buildPath` accepts an arbitrary number of string arguments to concatenate into a path.
 				//     util.buildPath('a', 'b', 'c/', 'd/') -> 'a/b/c/d/'
 				buildPath: function() {
 					var args = Array.prototype.filter.call(arguments, function (x) { return x; });
 					return util.resolveRelativePath(args.join('/'));
 				},
-			
+
 				// `resolveRelativePath` removes relative path indicators.  For example:
 				//     util.resolveRelativePath('a/../b') -> b
 				resolveRelativePath: function(path) {
@@ -145,10 +145,10 @@
 					   back later) so we don't accidently modify it. */
 					var protocol = path.match(/^(\w+:\/\/)(.*)$/);
 					if (protocol) { path = protocol[2]; }
-				
+
 					/* Remove multiple slashes and trivial dots (`/./ -> /`). */
 					path = path.replace(/\/+/g, '/').replace(/\/\.\//g, '/');
-				
+
 					/* Loop to collapse instances of `../` in the path by matching a previous
 					   path segment.  Essentially, we find substrings of the form `/abc/../`
 					   where abc is not `.` or `..` and replace the substrings with `/`.
@@ -215,7 +215,7 @@
 					return result;
 				}
 			};
-		
+
 		// construct the top-level jsio object
 		var jsio = util.bind(this, importer, null, null, null);
 
@@ -255,11 +255,11 @@
 				value: [],
 				cache: {}
 			};
-		
+
 		jsio.path = jsioPath;
 		jsio.addPath = util.bind(jsioPath, 'add');
 		jsio.addCmd = util.bind(jsio.__cmds, 'push');
-		
+
 		jsio.setEnv = function(envCtor) {
 			if (!envCtor && cloneFrom) {
 				ENV = new cloneFrom.__env.constructor(util);
@@ -278,7 +278,7 @@
 			this.__dir = ENV.getCwd();
 			this.path.set(ENV.getPath());
 		}
-		
+
 		if (cloneFrom) {
 			jsio.setEnv();
 		} else if (typeof process !== 'undefined' && process.version) {
@@ -297,11 +297,11 @@
 			this.log = function(args...) {};
 		}
 		*/
-	
+
 		function ENV_node() {
 			var fs = require('fs');
 			var path = require('path');
-			
+
 			this.name = 'node';
 			this.global = GLOBAL;
 			this.getCwd = process.cwd;
@@ -323,11 +323,11 @@
 				process.stderr.write(msg);
 				return msg;
 			}
-			
+
 			this.getPath = function() {
 				return path.relative(this.getCwd(), path.dirname(__filename) || '.');
 			}
-			
+
 			if (process.compile) {
 				this.eval = process.compile;
 			} else {
@@ -341,7 +341,7 @@
 					}
 				}
 			}
-			
+
 			this.fetch = function (p) {
 				p = path.resolve(this.getCwd(), p);
 
@@ -366,22 +366,22 @@
 					return false;
 				}
 			}
-			
+
 			this.require = require;
 		}
-	
+
 		function ENV_browser() {
 			var XHR = window.XMLHttpRequest || function() { return new ActiveXObject("Msxml2.XMLHTTP"); },
 				cwd = null,
 				path = null,
 				JOIN = Array.prototype.join;
-			
+
 			this.name = 'browser';
 			this.global = window;
 			this.pathSep = "/";
 
 			if (!this.global.jsio) { this.global.jsio = jsio; }
-		
+
 			if (window.console && console.log) {
 				if (!console.log.apply || /Android|iPhone|iPad|iPod/.test(navigator.userAgent)) {
 					this.log = function () {
@@ -406,13 +406,13 @@
 				}
 				return cwd;
 			}
-		
+
 			this.getPath = function() {
 				if(!path) {
 					try {
 						var filename = new RegExp('(.*?)' + jsio.__filename + '(\\?.*)?$'),
 							scripts = document.getElementsByTagName('script');
-					
+
 						for (var i = 0, script; script = scripts[i]; ++i) {
 							var result = script.src.match(filename);
 							if (result) {
@@ -422,12 +422,12 @@
 							}
 						}
 					} catch(e) {}
-				
+
 					if(!path) { path = '.'; }
 				}
 				return path;
 			}
-		
+
 			this.debugPath = function(path) { return path; }
 
 			// IE6 won't return an anonymous function from eval, so use the function constructor instead
@@ -449,7 +449,7 @@
 					throw e;
 				}
 			}
-		
+
 			this.checkSyntax = function(code, path) {
 				try {
 					var syntax = jsio('import util.syntax', {suppressErrors: true, dontExport: true}),
@@ -457,7 +457,7 @@
 					syntax.display(result, path);
 				} catch(e) {}
 			}
-		
+
 			this.fetch = function(path) {
 				var xhr = new XHR();
 				try {
@@ -467,7 +467,7 @@
 					ENV.log('e:', e);
 					return false; // firefox file://
 				}
-			
+
 				if (xhr.status == 404 || // all browsers, http://
 					xhr.status == -1100 || // safari file://
 					// XXX: We have no way to tell in opera if a file exists and is empty, or is 404
@@ -477,34 +477,34 @@
 				{
 					return false;
 				}
-			
+
 				return xhr.responseText;
 			}
 		};
-	
+
 		var preprocessorCheck = /^"use (.*?)"\s*;\s*\n/,
 			preprocessorFunc = /^(.+)\(.+\)$/,
 			failedFetch = {};
-	
+
 		function findModule(possibilities, opts) {
 			var src;
 			for (var i = 0, possible; possible = possibilities[i]; ++i) {
 				var path = possible.path,
 					cachedVersion = srcCache[path];
-				
+
 				if (cachedVersion) {
 					possible.src = cachedVersion.src;
 					possible.pre = true;
 					return possible;
 				}
-			
+
 				/*if (/^\.\//.test(path)) {
-					// remove one path segment for each dot from the cwd 
+					// remove one path segment for each dot from the cwd
 					path = addEndSlash(ENV.getCwd()) + path;
 				}*/
-			
+
 				src = ENV.fetch(path);
-			
+
 				if (src !== false) {
 					possible.src = src;
 					return possible;
@@ -512,10 +512,10 @@
 					failedFetch[path] = true;
 				}
 			}
-		
+
 			return false;
 		}
-	
+
 		// load a module from a file
 		function loadModule (fromDir, fromFile, modulePath, opts) {
 			var possibilities = util.resolveModulePath(modulePath, fromDir);
@@ -527,17 +527,17 @@
 
 				if (path in failedFetch) { possibilities.splice(i--, 1); }
 			}
-		
+
 			if (!possibilities.length) {
 				if (opts.suppressErrors) { return false; }
 				var e = new Error('Module failed to load (again)');
 				e.jsioLogged = true;
 				throw e;
 			}
-		
+
 			var moduleDef = findModule(possibilities, opts),
 				match;
-		
+
 			if (!moduleDef) {
 				if (opts.suppressErrors) { return false; }
 				var paths = [];
@@ -549,10 +549,10 @@
 						+ "\tImport Stack:\n"
 						+ "\t\t" + importStack.join("\n\t\t"));
 			}
-		
+
 			// a (potentially) nicer way to refer to a module -- how it was referenced in code when it was first imported
 			moduleDef.friendlyPath = modulePath;
-			
+
 			// cache the base module's path in the path cache so we don't have to
 			// try out all paths the next time we see the same base module.
 			if (moduleDef.baseMod && !(moduleDef.baseMod in jsioPath.cache)) {
@@ -582,7 +582,7 @@
 
 			return moduleDef;
 		}
-	
+
 		function applyPreprocessors(path, moduleDef, names, opts) {
 			for (var i = 0, len = names.length; i < len; ++i) {
 				p = getPreprocessor(names[i]);
@@ -595,7 +595,7 @@
 				}
 			}
 		}
-		
+
 		function getPreprocessor(name) {
 			var module = jsio.__modules['preprocessors.' + name];
 			return typeof name == 'function'
@@ -603,7 +603,7 @@
 				: (module && module.exports
 					|| jsio('import preprocessors.' + name, {dontExport: true, dontPreprocess: true}));
 		}
-	
+
 		function execModuleDef(context, moduleDef) {
 			var src = moduleDef.src;
 			delete moduleDef.src;
@@ -613,23 +613,23 @@
 			fn = fn(context);
 			fn.call(context.exports);
 		};
-		
+
 		function resolveImportRequest(context, request, opts) {
 			var cmds = jsio.__cmds,
 				imports = [],
 				result = false;
-		
+
 			for (var i = 0, imp; imp = cmds[i]; ++i) {
 				if ((result = imp(context, request, opts, imports))) { break; }
 			}
-		
+
 			if (result !== true) {
 				throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result || 'invalid jsio command: jsio(\'' + request + '\')'));
 			}
-		
+
 			return imports;
 		};
-	
+
 		function makeContext(ctx, modulePath, moduleDef, dontAddBase) {
 			if (!ctx) { ctx = {}; }
 			if (!ctx.exports) { ctx.exports = {}; }
@@ -639,7 +639,7 @@
 				if (!opts) { opts = {}; }
 				opts.dontExport = true;
 				// opts.suppressErrors = true;
-				
+
 				try {
 					var ret = ctx.jsio(request, opts);
 					if (ret === false) {
@@ -653,13 +653,13 @@
 					ENV.log(e);
 				}
 			};
-			
+
 			ctx.module = {id: modulePath, exports: ctx.exports};
 			if (!dontAddBase && modulePath != 'base') {
 				ctx.jsio('from base import *', {dontPreprocess: true});
 				ctx.logging.__create(modulePath, ctx);
 			}
-		
+
 			// TODO: FIX for "trailing ." case
 			ctx.jsio.__jsio = jsio;
 			ctx.jsio.__env = jsio.__env;
@@ -668,22 +668,22 @@
 			ctx.jsio.path = jsioPath;
 			return ctx;
 		};
-		
+
 		var importStack = [];
 		function importer(boundContext, fromDir, fromFile, request, opts) {
 			opts = opts || {};
 			fromDir = fromDir || './';
 			fromFile = fromFile || '<initial file>';
-		
+
 			// importer is bound to a module's (or global) context -- we can override this
 			// by using opts.exportInto
 			var exportInto = opts.exportInto || boundContext || ENV.global;
-		
+
 			// parse the import request(s)
 			var imports = resolveImportRequest(exportInto, request, opts),
 				numImports = imports.length,
 				retVal = numImports > 1 ? {} : null;
-		
+
 			// import each requested item
 			for (var i = 0; i < numImports; ++i) {
 				var item = imports[i];
@@ -692,7 +692,7 @@
 				var path;
 				var moduleDef;
 				var err;
-				
+
 				try {
 					moduleDef = loadModule(fromDir, fromFile, modulePath, opts);
 				} catch(e) {
@@ -728,11 +728,11 @@
 
 					throw err;
 				}
-				
+
 				if (moduleDef) {
 					importStack.push(importStack.length + ' : ' + moduleDef.friendlyPath + ' (' + moduleDef.path + ')');
 				}
-				
+
 				// eval any packages that we don't know about already
 				if (!(path in modules)) {
 					var newContext = makeContext(opts.context, modulePath, moduleDef, item.dontAddBase);
@@ -753,14 +753,14 @@
 					execModuleDef(newContext, moduleDef);
 					moduleDef.exports = newContext.exports;
 				}
-				
+
 				importStack.pop();
-			
+
 				var module = modules[path].exports;
-			
+
 				// return the module if we're only importing one module
 				if (numImports == 1) { retVal = module; }
-			
+
 				if (!opts.dontExport) {
 					// add the module to the current context
 					if (item.as) {
@@ -769,7 +769,7 @@
 							segments = as.split('.'),
 							kMax = segments.length - 1,
 							c = exportInto;
-				
+
 						// build the object in the context
 						for(var k = 0; k < kMax; ++k) {
 							var segment = segments[k];
@@ -777,15 +777,15 @@
 							if (!c[segment]) { c[segment] = {}; }
 							c = c[segment];
 						}
-					
+
 						c[segments[kMax]] = module;
-				
+
 						// there can be multiple module imports with this syntax (import foo, bar)
 						if (numImports > 1) {
 							retVal[as] = module;
 						}
 					} else if (item['import']) {
-						// there can only be one module import with this syntax 
+						// there can only be one module import with this syntax
 						// (from foo import bar), so retVal will already be set here
 						if (item['import']['*']) {
 							for (var k in modules[path].exports) { exportInto[k] = module[k]; }
@@ -795,12 +795,12 @@
 					}
 				}
 			}
-		
+
 			return retVal;
 		}
-	
+
 		// DEFINE SYNTAX FOR JSIO('cmd')
-	
+
 		// from myPackage import myFunc
 		// external myPackage import myFunc
 		jsio.addCmd(function(context, request, opts, imports) {
@@ -812,7 +812,7 @@
 					dontUseExports: match[3] == 'grab' || match[1] == 'external',
 					'import': {}
 				});
-			
+
 				match[4].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
 					imports[0]['import'][item] = as || item;
 				});
@@ -840,18 +840,18 @@
 
 		// CommonJS syntax
 		jsio.addCmd(function(context, request, opts, imports) {
-		
+
 			//		./../b -> ..b
 			// 		../../b -> ...b
 			// 		../b -> ..b
 			// 		./b -> .b
-		
+
 			var match = request.match(/^\s*[\w.0-9$\/\-]+\s*$/);
 			if (match) {
-			
+
 				var req = util.resolveRelativePath(match[0]),
 					isRelative = req.charAt(0) == '.';
-			
+
 				req = req
 					// .replace(/^\//, '') // remove any leading slash
 					.replace(/\.\.\//g, '.') // replace relative path indicators with dots
@@ -862,7 +862,7 @@
 				return true;
 			}
 		});
-		
+
 		jsio.install = function() {
 			jsio('from base import *');
 			GLOBAL['logger'] = logging.get('jsiocore');
@@ -875,7 +875,7 @@
 			applyPreprocessors(path, moduleDef, ["import", "cls"], {});
 			execModuleDef(ENV.global, moduleDef);
 		};
-		
+
 		jsio.clone = util.bind(null, init, jsio);
 
 		return jsio;
