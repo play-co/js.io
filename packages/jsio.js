@@ -766,7 +766,7 @@
 				// var module = modules[path].exports;
 
 				// return the module if we're only importing one module
-				if (!opts.skipReturn && numImports == 1) { console.log("RETURNING FOR", modulePath); retVal = getModule(); }
+				if (!opts.skipReturn && numImports == 1) { retVal = getModule(); }
 
 				if (!opts.dontExport) {
 					// add the module to the current context
