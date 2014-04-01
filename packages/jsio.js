@@ -23,7 +23,13 @@
 // Initialization of js.io occurs in a closure, preventing local variables
 // from entering the global scope.  During execution, the method `jsio` is
 // added to the global scope.
-
+if (this.window) {
+    var evaledFiles = window.evaledFiles = {};
+    var fileStack = window.fileStack = [];
+} else {
+    var evaledFiles = [];
+    var fileStack = [];
+}
 ;(function() {
 	function init(cloneFrom) {
 		// We expect this code to be minified before production use, so we may
@@ -438,6 +444,14 @@
 			// provide an eval with reasonable debugging
 			this.eval = function(code, path, origCode) {
 				try {
+                    var localThen = then = +new Date();
+                    var file = {
+                        path: path,
+                        imports: [],
+                        evalTime: 0
+                    };
+                    evaledFiles[path] = file;
+                    code = 'window.evaledFiles["' + path + '"].parseTime = +new Date() - then;;'+ code; 
 					return rawEval(code, this.debugPath(path));
 				} catch(e) {
 					if(e instanceof SyntaxError) {
@@ -566,7 +580,7 @@
 			if (modulePath != 'base' && (opts.reload || !opts.dontPreprocess && !moduleDef.pre)) {
 				moduleDef.pre = true;
 
-				applyPreprocessors(fromDir, moduleDef, ["import", "cls"], opts);
+				applyPreprocessors(fromDir, moduleDef, ["import", "cls", "logs"], opts);
 
 				// the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
 				// while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
@@ -610,9 +624,30 @@
 
 			var code = "(function(_){with(_){delete _;return function $$" + moduleDef.friendlyPath.replace(/[\:\\\/.-]/g, '_') + "(){" + src + "\n}}})";
 			var fn = ENV.eval(code, moduleDef.path, src);
+            var then = + new Date();
+            if (!evaledFiles[moduleDef.path]) {
+                evaledFiles[moduleDef.path] = {
+                    path: moduleDef.path,
+                    imports: [],
+                    evalTime: 0
+                }
+            }
 			fn = fn(context);
+            
+            fileStack.unshift(evaledFiles[moduleDef.path]);
 			fn.call(context.exports);
-		};
+            var now = + new Date();
+            fileStack.shift();
+            var currentFile = fileStack[0];
+            if (currentFile) {
+                currentFile.imports.push({
+                    path: moduleDef.path,
+                    time: now - then
+                });
+                currentFile.evalTime -= (now - then);
+            }
+            evaledFiles[moduleDef.path].evalTime += now - then;
+		}
 
 		function resolveImportRequest(context, request, opts) {
 			var cmds = jsio.__cmds,

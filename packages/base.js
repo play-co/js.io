@@ -100,6 +100,12 @@ exports.Class = function(name, parent, proto) {
 }
 
 exports.__class__ = function (cls, name, parent, proto) {
+    var p= {
+        mark: function() {
+      }
+    };
+    var profiler = this.profiler || p;
+    //profiler.mark('__class__');
 	var clsProto = function () {};
 	var logger;
 
