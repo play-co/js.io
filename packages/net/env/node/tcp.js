@@ -49,9 +49,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		var s = nodeTcp.createServer(bind(this, function(socket) {
 			if (typeof this._opts.timeout == 'number') { socket.setTimeout(this._opts.timeout) }
 			socket.setEncoding("utf8");
-			socket.addListener("connect", bind(this, function() {
-		   		this.onConnect(new Transport(socket));
-   			}));
+			this.onConnect(new Transport(socket));
    		}));
 		
 		var listenString = (this._opts['interface'] || "") + ":" + this._opts.port;
