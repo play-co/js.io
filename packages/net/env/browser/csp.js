@@ -14,7 +14,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 		conn.ondisconnect = bind(this, 'onDisconnect');
 		
 		logger.debug('opening the connection');
-		if (!this._opts.encoding) { this._opts.encoding = 'plain'; }
+		if (!this._opts.encoding) { this._opts.encoding = 'utf8'; }
 		conn.connect(this._opts.url, this._opts);//{encoding: 'plain'});
 	}
 	
