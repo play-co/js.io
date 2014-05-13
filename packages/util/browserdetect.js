@@ -97,14 +97,17 @@ exports.BrowserDetect = new function() {
 	}
 	
 	function searchVersion(dataString) {
-		var index = dataString.indexOf(versionSearchString);
-		if (index == -1) return;
-		return parseFloat(dataString.substring(index+versionSearchString.length+1));
+        if (dataString && typeof dataString === 'string') {
+            var index = dataString.indexOf(versionSearchString);
+            if (index == -1) return;
+            return parseFloat(dataString.substring(index+versionSearchString.length+1));
+        }
+        return;
 	}
 	
 	this.browser = searchString(dataBrowser) || "unknown";
-	this.version = searchVersion(navigator.userAgent || '')
-		|| searchVersion(navigator.appVersion || '')
+	this.version = searchVersion(navigator.userAgent)
+		|| searchVersion(navigator.appVersion)
 		|| "unknown";
 	this.OS = searchString(dataOS) || "unknown";
 	this.isWebKit = RegExp(" AppleWebKit/").test(navigator.userAgent);
