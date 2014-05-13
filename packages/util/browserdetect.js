@@ -103,8 +103,8 @@ exports.BrowserDetect = new function() {
 	}
 	
 	this.browser = searchString(dataBrowser) || "unknown";
-	this.version = searchVersion(navigator.userAgent)
-		|| searchVersion(navigator.appVersion)
+	this.version = searchVersion(navigator.userAgent || '')
+		|| searchVersion(navigator.appVersion || '')
 		|| "unknown";
 	this.OS = searchString(dataOS) || "unknown";
 	this.isWebKit = RegExp(" AppleWebKit/").test(navigator.userAgent);
