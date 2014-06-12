@@ -63,7 +63,7 @@
 
 		ModuleDef.prototype.setBase = function (baseMod, basePath) {
 			this.baseMod = baseMod;
-			this.basePath = basePath;
+			this.basePath = basePath + '/' + baseMod;
 		};
 
 		// Utility functions
@@ -184,15 +184,16 @@
 					// resolve absolute paths with respect to jsio packages/
 					var pathSegments = modulePath.split('.');
 					var baseMod = pathSegments[0];
-					var pathString = pathSegments.join('/');
-
 					if (jsioPath.cache.hasOwnProperty(baseMod)) {
+						pathSegments.shift();
+						var pathString = pathSegments.join('/');
 						return [
 							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString)),
 							getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString + '/index'))
 						];
 					}
 
+					var pathString = pathSegments.join('/');
 					var defs = [];
 					var paths = jsioPath.get();
 					var len = paths.length;
