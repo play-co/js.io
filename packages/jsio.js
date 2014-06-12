@@ -47,7 +47,7 @@
 		var ENV;
 
 		// Checks if the last character in a string is `/`.
-		var rexpEndSlash = /\/|\\$/;
+		var rexpEndSlash = /(\/|\\)$/;
 
 		function getModuleDef (path) {
 			path += '.js';
