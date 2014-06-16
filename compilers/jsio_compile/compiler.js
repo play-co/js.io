@@ -101,7 +101,13 @@ exports.run = function(args, opts) {
 
 		delete opts.path;
 	}
-	
+
+	if (opts.pathCache) {
+		for (var key in opts.pathCache) {
+			J.path.cache[key] = opts.pathCache[key];
+		}
+	}
+
 	logger.info('js.io path:', JSON.stringify(J.path.get()));
 	
 	var initial;
