@@ -11,7 +11,7 @@ var Transport = Class(net.interfaces.Transport, function() {
 		logger.debug('makeConnection:', protocol);
 		this._socket.addListener("receive", bind(protocol, 'dataReceived'));
 
-		this._socket.addListener("close", bind(protocol, 'connectionLost')); // TODO: map error codes
+		this._socket.addListener("close", bind(protocol, '_connectionLost')); // TODO: map error codes
 	}
 
 	this.write = function(data) {
@@ -32,8 +32,15 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		this._cspServer = s;
 		var listenString = (this._opts['interface'] || "" ) + ":" + this._opts.port;
 
-		// TODO: Show class name
-		if (!this._opts.skipListen) {
+		if (this._opts.app) {
+			var app = this._opts.app;
+			var middleware = this.createMiddleware();
+			if (this._opts.url) {
+				app.use(this._opts.url, middleware);
+			} else {
+				app.use(middleware);
+			}
+		} else if (!this._opts.skipListen) {
 			logger.info("Listening csp@" + listenString);
 			s.listen(this._opts.port, this._opts['interface'] || "");
 		}

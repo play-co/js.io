@@ -5,7 +5,8 @@ exports.map = {
 	'browser': [
 		'net.env.browser.csp',
 		'net.env.browser.postmessage',
-		'net.env.browser.websocket'
+		'net.env.browser.websocket',
+		'net.env.browser.socketio'
 	],
 	'mobile': []
 }

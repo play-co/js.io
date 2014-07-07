@@ -1,6 +1,6 @@
-jsio('import net.interfaces');
-jsio('from net.csp.client import CometSession');
-jsio('import std.utf8 as utf8');
+import net.interfaces;
+from net.csp.client import CometSession;
+import std.utf8 as utf8;
 
 /**
  * @extends net.interfaces.Connector

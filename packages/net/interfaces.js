@@ -8,14 +8,14 @@ exports.Protocol = Class(function() {
 	this.connectionMade = function(isReconnect) {}
 	this.dataReceived = function(data) {}
 	this.connectionLost = function(reason) {}
-	
+
 	this._connectionMade = function() {
 		this._isConnected = true;
 		this.connectionMade.apply(this, arguments);
 	}
 
 	this._connectionLost = function() {
-		this._isConnected = true;
+		this._isConnected = false;
 		this.connectionLost.apply(this, arguments);
 	}
 
@@ -23,15 +23,19 @@ exports.Protocol = Class(function() {
 	this.isConnected = function() {
 		return !!this._isConnected;
 	}
-	
-	
+
+	this.end = function () {
+		if (this.transport) {
+			this.transport.loseConnection();
+		}
+	}
 });
 
 exports.Client = Class(function() {
 	this.init = function(protocol) {
 		this._protocol = protocol;
 	}
-	
+
 	this.connect = function(transportName, opts) {
 		this._remote = new this._protocol();
 		this._remote._client = this;
@@ -48,9 +52,9 @@ exports.Server = Class(function() {
 	this.buildProtocol = function() {
 		return new this._protocolClass();
 	}
-	
-	this.listen = function(how, port) {
-		return net.listen(this, how, port);
+
+	this.listen = function(transportName, opts) {
+		return net.listen(this, transportName, opts);
 	}
 });
 
