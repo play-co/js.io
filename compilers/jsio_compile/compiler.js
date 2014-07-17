@@ -218,24 +218,26 @@ exports.run = function(args, opts) {
 		debugLevel: debugLevel,
 		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
 		defines: opts.defines,
+		path: opts.path,
 		autoDetectPaths: true,
 		environment: opts.environment,
 		dynamicImports: opts.dynamicImports,
+		preprocessors: opts.preprocessors,
 		rawOpts: opts
 	});
-	
-	compiler.compile('import base', opts);
-	
+
+	compiler.compile('import base');
+
 	if (opts.additionalDeps) {
 		var deps = opts.additionalDeps;
 		var n = deps.length;
 
 		logger.info('compiling dependencies...');
 		for (var i = 0; i < n; ++i) {
-			compiler.compile(deps[i], opts);
+			compiler.compile(deps[i]);
 		}
 	}
-	
+
 	logger.info('compiling main program', initial);
 
 	compiler.compile(initial);

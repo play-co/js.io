@@ -1,9 +1,7 @@
-"use import";
-
 import util.path;
 
 // compiler should be able to compile itself, so use a different name for calls to jsio that we don't want to try to compile
-var JSIO = jsio.__jsio; 
+var JSIO = jsio.__jsio;
 
 var gSrcTable = {};
 var gDynamicList = {};
@@ -15,31 +13,20 @@ function testComment(match) {
 
 exports = function(path, moduleDef, opts) {
 	opts = opts || {};
-	
+
 	if (gSrcTable[moduleDef.path]) {
 		moduleDef.src = '';
 		return;
 	}
 
 	logger.info('compiling', moduleDef.path);
-
 	checkDynamicImports(moduleDef);
-	
+
 	// prevent double import
 	gSrcTable[moduleDef.path] = true;
-	
+
 	var self = moduleDef.path;
-	
-	if (opts.path) {
-		if (isArray(opts.path)) {
-			for (var i = 0, len = opts.path.length; i < len; ++i) {
-				jsio.path.add(opts.path[i]);
-			}
-		} else if (typeof opts.path == 'string') {
-			jsio.path.add(opts.path);
-		}
-	}
-	
+
 	if (gCompilerOpts.autoDetectPaths) {
 		logger.debug('detecting paths for', self);
 
@@ -86,19 +73,31 @@ exports = function(path, moduleDef, opts) {
 		if (!inlineOpts) {
 			inlineOpts = {};
 		}
-		
+
+		if (gCompilerOpts.preprocessors) {
+			if (!inlineOpts.preprocessors) {
+				inlineOpts.preprocessors = gCompilerOpts.preprocessors.slice(0);
+			} else {
+				gCompilerOpts.preprocessors.forEach(function (preprocessor) {
+					if (inlineOpts.preprocessors.indexOf(preprocessor) == -1) {
+						inlineOpts.preprocessors.push(preprocessor);
+					}
+				});
+			}
+		}
+
 		try {
 			run(moduleDef, cmd, inlineOpts);
 		} catch (e) {
 			logger.warn('could not compile import from', self + ':', cmd);
 		}
 	}
-	
+
 	var jsioDynamic = /^(.*)jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/gm;
 	while(true) {
 		var match = jsioDynamic.exec(moduleDef.src);
 		if (!match || !testComment(match)) { break; }
-		
+
 		var cmd = match[2];
 		var inlineOpts;
 		try {
@@ -236,6 +235,16 @@ exports.setCompilerOpts = function(opts) {
 	if ('debugLevel' in opts) {
 		logger.setLevel(opts.debugLevel);
 	}
+
+	if (opts.path) {
+		if (isArray(opts.path)) {
+			for (var i = 0, len = opts.path.length; i < len; ++i) {
+				jsio.path.add(opts.path[i]);
+			}
+		} else if (typeof opts.path == 'string') {
+			jsio.path.add(opts.path);
+		}
+	}
 }
 
 exports.compile = function(statement, opts) {
@@ -283,7 +292,7 @@ function checkDynamicImports(moduleDef) {
 				imports.forEach(function(imp) {
 					logger.log("dynamic import:", imp);
 					try {
-						run(moduleDef, "import " + imp, {});
+						run(moduleDef, "import " + imp, {preprocessors: gCompilerOpts.preprocessors.slice(0)});
 					} catch (e) {
 						logger.error("module", imp, "does not exist\n\n\trequested from", filename, "\n\n");
 						process.exit(1);
