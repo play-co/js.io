@@ -4,13 +4,6 @@
 var loggerRegex = /logger\.(log|warn|info|error|debug)\(/g;
 var delimiterRegex = /^(\\.|[\(\)"'\\])/;
 
-function replace(raw, p1, p2, p3) {
-  if (!/\/\//.test(p1)) {
-    return p1 + 'jsio("' + p2 + '")' + p3;
-  }
-  return raw;
-}
-
 exports = function (path, moduleDef, opts) {
   moduleDef.src = exports.replaceLogger(moduleDef.src, moduleDef.friendlyPath);
 }
