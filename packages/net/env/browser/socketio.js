@@ -36,10 +36,15 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 	this._connect = function (io) {
 		logger.debug('opening the connection');
 		var socket = io(this._opts.namespace);
-		socket.on('connect', bind(this, function () {
-			this.onConnect(new Transport(socket));
-		}));
+		var transport = new Transport(socket);
+		var onConnect = bind(this, 'onConnect', transport);
+
 		socket.on('disconnect', bind(this, 'onDisconnect'));
+		if (socket.connected) {
+			onConnect();
+		} else {
+			socket.on('connect', onConnect);
+		}
 	}
 });
 
