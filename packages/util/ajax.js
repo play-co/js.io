@@ -41,6 +41,7 @@ var Request = Class(function() {
 	var _UID = 0;
 
 	this.init = function(opts, cb) {
+		if (typeof opts == 'string') { opts = {url: opts}; }
 		if (!opts || !opts.url) { logger.error('no url provided'); return; }
 
 		this.method = (opts.method || 'GET').toUpperCase();
