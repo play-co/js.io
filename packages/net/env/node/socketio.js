@@ -1,7 +1,5 @@
 import net.interfaces;
 
-var _io = require('socket.io');
-
 var Transport = Class(net.interfaces.Transport, function() {
 	this.init = function(socket) {
 		this._socket = socket;
@@ -33,7 +31,7 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 			// at the specified port
 			var server = require('http').Server();
 			server.listen(this._opts.port);
-			this._ioServer = require('socket.io')(server);
+			this._ioServer = this._opts.io(server);
 		} else if (this._opts.io) {
 			// if an io server is already setup
 			if (this._opts.namespace) {

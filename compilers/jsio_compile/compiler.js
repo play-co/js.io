@@ -14,6 +14,7 @@ var _interface = null;
 exports.start = function(/*optional*/ args, opts) {
 	if (opts && opts['interface']) {
 		_interface = opts['interface'];
+		delete opts['interface'];
 	} else {
 		if (!J) {
 			J = jsio.__jsio.clone();

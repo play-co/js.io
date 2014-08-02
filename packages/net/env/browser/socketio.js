@@ -1,7 +1,7 @@
 import lib.Callback;
 import net.interfaces;
 import std.utf8 as utf8;
-logger.setLevel(0);
+
 var _script;
 var _scriptOnLoad = new lib.Callback();
 

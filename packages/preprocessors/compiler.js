@@ -165,7 +165,10 @@ exports.generateSrc = function(opts, callback) {
 }
 
 exports.getPathJS = function() {
-	return 'jsio.path.set(' + JSON.stringify(jsio.path.get()) + ');jsio.path.cache=' + JSON.stringify(jsio.path.cache) + ';';
+	var cwd = jsio.__env.getCwd();
+	return 'jsio.path.set(' + JSON.stringify(jsio.path.get().map(function (path) {
+		return util.path.makeRelativePath(path, cwd);
+	})) + ');jsio.path.cache=' + JSON.stringify(jsio.path.cache) + ';';
 }
 
 function buildJsio(opts, callback) {

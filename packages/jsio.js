@@ -141,9 +141,9 @@
 				// `resolveRelativePath` removes relative path indicators.  For example:
 				//     util.resolveRelativePath('a/../b') -> b
 				resolveRelativePath: function(path) {
-					/* If the path starts with a protocol, store it and remove it (add it
+					/* If the path starts with a protocol+host, store it and remove it (add it
 					   back later) so we don't accidently modify it. */
-					var protocol = path.match(/^(\w+:\/\/)(.*)$/);
+					var protocol = path.match(/^(\w+:\/\/.*?\/)(.*)$/);
 					if (protocol) { path = protocol[2]; }
 
 					/* Remove multiple slashes and trivial dots (`/./ -> /`). */
@@ -198,12 +198,15 @@
 					var paths = jsioPath.get();
 					var len = paths.length;
 					for (var i = 0; i < len; ++i) {
-						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString));
-						moduleDef.setBase(baseMod, paths[i]);
+						var base = util.makeRelativePath(paths[i], ENV.getCwd());
+						var path = util.buildPath(base, pathString);
+
+						var moduleDef = getModuleDef(path);
+						moduleDef.setBase(baseMod, base);
 						defs.push(moduleDef);
 
-						var moduleDef = getModuleDef(util.buildPath(paths[i], pathString + '/index'));
-						moduleDef.setBase(baseMod, paths[i]);
+						var moduleDef = getModuleDef(path + '/index');
+						moduleDef.setBase(baseMod, base);
 						defs.push(moduleDef);
 					}
 					return defs;
@@ -326,7 +329,7 @@
 			}
 
 			this.getPath = function() {
-				return path.relative(this.getCwd(), path.dirname(__filename) || '.');
+				return path.resolve(this.getCwd(), path.dirname(__filename) || '.');
 			}
 
 			if (process.compile) {
@@ -429,7 +432,11 @@
 				return path;
 			}
 
-			this.debugPath = function(path) { return path; }
+			var debugHost = location.protocol + '//' + location.host + '/';
+			var debugPath = location.pathname;
+			this.debugPath = function (path) {
+				return util.buildPath(debugHost, path[0] != '/' && debugPath, path);
+			}
 
 			// IE6 won't return an anonymous function from eval, so use the function constructor instead
 			var rawEval = typeof eval('(function(){})') == 'undefined'
@@ -667,6 +674,9 @@
 			ctx.jsio.__dir = moduleDef.directory;
 			ctx.jsio.__filename = moduleDef.filename;
 			ctx.jsio.path = jsioPath;
+
+			ctx.__dirname = util.buildPath(ENV.getCwd(), moduleDef.directory);
+			ctx.__filename = util.buildPath(ctx.__dirname, moduleDef.filename);
 			return ctx;
 		};
 
@@ -805,7 +815,7 @@
 		// from myPackage import myFunc
 		// external myPackage import myFunc
 		jsio.addCmd(function(context, request, opts, imports) {
-			var match = request.match(/^\s*(from|external)\s+([\w.$]+)\s+(import|grab)\s+(.*)$/);
+			var match = request.match(/^\s*(from|external)\s+([\w.\-$]+)\s+(import|grab)\s+(.*)$/);
 			if(match) {
 				imports.push({
 					from: match[2],
@@ -814,7 +824,7 @@
 					'import': {}
 				});
 
-				match[4].replace(/\s*([\w.$*]+)(?:\s+as\s+([\w.$]+))?/g, function(_, item, as) {
+				match[4].replace(/\s*([\w.\-$*]+)(?:\s+as\s+([\w.\-$]+))?/g, function(_, item, as) {
 					imports[0]['import'][item] = as || item;
 				});
 				return true;
@@ -825,7 +835,7 @@
 		jsio.addCmd(function(context, request, opts, imports) {
 			var match = request.match(/^\s*import\s+(.*)$/);
 			if (match) {
-				match[1].replace(/\s*([\w.$]+)(?:\s+as\s+([\w.$]+))?,?/g, function(_, fullPath, as) {
+				match[1].replace(/\s*([\w.\-$]+)(?:\s+as\s+([\w.\-$]+))?,?/g, function(_, fullPath, as) {
 					imports.push(
 						as ? {
 							from: fullPath,
