@@ -1,4 +1,4 @@
-import util.path;
+var path = require("jsio/util/path");
 
 // compiler should be able to compile itself, so use a different name for calls to jsio that we don't want to try to compile
 var JSIO = jsio.__jsio;
@@ -146,7 +146,6 @@ exports.reset = function() {
  * opts.includeJsio: include a copy of jsio.js in the output
  */
 exports.generateSrc = function(opts, callback) {
-
 	var opts = merge(opts, {
 			compressSources: false,
 			includeJsio: true
@@ -166,9 +165,17 @@ exports.generateSrc = function(opts, callback) {
 
 exports.getPathJS = function() {
 	var cwd = jsio.__env.getCwd();
-	return 'jsio.path.set(' + JSON.stringify(jsio.path.get().map(function (path) {
-		return util.path.makeRelativePath(path, cwd);
-	})) + ');jsio.path.cache=' + JSON.stringify(jsio.path.cache) + ';';
+
+	var cache = {};
+	Object.keys(jsio.path.cache).forEach(function (key) {
+		cache[key] = path.relative(cwd, jsio.path.cache[key]);
+	});
+
+	return 'jsio.path.set('
+		+ JSON.stringify(jsio.path.get().map(function (value) {
+			return path.relative(cwd, value);
+		})) + ');jsio.path.cache=' + JSON.stringify(cache) + ';';
+
 }
 
 function buildJsio(opts, callback) {
@@ -180,9 +187,17 @@ function buildJsio(opts, callback) {
 		return src;
 	}
 
-	var src,
-		jsioSrc = (opts.includeJsio ? getJsioSrc() : '')
+	var src;
+	var jsioSrc = (opts.includeJsio ? getJsioSrc() : '')
 				+ exports.getPathJS();
+
+	var cwd = jsio.__env.getCwd();
+	var table = {};
+	for (var entry in gSrcTable) {
+		var relPath = path.relative(cwd, entry);
+		table[relPath] = gSrcTable[entry];
+		table[relPath].path = relPath;
+	}
 
 	// if we're not allowed to modify the jsio source or we're not including the jsio source
 	// then use jsio.setCachedSrc to include the source strings
@@ -190,14 +205,14 @@ function buildJsio(opts, callback) {
 		logger.info('source include method: jsio.setCachedSrc');
 
 		var lines = [];
-		for (var i in gSrcTable) {
-			lines.push("jsio.setCachedSrc('" + gSrcTable[i].path + "'," + JSON.stringify(gSrcTable[i].src) + ");");
+		for (var i in table) {
+			lines.push("jsio.setCachedSrc('" + table[i].path + "'," + JSON.stringify(table[i].src) + ");");
 		}
 		src = jsioSrc + lines.join('\n');
 	} else {
 		logger.info('source include method: jsio.setCache');
 
-		src = jsioSrc + "jsio.setCache(" + JSON.stringify(gSrcTable) + ");";
+		src = jsioSrc + "jsio.setCache(" + JSON.stringify(table) + ");";
 	}
 
 	if (opts.compressResult && gCompilerOpts.compressor) {
@@ -255,7 +270,7 @@ exports.compile = function(statement, opts) {
 }
 
 function run(moduleDef, cmd, opts) {
-	JSIO.__importer({}, moduleDef.directory, moduleDef.filename, cmd, updateOpts(opts));
+	JSIO.__require({}, moduleDef.directory, moduleDef.filename, cmd, updateOpts(opts));
 }
 
 function updateOpts(opts) {
@@ -268,6 +283,7 @@ function updateOpts(opts) {
 	}
 
 	opts.reload = true;
+	opts.initialImport = true;
 	return opts;
 }
 
@@ -281,8 +297,8 @@ function checkDynamicImports(moduleDef) {
 		logger.info("Checking directory", directory, "for dynamic imports... (" + gCompilerOpts.environment + ")");
 
 		// try to do a commonJS-style import
-		var filename = util.path.join(directory, '__imports__');
-		var module = JSIO.__importer(null, filename, null, '.__imports__', {dontExport: true, suppressErrors: true});
+		var filename = path.join(directory, '__imports__');
+		var module = JSIO.__require(null, directory, 'compiler', './__imports__', {dontExport: true, suppressErrors: true});
 		if (module && module.resolve) {
 			try {
 				var imports = module.resolve(gCompilerOpts.environment, gCompilerOpts);
