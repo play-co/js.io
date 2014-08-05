@@ -1,6 +1,6 @@
-import net.interfaces;
+import ...interfaces;
 
-var Transport = Class(net.interfaces.Transport, function() {
+var Transport = Class(interfaces.Transport, function() {
 	this.init = function(socket) {
 		this._socket = socket;
 		logger.debug('init', socket);
@@ -24,7 +24,7 @@ var Transport = Class(net.interfaces.Transport, function() {
 /**
  * @extends net.interfaces.Listener
  */
-exports.Listener = Class(net.interfaces.Listener, function(supr) {
+exports.Listener = Class(interfaces.Listener, function(supr) {
 	this.listen = function () {
 		if (this._opts.port) {
 			// if a port is provided, create an http server and host socket.io

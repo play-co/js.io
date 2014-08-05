@@ -1,9 +1,9 @@
-import net.interfaces;
+import ..interfaces;
 
 /**
  * @extends net.interfaces.Protocol
  */
-exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
+exports.DelimitedProtocol = Class(interfaces.Protocol, function(supr) {
 
 	this.init = function(delimiter) {
 		if (!delimiter) {
