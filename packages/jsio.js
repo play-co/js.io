@@ -69,6 +69,9 @@
       this.basePath = basePath + '/' + baseMod;
     };
 
+    var HOST = /^([a-z][a-z0-9+\-\.]*:\/\/.*?\/)(.*)$/;
+    var PROTOCOL = /^[a-z][a-z0-9+\-\.]*:/
+
     // Utility functions
     var util = {
         // `util.bind` returns a function that, when called, will execute
@@ -138,8 +141,19 @@
         // `buildPath` accepts an arbitrary number of string arguments to concatenate into a path.
         //     util.buildPath('a', 'b', 'c/', 'd/') -> 'a/b/c/d/'
         buildPath: function() {
-          var args = Array.prototype.filter.call(arguments, function (x) { return x != '.' && x != './' && x; });
-          return util.resolveRelativePath(args.join('/'));
+          var pieces = [];
+          for (var i = 0, n = arguments.length; i < n; ++i) {
+            var piece = arguments[i];
+            if (PROTOCOL.test(piece)) {
+              pieces.length = 0;
+            }
+
+            if (piece != '.' && piece != './' && piece) {
+              pieces.push(piece);
+            }
+          }
+
+          return util.resolveRelativePath(pieces.join('/'));
         },
 
         // `resolveRelativePath` removes relative path indicators.  For example:
@@ -147,7 +161,7 @@
         resolveRelativePath: function(path) {
           /* If the path starts with a protocol+host, store it and remove it (add it
              back later) so we don't accidently modify it. */
-          var protocol = path.match(/^(\w+:\/\/.*?\/)(.*)$/);
+          var protocol = path.match(HOST);
           if (protocol) { path = protocol[2]; }
 
           /* Remove multiple slashes and trivial dots (`/./ -> /`). */
@@ -166,8 +180,12 @@
           return protocol ? protocol[1] + path.replace(/^\//, '') : path;
         },
 
+        isAbsolutePath: function (path) {
+          return /^\//.test(path) || PROTOCOL.test(path);
+        },
+
         resolve: function (from, to) {
-          return /^\//.test(to) ? util.resolveRelativePath(to) : util.buildPath(from, to);
+          return this.isAbsolutePath(to) ? util.resolveRelativePath(to) : util.buildPath(from, to);
         },
 
         resolveRelativeModule: function (modulePath, directory) {
@@ -384,7 +402,7 @@
       }
 
       this.fetch = function (p) {
-        p = path.resolve(this.getCwd(), p);
+        p = util.resolve(this.getCwd(), p);
 
         try {
           var dirname = path.dirname(p);
@@ -408,7 +426,7 @@
         }
       }
 
-      var stackRe = /\((?!module.js)(.*?)(:\d+)(:\d+)\)/g;
+      var stackRe = /\((?!module.js)(?:file:\/\/)?(.*?)(:\d+)(:\d+)\)/g;
       this.loadModule = function (baseLoader, fromDir, fromFile, item, opts) {
         if (fromFile == INITIAL_FILE && !opts.initialImport) {
           var stack = new Error().stack;
@@ -438,7 +456,6 @@
               module.filename = filename;
               module.paths = Module._nodeModulePaths(path.dirname(filename));
             }
-
             var request = item.original || item.from;
             try {
               return {
