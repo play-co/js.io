@@ -1,6 +1,7 @@
 // Sort of like a twisted protocol
 import .index as net;
 import ..lib.Enum as Enum;
+import ..lib.PubSub as PubSub;
 
 var ctx = jsio.__env.global;
 
@@ -74,7 +75,8 @@ exports.Transport = Class(function() {
 	}
 });
 
-exports.Listener = Class(function() {
+// emits 'error' event if listen fails
+exports.Listener = Class(PubSub, function() {
 	this.init = function(server, opts) {
 		this._server = server;
 		this._opts = opts || {};

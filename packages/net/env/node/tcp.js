@@ -46,14 +46,21 @@ exports.Connector = Class(interfaces.Connector, function() {
 exports.Listener = Class(interfaces.Listener, function(supr) {
 	this.listen = function() {
 		var s = net.createServer(bind(this, function(socket) {
-			if (typeof this._opts.timeout == 'number') { socket.setTimeout(this._opts.timeout) }
+			if (typeof this._opts.timeout == 'number') {
+				socket.setTimeout(this._opts.timeout)
+			}
+
 			socket.setEncoding("utf8");
 			this.onConnect(new Transport(socket));
-   		}));
+		}));
 
 		var listenString = (this._opts['interface'] || "") + ":" + this._opts.port;
 		// TODO: Show class name
 		logger.info("Listening tcp@" + listenString);
-		s.listen(this._opts.port, this._opts['interface'] || "");
+		s.listen(this._opts.port, this._opts['interface'] || "")
+			.on('error', function (err) {
+				logger.error(err);
+				this.emit('error', err);
+			});
 	}
 });
