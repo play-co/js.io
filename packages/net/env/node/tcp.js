@@ -58,9 +58,9 @@ exports.Listener = Class(interfaces.Listener, function(supr) {
 		// TODO: Show class name
 		logger.info("Listening tcp@" + listenString);
 		s.listen(this._opts.port, this._opts['interface'] || "")
-			.on('error', function (err) {
+			.on('error', bind(this, function (err) {
 				logger.error(err);
 				this.emit('error', err);
-			});
+			}));
 	}
 });
