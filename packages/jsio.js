@@ -324,16 +324,22 @@
 
     if (cloneFrom) {
       jsio.setEnv();
+    } else if (typeof JSIO_ENV_CTOR !== 'undefined') {
+      jsio.setEnv(JSIO_ENV_CTOR);
     } else if (typeof process !== 'undefined' && process.version) {
       jsio.setEnv('node');
     } else if (typeof XMLHttpRequest != 'undefined' || typeof ActiveXObject != 'undefined') {
       jsio.setEnv('browser');
     }
 
-    jsio.main = ENV.main;
+    jsio.main = ENV && ENV.main;
 
-    var boundJsio = util.bind(this, _require, {}, ENV.getPath(), 'jsio.js');
+    var boundJsio;
     var localJsio = function (req) {
+      if (!boundJsio) {
+        boundJsio = util.bind(this, _require, {}, ENV.getPath(), 'jsio.js');
+      }
+
       return boundJsio(req, {dontExport: true, dontPreprocess: true});
     };
 
@@ -1009,9 +1015,12 @@
 
     jsio.clone = util.bind(null, init, jsio);
 
+    // in node, defines jsio as a module that can be imported
     var moduleInfo = util.resolveModulePath('jsio')[0];
-    jsio.__modules[moduleInfo.path] = new ModuleDef(moduleInfo.path);
-    jsio.__modules[moduleInfo.path].exports = jsio;
+    if (moduleInfo) {
+      jsio.__modules[moduleInfo.path] = new ModuleDef(moduleInfo.path);
+      jsio.__modules[moduleInfo.path].exports = jsio;
+    }
 
     return jsio;
   }
