@@ -25,7 +25,7 @@ exports.start = function(/*optional*/ args, opts) {
 			return;
 		}
 
-		_interface = J('import .' + J.__env.name + '_interface');
+		_interface = jsio('import .' + J.__env.name + '_interface');
 	}
 
 	// expects the interface to eventually call run to do the actual compile

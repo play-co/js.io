@@ -1,4 +1,4 @@
-import util.optparse;
+import jsio.util.optparse as optparse;
 import .optsDef;
 
 var fs = require('fs');
@@ -10,7 +10,7 @@ try {
 var closurePath = '';
 (function() {
 	var path = require('path');
-	var defaultPath = path.join(path.dirname(jsio.__filename), 'jsio_minify.jar');
+	var defaultPath = path.join(path.dirname(jsio.__filename), 'compiler', 'compiler.jar');
 	if (fs.existsSync(defaultPath)) {
 		closurePath = defaultPath;
 	}
@@ -26,7 +26,7 @@ function findMinifier(jarPath) {
 }
 
 function usage() {
-	util.optparse.printUsage('jsio_compile <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
+	optparse.printUsage('jsio_compile <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
 }
 
 var _compiler;
@@ -36,7 +36,7 @@ exports.setCompiler = function (compiler) {
 
 exports.run = function(args, opts) {
 	if (!args) {
-		var result = util.optparse(process.argv, optsDef),
+		var result = optparse(process.argv, optsDef),
 			args = result.args,
 			opts = result.opts;
 	}
@@ -53,9 +53,7 @@ exports.run = function(args, opts) {
 
 exports.onError = function(e) {
 	usage();
-	jsio.__env.log('');
-	logger.error('\n', e);
-	jsio.__env.log('');
+	jsio.__env.log('\n' + e.message);
 	process.exit(1);
 }
 

@@ -33,8 +33,8 @@ if (!Function.prototype.bind) {
       throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
     }
 
-    var aArgs = Array.prototype.slice.call(arguments, 1), 
-        fToBind = this, 
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
         fNOP = function () {},
         fBound = function () {
           return fToBind.apply(this instanceof fNOP
@@ -133,13 +133,13 @@ exports.__class__ = function (cls, name, parent, proto) {
 			clsProto.prototype = parent.prototype;
 		}
 	}
-	
+
 	var supr = parent ? function(context, method, args) {
 			var f = parent.prototype[method];
 			if (!f) { throw new Error('method ' + method + ' does not exist'); }
 			return f.apply(context, args || []);
 		} : null;
-	
+
 	var p = cls.prototype = new clsProto();
 	p.constructor = cls;
 	p.__parentClass__ = parent;
@@ -161,10 +161,10 @@ var ErrorParentClass = exports.__class__(function ErrorCls() {
  * Merge two objects together.
  */
 
-exports.Class.defaults = 
+exports.Class.defaults =
 exports.merge = function(base, extra) {
 	base = base || {};
-	
+
 	for (var i = 1, len = arguments.length; i < len; ++i) {
 		var copyFrom = arguments[i];
 		for (var key in copyFrom) {
@@ -173,7 +173,7 @@ exports.merge = function(base, extra) {
 			}
 		}
 	}
-	
+
 	return base;
 }
 
@@ -198,7 +198,7 @@ exports.delay = function(orig, timeout) {
  */
 
 exports.logging = (function() {
-	
+
 	// logging namespace, this is what is exported
 	var logging = {
 			DEBUG: 1,
@@ -288,3 +288,4 @@ exports.logging = (function() {
 })();
 
 var logger = exports.logging.get('jsiocore');
+

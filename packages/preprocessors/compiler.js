@@ -168,7 +168,7 @@ exports.getPathJS = function() {
 
 	var cache = {};
 	Object.keys(jsio.path.cache).forEach(function (key) {
-		cache[key] = path.relative(cwd, jsio.path.cache[key]);
+		cache[key] = path.relative(cwd, jsio.path.cache[key]) || './';
 	});
 
 	return 'jsio.path.set('
@@ -197,6 +197,7 @@ function buildJsio(opts, callback) {
 		var relPath = path.relative(cwd, entry);
 		table[relPath] = gSrcTable[entry];
 		table[relPath].path = relPath;
+		table[relPath].directory = path.relative(cwd, gSrcTable[entry].directory);
 	}
 
 	// if we're not allowed to modify the jsio source or we're not including the jsio source

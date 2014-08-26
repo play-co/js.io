@@ -61,7 +61,9 @@
     function ModuleDef (path) {
       this.path = path;
       this.friendlyPath = path;
+
       util.splitPath(path, this);
+      this.directory = util.resolve(ENV.getCwd(), this.directory);
     };
 
     ModuleDef.prototype.setBase = function (baseMod, basePath) {
@@ -272,12 +274,18 @@
         },
         get: function() { return jsioPath.value.slice(0); },
         add: function (path) {
-          path = util.resolve(ENV.getCwd(), path);
-          var v = jsioPath.value, len = v.length;
-          for (var i = 0; i < len; ++i) {
-            if (v[i] == path) { return; }
+          if (arguments.length == 2) {
+            var from = arguments[0];
+            var to = util.resolve(ENV.getCwd(), arguments[1]);
+            this.cache[from] = to;
+          } else {
+            path = util.resolve(ENV.getCwd(), path);
+            var v = jsioPath.value, len = v.length;
+            for (var i = 0; i < len; ++i) {
+              if (v[i] == path) { return; }
+            }
+            v.push(path);
           }
-          v.push(path);
         },
         remove: function(path) {
           var v = jsioPath.value, len = v.length;
@@ -357,7 +365,8 @@
     function ENV_node() {
       var Module = module.constructor;
 
-      var req = util.bind(module.parent, module.parent.require);
+      var parent = module.parent;
+      var req = util.bind(parent, parent && parent.require || require);
 
       var fs = req('fs');
       var path = req('path');
@@ -367,7 +376,11 @@
       this.main = require.main;
       this.name = 'node';
       this.global = global;
-      this.getCwd = process.cwd;
+
+      var _cwd = process.cwd();
+      this.setCwd = function (cwd) { _cwd = path.resolve(_cwd, cwd); }
+      this.getCwd = function () { return _cwd; }
+
       this.pathSep = path.sep;
 
       // var parentPath = util.splitPath(module.parent.filename);
@@ -469,7 +482,8 @@
                 path: item.from
               };
             } catch (e2) {
-              if (e2.code = MODULE_NOT_FOUND) {
+              console.log(e2);
+              if (e2.code == MODULE_NOT_FOUND) {
                 throw e;
               }
 
@@ -609,8 +623,11 @@
           cachedVersion = srcCache[path];
 
         if (cachedVersion) {
-          possible.src = cachedVersion.src;
+          for (var key in cachedVersion) {
+            possible[key] = cachedVersion[key];
+          }
           possible.pre = true;
+
           return possible;
         }
 
@@ -669,7 +686,6 @@
 
       var moduleDef = findModule(possibilities, opts),
         match;
-
       if (!moduleDef) {
         if (opts.suppressErrors) { return false; }
         var paths = [];
@@ -806,7 +822,7 @@
       ctx.jsio.__filename = moduleDef.filename;
       ctx.jsio.path = jsioPath;
 
-      ctx.__dirname = util.resolve(ENV.getCwd(), moduleDef.directory);
+      ctx.__dirname = moduleDef.directory;
       ctx.__filename = util.buildPath(ctx.__dirname, moduleDef.filename);
       return ctx;
     };
