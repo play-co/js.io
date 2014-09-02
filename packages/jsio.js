@@ -412,12 +412,7 @@
       }
 
       this.eval = function (code, path) {
-        try {
-          return vm.runInThisContext(code, path);
-        } catch (e) {
-          this.log('In ' + path + ':\n' + e.message);
-          throw e;
-        }
+        return vm.runInThisContext(code, path, true);
       }
 
       this.fetch = function (p) {
@@ -482,7 +477,6 @@
                 path: item.from
               };
             } catch (e2) {
-              console.log(e2);
               if (e2.code == MODULE_NOT_FOUND) {
                 throw e;
               }
