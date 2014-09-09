@@ -141,7 +141,7 @@ exports = function(argv, origDef) {
 }
 
 exports.printUsage = function(usage, optsDef) {
-	import jsio.util.wordWrap;
+	import ..util.wordWrap;
 
 	var print = jsio.__env.log;
 	print('Usage:');
@@ -158,7 +158,7 @@ exports.printUsage = function(usage, optsDef) {
 		}
 		print('\t'+opt.join(', '));
 		if (optsDef[i].description) {
-			print(jsio.util.wordWrap(optsDef[i].description, 80, '\t\t'));
+			print(util.wordWrap(optsDef[i].description, 80, '\t\t'));
 		}
 	}
 }

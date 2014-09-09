@@ -1,5 +1,3 @@
-"use import";
-
 var zeroPadding = [];
 function ensurePadding(n) {
 	for (var i = zeroPadding.length; i < n; ++i) {
@@ -17,25 +15,25 @@ function ensurePadding(n) {
 function sortIndex(i) { return this[i]; }
 
 exports = function(arr, indexer) {
-	
+
 	var len = arr.length,
 		index = new Array(len),
 		result = new Array(len),
 		toString = new Array(len),
 		indexers = Array.prototype.slice.call(arguments, 1),
 		haveMultiple = !!indexers[1];
-	
+
 	if (haveMultiple) {
 		for (var i = 0; i < len; ++i) {
 			result[i] = [];
 		}
 	}
-	
+
 	for (var k = 0, indexer; indexer = indexers[k]; ++k) {
 		for (var i = 0; i < len; ++i) {
 			index[i] = indexer.call(arr[i], i);
 		}
-		
+
 		if (typeof index[0] == 'number') {
 			// we do two passes here:
 			//  1: find the max and min numerical indices
@@ -71,7 +69,7 @@ exports = function(arr, indexer) {
 				}
 			}
 		}
-		
+
 		if (haveMultiple) {
 			for (var i = 0; i < len; ++i) {
 				result[i].push(index[i]);
@@ -80,18 +78,18 @@ exports = function(arr, indexer) {
 			result = index;
 		}
 	}
-	
+
 	for (var i = 0; i < len; ++i) {
 		if (haveMultiple) {
 			result[i] = result[i].join('|');
 		}
-		
+
 		toString[i] = arr[i].hasOwnProperty('toString') && arr[i].toString || null;
 		arr[i].toString = bind(result, sortIndex, i);
 	}
-	
+
 	Array.prototype.sort.apply(arr);
-	
+
 	for (var i = 0; i < len; ++i) {
 		if (toString[i]) {
 			arr[i].toString = toString[i];
