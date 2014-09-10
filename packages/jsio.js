@@ -617,9 +617,17 @@
           cachedVersion = srcCache[path];
 
         if (cachedVersion) {
-          for (var key in cachedVersion) {
-            possible[key] = cachedVersion[key];
+          // extract a non-absolute dirname from the cache key: absolute paths
+          // built into the cache are made relative during compile time since
+          // absolute paths won't match between host and target device. Use
+          // the cache key as the relative path so future imports can also
+          // successfully lookup paths in the cache.
+          var match = path.match(/^(.*\/)[^\\\/]+$/);
+          if (match) {
+            possible.directory = match[1];
           }
+
+          possible.src = cachedVersion.src;
           possible.pre = true;
 
           return possible;
