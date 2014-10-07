@@ -623,13 +623,9 @@
           // the cache key as the relative path so future imports can also
           // successfully lookup paths in the cache.
           var match = path.match(/^(.*\/)[^\\\/]+$/);
-          if (match) {
-            possible.directory = match[1];
-          }
-
+          possible.directory = match && match[1] || "";
           possible.src = cachedVersion.src;
           possible.pre = true;
-
           return possible;
         }
 
