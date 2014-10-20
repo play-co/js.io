@@ -10,12 +10,14 @@
   },
   "main": "./packages/jsio.js",
   "bin": {
-	  "jsio": "./repl.js",
-	  "jsio_compile": "./jsio_compile"
+    "jsio": "./repl.js",
+    "jsio_compile": "./jsio_compile"
   },
   "engines": {
     "node": ">0.6.0"
   },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "mocha": "^1.21.5"
+  }
 }

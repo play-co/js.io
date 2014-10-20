@@ -14,6 +14,8 @@
  *     lib.PubSub.
  */
 
+from ..std.uuid import uuid;
+
 var ctx = jsio.__env.global,
 	SLICE = Array.prototype.slice;
 
@@ -150,6 +152,80 @@ exports = Class(function () {
 
 	this.hasListeners = function (type) {
 		return this._subscribers && this._subscribers[type] && this._subscribers[type].length;
+	};
+
+	/**
+	 * listenTo for inverting control of #subscribe, #on, etc.
+	 * @param {object} obj something extending js.io's lib.PubSub
+	 * @param {string} name the event name to listen to
+	 * @param {callback} function to run on event
+	 * @return {this}
+	 */
+	this.listenTo = function (obj, name, callback) {
+		var listeningTo = this._listeningTo || (this._listeningTo = {});
+		var id = obj._listenId || (obj._listenId = uuid(8, 16));
+		listeningTo[id] = obj;
+		obj.subscribe(name, this, callback);
+		return this;
+	};
+
+	/**
+	 * Stop listening to objects previously passed to `listenTo`.
+	 *
+	 * @example
+	 *     // Stop listening to all events on all objects
+	 *     this.stopListening();
+	 *
+	 *     // Stop listening to all events on `obj`
+	 *     this.stopListening(obj);
+	 *
+	 *     // Stop all of my callbacks for a given event
+	 *     this.stopListening(obj, name);
+	 *
+	 *     // Stop a single callback from firing
+	 *     this.stopListening(obj, name, callback);
+	 *
+	 * @param {object} [obj] object extending lib.PubSub and using listenTo
+	 * @param {string} [name] the event name to listen to
+	 * @param {callback} [callback] function to stop running
+	 * @return {this}
+	 */
+	this.stopListening = function (obj, name, callback) {
+		var events, names, retain, i, j, k, l, ev;
+		var listeningTo = this._listeningTo;
+		if (!listeningTo) {
+			return this;
+		}
+
+		logger.log(obj);
+		var remove = !name && !callback;
+		if (obj) {
+			(listeningTo = {})[obj._listenId] = obj;
+		}
+
+		for (var id in listeningTo) {
+			obj = listeningTo[id];
+
+			names = name ? [name] : Object.keys(obj._subscribers);
+			for (i = 0, l = names.length; i < l; i++) {
+				name = names[i];
+				if (events = obj._subscribers[name]) {
+					obj._subscribers[name] = retain = [];
+					for (j = 0, k = events.length; j < k; j++) {
+						ev = events[j];
+						if ((callback && callback !== ev._method) ||
+								(this && this !== ev._ctx)) {
+							retain.push(ev);
+						}
+					}
+					if (!retain.length) delete obj._subscribers[name];
+				}
+			}
+			if (remove) {
+				delete this._listeningTo[id];
+			}
+		}
+		return this;
 	};
 });
 
