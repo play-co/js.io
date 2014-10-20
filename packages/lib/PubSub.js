@@ -9,9 +9,9 @@
  *  Usage notes: There is one special signal '__any'.  Any subscribers to
  *     '__any' will be called on every publish with the first publish
  *     argument being the signal itself (after any args passed in during
- *     the corresponding subscribe). 
- *     Calling the super constructor is not required for descendants of 
- *     lib.PubSub. 
+ *     the corresponding subscribe).
+ *     Calling the super constructor is not required for descendants of
+ *     lib.PubSub.
  */
 
 var ctx = jsio.__env.global,
@@ -20,7 +20,7 @@ var ctx = jsio.__env.global,
 exports = Class(function () {
 
 	this.init = function () {};
-	
+
 	this.publish = function (signal) {
 		if (this._subscribers) {
 			var args = SLICE.call(arguments, 1);
@@ -31,11 +31,11 @@ exports = Class(function () {
 					sub.apply(ctx, anyArgs);
 				}
 			}
-			
+
 			if (!this._subscribers[signal]) {
 				return this;
 			}
-			
+
 			var subs = this._subscribers[signal].slice(0);
 			for (var i = 0, sub; sub = subs[i]; ++i) {
 				sub.apply(ctx, args);
@@ -43,7 +43,7 @@ exports = Class(function () {
 		}
 		return this;
 	};
-	
+
 	this.subscribe = function (signal, ctx, method) {
 		var cb;
 		if (arguments.length == 2) {
@@ -53,12 +53,12 @@ exports = Class(function () {
 			cb._ctx = ctx; // references for unsubscription
 			cb._method = method;
 		}
-		
+
 		var s = this._subscribers || (this._subscribers = {});
 		(s[signal] || (s[signal] = [])).push(cb);
 		return this;
 	};
-	
+
 	this.subscribeOnce = function (signal, ctx, method) {
 		var args = arguments,
 			cb = bind(this, function () {
@@ -75,10 +75,10 @@ exports = Class(function () {
 			cb._ctx = ctx;
 			cb._method = method;
 		}
-		
+
 		return this.subscribe(signal, cb);
 	};
-	
+
 	// If no method is specified, all subscriptions with a callback context
 	// of ctx will be removed.
 
