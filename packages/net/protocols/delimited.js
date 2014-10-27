@@ -35,7 +35,7 @@ exports.DelimitedProtocol = Class(interfaces.Protocol, function(supr) {
 	this.sendLine = function(line) {
 		var data = line + this.delimiter;
 		logger.debug('WRITE:', data);
-		this.transport.write(data);
+		this.transport && this.transport.write(data);
 	}
 	this.connectionLost = function() {
 		logger.debug('connectionLost');

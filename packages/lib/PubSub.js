@@ -9,10 +9,12 @@
  *  Usage notes: There is one special signal '__any'.  Any subscribers to
  *     '__any' will be called on every publish with the first publish
  *     argument being the signal itself (after any args passed in during
- *     the corresponding subscribe). 
- *     Calling the super constructor is not required for descendants of 
- *     lib.PubSub. 
+ *     the corresponding subscribe).
+ *     Calling the super constructor is not required for descendants of
+ *     lib.PubSub.
  */
+
+from ..std.uuid import uuid;
 
 var ctx = jsio.__env.global,
 	SLICE = Array.prototype.slice;
@@ -20,7 +22,7 @@ var ctx = jsio.__env.global,
 exports = Class(function () {
 
 	this.init = function () {};
-	
+
 	this.publish = function (signal) {
 		if (this._subscribers) {
 			var args = SLICE.call(arguments, 1);
@@ -31,11 +33,11 @@ exports = Class(function () {
 					sub.apply(ctx, anyArgs);
 				}
 			}
-			
+
 			if (!this._subscribers[signal]) {
 				return this;
 			}
-			
+
 			var subs = this._subscribers[signal].slice(0);
 			for (var i = 0, sub; sub = subs[i]; ++i) {
 				sub.apply(ctx, args);
@@ -43,7 +45,7 @@ exports = Class(function () {
 		}
 		return this;
 	};
-	
+
 	this.subscribe = function (signal, ctx, method) {
 		var cb;
 		if (arguments.length == 2) {
@@ -53,12 +55,12 @@ exports = Class(function () {
 			cb._ctx = ctx; // references for unsubscription
 			cb._method = method;
 		}
-		
+
 		var s = this._subscribers || (this._subscribers = {});
 		(s[signal] || (s[signal] = [])).push(cb);
 		return this;
 	};
-	
+
 	this.subscribeOnce = function (signal, ctx, method) {
 		var args = arguments,
 			cb = bind(this, function () {
@@ -75,10 +77,10 @@ exports = Class(function () {
 			cb._ctx = ctx;
 			cb._method = method;
 		}
-		
+
 		return this.subscribe(signal, cb);
 	};
-	
+
 	// If no method is specified, all subscriptions with a callback context
 	// of ctx will be removed.
 
@@ -150,6 +152,80 @@ exports = Class(function () {
 
 	this.hasListeners = function (type) {
 		return this._subscribers && this._subscribers[type] && this._subscribers[type].length;
+	};
+
+	/**
+	 * listenTo for inverting control of #subscribe, #on, etc.
+	 * @param {object} obj something extending js.io's lib.PubSub
+	 * @param {string} name the event name to listen to
+	 * @param {callback} function to run on event
+	 * @return {this}
+	 */
+	this.listenTo = function (obj, name, callback) {
+		var listeningTo = this._listeningTo || (this._listeningTo = {});
+		var id = obj._listenId || (obj._listenId = uuid(8, 16));
+		listeningTo[id] = obj;
+		obj.subscribe(name, this, callback);
+		return this;
+	};
+
+	/**
+	 * Stop listening to objects previously passed to `listenTo`.
+	 *
+	 * @example
+	 *     // Stop listening to all events on all objects
+	 *     this.stopListening();
+	 *
+	 *     // Stop listening to all events on `obj`
+	 *     this.stopListening(obj);
+	 *
+	 *     // Stop all of my callbacks for a given event
+	 *     this.stopListening(obj, name);
+	 *
+	 *     // Stop a single callback from firing
+	 *     this.stopListening(obj, name, callback);
+	 *
+	 * @param {object} [obj] object extending lib.PubSub and using listenTo
+	 * @param {string} [name] the event name to listen to
+	 * @param {callback} [callback] function to stop running
+	 * @return {this}
+	 */
+	this.stopListening = function (obj, name, callback) {
+		var events, names, retain, i, j, k, l, ev;
+		var listeningTo = this._listeningTo;
+		if (!listeningTo) {
+			return this;
+		}
+
+		logger.log(obj);
+		var remove = !name && !callback;
+		if (obj) {
+			(listeningTo = {})[obj._listenId] = obj;
+		}
+
+		for (var id in listeningTo) {
+			obj = listeningTo[id];
+
+			names = name ? [name] : Object.keys(obj._subscribers);
+			for (i = 0, l = names.length; i < l; i++) {
+				name = names[i];
+				if (events = obj._subscribers[name]) {
+					obj._subscribers[name] = retain = [];
+					for (j = 0, k = events.length; j < k; j++) {
+						ev = events[j];
+						if ((callback && callback !== ev._method) ||
+								(this && this !== ev._ctx)) {
+							retain.push(ev);
+						}
+					}
+					if (!retain.length) delete obj._subscribers[name];
+				}
+			}
+			if (remove) {
+				delete this._listeningTo[id];
+			}
+		}
+		return this;
 	};
 });
 
