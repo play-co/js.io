@@ -120,6 +120,24 @@ $.addClass = function(el, classNames) {
 	return $;
 }
 
+/* returns true if the given className is found in the list of
+ * classes on the given element.
+ */
+$.hasClass = function(el, className) {
+	if (!el) { return false; }
+
+	var el = $.id(el);
+	var classNames = el.className.split(' ');
+
+	for (var i = 0, len = classNames.length; i < len; ++i) {
+		if (classNames[i].trim() === className) {
+			return true;
+		}
+	}
+
+	return false;
+};
+
 $.getTag = function(from, tag) { return from.getElementsByTagName(tag); }
 
 $.removeClass = function(el, classNames) {
