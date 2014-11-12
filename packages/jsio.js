@@ -866,8 +866,14 @@
 				req = req
 					// .replace(/^\//, '') // remove any leading slash
 					.replace(/\.\.\//g, '.') // replace relative path indicators with dots
-					.replace(/\.\//g, '')
-					.replace(/\//g, '.'); // any remaining slashes are path separators
+					.replace(/\.\//g, '');
+
+				if (ENV.pathSep === '\\' && req.match(/^[a-zA-Z]:.*/)) {
+					// leave absolute windows paths (start with drive letter) alone
+				} else {
+					// any remaining slashes are path separators
+					req = req.replace(/\//g, '.');
+				}
 
 				imports[0] = { from: (isRelative ? '.' : '') + req };
 				return true;
