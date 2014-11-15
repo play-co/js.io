@@ -110,7 +110,21 @@
 					var len = relativeTo.length;
 					if (path.substring(0, len) == relativeTo) {
 						/* Note: we're casting a boolean to an int by adding len to it */
-						return path.slice((path.charAt(len) == ENV.pathSep) + len);
+						var p = path.slice((path.charAt(len) == ENV.pathSep) + len);
+
+						// on windows, if path starts with a /, replace with \
+						// TODO: this is a stupid hack - we should find the root of the
+						// problem and solve it there
+						// when opening the simulator page, importing
+						// src/serve/static/index.js compiles a bunch of javascript
+						// and tries to import .Overview, which gets converted into
+						// /src/server/static/Overview.js, which does NOT correctly
+						// get pulled out of the relative path changes
+							if (ENV.pathSep === '\\' && p[0] === '/') {
+									p = p.substr(1);
+							}
+
+							return p;
 					}
 
 					var sA = util.removeEndSlash(path).split(ENV.pathSep),
