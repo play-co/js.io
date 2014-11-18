@@ -109,8 +109,10 @@
 				makeRelativePath: function(path, relativeTo) {
 					var len = relativeTo.length;
 					if (path.substring(0, len) == relativeTo) {
-						/* Note: we're casting a boolean to an int by adding len to it */
-						return path.slice((path.charAt(len) == ENV.pathSep) + len);
+						// if the relative path now starts with a path separator
+						// (either / or \), remove it
+						// Note: we're casting a boolean to an int by adding len to it
+						return path.slice(len + /[\/\\]/.test(path.charAt(len)));
 					}
 
 					var sA = util.removeEndSlash(path).split(ENV.pathSep),
@@ -857,7 +859,7 @@
 			// 		../b -> ..b
 			// 		./b -> .b
 
-			var match = request.match(/^\s*[\w.0-9$\/\-]+\s*$/);
+			var match = request.match(/^\s*[\w.0-9$\/\-:\\]+\s*$/);
 			if (match) {
 
 				var req = util.resolveRelativePath(match[0]),
@@ -866,8 +868,14 @@
 				req = req
 					// .replace(/^\//, '') // remove any leading slash
 					.replace(/\.\.\//g, '.') // replace relative path indicators with dots
-					.replace(/\.\//g, '')
-					.replace(/\//g, '.'); // any remaining slashes are path separators
+					.replace(/\.\//g, '');
+
+				if (ENV.pathSep === '\\' && req.match(/^[a-zA-Z]:.*/)) {
+					// leave absolute windows paths (start with drive letter) alone
+				} else {
+					// any remaining slashes are path separators
+					req = req.replace(/\//g, '.');
+				}
 
 				imports[0] = { from: (isRelative ? '.' : '') + req };
 				return true;
