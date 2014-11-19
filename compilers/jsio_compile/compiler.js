@@ -1,4 +1,4 @@
-import util.path;
+import jsio.util.path as path;
 
 var JSIO = 'jsio';
 
@@ -14,6 +14,7 @@ var _interface = null;
 exports.start = function(/*optional*/ args, opts) {
 	if (opts && opts['interface']) {
 		_interface = opts['interface'];
+		delete opts['interface'];
 	} else {
 		if (!J) {
 			J = jsio.__jsio.clone();
@@ -23,14 +24,18 @@ exports.start = function(/*optional*/ args, opts) {
 			logger.error("autostart failed: unknown environment.\n\n\tTry using compiler.run(args, opts) instead.");
 			return;
 		}
-		
-		J.path.add('../../packages/');
-		_interface = J('import .' + J.__env.name + '_interface');
+
+		_interface = jsio('import .' + J.__env.name + '_interface');
 	}
 
 	// expects the interface to eventually call run to do the actual compile
 	_interface.setCompiler(this);
-	_interface.run(args, opts);
+
+	try {
+		_interface.run(args, opts);
+	} catch (e) {
+		_interface.onError(e);
+	}
 }
 
 function getPackage(fileName) {
@@ -59,56 +64,53 @@ exports.setDebugLevel = function(level) {
  */
 exports.run = function(args, opts) {
 	J = jsio.__jsio.clone();
-	
+
 	if (opts.cwd) {
 		J.__env.getCwd = function () { return opts.cwd; };
 	}
 
 	var debugLevel = 'debug' in opts ? opts.debug : 5;
 	exports.setDebugLevel(debugLevel);
-	
+
 	var strOpts = JSON.stringify(opts, null, '\t');
 	logger.info('Starting compiler with args: ', args, 'and options:', strOpts.substring(1, strOpts.length - 1));
-	
+
 	// use external copy of jsio rather than cached copy
 	if (opts.jsioPath) {
-		// force the path
-		J.path.set([opts.jsioPath]);
-		
+		// update where import jsio.* comes from
+		J.path.cache['jsio'] = opts.jsioPath;
+
 		// hack to 'set' the js.io source code
 		J.__jsio.__init__.toString = function() { return J.__env.fetch(J.__jsio.__util.buildPath(opts.jsioPath, 'jsio.js')); }
-		
-		// reset cached path
-		for (var key in J.path.cache) {
-			delete J.path.cache[key];
-		}
-		
+
 		// delete the cache copy
 		var sourceCache = J.__jsio.__srcCache;
 		for (var i in sourceCache) {
 			delete sourceCache[i];
 		}
 	}
-	
+
 	if (opts.path) {
-		var cwd = J.__env.getCwd();
 		for(var i = 0, len = opts.path.length; i < len; ++i) {
-			if (opts.path[i]) {
-				var relPath = util.path.makeRelativePath(opts.path[i], cwd);
-				J.path.add(relPath);
-			}
+			opts.path[i] && J.path.add(opts.path[i]);
 		}
 
 		delete opts.path;
 	}
-	
+
+	if (opts.pathCache) {
+		for (var key in opts.pathCache) {
+			J.path.cache[key] = opts.pathCache[key];
+		}
+	}
+
 	logger.info('js.io path:', JSON.stringify(J.path.get()));
-	
+
 	var initial;
-	
+
 	// -- parse options --
 	// try to maintain consistency with pyjsiocompile
-	
+
 	// accept a pkg file as the first argument
 	if (/\.pkg$/.test(args[2])) {
 		var pkg = getPackage(args[2]);
@@ -120,18 +122,18 @@ exports.run = function(args, opts) {
 			opts['package'] = pkg; // treat the package the same as if it was specified on the command line
 		}
 	}
-	
+
 	// opts.package is probably the filename of the package
 	if (typeof opts['package'] == 'string' && /\.pkg$/.test(opts['package'])) {
 		opts['package'] = getPackage(opts['package']);
-	} 
+	}
 
 	// parse the package contents
 	if (opts['package']) {
 		var pkgDef = opts['package'];
-		
+
 		logger.debug(pkgDef);
-		
+
 		// in pyjsiocompile, root does two things:
 		if ('root' in pkgDef) {
 			// 1. provide the initial import
@@ -140,26 +142,26 @@ exports.run = function(args, opts) {
 			// pyjsiocompile package files don't have a relative import indicator (a prefix dot: '.')
 			// to indicate that the first import is relative, so manually add one here
 			if (!/^\./.test(initial)) { initial = '.' + initial; }
-			
+
 			// 2. generate a statement to include at the bottom of the file
 			opts.appendImport = true;
 		}
-	
+
 
 		// pyjsiocompile has keys for building the dynamic import ENV for the jsio net module.
 		// All pairs of (environment, transport) should be included as dependencies.
-		
+
 		function extendArray(destKey, srcKey) {
 			opts[destKey] = (opts[destKey] || []).concat(pkgDef[srcKey || destKey]);
 		}
-		
+
 		function extendObject(destKey, srcKey) {
 			opts[destKey] = JS.merge((opts[destKey] || {}), pkgDef[srcKey || destKey]);
 		}
-		
+
 		if (pkgDef.environments) { extendArray('environments'); }
 		if (pkgDef.transports) { extendArray('transports'); }
-		
+
 		// pyjsiocompile never supported additional dependencies, but the package files
 		// have an empty key, so let's implement it anyway
 		if (pkgDef.additional_dependancies) { extendArray('additionalDeps', 'additional_dependancies'); }
@@ -169,23 +171,23 @@ exports.run = function(args, opts) {
 		//     dictionary (each key maps to a string or array of strings)
 		if (pkgDef.dynamicImports) { extendObject('dynamicImports'); }
 	}
-	
+
 	// default argument is an import statement:
 	//    jsio_compile "import .myModule"
 	// (this will be args[2])
 	// We do this after package resolution since the arguments on the
 	// command-line should override any settings in the package file.
 	if (args.length > 2) { initial = args[2]; }
-	
+
 	if (!initial) {
-		_interface.onError(opts, 'No initial import specified');
+		_interface.onError(new Error('No initial import specified'));
 		return;
 	}
-	
+
 	// pyjsiocompile built the dynamic import table for the net environment
 	// which depends on runtime environment and desired transports.  This
 	// code does the same thing, building a list of imports that need to
-	// happen upon import of the net.env module.  
+	// happen upon import of the net.env module.
 	logger.info('dynamic imports: ', opts.dynamicImports);
 	if (!opts.dynamicImports) { opts.dynamicImports = {}; }
 	if (!opts.dynamicImports.ENV) { opts.dynamicImports.ENV = null; }
@@ -197,7 +199,7 @@ exports.run = function(args, opts) {
 			}
 		}
 	}
-	
+
 	var result = initial.match(/^(.*)\.js$/);
 	if (result) {
 		initial = result[1];
@@ -207,28 +209,31 @@ exports.run = function(args, opts) {
 	}
 
 	// run the actual compiler
-	var compiler = J('import preprocessors.compiler');
+	var compiler = J('import jsio.preprocessors.compiler');
 	compiler.setCompilerOpts({
 		debugLevel: debugLevel,
 		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
 		defines: opts.defines,
+		path: opts.path,
 		autoDetectPaths: true,
 		environment: opts.environment,
-		dynamicImports: opts.dynamicImports
+		dynamicImports: opts.dynamicImports,
+		preprocessors: opts.preprocessors,
+		rawOpts: opts
 	});
-	
-	compiler.compile('import base', opts);
-	
+
+	compiler.compile('import jsio.base');
+
 	if (opts.additionalDeps) {
 		var deps = opts.additionalDeps;
 		var n = deps.length;
 
-		logger.info('compiling dependencies...');
 		for (var i = 0; i < n; ++i) {
-			compiler.compile(deps[i], opts);
+			logger.info('compiling dependencies...', deps[i]);
+			compiler.compile(deps[i]);
 		}
 	}
-	
+
 	logger.info('compiling main program', initial);
 
 	compiler.compile(initial);
@@ -237,11 +242,11 @@ exports.run = function(args, opts) {
 		if (opts.appendImport) {
 			src = src + ';' + JSIO + '("' + initial + '")';
 		}
-		
+
 		if (opts.footer) {
 			src = src + (opts.footer || '');
 		}
-		
+
 		_interface.onFinish(opts, src);
 	});
 }

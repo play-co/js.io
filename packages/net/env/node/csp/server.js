@@ -26,18 +26,18 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
- 
+
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
 
-jsio('import std.uuid as uuid');
-jsio('import std.utf8 as utf8');
-jsio('import std.base64 as base64');
-jsio('import lib.Hash as Hash');
-jsio('from .util import *');
+import .....std.uuid as uuid;
+import .....std.utf8 as utf8;
+import .....std.base64 as base64;
+import .....lib.Hash as Hash;
+from .util import *;
 
-var http = jsio.__env.require('http'),
-	nodeUrl = jsio.__env.require('url');
+var http = require('http');
+var nodeUrl = require('url');
 
 var sessionDict = {},
 	varNames = {
@@ -118,7 +118,7 @@ exports.Session = Class(function() {
 		this.connection.readyState = (this.connection.readyState === 'open' ? 'readOnly' : 'closed');
 		this.connection.emit('close');
 	};
-	
+
 	var updatedHeaders = new Hash('gzipOk', 'contentType');
 	this.updateVars = function (params) {
 		for (var param in params) {
@@ -138,7 +138,7 @@ exports.Session = Class(function() {
 					// string of spaces of length prebufferSize
 					this.variables.prebuffer = (new Array(prebufferSize+1)).join(' ');
 				};
-			};	
+			};
 		};
 	};
 	this.isStreaming = function () {
@@ -158,7 +158,7 @@ exports.Session = Class(function() {
 	};
 	this.resetTimeoutTimer = function () {
 		clearTimeout(this.timeoutTimer);
-		// Give the client 50% longer than the duration of a comet request before 
+		// Give the client 50% longer than the duration of a comet request before
 		// we time them out.
 		var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
 		this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
@@ -264,7 +264,7 @@ exports.Session = Class(function() {
 				var packetContent,
 					packet = batch.shift(),
 					packetId = packet[0], encoding = packet[1], content = packet[2];
-				
+
 				if (content === null) {
 					this.close();
 				} else if (encoding === 0) {
@@ -318,7 +318,7 @@ exports.Connection = Class(process.EventEmitter, function() {
 		};
 		this.emit('receive', data);
 	};
-	
+
 	var validEncodings = new Hash('utf8', 'plain', 'binary');
 	this.setEncoding = function (encoding) {
 		assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
@@ -327,7 +327,7 @@ exports.Connection = Class(process.EventEmitter, function() {
 		};
 		this._encoding = encoding;
 	};
-	
+
 	var validReadyStates = new Hash('writeOnly', 'open');
 	this.send = function (data, encoding) {
 		if (!validReadyStates.contains(this.readyState)) {
@@ -351,7 +351,7 @@ exports.createServer = function (connection_listener) {
 exports.Server = Class(process.EventEmitter, function () {
 	this.init = function (sessionURL) {
 		process.EventEmitter.call(this);
-		this._sessionUrl = sessionURL || ''; 
+		this._sessionUrl = sessionURL || '';
 		log('starting server, session url is <' + this._sessionUrl + '>');
 	};
 	var CSPError = Class(AssertionError, function (supr) {
@@ -420,7 +420,7 @@ exports.Server = Class(process.EventEmitter, function () {
 				logger.debug(request.method);
 				assertOrRenderError(validMethods.contains(request.method),
 									405, 'Invalid HTTP method, ' + request.method);
-				
+
 				var resource = path.split('/').pop();
 				if (resource === 'static') {
 					assertOrRenderError(startswith(path, sessionUrl + '/'),
@@ -463,7 +463,7 @@ exports.Server = Class(process.EventEmitter, function () {
 			}
 			catch (err) {
 				if (err instanceof CSPError) {
-					renderError(response, err.code, err.message);					 
+					renderError(response, err.code, err.message);
 				} else {
 					logger.warn('Unexpected Error: ', err.message, err.stack);
 					renderError(response, 500, 'Unknown Server error');
