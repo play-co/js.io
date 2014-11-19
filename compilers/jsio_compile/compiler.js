@@ -1,4 +1,4 @@
-import util.path;
+import jsio.util.path as path;
 
 var JSIO = 'jsio';
 
@@ -25,8 +25,7 @@ exports.start = function(/*optional*/ args, opts) {
 			return;
 		}
 
-		J.path.add('../../packages/');
-		_interface = J('import .' + J.__env.name + '_interface');
+		_interface = jsio('import .' + J.__env.name + '_interface');
 	}
 
 	// expects the interface to eventually call run to do the actual compile
@@ -78,16 +77,11 @@ exports.run = function(args, opts) {
 
 	// use external copy of jsio rather than cached copy
 	if (opts.jsioPath) {
-		// force the path
-		J.path.set([opts.jsioPath]);
+		// update where import jsio.* comes from
+		J.path.cache['jsio'] = opts.jsioPath;
 
 		// hack to 'set' the js.io source code
 		J.__jsio.__init__.toString = function() { return J.__env.fetch(J.__jsio.__util.buildPath(opts.jsioPath, 'jsio.js')); }
-
-		// reset cached path
-		for (var key in J.path.cache) {
-			delete J.path.cache[key];
-		}
 
 		// delete the cache copy
 		var sourceCache = J.__jsio.__srcCache;
@@ -97,12 +91,8 @@ exports.run = function(args, opts) {
 	}
 
 	if (opts.path) {
-		var cwd = J.__env.getCwd();
 		for(var i = 0, len = opts.path.length; i < len; ++i) {
-			if (opts.path[i]) {
-				var relPath = util.path.makeRelativePath(opts.path[i], cwd);
-				J.path.add(relPath);
-			}
+			opts.path[i] && J.path.add(opts.path[i]);
 		}
 
 		delete opts.path;
@@ -219,7 +209,7 @@ exports.run = function(args, opts) {
 	}
 
 	// run the actual compiler
-	var compiler = J('import preprocessors.compiler');
+	var compiler = J('import jsio.preprocessors.compiler');
 	compiler.setCompilerOpts({
 		debugLevel: debugLevel,
 		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
@@ -232,14 +222,14 @@ exports.run = function(args, opts) {
 		rawOpts: opts
 	});
 
-	compiler.compile('import base');
+	compiler.compile('import jsio.base');
 
 	if (opts.additionalDeps) {
 		var deps = opts.additionalDeps;
 		var n = deps.length;
 
-		logger.info('compiling dependencies...');
 		for (var i = 0; i < n; ++i) {
+			logger.info('compiling dependencies...', deps[i]);
 			compiler.compile(deps[i]);
 		}
 	}

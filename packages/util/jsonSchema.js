@@ -1,6 +1,4 @@
-"use import";
-
-/** 
+/**
 * JSONSchema Validator
 * ====================
 *
@@ -10,7 +8,7 @@
 * Based on jsonschema-b4.js:
 *   Copyright (c) 2007 Kris Zyp SitePen (www.sitepen.com)
 *   Licensed under the MIT (MIT-LICENSE.txt) license.
-* 
+*
 * To use the validator call JSONSchema.validate with an instance object
 * and an optional schema object. If a schema is provided, it will be used
 * to validate. If the instance object refers to a schema
@@ -18,24 +16,22 @@
 * parameter is not necessary (if both exist, both validations will
 * occur). The validate method will return an array of validation errors.
 * If there are no errors, then an empty list will be returned. A
-* validation error will have two properties: 
+* validation error will have two properties:
 *	1. "property" - the property that had the error
 *	2. "message" - the error message
 */
-
-import std.js as JS;
 
 // JSONSchema:
 exports = {
 	// function (instance, schema):
 	// 		To use the validator call JSONSchema.validate with an instance object and an optional schema object.
-	// 		If a schema is provided, it will be used to validate. If the instance object refers to a schema (self-validating), 
-	// 		that schema will be used to validate and the schema parameter is not necessary (if both exist, 
-	// 		both validations will occur). 
+	// 		If a schema is provided, it will be used to validate. If the instance object refers to a schema (self-validating),
+	// 		that schema will be used to validate and the schema parameter is not necessary (if both exist,
+	// 		both validations will occur).
 	// 		The validate method will return an object with two properties:
 	// 			valid: A boolean indicating if the instance is valid by the schema
-	// 			errors: An array of validation errors. If there are no errors, then an 
-	// 					empty list will be returned. A validation error will have two properties: 
+	// 			errors: An array of validation errors. If there are no errors, then an
+	// 					empty list will be returned. A validation error will have two properties:
 	// 						property: which indicates which property had the error
 	// 						message: which indicates what the error was
 	//
@@ -44,8 +40,8 @@ exports = {
 	// Summary:
 	// 		The checkPropertyChange method will check to see if a value can legally be in a property with the given schema
 	// 		This is slightly different than the validate method in that it will fail if the schema is readonly and it will
-	// 		not check for self-validation, it is assumed that the passed in value is already internally valid.  
-	// 		The checkPropertyChange method will return the same object type as validate, see JSONSchema.validate for 
+	// 		not check for self-validation, it is assumed that the passed in value is already internally valid.
+	// 		The checkPropertyChange method will return the same object type as validate, see JSONSchema.validate for
 	// 		information.
 	//
 	checkPropertyChange: function(/*Any*/value,/*Object*/schema, /*String*/ property) {
@@ -56,12 +52,12 @@ exports = {
 var gCheckPropChange = false;
 function validate(instance, schema, property) {
 	gCheckPropChange = property;
-	
+
 	var errors = schema ? checkProp(instance, schema, '', property || '') : [];
 	if (!property && instance && instance.$schema) {
 		checkProp(instance, instance.$schema, '', '', errors);
 	}
-	
+
 	return {
 		valid: !errors.length,
 		errors: errors
@@ -71,11 +67,11 @@ function validate(instance, schema, property) {
 // validate a value against a property definition
 function checkProp(value, schema, path, i, errors) {
 	if (!errors) { errors = []; }
-	
-	path += 
+
+	path +=
 		path ? typeof i == 'number' ? '[' + i + ']'
 			 : typeof i == 'undefined' ? '' : '.' + i : i;
-	
+
 	function addError(message) {
 		errors.push({
 			property: path,
@@ -86,8 +82,8 @@ function checkProp(value, schema, path, i, errors) {
 	var schemaType = typeof schema,
 		isObject = schemaType == 'object',
 		isFunction = schemaType == 'function';
-	
-	if ((!isObject || JS.isArray(schema)) && (path || !isFunction)) {
+
+	if ((!isObject || Array.isArray(schema)) && (path || !isFunction)) {
 		if (isFunction) {
 			if (!(value instanceof schema)) {
 				addError("is not an instance of the class/constructor " + schema.name);
@@ -95,25 +91,25 @@ function checkProp(value, schema, path, i, errors) {
 		} else if (schema) {
 			addError("Invalid schema/property definition " + schema);
 		}
-		
+
 		return errors;
 	}
-	
+
 	if (gCheckPropChange && schema.readonly) { addError("is a readonly field, it can not be changed"); }
-	
+
 	// if it extends another schema, it must pass that schema as well
 	if (schema['extends']) { checkProp(value, schema['extends'], path, i, errors); }
-	
+
 	if (value === undefined) {
 		if (!schema.optional) { addError("is missing and it is not optional"); }
 	} else {
 		errors = errors.concat(checkType(schema.type,value));
 		if (schema.disallow && !checkType(schema.disallow,value).length) { addError(" disallowed value was matched"); }
-		
+
 		if (value !== null) {
-			if (JS.isArray(value)) {
+			if (Array.isArray(value)) {
 				if (schema.items) {
-					if (JS.isArray(schema.items)) {
+					if (Array.isArray(schema.items)) {
 						for (i=0,l=value.length; i<l; i++) {
 							errors.concat(checkProp(value[i],schema.items[i],path,i, errors));
 						}
@@ -121,7 +117,7 @@ function checkProp(value, schema, path, i, errors) {
 						for (i=0,l=value.length; i<l; i++) {
 							errors.concat(checkProp(value[i],schema.items,path,i, errors));
 						}
-					}							
+					}
 				}
 				if (schema.minItems && value.length < schema.minItems) {
 					addError("There must be a minimum of " + schema.minItems + " in the array");
@@ -153,12 +149,12 @@ function checkProp(value, schema, path, i, errors) {
 			{
 				addError("must have a maximum value of " + schema.maximum);
 			}
-			
+
 			if (schema['enum']) {
-				
+
 				var enumer = schema['enum'],
 					found;
-				
+
 				var l = enumer.length;
 				for(var j = 0; j < l; j++) {
 					if (enumer[j]===value) {
@@ -166,16 +162,16 @@ function checkProp(value, schema, path, i, errors) {
 						break;
 					}
 				}
-				
+
 				if (!found) { addError("does not have a value in the enumeration " + enumer.join(", ")); }
 			}
-			if (typeof schema.maxDecimal == 'number' && 
+			if (typeof schema.maxDecimal == 'number' &&
 			(value.toString().match(new RegExp("\\.[0-9]{" + (schema.maxDecimal + 1) + ",}")))) {
 				addError("may only have " + schema.maxDecimal + " digits of decimal places");
 			}
 		}
 	}
-	
+
 	return errors;
 }
 
@@ -183,14 +179,14 @@ function checkProp(value, schema, path, i, errors) {
 function checkObj(instance, objTypeDef, path, additionalProp, errors) {
 
 	if (typeof objTypeDef =='object') {
-		if (typeof instance != 'object' || JS.isArray(instance)) {
+		if (typeof instance != 'object' || Array.isArray(instance)) {
 			errors.push({
 				property: path,
 				message: "an object is required"
 			});
 		}
-		
-		for(var i in objTypeDef) { 
+
+		for(var i in objTypeDef) {
 			if (objTypeDef.hasOwnProperty(i) && !(i.charAt(0) == '_' && i.charAt(1) == '_')) {
 				var value = instance[i];
 				var propDef = objTypeDef[i];
@@ -198,7 +194,7 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
 			}
 		}
 	}
-	
+
 	for(i in instance) {
 		if (instance.hasOwnProperty(i)
 				&& !(i.charAt(0) == '_'
@@ -213,7 +209,7 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
 					" is not defined in the schema and the schema does not allow additional properties"
 			});
 		}
-		
+
 		var requires = objTypeDef && objTypeDef[i] && objTypeDef[i].requires;
 		if (requires && !(requires in instance)) {
 			errors.push({
@@ -222,17 +218,17 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
 					+ requires + " also be present"
 			});
 		}
-		
+
 		value = instance[i];
 		if (objTypeDef && typeof objTypeDef == 'object' && !(i in objTypeDef)) {
-			checkProp(value, additionalProp, path, i, errors); 
+			checkProp(value, additionalProp, path, i, errors);
 		}
-		
+
 		if (!gCheckPropChange && value && value.$schema) {
 			errors = errors.concat(checkProp(value, value.$schema, path, i, errors));
 		}
 	}
-	
+
 	return errors;
 }
 
@@ -240,14 +236,14 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
 function checkType(type, value, errors) {
 	if (type) {
 		var actualType = typeof value;
-		
+
 		if (typeof type == 'string') {
 			type = type.toLowerCase();
 			switch(type) {
 				case 'any':
 					return [];
 				case 'array':
-					if (!JS.isArray(value)) {
+					if (!Array.isArray(value)) {
 						return [{
 							property: path,
 							message: 'expected an array, but ' + actualType + ' found instead'
@@ -274,8 +270,8 @@ function checkType(type, value, errors) {
 			}
 			return [];
 		}
-		
-		if (JS.isArray(type)) {
+
+		if (Array.isArray(type)) {
 			var unionErrors = [];
 			for(var j = 0; j < type.length; j++) { // a union type
 				var errs = checkType(type[j], value, errors);
@@ -287,6 +283,6 @@ function checkType(type, value, errors) {
 			return checkProp(value, type, path);
 		}
 	}
-	
+
 	return [];
 }

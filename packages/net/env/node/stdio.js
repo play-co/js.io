@@ -1,6 +1,6 @@
-jsio('import net.interfaces');
+import ...interfaces;
 
-var Transport = Class(net.interfaces.Transport, function(supr) {
+var Transport = Class(interfaces.Transport, function(supr) {
     this.init = function(inStream, outStream) {
         this._inStream = inStream;
         this._outStream = outStream;
@@ -20,7 +20,7 @@ var Transport = Class(net.interfaces.Transport, function(supr) {
         this._inStream.on('data', bind(protocol, 'dataReceived'));
 		this._inStream.on('end', bind(protocol, 'connectionLost'));
     }
-	
+
     this.write = function(data) {
         this._outStream.write(data);
         this._outStream.flush();
@@ -33,7 +33,7 @@ var Transport = Class(net.interfaces.Transport, function(supr) {
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(net.interfaces.Connector, function() {
+exports.Connector = Class(interfaces.Connector, function() {
     this.connect = function() {
         var stdin = process.openStdin();
         var stdout = process.stdout

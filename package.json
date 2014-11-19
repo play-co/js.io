@@ -2,11 +2,11 @@
   "author": "Game Closure",
   "name": "jsio",
   "description": "js.io module and class system",
-  "version": "1.0.4",
+  "version": "2.0.0-beta.4",
   "homepage": "http://www.github.com/gameclosure/js.io",
   "repository": {
     "type": "git",
-    "url": "git://github.com/gameclosure/js.io.git"
+    "url": "https://github.com/gameclosure/js.io"
   },
   "main": "./packages/jsio.js",
   "bin": {

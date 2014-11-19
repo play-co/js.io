@@ -1,6 +1,7 @@
 // Sort of like a twisted protocol
-jsio('import net');
-jsio('import lib.Enum as Enum');
+import .index as net;
+import ..lib.Enum as Enum;
+import ..lib.PubSub as PubSub;
 
 var ctx = jsio.__env.global;
 
@@ -74,12 +75,13 @@ exports.Transport = Class(function() {
 	}
 });
 
-exports.Listener = Class(function() {
+// emits 'error' event if listen fails
+exports.Listener = Class(PubSub, function() {
 	this.init = function(server, opts) {
 		this._server = server;
 		this._opts = opts || {};
 	}
-	
+
 	this.onConnect = function(transport) {
 		//try {
 			var p = this._server.buildProtocol();
@@ -92,7 +94,7 @@ exports.Listener = Class(function() {
 		//	logger.error(e);
 		//}
 	}
-	
+
 	this.listen = function() { throw new Error('Abstract class'); }
 	this.stop = function() {}
 });
@@ -104,9 +106,9 @@ exports.Connector = Class(function() {
 		this._opts = opts;
 		this._state = exports.STATE.INITIAL;
 	}
-	
+
 	this.getState = function() { return this._state; }
-	
+
 	this.onConnect = function(transport) {
 		this._state = exports.STATE.CONNECTED;
 
@@ -118,17 +120,17 @@ exports.Connector = Class(function() {
 			throw logger.error(e);
 		}
 	}
-	
+
 	this.onDisconnect = function(err) {
 		var wasConnected = this._state == exports.STATE.CONNECTED;
 		this._state = exports.STATE.DISCONNECTED;
-		
+
 		try {
 			this._protocol._connectionLost(err, wasConnected);
 		} catch(e) {
 			throw logger.error(e);
 		}
 	}
-	
+
 	this.getProtocol = function() { return this._protocol; }
 });
