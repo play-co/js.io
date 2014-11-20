@@ -9,6 +9,5 @@ function replace (raw, p1, p2) {
 }
 
 exports = function (path, moduleDef, opts) {
-  // logger.log('moduleDef', moduleDef);
   moduleDef.src = moduleDef.src.replace(sliceExpr, replace);
 };
