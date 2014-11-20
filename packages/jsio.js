@@ -715,7 +715,7 @@
       if (modulePath != 'base' && (opts.reload || !opts.dontPreprocess && !moduleDef.pre)) {
         moduleDef.pre = true;
 
-        applyPreprocessors(fromDir, moduleDef, ["import"], opts);
+        applyPreprocessors(fromDir, moduleDef, ["import", "inlineSlice"], opts);
 
         // the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
         // while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
@@ -742,6 +742,7 @@
         if (p && typeof p == 'function') {
           p(path, moduleDef, opts);
         }
+
       }
     }
 
