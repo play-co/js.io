@@ -118,8 +118,10 @@
         relative: function (relativeTo, path) {
           var len = relativeTo.length;
           if (path.substring(0, len) == relativeTo) {
+            // if the relative path now starts with a path separator
+            // either (/ or \), remove it
             /* Note: we're casting a boolean to an int by adding len to it */
-            return path.slice((path.charAt(len) == ENV.pathSep) + len);
+            return path.slice(len + /[\/\\]/.test(path.charAt(len)));
           }
 
           var sA = util.removeEndSlash(path).split(ENV.pathSep),
