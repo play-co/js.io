@@ -1,4 +1,4 @@
-var importExpr = /^(\s*)(import\s+[^=+*"'\r\n;\/]+|from\s+[^=+"'\r\n;\/]+)(;|\/|$)/gm;
+var importExpr = /^(\s*)(import\s+[^=+*"'\r\n;\/]+|from\s+[^=+"'\r\n;\/ ]+\s+import\s+[^=+"'\r\n;\/]+)(;|\/|$)/gm;
 
 function replace(raw, p1, p2, p3) {
 	if (!/\/\//.test(p1)) {
