@@ -289,7 +289,7 @@
 		*/
 	
 		function ENV_node() {
-			var fs = require('fs');
+			var fs = require('graceful-fs');
 			var path = require('path');
 			
 			this.name = 'node';
