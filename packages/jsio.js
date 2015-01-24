@@ -261,7 +261,13 @@
     jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; }
     jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
 
-    jsio.setCachedSrc = function(path, src) { srcCache[path] = { path: path, src: src }; }
+    jsio.setCachedSrc = function(path, src, locked) {
+      if (srcCache[path] && srcCache[path].locked) {
+        console.warn('Cache is ignoring (already present and locked) src ' + path);
+        return;
+      }
+      srcCache[path] = { path: path, src: src, locked: locked };
+    };
     jsio.getCachedSrc = function(path) { return srcCache[path]; }
 
     jsio.__filename = 'jsio.js';
