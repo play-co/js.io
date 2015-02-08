@@ -35,7 +35,7 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 
 	this._connect = function (io) {
 		logger.debug('opening the connection');
-		var socket = io(this._opts.namespace, {multiplex: false});
+		var socket = io(window.location.origin + this._opts.namespace, {multiplex: false});
 		var transport = new Transport(socket);
 		var onConnect = bind(this, 'onConnect', transport);
 
