@@ -97,9 +97,12 @@ exports.BrowserDetect = new function() {
 	}
 	
 	function searchVersion(dataString) {
-		var index = dataString.indexOf(versionSearchString);
-		if (index == -1) return;
-		return parseFloat(dataString.substring(index+versionSearchString.length+1));
+        if (dataString && typeof dataString === 'string') {
+            var index = dataString.indexOf(versionSearchString);
+            if (index == -1) return;
+            return parseFloat(dataString.substring(index+versionSearchString.length+1));
+        }
+        return;
 	}
 	
 	this.browser = searchString(dataBrowser) || "unknown";

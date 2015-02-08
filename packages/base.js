@@ -33,8 +33,8 @@ if (!Function.prototype.bind) {
       throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
     }
 
-    var aArgs = Array.prototype.slice.call(arguments, 1), 
-        fToBind = this, 
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
         fNOP = function () {},
         fBound = function () {
           return fToBind.apply(this instanceof fNOP
@@ -133,13 +133,13 @@ exports.__class__ = function (cls, name, parent, proto) {
 			clsProto.prototype = parent.prototype;
 		}
 	}
-	
+
 	var supr = parent ? function(context, method, args) {
 			var f = parent.prototype[method];
 			if (!f) { throw new Error('method ' + method + ' does not exist'); }
 			return f.apply(context, args || []);
 		} : null;
-	
+
 	var p = cls.prototype = new clsProto();
 	p.constructor = cls;
 	p.__parentClass__ = parent;
@@ -161,10 +161,10 @@ var ErrorParentClass = exports.__class__(function ErrorCls() {
  * Merge two objects together.
  */
 
-exports.Class.defaults = 
+exports.Class.defaults =
 exports.merge = function(base, extra) {
 	base = base || {};
-	
+
 	for (var i = 1, len = arguments.length; i < len; ++i) {
 		var copyFrom = arguments[i];
 		for (var key in copyFrom) {
@@ -173,7 +173,7 @@ exports.merge = function(base, extra) {
 			}
 		}
 	}
-	
+
 	return base;
 }
 
@@ -198,7 +198,7 @@ exports.delay = function(orig, timeout) {
  */
 
 exports.logging = (function() {
-	
+
 	// logging namespace, this is what is exported
 	var logging = {
 			DEBUG: 1,
@@ -207,53 +207,85 @@ exports.logging = (function() {
 			WARN: 4,
 			ERROR: 5,
 			NONE: 10
-		},
-		loggers = {}, // effectively globals - all loggers and a global production state
-		production = false;
-	var gPrefix = '';
-	logging.setPrefix = function(prefix) { gPrefix = prefix + ' '; }
-	logging.setProduction = function(prod) { production = !!prod; }
+		};
+
+	var _loggers = {}; // all loggers
+	var _production = false;
+	var _prefix = '';
+
+	logging.setPrefix = function(prefix) { _prefix = prefix + ' '; }
+
+	logging.setProduction = function(prod) {
+		_production = !!prod;
+		for (var key in _loggers) {
+			_loggers[key].setProduction(_production);
+		}
+	}
+
 	logging.get = function(name) {
-		return loggers.hasOwnProperty(name) ? loggers[name]
-			: (loggers[name] = new Logger(name));
+		return _loggers.hasOwnProperty(name) ? _loggers[name]
+			: (_loggers[name] = new Logger(name));
 	}
-	logging.set = function(name, _logger) {
-		loggers[name] = _logger;
+
+	logging.set = function(name, logger) {
+		_loggers[name] = logger;
 	}
-	
-	logging.getAll = function() { return loggers; }
+
+	logging.getAll = function() { return _loggers; }
 
 	logging.__create = function(pkg, ctx) { ctx.logger = logging.get(pkg); }
-	
+
 	var Logger = exports.__class__(
 		function Logger(name, level) {
 			this._name = name;
-			this._level = level || logging.LOG;
+			this._isProduction = _production;
+
+			this.setLevel(level || logging.LOG);
 		},
 		function () {
-			this.setLevel = function(level) { this._level = level; }
-		
-			function makeLogFunction(level, type) {
+			this.setProduction = function (isProduction) {
+				this._isProduction = isProduction;
+				this.setLevel(logging.NONE);
+			}
+
+			this.setLevel = function(level) {
+				this._level = level;
+
+				if (this._isProduction) {
+					level = logging.NONE;
+				}
+
+				this.DEBUG = level <= logging.DEBUG;
+				this.LOG   = level <= logging.LOG;
+				this.INFO  = level <= logging.INFO;
+				this.WARN  = level <= logging.WARN;
+				this.ERROR = level <= logging.ERROR;
+			}
+
+			function makeLogger(type) {
+				var level = logging[type];
 				return function() {
-					if (!production && level >= this._level) {
-						var prefix = type + ' ' + gPrefix + this._name,
-							listener = this._listener || exports.log;
-						
+					if (!this._isProduction && level >= this._level) {
+						var prefix = type + ' ' + _prefix + this._name;
+						var listener = this._listener || exports.log;
+
 						return listener && listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
 					}
 					return arguments[0];
 				}
 			}
-		
+
 			this.setListener = function(listener) { this._listener = listener; }
-			this.debug = makeLogFunction(logging.DEBUG, "DEBUG");
-			this.log = makeLogFunction(logging.LOG, "LOG");
-			this.info = makeLogFunction(logging.INFO, "INFO");
-			this.warn = makeLogFunction(logging.WARN, "WARN");
-			this.error = makeLogFunction(logging.ERROR, "ERROR");
+
+			this.debug = makeLogger("DEBUG");
+			this.log = makeLogger("LOG");
+			this.info = makeLogger("INFO");
+			this.warn = makeLogger("WARN");
+			this.error = makeLogger("ERROR");
 		});
 
 	return logging;
 })();
 
 var logger = exports.logging.get('jsiocore');
+

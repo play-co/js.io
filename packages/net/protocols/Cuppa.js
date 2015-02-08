@@ -1,9 +1,7 @@
-"use import";
+import jsio.lib.Callback;
+import jsio.lib.PubSub;
 
-import lib.Callback;
-import lib.PubSub;
-
-from net.protocols.rtjp import RTJPProtocol;
+from .rtjp import RTJPProtocol;
 
 var Error = Class(function() {
 	this.init = function(protocol, id, msg, details, requestId) {
@@ -24,15 +22,15 @@ var RPCRequest = Class(function() {
 
 	this.onError = function() { this._onError.forward(arguments); }
 	this.onSuccess = function() { this._onSuccess.forward(arguments); }
-	
+
 	this.bindLater = function(l) {
 		var args = [].slice(arguments, 1);
 		this._onError.forward([l, l.fail].concat(args));
 		this._onSuccess.forward([l, l.succed].concat(args));
 		return l;
 	}
-	
-	
+
+
 });
 
 var ReceivedRequest = Class(function() {
@@ -49,24 +47,24 @@ var ReceivedRequest = Class(function() {
 
 	this.error = function(msg, details) {
 		if (this.responded) { throw new Error("already responded"); }
-		if (this._timer) { 
-			clearTimeout(this._timer); 
-			this._timer = null; 
+		if (this._timer) {
+			clearTimeout(this._timer);
+			this._timer = null;
 		}
 		args = {
 			id: this.id,
 			msg: msg + ""
 		}
 		if (details !== undefined) { args.details = details }
-		this.responded = true;        
+		this.responded = true;
 		this.protocol.sendFrame('ERROR', args);
 	}
 
 	this.respond = function(args) {
 		if (this.responded) { throw new Error("already responded"); }
-		if (this._timer) { 
-			clearTimeout(this._timer); 
-			this._timer = null; 
+		if (this._timer) {
+			clearTimeout(this._timer);
+			this._timer = null;
 		}
 		this.responded = true;
 		this.protocol.sendFrame('RESPONSE', {
@@ -74,19 +72,19 @@ var ReceivedRequest = Class(function() {
 			args: args == undefined ? {} : args // python cuppa ignores responses with undefined args
 		});
 	}
-	
+
 	this.timeoutAfter = function(duration, msg) {
 		if (this.responded) { return; }
 		if (this._timer) { clearTimeout(this._timer); }
 		this._timer = setTimeout(bind(this, '_timeout', msg), duration);
 	}
-	
+
 	this._timeout = function(msg) {
 		if (!this.responded) {
 			this.error(msg);
 		}
 	}
-    
+
 });
 
 var ReceivedEvent = Class(function() {
@@ -104,71 +102,71 @@ var ReceivedEvent = Class(function() {
 exports = Class(RTJPProtocol, function(supr) {
 	this.init = function() {
 		supr(this, 'init', arguments);
-		
+
 		this._onConnect = new lib.Callback();
 		this._onDisconnect = new lib.Callback();
-		
+
 		this._requests = {};
-		
+
 		this.onEvent = new lib.PubSub();
 		this.onRequest = new lib.PubSub();
 	}
-	
+
 	this.disconnect = function() { this.transport.loseConnection(); }
-	
+
 	// pass something to call (ctx, method, args...) when connected
 	this.onConnect = function() { this._onConnect.forward(arguments); }
 	this.onDisconnect = function() { this._onDisconnect.forward(arguments); }
-	
+
 	this.reset = function() {
 		this._onConnect.reset();
 		this._onDisconnect.reset();
 	}
-	
+
 	// called when we're connected
 	this.connectionMade = function() {
 		this._isConnected = true;
 		this._onConnect.fire();
 	}
-	
+
 	this.connectionLost = function(err) {
 		for (var i in this._requests) {
 			var req = this._requests[i];
 			delete this._requests[i];
 			req._onError.fire(err);
 		}
-		
+
 		this._isConnected = false;
 		this._onDisconnect.fire(err);
 	}
-	
+
 	this.sendRequest = function(name, args, target, cb) {
 		if (arguments.length > 4) { // allow bound functions (e.g. [this, 'onResponse', 123])
 			cb = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 3));
 		}
-		
+
 		var frameArgs = {
 			name: name,
 			args: args
 		};
-		
+
 		if (target) { frameArgs.target = target; }
-		
+
 		var id = this.sendFrame('RPC', frameArgs),
 			req = this._requests[id] = new RPCRequest(this, id);
-		
+
 		if (cb) {
 			req.onSuccess(GLOBAL, cb, false); // will call cb(false, args...)
 			req.onError(GLOBAL, cb); // will call cb(err)
 		}
-		
+
 		return req;
 	}
-	
+
 	this.sendEvent = function(name, args, target) {
 		this.sendFrame('EVENT', {name: name, args: args, target: target || null});
 	}
-	
+
 	this.frameReceived = function(id, name, args) {
 		logger.debug('RECEIVED', id, name, args);
 		switch(name.toUpperCase()) {
@@ -183,7 +181,7 @@ exports = Class(RTJPProtocol, function(supr) {
 					requestId = args.id,
 					req = this._requests[requestId],
 					err = new Error(this, id, msg, args.details, requestId);
-				
+
 				if (!req) {
 					return this.errorReceived && this.errorReceived(err);
 				} else {
@@ -202,7 +200,7 @@ exports = Class(RTJPProtocol, function(supr) {
 					reqCtor = isRPC ? ReceivedRequest : ReceivedEvent,
 					pubTarget = isRPC ? this.onRequest : this.onEvent,
 					req = new reqCtor(this, args.id || id, args.name, frameArgs, target);
-				
+
 				pubTarget.publish(req.name, req);
 				break;
 			default:

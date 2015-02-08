@@ -1,9 +1,9 @@
-jsio('import net.interfaces');
+import ..interfaces;
 
 /**
  * @extends net.interfaces.Protocol
  */
-exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
+exports.DelimitedProtocol = Class(interfaces.Protocol, function(supr) {
 
 	this.init = function(delimiter) {
 		if (!delimiter) {
@@ -12,15 +12,14 @@ exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
 		this.delimiter = delimiter;
 		this.buffer = ""
 	}
-	
+
 	this.connectionMade = function() {
 		logger.debug('connectionMade');
 	}
-	
+
 	this.dataReceived = function(data) {
 		if (!data) { return; }
-		logger.debug('dataReceived:(' + data.length + ')', data);
-		logger.debug('last 2:', JSON.stringify(data.slice(data.length-2)));
+		logger.debug('dataReceived:', data.length, data);
 		this.buffer += data;
 		var i;
 		while ((i = this.buffer.indexOf(this.delimiter)) != -1) {
@@ -34,8 +33,9 @@ exports.DelimitedProtocol = Class(net.interfaces.Protocol, function(supr) {
 		logger.debug('Not implemented, lineReceived:', line);
 	}
 	this.sendLine = function(line) {
-		logger.debug('WRITE:', JSON.stringify(line + this.delimiter));
-		this.transport.write(line + this.delimiter);
+		var data = line + this.delimiter;
+		logger.debug('WRITE:', data);
+		this.transport && this.transport.write(data);
 	}
 	this.connectionLost = function() {
 		logger.debug('connectionLost');

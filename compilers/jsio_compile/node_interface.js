@@ -1,4 +1,4 @@
-import util.optparse;
+import jsio.util.optparse as optparse;
 import .optsDef;
 
 var fs = require('fs');
@@ -10,7 +10,7 @@ try {
 var closurePath = '';
 (function() {
 	var path = require('path');
-	var defaultPath = path.join(path.dirname(jsio.__filename), 'jsio_minify.jar');
+	var defaultPath = path.join(path.dirname(jsio.__filename), 'compiler', 'compiler.jar');
 	if (fs.existsSync(defaultPath)) {
 		closurePath = defaultPath;
 	}
@@ -26,7 +26,7 @@ function findMinifier(jarPath) {
 }
 
 function usage() {
-	util.optparse.printUsage('jsio_compile <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
+	optparse.printUsage('jsio_compile <initial import>\n\t where <initial import> looks like "import .myModule"', optsDef);
 }
 
 var _compiler;
@@ -36,26 +36,24 @@ exports.setCompiler = function (compiler) {
 
 exports.run = function(args, opts) {
 	if (!args) {
-		var result = util.optparse(process.argv, optsDef),
+		var result = optparse(process.argv, optsDef),
 			args = result.args,
 			opts = result.opts;
 	}
-	
+
 	if (opts.help) {
 		usage();
 		process.exit();
 	}
-	
+
 	findMinifier(opts.closurePath);
-	
+
 	_compiler.run(args, opts);
 };
 
-exports.onError = function(opts, msg) {
+exports.onError = function(e) {
 	usage();
-	jsio.__env.log('');
-	logger.error('\n' + msg);
-	jsio.__env.log('');
+	jsio.__env.log('\n' + e.message);
 	process.exit(1);
 }
 
@@ -72,16 +70,16 @@ exports.onFinish = function(opts, src) {
 
 exports.compress = function(filename, src, opts, callback) {
 	var cachePath;
-	
+
 	function fail(err) {
 		if (err) {
 			logger.error(err);
 		}
 		callback(src);
 	}
-	
+
 	if (!closurePath) { return fail(); }
-	
+
 	if (opts.compressorCachePath && filename) {
 		try {
 			var cacheFilename = (/^\.\//.test(filename) ? 'R-' + filename.substring(2) : 'A-' + filename)
@@ -98,7 +96,7 @@ exports.compress = function(filename, src, opts, callback) {
 				var stat = fs.statSync(filename);
 				var checksum = '' + stat.mtime;
 			}
-			
+
 			if (fs.existsSync(cachePath)) {
 				var cachedContents = fs.readFileSync(cachePath, 'utf8');
 				var i = cachedContents.indexOf('\n');
@@ -113,9 +111,9 @@ exports.compress = function(filename, src, opts, callback) {
 			logger.error(e);
 		}
 	}
-	
+
 	// http://code.google.com/p/closure-compiler/wiki/Warnings
-	
+
 	var spawn = require('child_process').spawn;
 	var cmd = ['-jar', closurePath || 'jsio_minify.jar', '--compilation_level', 'SIMPLE_OPTIMIZATIONS'];
 	if (opts.noIE) {
@@ -125,7 +123,7 @@ exports.compress = function(filename, src, opts, callback) {
 	var closure = spawn('java', cmd);
 	var stdout = [];
 	var stderr = [];
-	
+
 	closure.stdout.on('data', function(data) { stdout.push(data); });
 	closure.stderr.on('data', function(data) { stderr.push(data); });
 	closure.on('exit', function(code) {
@@ -139,13 +137,13 @@ exports.compress = function(filename, src, opts, callback) {
 			} catch(e) {
 				logger.error(e);
 			}
-			
+
 			callback(compressedSrc);
 		} else {
 			fail(stderr.join(''));
 		}
 	});
-	
+
 	closure.stdin.write(src);
 	closure.stdin.end();
 }

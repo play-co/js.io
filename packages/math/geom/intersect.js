@@ -30,6 +30,13 @@ intersect.circleAndPoint = intersect.circAndPt = function (circle, pt) {
 	return intersect.pointAndCircle(pt, circle);
 };
 
+intersect.circleAndCircle = function(circle1, circle2) {
+	var dx = circle2.x - circle1.x,
+		dy = circle2.y - circle1.y;
+	var radiusSum = circle1.radius + circle2.radius;
+	return dx * dx + dy * dy <= radiusSum * radiusSum;
+};
+
 intersect.isRectAndRect = function (rect1, rect2) {
 	return !((rect1.y + rect1.height < rect2.y) ||
 					 (rect2.y + rect2.height < rect1.y) ||

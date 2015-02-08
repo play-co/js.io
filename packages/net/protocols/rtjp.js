@@ -1,5 +1,4 @@
-jsio('import net.interfaces');
-jsio('from net.protocols.delimited import DelimitedProtocol');
+from .delimited import DelimitedProtocol;
 
 /**
  * @extends net.protocols.delimited.DelimitedProtocol
@@ -15,11 +14,11 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 		if (this._client && this._client.connectionMade) { this._client.connectionMade(); }
 		logger.debug("connectionMade");
 	}
-	
+
 	var error = function(e) {
 		logger.error(e);
 	}
-	
+
 	// Inherit and overwrite
 	this.frameReceived = function(id, name, args) {
 	}
@@ -50,7 +49,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 		} catch(e) {
 			error.call(this, e);
 		}
-		
+
 		if (frame) {
 			this.frameReceived(frame[0], frame[1], frame[2]);
 		}

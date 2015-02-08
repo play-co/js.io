@@ -1,7 +1,5 @@
-"use import";
-
-import util.jsonSchema
-import lib.Enum;
+import .jsonSchema
+import ..lib.Enum;
 
 /* optparser */
 
@@ -44,8 +42,8 @@ function addArg(result, optsDef, argv, i) {
 		srcName = argv[i],
 		itemSchema = optsDef[argv[i]],
 		len = argv.length,
-		itemType = itemSchema.type.toLowerCase();
-	
+		itemType = itemSchema && itemSchema.type && itemSchema.type.toLowerCase();
+
 	++i;
 	switch(itemType) {
 		case 'boolean':
@@ -89,7 +87,7 @@ function addArg(result, optsDef, argv, i) {
 			val = argv[i];
 			break;
 	}
-	
+
 	var status = util.jsonSchema.validate(val, itemSchema);
 	if (status.valid) {
 		result[itemSchema.name] = val;
@@ -99,7 +97,7 @@ function addArg(result, optsDef, argv, i) {
 		for(var k = 0, e; e = status.errors[k]; ++k) {
 			log.push('\n\t\t' + (e.property ? e.property + ': ' : '') + e.message)
 		}
-		
+
 		ERROR('\n' + srcName + ': provided value ' + argv[i] + '\n\t' + itemSchema.name + ' option:' + log.join(''));
 	}
 }
@@ -110,7 +108,7 @@ exports = function(argv, origDef) {
 	for (var i in optsDef) {
 		var opt = optsDef[i];
 		if ('default' in opt) { result[opt.name] = opt['default']; }
-		
+
 		var also = opt.also;
 		if (also) {
 			if (isArray(also)) {
@@ -122,11 +120,11 @@ exports = function(argv, origDef) {
 			}
 		}
 	}
-	
+
 	var unprocessed = [],
 		i = 0,
 		len = argv.length;
-	
+
 	while (i < len) {
 		if (argv[i] in optsDef) {
 			i = addArg(result, optsDef, argv, i);
@@ -135,7 +133,7 @@ exports = function(argv, origDef) {
 			i++;
 		}
 	}
-	
+
 	return {
 		args: unprocessed,
 		opts: result
@@ -143,8 +141,8 @@ exports = function(argv, origDef) {
 }
 
 exports.printUsage = function(usage, optsDef) {
-	import util.wordWrap;
-	
+	import ..util.wordWrap;
+
 	var print = jsio.__env.log;
 	print('Usage:');
 	print('\t' + usage);

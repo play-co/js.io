@@ -1,8 +1,7 @@
-jsio('import net.interfaces');
+import ...interfaces;
+var net = require('net');
 
-var nodeTcp = jsio.__env.require('net');
-
-var Transport = Class(net.interfaces.Transport, function() {
+var Transport = Class(interfaces.Transport, function() {
 	this.init = function(socket) {
 		this._socket = socket;
 	}
@@ -24,10 +23,10 @@ var Transport = Class(net.interfaces.Transport, function() {
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(net.interfaces.Connector, function() {
+exports.Connector = Class(interfaces.Connector, function() {
 	this.connect = function() {
-		
-		var conn = nodeTcp.createConnection(this._opts.port, this._opts.host);
+
+		var conn = net.createConnection(this._opts.port, this._opts.host);
 		conn.addListener("connect", bind(this, function() {
 			this.onConnect(new Transport(conn));
 		}))
@@ -44,19 +43,24 @@ exports.Connector = Class(net.interfaces.Connector, function() {
 /**
  * @extends net.interfaces.Listener
  */
-exports.Listener = Class(net.interfaces.Listener, function(supr) {
+exports.Listener = Class(interfaces.Listener, function(supr) {
 	this.listen = function() {
-		var s = nodeTcp.createServer(bind(this, function(socket) {
-			if (typeof this._opts.timeout == 'number') { socket.setTimeout(this._opts.timeout) }
+		var s = net.createServer(bind(this, function(socket) {
+			if (typeof this._opts.timeout == 'number') {
+				socket.setTimeout(this._opts.timeout)
+			}
+
 			socket.setEncoding("utf8");
-			socket.addListener("connect", bind(this, function() {
-		   		this.onConnect(new Transport(socket));
-   			}));
-   		}));
-		
+			this.onConnect(new Transport(socket));
+		}));
+
 		var listenString = (this._opts['interface'] || "") + ":" + this._opts.port;
 		// TODO: Show class name
 		logger.info("Listening tcp@" + listenString);
-		s.listen(this._opts.port, this._opts['interface'] || "");
+		s.listen(this._opts.port, this._opts['interface'] || "")
+			.on('error', bind(this, function (err) {
+				logger.error(err);
+				this.emit('error', err);
+			}));
 	}
 });

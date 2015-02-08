@@ -2,7 +2,7 @@ var importExpr = /^(\s*)(import\s+[^=+*"'\r\n;\/]+|from\s+[^=+"'\r\n;\/ ]+\s+imp
 
 function replace(raw, p1, p2, p3) {
 	if (!/\/\//.test(p1)) {
-		return p1 + 'jsio("' + p2 + '")' + p3;
+		return p1 + 'jsio(\'' + p2 + '\')' + p3;
 	}
 	return raw;
 }
