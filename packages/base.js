@@ -223,8 +223,10 @@ exports.logging = (function() {
 	}
 
 	logging.get = function(name) {
-		return _loggers.hasOwnProperty(name) ? _loggers[name]
-			: (_loggers[name] = new Logger(name));
+		var logger = name in _loggers ? _loggers[name] :
+			(_loggers[name] = new Logger(name));
+		logger.setProduction(_production);
+		return logger;
 	}
 
 	logging.set = function(name, logger) {
@@ -245,7 +247,7 @@ exports.logging = (function() {
 		function () {
 			this.setProduction = function (isProduction) {
 				this._isProduction = isProduction;
-				this.setLevel(logging.NONE);
+				isProduction && this.setLevel(logging.NONE);
 			}
 
 			this.setLevel = function(level) {
