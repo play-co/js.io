@@ -1,6 +1,7 @@
 import std.uri as URI;
 
-var SIMULTANEOUS = 4;
+exports.MAX_SIMULTANEOUS = 4;
+
 var _inflight = 0;
 
 var doc;
@@ -49,6 +50,7 @@ var Request = Class(function() {
 		this.type = opts.type;
 		this.async = opts.async;
 		this.timeout = opts.timeout;
+		this.withCredentials = !!opts.withCredentials;
 		this.id = ++_UID;
 		this.headers = {};
 		this.cb = cb;
@@ -91,7 +93,7 @@ var _pending = [];
 exports.get = function(opts, cb) {
 	var request = new Request(opts, cb);
 
-	if (_inflight >= SIMULTANEOUS) {
+	if (_inflight >= exports.MAX_SIMULTANEOUS) {
 		_pending.push(request);
 	} else {
 		_send(request);
@@ -99,8 +101,8 @@ exports.get = function(opts, cb) {
 }
 
 function _sendNext() {
-	//logger.log('====INFLIGHT', _inflight, SIMULTANEOUS, 'might send next?');
-	if (_inflight < SIMULTANEOUS) {
+	//logger.log('====INFLIGHT', _inflight, exports.MAX_SIMULTANEOUS, 'might send next?');
+	if (_inflight < exports.MAX_SIMULTANEOUS) {
 		var request = _pending.shift();
 		if (request) {
 			_send(request);
@@ -119,6 +121,8 @@ function _send(request) {
 		if (key.toLowerCase() == 'content-type') { setContentType = true; }
 		xhr.setRequestHeader(key, request.headers[key]);
 	}
+
+	xhr.withCredentials = request.withCredentials;
 
 	if (!setContentType) {
 		xhr.setRequestHeader('Content-Type', 'text/plain');
