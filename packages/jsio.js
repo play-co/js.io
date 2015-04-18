@@ -753,11 +753,11 @@
     }
 
     function getPreprocessor(name) {
-      var module = jsio.__modules['.preprocessors.' + name];
+      var module = jsio.__modules['jsio.preprocessors.' + name];
       return typeof name == 'function'
         ? name
         : (module && module.exports
-          || localJsio('import .preprocessors.' + name));
+          || localJsio('import jsio.preprocessors.' + name));
     }
 
     function execModuleDef(context, moduleDef) {
