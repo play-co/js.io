@@ -213,17 +213,20 @@
 
           // resolve absolute paths with respect to jsio packages/
           var pathSegments = modulePath.split('.');
-          var baseMod = pathSegments[0];
-
-          if (jsioPath.cache.hasOwnProperty(baseMod)) {
-            pathSegments.shift();
-            var pathString = pathSegments.join('/');
-            return [
-              getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString)),
-              getModuleDef(util.buildPath(jsioPath.cache[baseMod], pathString + '/index'))
-            ];
+          var n = pathSegments.length;
+          for (var i = n; i > 0; --i) {
+            var subpath = pathSegments.slice(0, i).join('.');
+            var value = jsioPath.cache[subpath];
+            var pathString = pathSegments.slice(i).join('/');
+            if (value) {
+              return [
+                getModuleDef(util.buildPath(value, pathString)),
+                getModuleDef(util.buildPath(value, pathString + '/index'))
+              ];
+            }
           }
 
+          var baseMod = pathSegments[0];
           var pathString = pathSegments.join('/');
           var defs = [];
           var paths = jsioPath.get();
