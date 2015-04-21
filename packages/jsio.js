@@ -64,7 +64,7 @@
 
       util.splitPath(path, this);
       this.directory = util.resolve(ENV.getCwd(), this.directory);
-    };
+    }
 
     ModuleDef.prototype.setBase = function (baseMod, basePath) {
       this.baseMod = baseMod;
@@ -72,7 +72,7 @@
     };
 
     var HOST = /^([a-z][a-z0-9+\-\.]*:\/\/.*?\/)(.*)$/;
-    var PROTOCOL = /^[a-z][a-z0-9+\-\.]*:/
+    var PROTOCOL = /^[a-z][a-z0-9+\-\.]*:/;
 
     // Utility functions
     var util = {
@@ -261,7 +261,7 @@
     jsio.__init__ = init;
 
     var srcCache;
-    jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; }
+    jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
     jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
 
     jsio.setCachedSrc = function(path, src, locked) {
@@ -271,7 +271,7 @@
       }
       srcCache[path] = { path: path, src: src, locked: locked };
     };
-    jsio.getCachedSrc = function(path) { return srcCache[path]; }
+    jsio.getCachedSrc = function(path) { return srcCache[path]; };
 
     jsio.__filename = 'jsio.js';
     jsio.__cmds = [];
@@ -339,7 +339,7 @@
       if (envCtor == ENV_browser) {
         jsio.path.set(ENV.getPath());
       }
-    }
+    };
 
     if (cloneFrom) {
       jsio.setEnv();
@@ -389,8 +389,8 @@
       this.global = global;
 
       var _cwd = process.cwd();
-      this.setCwd = function (cwd) { _cwd = path.resolve(_cwd, cwd); }
-      this.getCwd = function () { return _cwd; }
+      this.setCwd = function (cwd) { _cwd = path.resolve(_cwd, cwd); };
+      this.getCwd = function () { return _cwd; };
 
       this.pathSep = path.sep;
 
@@ -416,30 +416,31 @@
 
         process.stderr.write(msg);
         return msg;
-      }
+      };
 
       this.getPath = function() {
         return __dirname;
-      }
+      };
 
       this.eval = function (code, path) {
         return vm.runInThisContext(code, path, true);
-      }
+      };
 
       this.fetch = function (p) {
         p = util.resolve(this.getCwd(), p);
 
+        var filename, lowercaseFilename, files;
         try {
           var dirname = path.dirname(p);
-          var filename = path.basename(p);
-          var lowerFilename = filename.toLowerCase();
-          var files = fs.readdirSync(dirname);
+          filename = path.basename(p);
+          lowercaseFilename = filename.toLowerCase();
+          files = fs.readdirSync(dirname);
         } catch (e) {
           return false;
         }
 
         for (var i = 0, testName; testName = files[i]; ++i) {
-          if (testName.toLowerCase() == lowerFilename && testName != filename) {
+          if (testName.toLowerCase() == lowercaseFilename && testName != filename) {
             throw "Invalid case when importing [" + p + "].  You probably meant" + testName;
           }
         }
@@ -449,7 +450,7 @@
         } catch(e) {
           return false;
         }
-      }
+      };
 
       var stackRe = /\((?!module.js)(?:file:\/\/)?(.*?)(:\d+)(:\d+)\)/g;
       this.loadModule = function (baseLoader, fromDir, fromFile, item, opts) {
@@ -498,7 +499,7 @@
             throw e;
           }
         }
-      }
+      };
     }
 
     function ENV_browser() {
@@ -519,15 +520,15 @@
             var args = JOIN.call(arguments, ' ');
             console.log(args);
             return args;
-          }
+          };
         } else {
           this.log = function () {
             console.log.apply(console, arguments);
             return JOIN.call(arguments, ' ');
-          }
+          };
         }
       } else {
-        this.log = function () { return JOIN.call(arguments, ' '); }
+        this.log = function () { return JOIN.call(arguments, ' '); };
       }
 
       this.getCwd = function() {
@@ -536,7 +537,7 @@
           cwd = loc.protocol + '//' + loc.host + path.substring(0, path.lastIndexOf('/') + 1);
         }
         return cwd;
-      }
+      };
 
       this.getPath = function() {
         if(!path) {
@@ -557,13 +558,13 @@
           if(!path) { path = '.'; }
         }
         return path;
-      }
+      };
 
       var debugHost = location.protocol + '//' + location.host + '/';
       var debugPath = location.pathname;
       this.debugPath = function (path) {
         return util.buildPath(debugHost, path[0] != '/' && debugPath, path);
-      }
+      };
 
       // IE6 won't return an anonymous function from eval, so use the function constructor instead
       var rawEval = typeof eval('(function(){})') == 'undefined'
@@ -583,7 +584,7 @@
           }
           throw e;
         }
-      }
+      };
 
       this.checkSyntax = function(code, path) {
         try {
@@ -591,7 +592,7 @@
             result = syntax(code);
           syntax.display(result, path);
         } catch(e) {}
-      }
+      };
 
       this.fetch = function(path) {
         var xhr = new XHR();
@@ -614,14 +615,12 @@
         }
 
         return xhr.responseText;
-      }
+      };
     };
 
-    var preprocessorCheck = /^"use (.*?)"\s*;\s*\n/,
-      preprocessorFunc = /^(.+)\(.+\)$/,
-      failedFetch = {};
+    var failedFetch = {};
 
-    function findModule(possibilities, opts) {
+    function findModule(possibilities) {
       var src;
       for (var i = 0, possible; possible = possibilities[i]; ++i) {
         var path = possible.path,
@@ -693,8 +692,7 @@
         throw e;
       }
 
-      var moduleDef = findModule(possibilities, opts),
-        match;
+      var moduleDef = findModule(possibilities);
       if (!moduleDef) {
         if (opts.suppressErrors) { return false; }
         var paths = [];
@@ -725,12 +723,6 @@
         moduleDef.pre = true;
 
         applyPreprocessors(fromDir, moduleDef, ["import", "inlineSlice"], opts);
-
-        // the order here is somewhat arbitrary and might be overly restrictive (... or overly powerful)
-        // while (moduleDef.src.charAt(0) == '"' && (match = moduleDef.src.match(preprocessorCheck))) {
-        //  moduleDef.src = moduleDef.src.substring(match[0].length - 1);
-        //  applyPreprocessors(fromDir, moduleDef, match[1].split(','), opts);
-        // }
       }
 
       // any additional preprocessors?
@@ -743,7 +735,7 @@
 
     function applyPreprocessors(path, moduleDef, names, opts) {
       for (var i = 0, len = names.length; i < len; ++i) {
-        p = getPreprocessor(names[i]);
+        var p = getPreprocessor(names[i]);
 
         // if we have a recursive import and p isn't a function, just
         // skip it (handles the case where a preprocessor imports
@@ -751,7 +743,6 @@
         if (p && typeof p == 'function') {
           p(path, moduleDef, opts);
         }
-
       }
     }
 
@@ -788,7 +779,7 @@
         // js.io-style ability to override exports directly (`exports = `)
         moduleDef.exports = context.exports;
       }
-    };
+    }
 
     function resolveImportRequest(context, request, opts) {
       var cmds = jsio.__cmds,
@@ -804,7 +795,7 @@
       }
 
       return imports;
-    };
+    }
 
     function makeContext(ctx, modulePath, moduleDef, dontAddBase) {
       if (!ctx) { ctx = {}; }
@@ -835,7 +826,7 @@
       ctx.__dirname = moduleDef.directory;
       ctx.__filename = util.buildPath(ctx.__dirname, moduleDef.filename);
       return ctx;
-    };
+    }
 
     var importStack = [];
     function _require(boundContext, fromDir, fromFile, request, opts) {
@@ -869,7 +860,7 @@
 
         if (moduleDef) {
           path = moduleDef.path;
-        } else if (moduleDef == false) {
+        } else if (moduleDef === false) {
           return false;
         }
 
