@@ -16,6 +16,10 @@ exports = {
 		name: 'cwd',
 		description: "sets the current working directory"
 	},
+	'--pathCache': {
+		name: 'pathCache',
+		type: 'object'
+	},
 	'--closure': {
 		name: 'closurePath',
 		type: 'string',

@@ -1,4 +1,4 @@
-import .jsonSchema
+import .jsonSchema;
 import ..lib.Enum;
 
 /* optparser */
@@ -88,7 +88,7 @@ function addArg(result, optsDef, argv, i) {
 			break;
 	}
 
-	var status = util.jsonSchema.validate(val, itemSchema);
+	var status = jsonSchema.validate(val, itemSchema);
 	if (status.valid) {
 		result[itemSchema.name] = val;
 		return i + 1;
