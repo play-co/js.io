@@ -577,7 +577,6 @@
           return rawEval(code, this.debugPath(path));
         } catch(e) {
           if(e instanceof SyntaxError) {
-            ENV.log("a syntax error is preventing execution of " + path);
             if (DEBUG && this.checkSyntax) {
               this.checkSyntax(origCode, path);
             }
@@ -588,9 +587,8 @@
 
       this.checkSyntax = function(code, path) {
         try {
-          var syntax = jsio('import .util.syntax', {suppressErrors: true, dontExport: true}),
-            result = syntax(code);
-          syntax.display(result, path);
+          var syntax = jsio('import jsio.util.syntax', {suppressErrors: true, dontExport: true});
+          syntax(code, path);
         } catch(e) {}
       };
 
