@@ -335,7 +335,7 @@
         ENV.loadModule = loadModule;
       }
 
-      jsio.path.cache['jsio'] = ENV.getPath();
+      jsio.path.cache['jsio'] = cloneFrom ? cloneFrom.path.cache.jsio : ENV.getPath();
       if (envCtor == ENV_browser) {
         jsio.path.set(ENV.getPath());
       }
