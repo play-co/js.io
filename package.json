@@ -16,7 +16,9 @@
   "engines": {
     "node": ">0.6.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "typescript-compiler": "^1.4.1-2"
+  },
   "devDependencies": {
     "mocha": "^1.21.5"
   }
