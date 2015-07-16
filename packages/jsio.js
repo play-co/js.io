@@ -51,10 +51,14 @@
 
     // Checks if the last character in a string is `/`.
     var rexpEndSlash = /(\/|\\)$/;
+    var extensions = ['.js', '.ts'];
 
-    function getModuleDef (path) {
-      path += '.js';
-      return jsio.__modules[path] || new ModuleDef(path);
+    function getModuleDefs (path, extension) {
+      return extensions.map(function(ext) {
+        var fullPath = path + ext;
+        return jsio.__modules[fullPath] || new ModuleDef(fullPath);
+
+      })
     }
 
     // Creates an object containing metadata about a module.
@@ -205,10 +209,8 @@
         resolveModulePath: function (modulePath, directory) {
           // resolve relative paths
           if (modulePath.charAt(0) == '.') {
-            return [
-              getModuleDef(util.resolveRelativeModule(modulePath, directory)),
-              getModuleDef(util.resolveRelativeModule(modulePath + '.index', directory))
-            ];
+            return getModuleDefs(util.resolveRelativeModule(modulePath, directory))
+              .concat(getModuleDefs(util.resolveRelativeModule(modulePath + '.index', directory)));
           }
 
           // resolve absolute paths with respect to jsio packages/
@@ -219,10 +221,8 @@
             var value = jsioPath.cache[subpath];
             var pathString = pathSegments.slice(i).join('/');
             if (value) {
-              return [
-                getModuleDef(util.buildPath(value, pathString)),
-                getModuleDef(util.buildPath(value, pathString + '/index'))
-              ];
+              return getModuleDefs(util.buildPath(value, pathString))
+                .concat(getModuleDefs(util.buildPath(value, pathString + '/index')));
             }
           }
 
@@ -235,13 +235,17 @@
             var base = paths[i];
             var path = util.buildPath(base, pathString);
 
-            var moduleDef = getModuleDef(path);
-            moduleDef.setBase(baseMod, base);
-            defs.push(moduleDef);
+            var moduleDefs = getModuleDefs(path);
+            moduleDefs.forEach(function(moduleDef) {
+              moduleDef.setBase(baseMod, base);
+              defs.push(moduleDef);
+            });
 
-            var moduleDef = getModuleDef(path + '/index');
-            moduleDef.setBase(baseMod, base);
-            defs.push(moduleDef);
+            var moduleDefs = getModuleDefs(path + '/index');
+            moduleDefs.forEach(function(moduleDef) {
+              moduleDef.setBase(baseMod, base);
+              defs.push(moduleDef);
+            });
           }
           return defs;
         },
@@ -720,7 +724,7 @@
       if (modulePath != 'base' && (opts.reload || !opts.dontPreprocess && !moduleDef.pre)) {
         moduleDef.pre = true;
 
-        applyPreprocessors(fromDir, moduleDef, ["import", "inlineSlice"], opts);
+        applyPreprocessors(fromDir, moduleDef, ["import", "typescript", "inlineSlice"], opts);
       }
 
       // any additional preprocessors?
@@ -1030,7 +1034,7 @@
       path = ENV.getCwd() || '/';
       var moduleDef = new ModuleDef(path);
       moduleDef.src = src;
-      applyPreprocessors(path, moduleDef, ["import", "cls"], {});
+      applyPreprocessors(path, moduleDef, ["import", "typescript", "cls"], {});
       execModuleDef(ENV.global, moduleDef);
     };
 

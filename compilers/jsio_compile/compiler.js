@@ -200,7 +200,7 @@ exports.run = function(args, opts) {
 		}
 	}
 
-	var result = initial.match(/^(.*)\.js$/);
+	var result = initial.match(/^(.*)\.[j|t]s$/);
 	if (result) {
 		initial = result[1];
 		if (initial.charAt[0] != '/' && initial.charAt[0] != '.') {
