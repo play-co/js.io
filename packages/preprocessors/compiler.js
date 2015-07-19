@@ -178,18 +178,23 @@ exports.getPathJS = function() {
 
 }
 
-function buildJsio(opts, callback) {
-	function getJsioSrc() {
-		var src = jsio.__jsio.__init__.toString(-1);
+exports.getJsioSrc = function(includeJsio) {
+	var src = '';
+	if (includeJsio) {
+		src = jsio.__jsio.__init__.toString(-1);
 		if (src.substring(0, 8) == 'function') {
 			src = 'jsio=(' + src + ')();';
 		}
-		return src;
 	}
 
+	src += exports.getPathJS();
+
+	return src;
+}
+
+function buildJsio(opts, callback) {
 	var src;
-	var jsioSrc = (opts.includeJsio ? getJsioSrc() : '')
-				+ exports.getPathJS();
+	var jsioSrc = exports.getJsioSrc(opts.includeJsio);
 
 	var cwd = jsio.__env.getCwd();
 	var table = {};
