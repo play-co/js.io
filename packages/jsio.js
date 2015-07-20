@@ -511,6 +511,14 @@
         _failedFetches[path] = true;
       };
 
+      this.registerFoundModule = function(path) {
+        // Pass
+      };
+
+      this.preloadModules = function(cb) {
+        cb();
+      };
+
     }
 
     function ENV_browser() {
@@ -603,29 +611,58 @@
         } catch(e) {}
       };
 
-      this.fetch = function(path) {
+      // Optional callback for async use
+      this.fetch = function(path, callback) {
         var xhr = new XHR();
         try {
-          xhr.open('GET', path, false);
-          xhr.send(null);
+          xhr.open('GET', path, callback !== undefined);
         } catch(e) {
           ENV.log('e:', e);
-          return false; // firefox file://
+          if (callback) {
+            callback(e);
+          } else {
+            return false; // firefox file://
+          }
         }
 
-        if (xhr.status == 404 || // all browsers, http://
-          xhr.status == -1100 || // safari file://
-          // XXX: We have no way to tell in opera if a file exists and is empty, or is 404
-          // XXX: Use flash?
-          //(!failed && xhr.status == 0 && !xhr.responseText && EXISTS)) // opera
-          false)
-        {
-          return false;
+        var isDone = false;
+
+        var done = function() {
+          isDone = true;
+          if (xhr.status == 404 || // all browsers, http://
+            xhr.status == -1100 || // safari file://
+            // XXX: We have no way to tell in opera if a file exists and is empty, or is 404
+            // XXX: Use flash?
+            //(!failed && xhr.status == 0 && !xhr.responseText && EXISTS)) // opera
+            false)
+          {
+            if (callback) {
+              callback(xhr.status);
+            } else {
+              return false;
+            }
+          }
+
+          if (callback) {
+            callback(null, xhr.responseText);
+          } else {
+            return xhr.responseText;
+          }
         }
 
-        return xhr.responseText;
+        // If ansync, we wait otherwise done immediately
+        if (callback) {
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              done();
+            }
+          }
+          xhr.send(null);
+        } else {
+          xhr.send(null);
+          return done();
+        }
       };
-
       var _namespace = null;
 
       this._getNamespace = function() {
@@ -660,6 +697,76 @@
         localStorage.setItem(oldFailedKey, JSON.stringify(_failedFetches));
       };
 
+      var _suggestions = null;
+      this._getSuggestions = function() {
+        if (!_suggestions) {
+          var oldSuggestionsKey = this._getNamespace() + 'suggestions';
+          var oldSuggestions = localStorage.getItem(oldSuggestionsKey);
+          _suggestions = JSON.parse(oldSuggestions) || [];
+        }
+        return _suggestions;
+      }
+
+      // Register modules that were found. These should be loaded first next run, if possible.
+      // They serve as a best guess for required files based on prior runs
+      this.registerFoundModule = function(path) {
+        var suggestions = this._getSuggestions();
+        if (suggestions.indexOf(path) === -1 && path.indexOf('http') === 0) {
+          suggestions.push(path);
+          // // Save
+          var oldSuggestionsKey = this._getNamespace() + 'suggestions';
+          localStorage.setItem(oldSuggestionsKey, JSON.stringify(suggestions));
+        }
+      };
+
+      this.preloadModules = function(cb) {
+        // Get the old list from storage
+        var suggestions = this._getSuggestions();
+        if (suggestions.length === 0) {
+          cb();
+        }
+
+        console.log('PRELOADING MODULES', suggestions.length);
+
+        // Request all
+        var suggestionCount = suggestions.length;
+        var finished = 0;
+        var errors = [];
+        var importPreprocessor = getPreprocessor('import');
+        var inlinePreprocessor = getPreprocessor('inlineSlice');
+
+        var onComplete = function() {
+          finished++;
+          if (finished === suggestionCount) {
+            // debugger
+            cb(errors.length > 0 ? errors : undefined);
+          }
+        };
+
+        var request = function(path) {
+          if (jsio.getCachedSrc(path)) {
+            onComplete();
+            return;
+          }
+
+          this.fetch(path, function(err, src) {
+            if (err) {
+              errors.push(path);
+            } else {
+              // Preprocessors use a moduleDef
+              // TODO: why is the src cache not actually the src?
+              var fakeModule = { src: src };
+              importPreprocessor(null, fakeModule, null);
+              inlinePreprocessor(null, fakeModule, null);
+              jsio.setCachedSrc(path, fakeModule.src);
+            }
+
+            onComplete();
+          });
+        }.bind(this);
+
+        suggestions.forEach(request);
+      };
     };
 
     function findModule(possibilities) {
@@ -690,6 +797,7 @@
 
         if (src !== false) {
           possible.src = src;
+          ENV.registerFoundModule(path);
           return possible;
         } else {
           ENV.setFetchFailed(path);
