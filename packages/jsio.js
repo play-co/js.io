@@ -500,6 +500,17 @@
           }
         }
       };
+
+      var _failedFetches = {};
+
+      this.hasFetchFailed = function(path) {
+        return (path in _failedFetches);
+      };
+
+      this.setFetchFailed = function(path) {
+        _failedFetches[path] = true;
+      };
+
     }
 
     function ENV_browser() {
@@ -614,9 +625,42 @@
 
         return xhr.responseText;
       };
-    };
 
-    var failedFetch = {};
+      var _namespace = null;
+
+      this._getNamespace = function() {
+        if (!_namespace) {
+          var cwd = this.getCwd();
+          var _namespace = cwd.substring(cwd.indexOf('apps/'), cwd.length);
+          if (_namespace.charAt(_namespace.length - 1) === '/') { _namespace = _namespace.substring(0, _namespace.length - 1); }
+          _namespace += ':';
+        }
+        return _namespace;
+      }
+
+      var oldFailedKey = this._getNamespace() + 'failedFetches';
+      var _failedFetches = null;
+
+      this.hasFetchFailed = function(path) {
+        if (!_failedFetches) {
+          var oldFailed = localStorage.getItem(oldFailedKey);
+          if (oldFailed) {
+            _failedFetches = JSON.parse(oldFailed);
+          } else {
+            _failedFetches = {};
+          }
+        }
+
+        return (path in _failedFetches);
+      };
+
+      this.setFetchFailed = function(path) {
+        _failedFetches[path] = true;
+        // Save it
+        localStorage.setItem(oldFailedKey, JSON.stringify(_failedFetches));
+      };
+
+    };
 
     function findModule(possibilities) {
       var src;
@@ -648,7 +692,7 @@
           possible.src = src;
           return possible;
         } else {
-          failedFetch[path] = true;
+          ENV.setFetchFailed(path);
         }
       }
 
@@ -677,7 +721,7 @@
           return possibilities[i];
         }
 
-        if (path in failedFetch) { possibilities.splice(i--, 1); }
+        if (ENV.hasFetchFailed(path)) { possibilities.splice(i--, 1); }
       }
 
       if (!possibilities.length) {
