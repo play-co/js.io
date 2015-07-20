@@ -697,12 +697,17 @@
         localStorage.setItem(oldFailedKey, JSON.stringify(_failedFetches));
       };
 
+      var oldSuggestionsKey = this._getNamespace() + 'suggestions';
       var _suggestions = null;
+
       this._getSuggestions = function() {
         if (!_suggestions) {
-          var oldSuggestionsKey = this._getNamespace() + 'suggestions';
           var oldSuggestions = localStorage.getItem(oldSuggestionsKey);
-          _suggestions = JSON.parse(oldSuggestions) || [];
+          if (oldSuggestions) {
+            _suggestions = JSON.parse(oldSuggestions);
+          } else {
+            _suggestions = [];
+          }
         }
         return _suggestions;
       }
@@ -713,13 +718,23 @@
         var suggestions = this._getSuggestions();
         if (suggestions.indexOf(path) === -1 && path.indexOf('http') === 0) {
           suggestions.push(path);
-          // // Save
-          var oldSuggestionsKey = this._getNamespace() + 'suggestions';
+          // Save
           localStorage.setItem(oldSuggestionsKey, JSON.stringify(suggestions));
         }
       };
 
       this.preloadModules = function(cb) {
+        // Check for the preserveCache key
+        // This is how the simulator tells us it is a soft reload
+        if (!localStorage.getItem('preserveCache')) {
+          // Clear the old things
+          localStorage.setItem(oldSuggestionsKey, '');
+          localStorage.setItem(oldFailedKey, '');
+
+          cb();
+          return;
+        }
+
         // Get the old list from storage
         var suggestions = this._getSuggestions();
         if (suggestions.length === 0) {

@@ -185,9 +185,9 @@ exports.getJsioSrc = function(includeJsio) {
 		if (src.substring(0, 8) == 'function') {
 			src = 'jsio=(' + src + ')();';
 		}
-	}
 
-	src += exports.getPathJS();
+		src += exports.getPathJS();
+	}
 
 	return src;
 }
