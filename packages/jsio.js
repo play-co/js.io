@@ -501,6 +501,10 @@
         }
       };
 
+      this.getNamespace = function(str) {
+        return this.getCwd() + ':' + str;
+      };
+
       var _failedFetches = {};
 
       this.hasFetchFailed = function(path) {
@@ -663,19 +667,19 @@
           return done();
         }
       };
-      var _namespace = null;
 
-      this._getNamespace = function() {
+      var _namespace = null;
+      this.getNamespace = function(str) {
         if (!_namespace) {
           var cwd = this.getCwd();
           var _namespace = cwd.substring(cwd.indexOf('apps/'), cwd.length);
           if (_namespace.charAt(_namespace.length - 1) === '/') { _namespace = _namespace.substring(0, _namespace.length - 1); }
           _namespace += ':';
         }
-        return _namespace;
+        return _namespace + str;
       }
 
-      var oldFailedKey = this._getNamespace() + 'failedFetches';
+      var oldFailedKey = this.getNamespace('failedFetches');
       var _failedFetches = null;
 
       this.hasFetchFailed = function(path) {
@@ -697,7 +701,7 @@
         localStorage.setItem(oldFailedKey, JSON.stringify(_failedFetches));
       };
 
-      var oldSuggestionsKey = this._getNamespace() + 'suggestions';
+      var oldSuggestionsKey = this.getNamespace('suggestions');
       var _suggestions = null;
 
       this._getSuggestions = function() {
@@ -726,14 +730,17 @@
       this.preloadModules = function(cb) {
         // Check for the preserveCache key
         // This is how the simulator tells us it is a soft reload
-        if (!localStorage.getItem('preserveCache')) {
+        if (!localStorage.getItem(this.getNamespace('preserveCache'))) {
           // Clear the old things
-          localStorage.setItem(oldSuggestionsKey, '');
-          localStorage.setItem(oldFailedKey, '');
+          localStorage.removeItem(oldSuggestionsKey);
+          localStorage.removeItem(oldFailedKey);
 
           cb();
           return;
         }
+
+        // Clear from last time
+        localStorage.removeItem(this.getNamespace('preserveCache'));
 
         // Get the old list from storage
         var suggestions = this._getSuggestions();
@@ -747,10 +754,21 @@
         var suggestionCount = suggestions.length;
         var finished = 0;
         var errors = [];
+
+        // Load the preprocessors
+        // TODO: These synchronously block, should probably load them async
         var importPreprocessor = getPreprocessor('import');
         var inlinePreprocessor = getPreprocessor('inlineSlice');
 
-        var onComplete = function() {
+        var processSrc = function(path, src) {
+          var fakeModule = { src: src };
+          importPreprocessor(null, fakeModule, null);
+          inlinePreprocessor(null, fakeModule, null);
+          jsio.setCachedSrc(path, fakeModule.src);
+          onComplete();
+        };
+
+        var onComplete = function(err) {
           finished++;
           if (finished === suggestionCount) {
             // debugger
@@ -764,19 +782,21 @@
             return;
           }
 
+          // TODO: validate these before the request step
+          if (path === 'undefined') {
+            onComplete();
+            return;
+          }
+
           this.fetch(path, function(err, src) {
             if (err) {
               errors.push(path);
+              onComplete(err);
             } else {
               // Preprocessors use a moduleDef
               // TODO: why is the src cache not actually the src?
-              var fakeModule = { src: src };
-              importPreprocessor(null, fakeModule, null);
-              inlinePreprocessor(null, fakeModule, null);
-              jsio.setCachedSrc(path, fakeModule.src);
+              processSrc(path, src);
             }
-
-            onComplete();
           });
         }.bind(this);
 
