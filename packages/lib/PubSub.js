@@ -130,7 +130,7 @@ exports = Class(function () {
                         callback = new Callback(),
                         next = bind(this, function (val, cancel) {
                                 var cb = this._callbacks[evnt][i] || {
-                                        // i is poiting to the end of the queue, so creating custom cb object.
+                                        // i is pointing to the end of the queue, so creating custom cb object.
                                         fire: bind(this, function (val, cancel) {
                                                 // call pending callbacks from the next event.
 
@@ -176,8 +176,8 @@ exports = Class(function () {
                         cbs[evnt] = [];
                         this.on(evnt, bind(this, function (val) {
                                 var active_cbs = this._activeCBs || (this._activeCBs = []),
-				len = active_cbs.length,
-                                pending, last;
+					len = active_cbs.length,
+					pending, last;
 
                                 // add to queue.
                                 // this is needed for multi signal chaining
@@ -205,19 +205,23 @@ exports = Class(function () {
 	};
 
 	this.removeAllListeners = function (type) {
-		var current = (!this._callbacks || !this._callbacks[type]) ? [] : this._callbacks[type]
-			cb_length = current.length;
-
-		if (cb_length > 0) {
-			for (var i = 0; i < cb_length; i++) {
-				current[i].clear();
+		if (this._callbacks) {
+			for (var evnt in this._callbacks) {
+				if (type == null || type == evnt) {
+					delete this._callbacks[evnt];
+				}
 			}
+		}
 
-			delete this._callbacks[type];
-			this._activeCBs = this._activeCBs.filter(function (event) {
-				return event !== type;
-			});
-                }
+		if (this._activeCBs) {
+			if (type == null) {
+				this._activeCBs = []
+			} else {
+				this._activeCBs = this._activeCBs.filter(function (event) {
+					return event !== type;
+				});
+			}
+		}
 
 		if (this._subscribers) {
 			for (var k in this._subscribers) {
