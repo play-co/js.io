@@ -205,9 +205,14 @@ exports = Class(function () {
 	};
 
 	this.removeAllListeners = function (type) {
-		if (this._callbacks) {
-			for (var evnt in this._callbacks) {
+		var cbs = this._callbacks;
+
+		if (cbs) {
+			for (var evnt in cbs) {
 				if (type == null || type == evnt) {
+					for (var i = 0; i < cbs[evnt].length; i++) {
+						cbs[type][i].clear();
+					}
 					delete this._callbacks[evnt];
 				}
 			}
@@ -215,7 +220,7 @@ exports = Class(function () {
 
 		if (this._activeCBs) {
 			if (type == null) {
-				this._activeCBs = []
+				this._activeCBs.length = 0;
 			} else {
 				this._activeCBs = this._activeCBs.filter(function (event) {
 					return event !== type;
