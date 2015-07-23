@@ -260,19 +260,6 @@
     jsio.__util = util;
     jsio.__init__ = init;
 
-    var srcCache;
-    jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
-    jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
-
-    jsio.setCachedSrc = function(path, src, locked) {
-      if (srcCache[path] && srcCache[path].locked) {
-        console.warn('Cache is ignoring (already present and locked) src ' + path);
-        return;
-      }
-      srcCache[path] = { path: path, src: src, locked: locked };
-    };
-    jsio.getCachedSrc = function(path) { return srcCache[path]; };
-
     jsio.__filename = 'jsio.js';
     jsio.__cmds = [];
     jsio.__jsio = jsio;
@@ -339,6 +326,12 @@
       if (envCtor == ENV_browser) {
         jsio.path.set(ENV.getPath());
       }
+
+      jsio.setCache = ENV.setCache.bind(ENV);
+      jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
+
+      jsio.setCachedSrc = ENV.setCachedSrc.bind(ENV);
+      jsio.getCachedSrc = ENV.getCachedSrc.bind(ENV);
     };
 
     if (cloneFrom) {
@@ -393,13 +386,6 @@
       this.getCwd = function () { return _cwd; };
 
       this.pathSep = path.sep;
-
-      // var parentPath = util.splitPath(module.parent.filename);
-      // module.parent.require = function(request, opts) {
-      //   if (!opts) { opts = {}; }
-      //   opts.dontExport = true;
-      //   return _require({}, parentPath.directory, parentPath.filename, request, opts);
-      // };
 
       this.log = function() {
         var msg;
@@ -502,7 +488,7 @@
       };
 
       this.getNamespace = function(str) {
-        return this.getCwd() + ':' + str;
+        return this.getCwd() + ':' + (str || '');
       };
 
       var _failedFetches = {};
@@ -521,6 +507,20 @@
 
       this.preloadModules = function(cb) {
         cb();
+      };
+
+      var srcCache;
+      this.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
+
+      this.setCachedSrc = function(path, src, locked) {
+        if (srcCache[path] && srcCache[path].locked) {
+          console.warn('Cache is ignoring (already present and locked) src ' + path);
+          return;
+        }
+        srcCache[path] = { path: path, src: src, locked: locked };
+      };
+      this.getCachedSrc = function(path) {
+        return srcCache[path];
       };
 
     }
@@ -716,11 +716,12 @@
         return _suggestions;
       }
 
-      // Register modules that were found. These should be loaded first next run, if possible.
-      // They serve as a best guess for required files based on prior runs
+      /** Register modules that were found. These should be loaded first next run, if possible.
+          They serve as a best guess for required files based on prior runs */
       this.registerFoundModule = function(path) {
         var suggestions = this._getSuggestions();
-        if (suggestions.indexOf(path) === -1 && path.indexOf('http') === 0) {
+        // If it doesnt have an http, add it!
+        if (path && suggestions.indexOf(path) === -1) {
           suggestions.push(path);
           // Save
           localStorage.setItem(oldSuggestionsKey, JSON.stringify(suggestions));
@@ -733,7 +734,9 @@
         if (!localStorage.getItem(this.getNamespace('preserveCache'))) {
           // Clear the old things
           localStorage.removeItem(oldSuggestionsKey);
+          _suggestions = null;
           localStorage.removeItem(oldFailedKey);
+          _failedFetches = null;
 
           cb();
           return;
@@ -771,12 +774,15 @@
         var onComplete = function(err) {
           finished++;
           if (finished === suggestionCount) {
-            // debugger
             cb(errors.length > 0 ? errors : undefined);
           }
         };
 
+        var requestedPaths = [];
         var request = function(path) {
+          var originalPath = path;
+
+          // TODO: This should never happen
           if (jsio.getCachedSrc(path)) {
             onComplete();
             return;
@@ -788,6 +794,17 @@
             return;
           }
 
+          // Check for duplicates (potentially occuring from http://host/abc and /abc)
+          if (path.indexOf('http') !== 0) {
+            // First convert to a full path (assumes href ends in a '/' and path does not start with a '/')
+            path = locationString + path;
+            if (requestedPaths.indexOf(path) >= 0) {
+              onComplete();
+              return;
+            }
+          }
+
+          requestedPaths.push(path);
           this.fetch(path, function(err, src) {
             if (err) {
               errors.push(path);
@@ -795,20 +812,51 @@
             } else {
               // Preprocessors use a moduleDef
               // TODO: why is the src cache not actually the src?
-              processSrc(path, src);
+              processSrc(originalPath, src);
             }
           });
         }.bind(this);
 
         suggestions.forEach(request);
       };
+
+      var srcCache;
+      var locationString = util.addEndSlash(location.href);
+
+      var _cachePath = function(path) {
+        if (path.indexOf(locationString) === 0) {
+          return path.substring(locationString.length, path.length);
+        }
+        return path;
+      };
+
+      this.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
+
+      /** A http path will be stored relative to location.href, if possible */
+      this.setCachedSrc = function(path, src, locked) {
+        path = _cachePath(path);
+
+        if (srcCache[path] && srcCache[path].locked) {
+          console.warn('Cache is ignoring (already present and locked) src ' + path);
+          return;
+        }
+
+        srcCache[path] = { path: path, src: src, locked: locked };
+      };
+
+      this.getCachedSrc = function(path) {
+        return srcCache[_cachePath(path)];
+      };
+
     };
 
     function findModule(possibilities) {
-      var src;
-      for (var i = 0, possible; possible = possibilities[i]; ++i) {
-        var path = possible.path,
-          cachedVersion = srcCache[path];
+      var i, possible, path;
+
+      // Check for possibilities in the cache
+      for (i = 0, possible; possible = possibilities[i]; ++i) {
+        path = possible.path;
+        var cachedVersion = jsio.getCachedSrc(path);
 
         if (cachedVersion) {
           // extract a non-absolute dirname from the cache key: absolute paths
@@ -822,13 +870,12 @@
           possible.pre = true;
           return possible;
         }
+      }
 
-        /*if (/^\.\//.test(path)) {
-          // remove one path segment for each dot from the cwd
-          path = addEndSlash(ENV.getCwd()) + path;
-        }*/
-
-        src = ENV.fetch(path);
+      // Try to fetch
+      for (i = 0, possible; possible = possibilities[i]; ++i) {
+        path = possible.path;
+        var src = ENV.fetch(path);
 
         if (src !== false) {
           possible.src = src;
@@ -908,6 +955,9 @@
         moduleDef.pre = true;
 
         applyPreprocessors(fromDir, moduleDef, ["import", "inlineSlice"], opts);
+
+        // Save it in the cache
+        jsio.setCachedSrc(moduleDef.path, moduleDef.src);
       }
 
       // any additional preprocessors?
