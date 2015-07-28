@@ -363,6 +363,17 @@
       this.eval = function(code, path) {};
       this.fetch = function(path) { return contentsOfPath; };
       this.log = function(args...) {};
+
+      this.getNamespace = function(key) { return CONFIG.shortName + ':' + key };
+      this.hasFetchFailed = function() { return false; };
+      this.setFetchFailed = function() {};
+      this.registerFoundModule = function() {};
+      this.preloadModules = function(cb) {};
+
+      this.setCache = function(cache) {};
+
+      this.setCachedSrc = function(path, src, locked) {};
+      this.getCachedSrc = function(path) {};
     }
     */
 
