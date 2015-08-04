@@ -364,7 +364,7 @@
       this.fetch = function(path) { return contentsOfPath; };
       this.log = function(args...) {};
 
-      this.getNamespace = function(key) { return CONFIG.shortName + ':' + key };
+      this.getNamespace = function(key) { return 'jsio:' + key };
       this.hasFetchFailed = function() { return false; };
       this.setFetchFailed = function() {};
       this.registerFoundModule = function() {};
@@ -679,15 +679,8 @@
         }
       };
 
-      var _namespace = null;
       this.getNamespace = function(str) {
-        if (!_namespace) {
-          var cwd = this.getCwd();
-          var _namespace = cwd.substring(cwd.indexOf('apps/'), cwd.length);
-          if (_namespace.charAt(_namespace.length - 1) === '/') { _namespace = _namespace.substring(0, _namespace.length - 1); }
-          _namespace += ':';
-        }
-        return _namespace + str;
+        return 'jsio:' + str;
       }
 
       var oldFailedKey = this.getNamespace('failedFetches');
