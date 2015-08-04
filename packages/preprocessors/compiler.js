@@ -168,14 +168,18 @@ exports.getPathJS = function() {
 
 	var cache = {};
 	Object.keys(jsio.path.cache).forEach(function (key) {
-		cache[key] = path.relative(cwd, jsio.path.cache[key]) || './';
+		cache[key] = replaceSlashes(path.relative(cwd, jsio.path.cache[key])) || './';
 	});
 
 	return 'jsio.path.set('
 		+ JSON.stringify(jsio.path.get().map(function (value) {
-			return path.relative(cwd, value);
+			return replaceSlashes(path.relative(cwd, value));
 		})) + ');jsio.path.cache=' + JSON.stringify(cache) + ';';
 
+}
+
+function replaceSlashes(str) {
+	return str.replace(/\\+/g, '/').replace(/\/{2,}/g, '/');
 }
 
 exports.getJsioSrc = function(includeJsio) {
@@ -199,10 +203,10 @@ function buildJsio(opts, callback) {
 	var cwd = jsio.__env.getCwd();
 	var table = {};
 	for (var entry in gSrcTable) {
-		var relPath = path.relative(cwd, entry);
+		var relPath = replaceSlashes(path.relative(cwd, entry));
 		table[relPath] = gSrcTable[entry];
 		table[relPath].path = relPath;
-		table[relPath].directory = path.relative(cwd, gSrcTable[entry].directory);
+		table[relPath].directory = replaceSlashes(path.relative(cwd, gSrcTable[entry].directory));
 	}
 
 	// if we're not allowed to modify the jsio source or we're not including the jsio source
