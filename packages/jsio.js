@@ -681,13 +681,26 @@
 
       this.getNamespace = function(str) {
         return 'jsio:' + str;
-      }
+      };
+
+      this._tryClearSuggestions = function() {
+        if (!localStorage.getItem(this.getNamespace('preserveCache'))) {
+          // Clear the old things
+          localStorage.removeItem(oldSuggestionsKey);
+          _suggestions = null;
+          localStorage.removeItem(oldFailedKey);
+          _failedFetches = null;
+          return true;
+        }
+        return false;
+      };
 
       var oldFailedKey = this.getNamespace('failedFetches');
       var _failedFetches = null;
 
       this.hasFetchFailed = function(path) {
         if (!_failedFetches) {
+          this._tryClearSuggestions();
           var oldFailed = localStorage.getItem(oldFailedKey);
           if (oldFailed) {
             _failedFetches = JSON.parse(oldFailed);
@@ -710,6 +723,7 @@
 
       this._getSuggestions = function() {
         if (!_suggestions) {
+          this._tryClearSuggestions();
           var oldSuggestions = localStorage.getItem(oldSuggestionsKey);
           if (oldSuggestions) {
             _suggestions = JSON.parse(oldSuggestions);
@@ -735,13 +749,7 @@
       this.preloadModules = function(cb) {
         // Check for the preserveCache key
         // This is how the simulator tells us it is a soft reload
-        if (!localStorage.getItem(this.getNamespace('preserveCache'))) {
-          // Clear the old things
-          localStorage.removeItem(oldSuggestionsKey);
-          _suggestions = null;
-          localStorage.removeItem(oldFailedKey);
-          _failedFetches = null;
-
+        if (this._tryClearSuggestions()) {
           cb();
           return;
         }
