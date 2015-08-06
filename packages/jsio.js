@@ -653,14 +653,14 @@
           {
             if (callback) {
               callback(xhr.status);
-            } else {
-              return false;
             }
-          }
 
-          if (callback) {
-            callback(null, xhr.responseText);
+            return false;
           } else {
+            if (callback) {
+              callback(null, xhr.responseText);
+            }
+
             return xhr.responseText;
           }
         }
@@ -687,9 +687,9 @@
         if (!localStorage.getItem(this.getNamespace('preserveCache'))) {
           // Clear the old things
           localStorage.removeItem(oldSuggestionsKey);
-          _suggestions = null;
+          _suggestions = [];
           localStorage.removeItem(oldFailedKey);
-          _failedFetches = null;
+          _failedFetches = {};
           return true;
         }
         return false;
