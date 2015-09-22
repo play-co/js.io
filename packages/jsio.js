@@ -185,7 +185,7 @@
         },
 
         isAbsolutePath: function (path) {
-          return /^\//.test(path) || PROTOCOL.test(path);
+          return /^\//.test(path) || PROTOCOL.test(path) || ENV.isWindowsNode && /^[a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+/.test(path);
         },
 
         resolve: function (from, to) {
@@ -247,7 +247,7 @@
         },
         splitPath: function(path, result) {
           if (!result) { result = {}; }
-          var i = path.lastIndexOf('/') + 1;
+          var i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1;
           result.directory = path.substring(0, i);
           result.filename = path.substring(i);
           return result;
@@ -387,6 +387,7 @@
       this.main = require.main;
       this.name = 'node';
       this.global = global;
+      this.isWindowsNode = (process.platform === 'win32');
 
       var _cwd = process.cwd();
       this.setCwd = function (cwd) { _cwd = path.resolve(_cwd, cwd); };
