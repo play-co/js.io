@@ -261,7 +261,9 @@
     jsio.__init__ = init;
 
     var srcCache;
-    jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
+    jsio.setCache = function(cache) {
+      srcCache = jsio.__srcCache = cache;
+    }
     jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
 
     jsio.setCachedSrc = function(path, src, locked) {
