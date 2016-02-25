@@ -780,13 +780,13 @@
       }
     }
 
-    function resolveImportRequest(context, request, opts) {
+    function resolveImportRequest(request) {
       var cmds = jsio.__cmds,
         imports = [],
         result = false;
 
       for (var i = 0, imp; imp = cmds[i]; ++i) {
-        if ((result = imp(context, request, opts, imports))) { break; }
+        if ((result = imp(request, imports))) { break; }
       }
 
       if (result !== true) {
@@ -838,7 +838,7 @@
       var exportInto = opts.exportInto || boundContext || ENV.global;
 
       // parse the import request(s)
-      var imports = resolveImportRequest(exportInto, request, opts),
+      var imports = resolveImportRequest(request),
         numImports = imports.length,
         retVal = numImports > 1 ? {} : null;
 
@@ -955,7 +955,7 @@
 
     // from myPackage import myFunc
     // external myPackage import myFunc
-    jsio.addCmd(function(context, request, opts, imports) {
+    jsio.addCmd(function(request, imports) {
       var match = request.match(/^\s*(from|external)\s+([\w.\-$]+)\s+(import|grab)\s+(.*)$/);
       if(match) {
         imports.push({
@@ -973,7 +973,7 @@
     });
 
     // import myPackage
-    jsio.addCmd(function(context, request, opts, imports) {
+    jsio.addCmd(function(request, imports) {
       var match = request.match(/^\s*import\s+(.*)$/);
       if (match) {
         match[1].replace(/\s*([\w.\-$]+)(?:\s+as\s+([\w.\-$]+))?,?/g, function(_, fullPath, as) {
@@ -991,7 +991,7 @@
     });
 
     // CommonJS syntax
-    jsio.addCmd(function(context, request, opts, imports) {
+    jsio.addCmd(function(request, imports) {
 
       //    ./../b -> ..b
       //    ../../b -> ...b
