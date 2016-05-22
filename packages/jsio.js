@@ -570,7 +570,7 @@
       // IE6 won't return an anonymous function from eval, so use the function constructor instead
       var rawEval = typeof eval('(function(){})') == 'undefined'
         ? function(src, path) { return (new Function('return ' + src))(); }
-        : function(src, path) { var src = src + '\n//@ sourceURL=' + path; return window.eval(src); };
+        : function(src, path) { var src = src + '\n//# sourceURL=' + path; return window.eval(src); };
 
       // provide an eval with reasonable debugging
       this.eval = function(code, path, origCode) {
