@@ -44,6 +44,7 @@ exports = function(path, moduleDef, opts) {
 		}
 	}
 
+	var replacements = {};
 	var jsioNormal = /^(.*)jsio\s*\(\s*(['"].+?['"])\s*(,\s*\{[^}]+\})?\)/gm;
 	while (true) {
 		var match = jsioNormal.exec(moduleDef.src);
@@ -86,11 +87,40 @@ exports = function(path, moduleDef, opts) {
 			}
 		}
 
-		try {
-			run(moduleDef, cmd, inlineOpts);
-		} catch (e) {
-			logger.warn('could not compile import from', self + ':', cmd);
+		/* Checking for conditional imports
+		 * eg: import abc.x|def.x|ghi.x as x
+		 */
+		var conditionalImport = /(\s*import\s+)([^=+*"'\s\r\n;\/]+\|[^=+"'\s\r\n;\/]+)(\s*[^'";=]+)/gm;
+		var condImportMatch = conditionalImport.exec(cmd);
+		var condOpts = [];
+		var i = 0;
+		if (condImportMatch) {
+			cmd = [];
+			condOpts = condImportMatch[2].split('|');
+			replacements[condImportMatch[0]] = condImportMatch[0];
+			for (i = 0; i < condOpts.length; i++) {
+				cmd.push(condImportMatch[1] + condOpts[i].trim() + condImportMatch[3]);
+			}
+		} else {
+			cmd =[cmd];
 		}
+
+		for (i = 0; i < cmd.length; i++) {
+			try {
+				run(moduleDef, cmd[i], inlineOpts);
+				if (condImportMatch) {
+					replacements[condImportMatch[0]] = cmd[i];
+					break;
+				}
+			} catch (e) {
+				logger.warn('could not compile import from', self + ':', cmd[i]);
+			}
+		}
+	}
+
+	// Replacing conditional import with available module import
+	for (var key in replacements) {
+		moduleDef.src = moduleDef.src.replace(key, replacements[key]);
 	}
 
 	var jsioDynamic = /^(.*)jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/gm;
