@@ -260,19 +260,6 @@
     jsio.__util = util;
     jsio.__init__ = init;
 
-    var srcCache;
-    jsio.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
-    jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
-
-    jsio.setCachedSrc = function(path, src, locked) {
-      if (srcCache[path] && srcCache[path].locked) {
-        console.warn('Cache is ignoring (already present and locked) src ' + path);
-        return;
-      }
-      srcCache[path] = { path: path, src: src, locked: locked };
-    };
-    jsio.getCachedSrc = function(path) { return srcCache[path]; };
-
     jsio.__filename = 'jsio.js';
     jsio.__cmds = [];
     jsio.__jsio = jsio;
@@ -339,6 +326,12 @@
       if (envCtor == ENV_browser) {
         jsio.path.set(ENV.getPath());
       }
+
+      jsio.setCache = ENV.setCache.bind(ENV);
+      jsio.setCache(cloneFrom && cloneFrom.__srcCache || {});
+
+      jsio.setCachedSrc = ENV.setCachedSrc.bind(ENV);
+      jsio.getCachedSrc = ENV.getCachedSrc.bind(ENV);
     };
 
     if (cloneFrom) {
@@ -370,6 +363,17 @@
       this.eval = function(code, path) {};
       this.fetch = function(path) { return contentsOfPath; };
       this.log = function(args...) {};
+
+      this.getNamespace = function(key) { return 'jsio:' + key };
+      this.hasFetchFailed = function() { return false; };
+      this.setFetchFailed = function() {};
+      this.registerFoundModule = function() {};
+      this.preloadModules = function(cb) {};
+
+      this.setCache = function(cache) {};
+
+      this.setCachedSrc = function(path, src, locked) {};
+      this.getCachedSrc = function(path) {};
     }
     */
 
@@ -394,13 +398,6 @@
       this.getCwd = function () { return _cwd; };
 
       this.pathSep = path.sep;
-
-      // var parentPath = util.splitPath(module.parent.filename);
-      // module.parent.require = function(request, opts) {
-      //   if (!opts) { opts = {}; }
-      //   opts.dontExport = true;
-      //   return _require({}, parentPath.directory, parentPath.filename, request, opts);
-      // };
 
       this.log = function() {
         var msg;
@@ -501,6 +498,43 @@
           }
         }
       };
+
+      this.getNamespace = function(str) {
+        return this.getCwd() + ':' + (str || '');
+      };
+
+      var _failedFetches = {};
+
+      this.hasFetchFailed = function(path) {
+        return (path in _failedFetches);
+      };
+
+      this.setFetchFailed = function(path) {
+        _failedFetches[path] = true;
+      };
+
+      this.registerFoundModule = function(path) {
+        // Pass
+      };
+
+      this.preloadModules = function(cb) {
+        cb();
+      };
+
+      var srcCache;
+      this.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
+
+      this.setCachedSrc = function(path, src, locked) {
+        if (srcCache[path] && srcCache[path].locked) {
+          console.warn('Cache is ignoring (already present and locked) src ' + path);
+          return;
+        }
+        srcCache[path] = { path: path, src: src, locked: locked };
+      };
+      this.getCachedSrc = function(path) {
+        return srcCache[path];
+      };
+
     }
 
     function ENV_browser() {
@@ -593,37 +627,249 @@
         } catch(e) {}
       };
 
-      this.fetch = function(path) {
+      // Optional callback for async use
+      this.fetch = function(path, callback) {
         var xhr = new XHR();
         try {
-          xhr.open('GET', path, false);
-          xhr.send(null);
+          xhr.open('GET', path, callback !== undefined);
         } catch(e) {
           ENV.log('e:', e);
-          return false; // firefox file://
+          if (callback) {
+            callback(e);
+          } else {
+            return false; // firefox file://
+          }
         }
 
-        if (xhr.status == 404 || // all browsers, http://
-          xhr.status == -1100 || // safari file://
-          // XXX: We have no way to tell in opera if a file exists and is empty, or is 404
-          // XXX: Use flash?
-          //(!failed && xhr.status == 0 && !xhr.responseText && EXISTS)) // opera
-          false)
-        {
-          return false;
+        var isDone = false;
+
+        var done = function() {
+          isDone = true;
+          if (xhr.status == 404 || // all browsers, http://
+            xhr.status == -1100 || // safari file://
+            // XXX: We have no way to tell in opera if a file exists and is empty, or is 404
+            // XXX: Use flash?
+            //(!failed && xhr.status == 0 && !xhr.responseText && EXISTS)) // opera
+            false)
+          {
+            if (callback) {
+              callback(xhr.status);
+            }
+
+            return false;
+          } else {
+            if (callback) {
+              callback(null, xhr.responseText);
+            }
+
+            return xhr.responseText;
+          }
         }
 
-        return xhr.responseText;
+        // If ansync, we wait otherwise done immediately
+        if (callback) {
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              done();
+            }
+          }
+          xhr.send(null);
+        } else {
+          xhr.send(null);
+          return done();
+        }
       };
+
+      this.getNamespace = function(str) {
+        return 'jsio:' + str;
+      };
+
+      this._tryClearSuggestions = function() {
+        if (!localStorage.getItem(this.getNamespace('preserveCache'))) {
+          // Clear the old things
+          localStorage.removeItem(oldSuggestionsKey);
+          _suggestions = [];
+          localStorage.removeItem(oldFailedKey);
+          _failedFetches = {};
+          return true;
+        }
+        return false;
+      };
+
+      var oldFailedKey = this.getNamespace('failedFetches');
+      var _failedFetches = null;
+
+      this.hasFetchFailed = function(path) {
+        if (!_failedFetches) {
+          this._tryClearSuggestions();
+          var oldFailed = localStorage.getItem(oldFailedKey);
+          if (oldFailed) {
+            _failedFetches = JSON.parse(oldFailed);
+          } else {
+            _failedFetches = {};
+          }
+        }
+
+        return (path in _failedFetches);
+      };
+
+      this.setFetchFailed = function(path) {
+        _failedFetches[path] = true;
+        // Save it
+        localStorage.setItem(oldFailedKey, JSON.stringify(_failedFetches));
+      };
+
+      var oldSuggestionsKey = this.getNamespace('suggestions');
+      var _suggestions = null;
+
+      this._getSuggestions = function() {
+        if (!_suggestions) {
+          this._tryClearSuggestions();
+          var oldSuggestions = localStorage.getItem(oldSuggestionsKey);
+          if (oldSuggestions) {
+            _suggestions = JSON.parse(oldSuggestions);
+          } else {
+            _suggestions = [];
+          }
+        }
+        return _suggestions;
+      }
+
+      /** Register modules that were found. These should be loaded first next run, if possible.
+          They serve as a best guess for required files based on prior runs */
+      this.registerFoundModule = function(path) {
+        var suggestions = this._getSuggestions();
+        // If it doesnt have an http, add it!
+        if (path && suggestions.indexOf(path) === -1) {
+          suggestions.push(path);
+          // Save
+          localStorage.setItem(oldSuggestionsKey, JSON.stringify(suggestions));
+        }
+      };
+
+      this.preloadModules = function(cb) {
+        // Check for the preserveCache key
+        // This is how the simulator tells us it is a soft reload
+        if (this._tryClearSuggestions()) {
+          cb();
+          return;
+        }
+
+        // Clear from last time
+        localStorage.removeItem(this.getNamespace('preserveCache'));
+
+        // Get the old list from storage
+        var suggestions = this._getSuggestions();
+        if (suggestions.length === 0) {
+          cb();
+        }
+
+        console.log('PRELOADING MODULES', suggestions.length);
+
+        // Request all
+        var suggestionCount = suggestions.length;
+        var finished = 0;
+        var errors = [];
+
+        // Load the preprocessors
+        // TODO: These synchronously block, should probably load them async
+        var importPreprocessor = getPreprocessor('import');
+        var inlinePreprocessor = getPreprocessor('inlineSlice');
+
+        var processSrc = function(path, src) {
+          var fakeModule = { src: src };
+          importPreprocessor(null, fakeModule, null);
+          inlinePreprocessor(null, fakeModule, null);
+          jsio.setCachedSrc(path, fakeModule.src);
+          onComplete();
+        };
+
+        var onComplete = function(err) {
+          finished++;
+          if (finished === suggestionCount) {
+            cb(errors.length > 0 ? errors : undefined);
+          }
+        };
+
+        var requestedPaths = [];
+        var request = function(path) {
+          var originalPath = path;
+
+          // TODO: This should never happen
+          if (jsio.getCachedSrc(path)) {
+            onComplete();
+            return;
+          }
+
+          // TODO: validate these before the request step
+          if (path === 'undefined') {
+            onComplete();
+            return;
+          }
+
+          // Check for duplicates (potentially occuring from http://host/abc and /abc)
+          if (path.indexOf('http') !== 0) {
+            // First convert to a full path (assumes href ends in a '/' and path does not start with a '/')
+            path = locationString + path;
+            if (requestedPaths.indexOf(path) >= 0) {
+              onComplete();
+              return;
+            }
+          }
+
+          requestedPaths.push(path);
+          this.fetch(path, function(err, src) {
+            if (err) {
+              errors.push(path);
+              onComplete(err);
+            } else {
+              // Preprocessors use a moduleDef
+              // TODO: why is the src cache not actually the src?
+              processSrc(originalPath, src);
+            }
+          });
+        }.bind(this);
+
+        suggestions.forEach(request);
+      };
+
+      var srcCache;
+      var locationString = util.addEndSlash(location.href);
+
+      var _cachePath = function(path) {
+        if (path.indexOf(locationString) === 0) {
+          return path.substring(locationString.length, path.length);
+        }
+        return path;
+      };
+
+      this.setCache = function(cache) { srcCache = jsio.__srcCache = cache; };
+
+      /** A http path will be stored relative to location.href, if possible */
+      this.setCachedSrc = function(path, src, locked) {
+        path = _cachePath(path);
+
+        if (srcCache[path] && srcCache[path].locked) {
+          console.warn('Cache is ignoring (already present and locked) src ' + path);
+          return;
+        }
+
+        srcCache[path] = { path: path, src: src, locked: locked };
+      };
+
+      this.getCachedSrc = function(path) {
+        return srcCache[_cachePath(path)];
+      };
+
     };
 
-    var failedFetch = {};
-
     function findModule(possibilities) {
-      var src;
-      for (var i = 0, possible; possible = possibilities[i]; ++i) {
-        var path = possible.path,
-          cachedVersion = srcCache[path];
+      var i, possible, path;
+
+      // Check for possibilities in the cache
+      for (i = 0, possible; possible = possibilities[i]; ++i) {
+        path = possible.path;
+        var cachedVersion = jsio.getCachedSrc(path);
 
         if (cachedVersion) {
           // extract a non-absolute dirname from the cache key: absolute paths
@@ -637,19 +883,19 @@
           possible.pre = true;
           return possible;
         }
+      }
 
-        /*if (/^\.\//.test(path)) {
-          // remove one path segment for each dot from the cwd
-          path = addEndSlash(ENV.getCwd()) + path;
-        }*/
-
-        src = ENV.fetch(path);
+      // Try to fetch
+      for (i = 0, possible; possible = possibilities[i]; ++i) {
+        path = possible.path;
+        var src = ENV.fetch(path);
 
         if (src !== false) {
           possible.src = src;
+          ENV.registerFoundModule(path);
           return possible;
         } else {
-          failedFetch[path] = true;
+          ENV.setFetchFailed(path);
         }
       }
 
@@ -678,7 +924,7 @@
           return possibilities[i];
         }
 
-        if (path in failedFetch) { possibilities.splice(i--, 1); }
+        if (ENV.hasFetchFailed(path)) { possibilities.splice(i--, 1); }
       }
 
       if (!possibilities.length) {
@@ -722,6 +968,9 @@
         moduleDef.pre = true;
 
         applyPreprocessors(fromDir, moduleDef, ["import", "inlineSlice"], opts);
+
+        // Save it in the cache
+        jsio.setCachedSrc(moduleDef.path, moduleDef.src);
       }
 
       // any additional preprocessors?

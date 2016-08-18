@@ -10,6 +10,7 @@ var supportedEnvs = {
 };
 
 var _interface = null;
+var compiler = null;
 
 exports.start = function(/*optional*/ args, opts) {
 	if (opts && opts['interface']) {
@@ -36,6 +37,10 @@ exports.start = function(/*optional*/ args, opts) {
 	} catch (e) {
 		_interface.onError(e);
 	}
+}
+
+exports.getCompiler = function() {
+	return compiler;
 }
 
 function getPackage(fileName) {
@@ -209,7 +214,7 @@ exports.run = function(args, opts) {
 	}
 
 	// run the actual compiler
-	var compiler = J('import jsio.preprocessors.compiler');
+	compiler = J('import jsio.preprocessors.compiler');
 	compiler.setCompilerOpts({
 		debugLevel: debugLevel,
 		compressor: opts.compressor || ('compress' in _interface ? bind(_interface, 'compress') : null),
@@ -222,23 +227,7 @@ exports.run = function(args, opts) {
 		rawOpts: opts
 	});
 
-	compiler.compile('import jsio.base');
-
-	if (opts.additionalDeps) {
-		var deps = opts.additionalDeps;
-		var n = deps.length;
-
-		for (var i = 0; i < n; ++i) {
-			logger.info('compiling dependencies...', deps[i]);
-			compiler.compile(deps[i]);
-		}
-	}
-
-	logger.info('compiling main program', initial);
-
-	compiler.compile(initial);
-
-	compiler.generateSrc(opts, function(src) {
+	var onFinish = function(src) {
 		if (opts.appendImport) {
 			src = src + ';' + JSIO + '("' + initial + '")';
 		}
@@ -248,6 +237,28 @@ exports.run = function(args, opts) {
 		}
 
 		_interface.onFinish(opts, src);
-	});
+	};
+
+	if (!opts.noCompile) {
+		compiler.compile('import jsio.base');
+
+		if (opts.additionalDeps) {
+			var deps = opts.additionalDeps;
+			var n = deps.length;
+
+			for (var i = 0; i < n; ++i) {
+				logger.info('compiling dependencies...', deps[i]);
+				compiler.compile(deps[i]);
+			}
+		}
+
+		logger.info('compiling main program', initial);
+
+		compiler.compile(initial);
+
+		compiler.generateSrc(opts, onFinish);
+	} else {
+		onFinish(compiler.getJsioSrc(opts.includeJsio));
+	}
 }
 
