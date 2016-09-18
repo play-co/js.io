@@ -828,14 +828,13 @@
     }
 
     var importStack = [];
-    function _require(boundContext, fromDir, fromFile, request, opts) {
+    function _require(exportInto, fromDir, fromFile, request, opts) {
       opts = opts || {};
       fromDir = fromDir || './';
-      fromFile = fromFile || INITIAL_FILE;
-
+      fromFile = fromFile || INITIAL_FILE,
       // require is bound to a module's (or global) context -- we can override this
       // by using opts.exportInto
-      var exportInto = opts.exportInto || boundContext || ENV.global;
+      exportInto = opts.exportInto || exportInto || ENV.global;
 
       // parse the import request(s)
       var imports = resolveImportRequest(exportInto, request, opts),
