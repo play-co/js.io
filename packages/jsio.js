@@ -923,7 +923,7 @@
               c = exportInto;
 
             // build the object in the context
-            for(var k = 0; k < kMax; ++k) {
+            for(var k = 0; k <= kMax; ++k) {
               var segment = segments[k];
               if (!segment) continue;
               if (!c[segment]) { c[segment] = {}; }
