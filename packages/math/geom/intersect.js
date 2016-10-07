@@ -87,7 +87,6 @@ intersect.pointToLine = intersect.ptToLine = function (pt, line) {
 
 // returns rectangle of intersection
 intersect.rectAndRect = function (rect1, rect2) {
-	import .Rect;
 	return (intersect.rectAndRect = function(rect1, rect2) {
 		if (rect1 === true) { return new Rect(rect2); }
 		if (rect2 === true) { return new Rect(rect2); }

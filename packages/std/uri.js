@@ -1,4 +1,4 @@
-import util.path;
+import util.path as utilPath;
 
 var attrs = [
 	"source",
@@ -58,7 +58,7 @@ var URI = module.exports = Class(function() {
 	};
 
 	this.setPath = function (path) {
-		var pieces = util.path.splitPath(path);
+		var pieces = utilPath.splitPath(path);
 		this._file = pieces.filename;
 		this._directory = pieces.directory;
 		this._path = path;
@@ -66,11 +66,11 @@ var URI = module.exports = Class(function() {
 	};
 
 	this.setFile = function (file) {
-		return this.setPath(util.path.join(this._directory, file));
+		return this.setPath(utilPath.join(this._directory, file));
 	};
 
 	this.setDirectory = function (directory) {
-		return this.setPath(util.path.join(directory, this._file));
+		return this.setPath(utilPath.join(directory, this._file));
 	};
 
 	this.push = function(path) {

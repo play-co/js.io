@@ -1,4 +1,4 @@
-jsio('external .sizzle import Sizzle');
+jsio('import .sizzle as Sizzle');
 
 import math.geom.Rect;
 

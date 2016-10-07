@@ -34,7 +34,7 @@ import .....std.uuid as uuid;
 import .....std.utf8 as utf8;
 import .....std.base64 as base64;
 import .....lib.Hash as Hash;
-from .util import *;
+import .util as cspUtil;
 
 var http = require('http');
 var nodeUrl = require('url');
@@ -321,9 +321,9 @@ exports.Connection = Class(process.EventEmitter, function() {
 
 	var validEncodings = new Hash('utf8', 'plain', 'binary');
 	this.setEncoding = function (encoding) {
-		assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
+		cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
 		if (encoding !== 'utf8') {
-			assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer');
+			cspUtil.assert(!(this._utf8buffer), 'cannot switch encodings with dirty utf8 buffer');
 		};
 		this._encoding = encoding;
 	};
@@ -335,7 +335,7 @@ exports.Connection = Class(process.EventEmitter, function() {
 			throw new Error("Socket is not writable in readyState: " + this.readyState);
 		};
 		encoding = encoding || this._encoding || 'binary'; // default to 'binary'
-		assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
+		cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
 		data = (encoding === 'utf8') ? utf8.encode(data) : data;
 		this._session.send(data);
 	};
@@ -354,7 +354,7 @@ exports.Server = Class(process.EventEmitter, function () {
 		this._sessionUrl = sessionURL || '';
 		log('starting server, session url is <' + this._sessionUrl + '>');
 	};
-	var CSPError = Class(AssertionError, function (supr) {
+	var CSPError = Class(cspUtil.AssertionError, function (supr) {
 		this.name = 'CSPError'
 		this.init = function (code/*, other args */) {
 			supr(this, 'init', args);
@@ -373,7 +373,7 @@ exports.Server = Class(process.EventEmitter, function () {
 	};
 	var sendStatic = function (path, response) {
 		logger.debug('SEND STATIC', path, response)
-		staticFile('./' + path.join('/'), function(err, content){
+		cspUtils.staticFile('./' + path.join('/'), function(err, content){
 			if (err) {
 				renderError(response, 404, 'No such file, ' + path);
 			} else {
@@ -388,7 +388,7 @@ exports.Server = Class(process.EventEmitter, function () {
 	// immediately with null for GET requests
 	var getRequestBody = function (request, callback) {
 		if (request.method === 'GET') {
-			reschedule(function () {
+			cspUtils.reschedule(function () {
 				callback('')
 			});
 		} else {
@@ -415,7 +415,7 @@ exports.Server = Class(process.EventEmitter, function () {
 					path = uri.pathname,
 					sessionUrl = this._sessionUrl;
 
-				assertOrRenderError(startswith(path, sessionUrl + '/'),
+				assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'),
 									404, 'Request to invalid session URL');
 				logger.debug(request.method);
 				assertOrRenderError(validMethods.contains(request.method),
@@ -423,7 +423,7 @@ exports.Server = Class(process.EventEmitter, function () {
 
 				var resource = path.split('/').pop();
 				if (resource === 'static') {
-					assertOrRenderError(startswith(path, sessionUrl + '/'),
+					assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'),
 										404, 'sendStatic Not Implemented');
 					// TODO: sendStatic(relativePath, response);
 					return;
@@ -441,7 +441,7 @@ exports.Server = Class(process.EventEmitter, function () {
 					try {
 						var dict = JSON.parse(request.data);
 						// make sure our json dict is an object literal
-						assert((dict instanceof Object) && !(dict instanceof Array));
+						cspUtil.assert((dict instanceof Object) && !(dict instanceof Array));
 					} catch (err) {
 						logger.debug('INVALID HANDSHAKE, ', request, err);
 						throw new CSPError(400, 'Invalid data parameter for handshake');

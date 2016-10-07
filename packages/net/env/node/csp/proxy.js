@@ -27,7 +27,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-jsio('from .util import *');
+jsio('import .util as cspUtil');
 jsio('from .server import csp')
 
 // msp = "Multiplexing Socket Proxy"
@@ -55,7 +55,7 @@ msp.ProxyConnection = Class(function() {
 			.addListener('receive', bind(this, this.receiveData))
 			.addListener('eof', bind(this, this.shutdown))
 			.addListener('disconnect', bind(this, this.shutdown))
-			.setEncoding('bytes');	
+			.setEncoding('bytes');
 	};
 	this.receiveData = function (data) {
 		var frameBegin;
@@ -63,17 +63,17 @@ msp.ProxyConnection = Class(function() {
 		try {
 			while ((frameBegin = this.inBuffer.indexOf('[')) != -1) {
 				var frameEnd = parseInt(this.inBuffer.slice(0, frameBegin)) + frameBegin;
-				assert (!isNaN(frameEnd), 'Invalid frame size prefix');
+				cspUtil.assert (!isNaN(frameEnd), 'Invalid frame size prefix');
 				if (this.inBuffer.length < frameEnd) {
 					break; // whole frame hasn't arrived yet
 				}
 				var frame = JSON.parse(this.inBuffer.slice(frameBegin, frameEnd));
 				this.inBuffer = this.inBuffer.slice(frameEnd) // remove frame from buffer
 				// frame consists of connection id, frame type, arbitrary other arguments
-				assert(frame instanceof Array && frame.length >= 2, 'Invalid frame');
+				cspUtil.assert(frame instanceof Array && frame.length >= 2, 'Invalid frame');
 				var connectionId = frame.shift();
 				var frameType = frameTypes[frame.shift()];
-				assert(frameType, 'Unrecognized frame type');
+				cspUtil.assert(frameType, 'Unrecognized frame type');
 				var args = frame; args.unshift(connectionId); // put back connection ID
 				dispatchFrame[frameType].apply(this, args);
 			};
@@ -83,7 +83,7 @@ msp.ProxyConnection = Class(function() {
 		};
 	};
 	this.shutdown = function (had_error) {
-		// close all outgoing TCP connections			 
+		// close all outgoing TCP connections
 		for (var connectionId in this.outConnections) {
 			if (had_error) {
 				this.closeOutgoing(connectionId, 'ProtocolError');
@@ -112,8 +112,8 @@ msp.ProxyConnection = Class(function() {
 	};
 	this.dispatchFrame = {
 		open: function (connectionId, host, port) {
-			assert(!(connectionId in this.outConnections), 'OPEN frame for existing connection');
-			assert(host && port, 'Invalid host or port');
+			cspUtil.assert(!(connectionId in this.outConnections), 'OPEN frame for existing connection');
+			cspUtil.assert(host && port, 'Invalid host or port');
 			var outConn = this.outConnections[connectionId] = node.tcp.createConnection(port, host);
 			outConn.setEncoding('bytes');
 			outConn

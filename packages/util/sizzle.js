@@ -5,7 +5,7 @@
  *  More information: http://sizzlejs.com/
  */
 
-Sizzle = (function(){
+exports = Sizzle = (function(){
 
 var chunker = /((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^[\]]*\]|['"][^'"]*['"]|[^[\]'"]+)+\]|\\.|[^ >+~,(\[\\]+)+|[>+~])(\s*,\s*)?/g,
 	done = 0,

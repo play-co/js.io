@@ -588,7 +588,8 @@
 
       this.checkSyntax = function(code, path) {
         try {
-          var syntax = jsio('import jsio.util.syntax', {suppressErrors: true, dontExport: true});
+          // var syntax = jsio('import jsio.util.syntax', {suppressErrors: true, dontExport: true});
+          var syntax = require('jsio.util.syntax');
           syntax(code, path);
         } catch(e) {}
       };
@@ -1023,8 +1024,8 @@
     });
 
     jsio.install = function() {
-      jsio('from .base import *');
-      GLOBAL['logger'] = logging.get('jsiocore');
+      var base = require('./base');
+      base.GLOBAL['logger'] = base.logging.get('jsiocore');
     };
 
     jsio.eval = function (src, path) {

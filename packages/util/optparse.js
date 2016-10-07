@@ -140,9 +140,10 @@ exports = function(argv, origDef) {
 	};
 }
 
-exports.printUsage = function(usage, optsDef) {
-	import ..util.wordWrap;
 
+import ..util.wordWrap;
+
+exports.printUsage = function(usage, optsDef) {
 	var print = jsio.__env.log;
 	print('Usage:');
 	print('\t' + usage);
