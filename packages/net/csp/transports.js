@@ -261,7 +261,13 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		if (!doc.body) { return false; }
 		
 		var i = doc.createElement("iframe");
-		with(i.style) { display = 'block'; width = height = border = margin = padding = '0'; overflow = visibility = 'hidden'; position = 'absolute'; top = left = '-999px'; }
+
+		i.style.display = 'block';
+		i.style.width = i.style.height = i.style.border = i.style.margin = i.style.padding = '0';
+		i.style.overflow = i.style.visibility = 'hidden';
+		i.style.position = 'absolute';
+		i.style.top = i.style.left = '-999px';
+
 		i.cbId = 0;
 		doc.body.appendChild(i);
 		i.src = 'about:blank';

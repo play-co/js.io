@@ -65,14 +65,14 @@ exports.encode = function (bytes, skipPadding) {
 	var out_array = [];
 	for (var i=0, n=bytes.length; i < n; i+=3) {
 		var newchars = (
-			(bytes.charCodeAt(i)   << 020) +
-			(bytes.charCodeAt(i+1) << 010) +
+			(bytes.charCodeAt(i)   << 0o020) +
+			(bytes.charCodeAt(i+1) << 0o010) +
 			(bytes.charCodeAt(i+2)));
 		out_array.push(
-			alphabet.charAt((newchars >> 18) & 077),
-			alphabet.charAt((newchars >> 12) & 077),
-			alphabet.charAt((newchars >> 6)  & 077),
-			alphabet.charAt((newchars)       & 077));
+			alphabet.charAt((newchars >> 18) & 0o077),
+			alphabet.charAt((newchars >> 12) & 0o077),
+			alphabet.charAt((newchars >> 6)  & 0o077),
+			alphabet.charAt((newchars)       & 0o077));
 	};
 	
 	out_array.length -= padding.length;
@@ -114,8 +114,8 @@ exports.decode = function (b64text) {
 			(decodeMap[b64text.charAt(i+2)] << 6)  +
 			(decodeMap[b64text.charAt(i+3)]));
 		out_array.push(
-			(newchars >> 020) & 0xFF,
-			(newchars >> 010) & 0xFF, 
+			(newchars >> 0o020) & 0xFF,
+			(newchars >> 0o010) & 0xFF,
 			(newchars)		& 0xFF);
 	};
 	
