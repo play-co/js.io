@@ -34,19 +34,6 @@ var URI = module.exports = Class(function() {
 		}
 	};
 
-	for (var i = 0, attr; attr = attrs[i]; ++i) {
-		(function(attr) {
-			var fNameSuffix = attr.charAt(0).toUpperCase() + attr.slice(1);
-			this['get' + fNameSuffix] = function() {
-				return this['_' + attr];
-			};
-			this['set' + fNameSuffix] = function(val) {
-				this['_' + attr] = val;
-				return this;
-			};
-		}).call(this, attr);
-	}
-
 	this.query = function(key) { return URI.parseQuery(this._query)[key]; };
 	this.hash = function(key) { return URI.parseQuery(this._anchor)[key]; };
 
@@ -117,6 +104,21 @@ var URI = module.exports = Class(function() {
 		return a + b + c + d + e;
 	};
 });
+
+
+for (var i = 0, attr; attr = attrs[i]; ++i) {
+	(function(attr) {
+		var fNameSuffix = attr.charAt(0).toUpperCase() + attr.slice(1);
+		this['get' + fNameSuffix] = function() {
+			return this['_' + attr];
+		};
+		this['set' + fNameSuffix] = function(val) {
+			this['_' + attr] = val;
+			return this;
+		};
+	}).call(URI.prototype, attr);
+}
+
 
 URI.relativeTo = function(url, base) {
 	var url = String(url);

@@ -1,3 +1,58 @@
+/*
+ * Find the smallest element in an array, wrt compare (avoids sorting)
+ * @compare : return -1 || 0 || 1
+ */
+function smallest (arr, compare) {
+	var n = arr.length;
+	if (!n) { return; }
+
+	var min = arr[0];
+	for (var k = 1; k < n; k++){
+		if (compare(arr[k], min) == -1) {
+			min = arr[k];
+		}
+	}
+
+	return min;
+}
+
+/*
+ * Sum an array of numbers
+ */
+function array_sum (arr) {
+	var ans = 0;
+	for (k = 0; k < arr.length; k++) {
+		ans += arr[k];
+	}
+	return ans;
+}
+
+function len (vec) {
+	return Math.pow(vec[0] * vec[0] + vec[1] * vec[1], 0.5);
+}
+
+function normalize (v) {
+	var len = len(v);
+	return [v[0] / len, v[1] / len];
+}
+
+function vec_len (v) {
+	return Math.pow(v[0] * v[0] + v[1] * v[1], 0.5)
+}
+
+function sign (n) {
+	return n < 0 ? -1 : n > 0 ? 1 : 0;
+}
+
+function approx(a,b,epsilon) {
+	return (Math.abs(a - b) < epsilon);
+}
+
+function norm (v) {
+	return Math.pow(v[0] * v[0] + v[1] * v[1], 0.5);
+}
+
+
 exports = Class(function() {
 
 	this.init = function (opts) {
@@ -148,58 +203,4 @@ exports = Class(function() {
 			this.y[k] = sin * offset[0] - cos * offset[1];
 		}
 	};
-
-	/*
-	 * Find the smallest element in an array, wrt compare (avoids sorting)
-	 * @compare : return -1 || 0 || 1
-	 */
-	function smallest (arr, compare) {
-		var n = arr.length;
-		if (!n) { return; }
-
-		var min = arr[0];
-		for (var k = 1; k < n; k++){
-			if (compare(arr[k], min) == -1) {
-				min = arr[k];
-			}
-		}
-
-		return min;
-	}
-
-	/*
-	 * Sum an array of numbers
-	 */
-	function array_sum (arr) {
-		var ans = 0;
-		for (k = 0; k < arr.length; k++) {
-			ans += arr[k];
-		}
-		return ans;
-	}
-
-	function len (vec) {
-		return Math.pow(vec[0] * vec[0] + vec[1] * vec[1], 0.5);
-	}
-
-	function normalize (v) {
-		var len = len(v);
-		return [v[0] / len, v[1] / len];
-	}
-
-	function vec_len (v) {
-		return Math.pow(v[0] * v[0] + v[1] * v[1], 0.5)
-	}
-	
-	function sign (n) {
-		return n < 0 ? -1 : n > 0 ? 1 : 0;
-	}
-	
-	function approx(a,b,epsilon) {
-		return (Math.abs(a - b) < epsilon);
-	}
-	
-	function norm (v) {
-		return Math.pow(v[0] * v[0] + v[1] * v[1], 0.5);
-	}
 });

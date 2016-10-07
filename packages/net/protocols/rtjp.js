@@ -1,5 +1,11 @@
 from .delimited import DelimitedProtocol;
 
+
+var error = function(e) {
+	logger.error(e);
+};
+
+
 /**
  * @extends net.protocols.delimited.DelimitedProtocol
  */
@@ -13,10 +19,6 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function(supr) {
 	this.connectionMade = function() {
 		if (this._client && this._client.connectionMade) { this._client.connectionMade(); }
 		logger.debug("connectionMade");
-	}
-
-	var error = function(e) {
-		logger.error(e);
 	}
 
 	// Inherit and overwrite

@@ -38,9 +38,10 @@ exports.post = function(opts, cb) {
 	return exports.get(merge({method: 'POST'}, opts), cb);
 }
 
-var Request = Class(function() {
-	var _UID = 0;
 
+var _UID = 0;
+
+var Request = Class(function() {
 	this.init = function(opts, cb) {
 		if (typeof opts == 'string') { opts = {url: opts}; }
 		if (!opts || !opts.url) { logger.error('no url provided'); return; }

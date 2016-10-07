@@ -153,6 +153,35 @@ var baseTransport = Class(exports.Transport, function(supr) {
 	};
 });
 
+
+function onReadyStateChange(xhr, rType, cb, eb) {
+	try {
+		var data = {status: xhr.status};
+	} catch(e) { eb({response: 'Could not access status'}); }
+	
+	try {
+		if(xhr.readyState != 4) { return; }
+		
+		data.response = eval(xhr.responseText);
+		if(data.status != 200) { 
+			logger.debug('XHR failed with status ', xhr.status);
+			eb(data);
+			return;
+		}
+		
+		logger.debug('XHR data received');
+	} catch(e) {
+		logger.debug('Error in XHR::onReadyStateChange', e);
+		eb(data);
+		this._abortXHR(rType);
+		logger.debug('done handling XHR error');
+		return;
+	}
+	
+	cb(data);
+};
+
+
 transports.xhr = Class(baseTransport, function(supr) {
 	
 	this.init = function() {
@@ -197,33 +226,6 @@ transports.xhr = Class(baseTransport, function(supr) {
 		return !xhrSupportsBinary ? [ packetId, 1, base64.encode(data) ] : [ packetId, 0, data ];
 	};
 
-	function onReadyStateChange(xhr, rType, cb, eb) {
-		try {
-			var data = {status: xhr.status};
-		} catch(e) { eb({response: 'Could not access status'}); }
-		
-		try {
-			if(xhr.readyState != 4) { return; }
-			
-			data.response = eval(xhr.responseText);
-			if(data.status != 200) { 
-				logger.debug('XHR failed with status ', xhr.status);
-				eb(data);
-				return;
-			}
-			
-			logger.debug('XHR data received');
-		} catch(e) {
-			logger.debug('Error in XHR::onReadyStateChange', e);
-			eb(data);
-			this._abortXHR(rType);
-			logger.debug('done handling XHR error');
-			return;
-		}
-		
-		cb(data);
-	};
-
 	/**
 	 * even though we encode the POST body as in application/x-www-form-urlencoded
 	 */
@@ -253,9 +255,9 @@ transports.xhr = Class(baseTransport, function(supr) {
 var EMPTY_FUNCTION = function() {},
 	SLICE = Array.prototype.slice;
 
-transports.jsonp = Class(baseTransport, function(supr) {
+(function () {
 	var doc;
-	
+
 	var createIframe = function() {
 		var doc = exports.getDoc();
 		if (!doc.body) { return false; }
@@ -293,107 +295,6 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		}, 60000);
 	};
 
-	this.init = function() {
-		supr(this, 'init');
-
-		this._onReady = [];
-		this._isReady = false;
-
-		this._createIframes();
-	};
-
-	this._createIframes = function() {
-		this._ifr = {
-			send: createIframe(),
-			comet: createIframe()
-		};
-		
-		if(this._ifr.send === false) { return setTimeout(bind(this, '_createIframes'), 100); }
-		
-		this._isReady = true;
-
-		var readyArgs = this._onReady;
-		this._onReady = [];
-		for(var i = 0, args; args = readyArgs[i]; ++i) {
-			this._makeRequest.apply(this, args);
-		}
-	};
-
-	this.encodePacket = function(packetId, data, options) {
-		return [ packetId, 1, base64.encode(data) ];
-	};
-
-	this.abort = function() {
-		this._aborted = true;
-		for(var i in this._ifr) {
-			if(this._ifr.hasOwnProperty(i)) {
-				var ifr = this._ifr[i];
-				cleanupIframe(ifr);
-				removeIframe(ifr);
-			}
-		}
-	};
-	
-	this._makeRequest = function(rType, url, args, data, cb, eb) {
-		if(!this._isReady) { return this._onReady.push(arguments); }
-		
-		var ifr = this._ifr[rType],
-			id = ++ifr.cbId,
-			req = {
-				type: rType,
-				id: id,
-				cb: cb,
-				eb: eb,
-				cbName: 'cb' + id,
-				ebName: 'eb' + id,
-				completed: false
-			};
-		
-		args.d = data;
-		args.n = Math.random();	
-		switch(rType) {
-			case 'send': args.rs = ';'; args.rp = req.cbName; break;
-			case 'comet': args.bs = ';'; args.bp = req.cbName; break;
-		}
-		
-		req.url = url + '?' + uri.buildQuery(args)
-		
-		setTimeout(bind(this, '_request', req), 0);
-	}
-	
-	this._request = function(req) {
-		var ifr = this._ifr[req.type],
-			win = ifr.contentWindow,
-			doc = win.document,
-			body = doc.body;
-                /*added by skysbird for opera support*/
-                if (!body){return setTimeout(bind(this,'_request',req),100); }
-		win[req.ebName] = bind(this, checkForError, req);
-		win[req.cbName] = bind(this, onSuccess, req);
-		
-		if(BrowserDetect.isWebKit) {
-			// this will probably cause loading bars in Safari -- might want to rethink?
-			doc.open();
-			doc.write('<scr'+'ipt src="'+req.url+'"></scr'+'ipt><scr'+'ipt>'+ebName+'(false)</scr'+'ipt>');
-			doc.close();
-		} else {
-			var s = doc.createElement('script');
-			s.src = req.url;
-			
-			// IE
-			if(s.onreadystatechange === null) { s.onreadystatechange = bind(this, onReadyStateChange, req, s); }
-			body.appendChild(s);
-			
-			if(!BrowserDetect.isIE) {
-				var s = doc.createElement('script');
-				s.innerHTML = req.ebName+'(false)';
-				body.appendChild(s);
-			}
-		}
-		
-		killLoadingBar();
-	};
-	
 	function onSuccess(req, response) {
 		logger.debug('successful: ', req.url, response);
 		req.completed = true;
@@ -433,5 +334,108 @@ transports.jsonp = Class(baseTransport, function(supr) {
 		b.insertBefore(killLoadingBar.iframe, b.firstChild);
 		b.removeChild(killLoadingBar.iframe);
 	} : function() {};
-});
-	
+
+	transports.jsonp = Class(baseTransport, function(supr) {
+		this.init = function() {
+			supr(this, 'init');
+
+			this._onReady = [];
+			this._isReady = false;
+
+			this._createIframes();
+		};
+
+		this._createIframes = function() {
+			this._ifr = {
+				send: createIframe(),
+				comet: createIframe()
+			};
+			
+			if(this._ifr.send === false) { return setTimeout(bind(this, '_createIframes'), 100); }
+			
+			this._isReady = true;
+
+			var readyArgs = this._onReady;
+			this._onReady = [];
+			for(var i = 0, args; args = readyArgs[i]; ++i) {
+				this._makeRequest.apply(this, args);
+			}
+		};
+
+		this.encodePacket = function(packetId, data, options) {
+			return [ packetId, 1, base64.encode(data) ];
+		};
+
+		this.abort = function() {
+			this._aborted = true;
+			for(var i in this._ifr) {
+				if(this._ifr.hasOwnProperty(i)) {
+					var ifr = this._ifr[i];
+					cleanupIframe(ifr);
+					removeIframe(ifr);
+				}
+			}
+		};
+		
+		this._makeRequest = function(rType, url, args, data, cb, eb) {
+			if(!this._isReady) { return this._onReady.push(arguments); }
+			
+			var ifr = this._ifr[rType],
+				id = ++ifr.cbId,
+				req = {
+					type: rType,
+					id: id,
+					cb: cb,
+					eb: eb,
+					cbName: 'cb' + id,
+					ebName: 'eb' + id,
+					completed: false
+				};
+			
+			args.d = data;
+			args.n = Math.random();	
+			switch(rType) {
+				case 'send': args.rs = ';'; args.rp = req.cbName; break;
+				case 'comet': args.bs = ';'; args.bp = req.cbName; break;
+			}
+			
+			req.url = url + '?' + uri.buildQuery(args)
+			
+			setTimeout(bind(this, '_request', req), 0);
+		}
+		
+		this._request = function(req) {
+			var ifr = this._ifr[req.type],
+				win = ifr.contentWindow,
+				doc = win.document,
+				body = doc.body;
+	                /*added by skysbird for opera support*/
+	                if (!body){return setTimeout(bind(this,'_request',req),100); }
+			win[req.ebName] = bind(this, checkForError, req);
+			win[req.cbName] = bind(this, onSuccess, req);
+			
+			if(BrowserDetect.isWebKit) {
+				// this will probably cause loading bars in Safari -- might want to rethink?
+				doc.open();
+				doc.write('<scr'+'ipt src="'+req.url+'"></scr'+'ipt><scr'+'ipt>'+ebName+'(false)</scr'+'ipt>');
+				doc.close();
+			} else {
+				var s = doc.createElement('script');
+				s.src = req.url;
+				
+				// IE
+				if(s.onreadystatechange === null) { s.onreadystatechange = bind(this, onReadyStateChange, req, s); }
+				body.appendChild(s);
+				
+				if(!BrowserDetect.isIE) {
+					var s = doc.createElement('script');
+					s.innerHTML = req.ebName+'(false)';
+					body.appendChild(s);
+				}
+			}
+			
+			killLoadingBar();
+		};
+	});
+
+})();

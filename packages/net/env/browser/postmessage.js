@@ -2,12 +2,15 @@ import net.interfaces;
 from util.browser import $;
 import std.uuid;
 
+
+var ID = 0;
+var uniqueId = 1;
+
+
 /**
  * @extends net.interfaces.Listener
  */
 exports.Listener = Class(net.interfaces.Listener, function(supr) {
-	var ID = 0;
-
 	this.init = function() {
 		supr(this, 'init', arguments);
 		this._clients = {};
@@ -32,7 +35,6 @@ exports.Listener = Class(net.interfaces.Listener, function(supr) {
 		return button;
 	}
 
-	var uniqueId = 1;
 	this.openWindow = function (url) {
 		var options = { menubar: 'no', location: 'no', toolbar: 'no',
 			width: 550, height: 350, // left: 200, top: 200,

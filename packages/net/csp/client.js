@@ -14,11 +14,13 @@ var READYSTATE = exports.READYSTATE = Enum({
 });
 
 
+var id = 0;
+var kDefaultBackoff = 50;
+var kDefaultTimeoutInterval = 45000;
+var kDefaultHandshakeTimeout = 10000;
+
+
 exports.CometSession = Class(function(supr) {
-	var id = 0;
-	var kDefaultBackoff = 50;
-	var kDefaultTimeoutInterval = 45000;
-	var kDefaultHandshakeTimeout = 10000;
 	this.init = function() {
 		this._id = ++id;
 		this._url = null;

@@ -60,6 +60,8 @@ var sessionDict = {},
 		// 'n'	: 'noCache',
 	};
 
+var updatedHeaders = new Hash('gzipOk', 'contentType');
+
 exports.Session = Class(function() {
 	this.init = function () {
 		// this.lastAck = 0; // 'a' variable
@@ -119,7 +121,6 @@ exports.Session = Class(function() {
 		this.connection.emit('close');
 	};
 
-	var updatedHeaders = new Hash('gzipOk', 'contentType');
 	this.updateVars = function (params) {
 		for (var param in params) {
 			var key = varNames[param];
@@ -301,6 +302,11 @@ exports.Session = Class(function() {
 	};
 });
 
+
+var validEncodings = new Hash('utf8', 'plain', 'binary');
+var validReadyStates = new Hash('writeOnly', 'open');
+
+
 exports.Connection = Class(process.EventEmitter, function() {
 	this.init = function (session) {
 		this.remoteAddress = null; // XXX get remote address from requests
@@ -319,7 +325,6 @@ exports.Connection = Class(process.EventEmitter, function() {
 		this.emit('receive', data);
 	};
 
-	var validEncodings = new Hash('utf8', 'plain', 'binary');
 	this.setEncoding = function (encoding) {
 		cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
 		if (encoding !== 'utf8') {
@@ -328,7 +333,6 @@ exports.Connection = Class(process.EventEmitter, function() {
 		this._encoding = encoding;
 	};
 
-	var validReadyStates = new Hash('writeOnly', 'open');
 	this.send = function (data, encoding) {
 		if (!validReadyStates.contains(this.readyState)) {
 			// XXX make error type for this
@@ -348,12 +352,7 @@ exports.createServer = function (connection_listener) {
 	return new exports.Server().addListener('connection', connection_listener);
 };
 
-exports.Server = Class(process.EventEmitter, function () {
-	this.init = function (sessionURL) {
-		process.EventEmitter.call(this);
-		this._sessionUrl = sessionURL || '';
-		log('starting server, session url is <' + this._sessionUrl + '>');
-	};
+(function () {
 	var CSPError = Class(cspUtil.AssertionError, function (supr) {
 		this.name = 'CSPError'
 		this.init = function (code/*, other args */) {
@@ -407,76 +406,85 @@ exports.Server = Class(process.EventEmitter, function () {
 	// called every time a new request comes in.
 	var validResources = new Hash('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest'),
 		validMethods = new Hash('GET', 'POST');
-	this._handleRequest = function (request, response) {
-		getRequestBody(request, bind(this, function(body) {
-			logger.debug('received request', request.url);
-			try {
-				var uri = nodeUrl.parse(request.url, true),
-					path = uri.pathname,
-					sessionUrl = this._sessionUrl;
 
-				assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'),
-									404, 'Request to invalid session URL');
-				logger.debug(request.method);
-				assertOrRenderError(validMethods.contains(request.method),
-									405, 'Invalid HTTP method, ' + request.method);
+	exports.Server = Class(process.EventEmitter, function () {
+		this.init = function (sessionURL) {
+			process.EventEmitter.call(this);
+			this._sessionUrl = sessionURL || '';
+			log('starting server, session url is <' + this._sessionUrl + '>');
+		};
 
-				var resource = path.split('/').pop();
-				if (resource === 'static') {
+		this._handleRequest = function (request, response) {
+			getRequestBody(request, bind(this, function(body) {
+				logger.debug('received request', request.url);
+				try {
+					var uri = nodeUrl.parse(request.url, true),
+						path = uri.pathname,
+						sessionUrl = this._sessionUrl;
+
 					assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'),
-										404, 'sendStatic Not Implemented');
-					// TODO: sendStatic(relativePath, response);
-					return;
-				};
+										404, 'Request to invalid session URL');
+					logger.debug(request.method);
+					assertOrRenderError(validMethods.contains(request.method),
+										405, 'Invalid HTTP method, ' + request.method);
 
-				assertOrRenderError(validResources.contains(resource),
-									404, 'Invalid resource, ' + path);
-
-				var params = uri.query;
-
-				// 'data' is either the POST body if it exists, or the 'd' variable
-				request.data = body || params.d || null;
-				if (resource === 'handshake') {
-					assertOrRenderError(!params.s, 400, 'Handshake cannot have session');
-					try {
-						var dict = JSON.parse(request.data);
-						// make sure our json dict is an object literal
-						cspUtil.assert((dict instanceof Object) && !(dict instanceof Array));
-					} catch (err) {
-						logger.debug('INVALID HANDSHAKE, ', request, err);
-						throw new CSPError(400, 'Invalid data parameter for handshake');
+					var resource = path.split('/').pop();
+					if (resource === 'static') {
+						assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'),
+											404, 'sendStatic Not Implemented');
+						// TODO: sendStatic(relativePath, response);
+						return;
 					};
-					var session = new exports.Session();
-					var connection = new exports.Connection(session);
-					session.connection = connection;
-					this.emit('connection', connection);
-					connection.emit('connect');
-				} else {
-					var session = sessionDict[params.s];
-					assertOrRenderError(session, 400, 'Invalid or missing session');
-					// 'ackId' is either the 'Last-Event-Id' header, or the 'a' variable
-					var ackId = parseInt(request.headers['Last-Event-Id']) || parseInt(params.a) || -1;
-					session.receiveAck(ackId);
+
+					assertOrRenderError(validResources.contains(resource),
+										404, 'Invalid resource, ' + path);
+
+					var params = uri.query;
+
+					// 'data' is either the POST body if it exists, or the 'd' variable
+					request.data = body || params.d || null;
+					if (resource === 'handshake') {
+						assertOrRenderError(!params.s, 400, 'Handshake cannot have session');
+						try {
+							var dict = JSON.parse(request.data);
+							// make sure our json dict is an object literal
+							cspUtil.assert((dict instanceof Object) && !(dict instanceof Array));
+						} catch (err) {
+							logger.debug('INVALID HANDSHAKE, ', request, err);
+							throw new CSPError(400, 'Invalid data parameter for handshake');
+						};
+						var session = new exports.Session();
+						var connection = new exports.Connection(session);
+						session.connection = connection;
+						this.emit('connection', connection);
+						connection.emit('connect');
+					} else {
+						var session = sessionDict[params.s];
+						assertOrRenderError(session, 400, 'Invalid or missing session');
+						// 'ackId' is either the 'Last-Event-Id' header, or the 'a' variable
+						var ackId = parseInt(request.headers['Last-Event-Id']) || parseInt(params.a) || -1;
+						session.receiveAck(ackId);
+					};
+					session.updateVars(params);
+					session.dispatch[resource].call(session, request, response); // logic is in session
+				}
+				catch (err) {
+					if (err instanceof CSPError) {
+						renderError(response, err.code, err.message);
+					} else {
+						logger.warn('Unexpected Error: ', err.message, err.stack);
+						renderError(response, 500, 'Unknown Server error');
+					};
 				};
-				session.updateVars(params);
-				session.dispatch[resource].call(session, request, response); // logic is in session
-			}
-			catch (err) {
-				if (err instanceof CSPError) {
-					renderError(response, err.code, err.message);
-				} else {
-					logger.warn('Unexpected Error: ', err.message, err.stack);
-					renderError(response, 500, 'Unknown Server error');
-				};
-			};
-		}));
-	};
-	this.listen = function (port, host) {
-		var server = http.createServer(bind(this, this._handleRequest));
-		if (!port) { throw logger.error('No port specified'); }
-		server.listen(port, host);
-	};
-});
+			}));
+		};
+		this.listen = function (port, host) {
+			var server = http.createServer(bind(this, this._handleRequest));
+			if (!port) { throw logger.error('No port specified'); }
+			server.listen(port, host);
+		};
+	});
+})();
 
 /* // un-comment to run echo server when this file runs
 
