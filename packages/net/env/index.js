@@ -1,3 +1,8 @@
+import {
+  logger,
+  bind
+} from 'base';
+
 var req = require.context('.', true, /\.js$/);
 
 function getObj(objectName, transportName, envName) {

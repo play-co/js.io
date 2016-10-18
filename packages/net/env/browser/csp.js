@@ -1,3 +1,8 @@
+import {
+  bind,
+  logger
+} from 'base';
+
 import interfaces from '../../interfaces';
 import client from '../../csp/client';
 let CometSession = client.CometSession;

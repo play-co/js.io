@@ -1,3 +1,8 @@
+import {
+  logger,
+  bind
+} from 'base';
+
 import interfaces from '../../interfaces';
 
 var Transport = Class(interfaces.Transport, function () {

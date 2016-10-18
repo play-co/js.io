@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 /*
 "URL-safe" Base64 Codec, by Jacob Rus
 

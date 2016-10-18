@@ -1,3 +1,8 @@
+import {
+  logger,
+  bind
+} from 'base';
+
 import interfaces from '../../../interfaces';
 import server from './server';
 

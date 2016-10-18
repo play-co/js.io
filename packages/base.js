@@ -1,3 +1,8 @@
+import {
+  logger,
+  logging
+} from 'base';
+
 /**
  * base.js
  * This file contains all global functions provided by js.io.

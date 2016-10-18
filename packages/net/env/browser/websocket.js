@@ -1,3 +1,8 @@
+import {
+  logger,
+  bind
+} from 'base';
+
 import interfaces from 'net/interfaces';
 import utf8 from 'std/utf8';
 import Errors from 'net/errors';

@@ -1,3 +1,8 @@
+import {
+  bind,
+  logger
+} from 'base';
+
 import interfaces from '../../interfaces';
 var net = require('net');
 

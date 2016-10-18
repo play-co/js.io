@@ -13,6 +13,12 @@
  *     Calling the super constructor is not required for descendants of
  *     lib.PubSub.
  */
+import {
+  bind,
+  GLOBAL,
+  logger
+} from 'base';
+
 import _uuid from '../std/uuid';
 let uuid = _uuid.uuid;
 

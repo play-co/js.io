@@ -28,6 +28,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
+import {
+  bind,
+  logger,
+  log
+} from 'base';
+
 import uuid from '../../../../std/uuid';
 import utf8 from '../../../../std/utf8';
 import base64 from '../../../../std/base64';

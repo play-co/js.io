@@ -1,3 +1,8 @@
+import {
+  bind,
+  logger
+} from 'base';
+
 import interfaces from 'net/interfaces';
 import browser from 'util/browser';
 let $ = browser.$;

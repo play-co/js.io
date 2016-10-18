@@ -1,3 +1,10 @@
+import {
+  logger,
+  isArray,
+  log,
+  merge
+} from 'base';
+
 import jsonSchema from './jsonSchema';
 import Enum from '../lib/Enum';
 

@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 import buffered from 'net/protocols/buffered';
 let BufferedProtocol = buffered.BufferedProtocol;
 import _sprintf from 'util/sprintf';

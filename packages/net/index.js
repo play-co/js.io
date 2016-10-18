@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 import env from './env';
 import JSON from '../std/JSON';
 import interfaces from './interfaces';

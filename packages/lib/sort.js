@@ -1,3 +1,5 @@
+import { bind } from 'base';
+
 var zeroPadding = [];
 function ensurePadding(n) {
   for (var i = zeroPadding.length; i < n; ++i) {

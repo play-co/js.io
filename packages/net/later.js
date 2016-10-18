@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 exports.Later = Class(function () {
   this.init = function () {
     this.cb = null;

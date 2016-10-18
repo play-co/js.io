@@ -1,3 +1,5 @@
+import { bind } from 'base';
+
 import interfaces from '../../interfaces';
 
 var Transport = Class(interfaces.Transport, function (supr) {

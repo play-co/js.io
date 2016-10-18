@@ -1,3 +1,5 @@
+import { GLOBAL } from 'base';
+
 /**
  * Summary: a basic Hash/Set class for number and string values.
  * Methods:

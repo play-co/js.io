@@ -1,3 +1,9 @@
+import {
+  logger,
+  bind,
+  GLOBAL
+} from 'base';
+
 import uri from 'std/uri';
 import base64 from 'std/base64';
 import browserdetect from 'util/browserdetect';

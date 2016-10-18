@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 /***********************************************************************
 
   A JavaScript tokenizer / parser / beautifier / compressor.

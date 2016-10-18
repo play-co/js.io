@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 import interfaces from '../interfaces';
 
 /**

@@ -1,3 +1,5 @@
+import { bind } from 'base';
+
 exports = Class(function () {
   this._fired = false;
   this._id = 0;

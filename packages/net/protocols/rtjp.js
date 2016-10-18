@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 import delimited from './delimited';
 let DelimitedProtocol = delimited.DelimitedProtocol;
 

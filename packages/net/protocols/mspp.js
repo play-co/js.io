@@ -1,3 +1,5 @@
+import { logging } from 'base';
+
 import net from 'net';
 import buffered from 'net/protocols/buffered';
 let BufferedProtocol = buffered.BufferedProtocol;

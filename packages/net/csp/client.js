@@ -1,3 +1,8 @@
+import {
+  bind,
+  logger
+} from 'base';
+
 import base64 from 'std/base64';
 import utf8 from 'std/utf8';
 import uri from 'std/uri';

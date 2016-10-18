@@ -1,3 +1,8 @@
+import {
+  GLOBAL,
+  bind
+} from 'base';
+
 import Sizzle from './sizzle';
 
 import Rect from 'math/geom/Rect';

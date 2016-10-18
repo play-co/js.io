@@ -1,3 +1,9 @@
+import {
+  merge,
+  logger,
+  bind
+} from 'base';
+
 import URI from 'std/uri';
 
 exports.MAX_SIMULTANEOUS = 4;

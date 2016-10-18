@@ -1,3 +1,5 @@
+import { logger } from 'base';
+
 import interfaces from 'net/interfaces';
 let Protocol = interfaces.Protocol;
 

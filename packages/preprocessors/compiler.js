@@ -1,3 +1,10 @@
+import {
+  logger,
+  isArray,
+  merge,
+  bind
+} from 'base';
+
 var path = require('jsio/util/path');
 
 // compiler should be able to compile itself, so use a different name for calls to jsio that we don't want to try to compile

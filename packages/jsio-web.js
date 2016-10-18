@@ -1,3 +1,5 @@
+import { bind } from 'base';
+
 // Copyright (c) 2010
 // Michael Carter (cartermichael@gmail.com)
 // Martin Hunt (mghunt@gmail.com)

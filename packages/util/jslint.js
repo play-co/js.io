@@ -1,3 +1,8 @@
+import {
+  logger,
+  log
+} from 'base';
+
 //
 // This file is a copy of jslint.js with *two* modifications:
 //   1. warning is printed when this module is imported

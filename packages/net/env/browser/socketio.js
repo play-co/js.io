@@ -1,3 +1,8 @@
+import {
+  bind,
+  logger
+} from 'base';
+
 import Callback from 'lib/Callback';
 import interfaces from 'net/interfaces';
 import utf8 from 'std/utf8';

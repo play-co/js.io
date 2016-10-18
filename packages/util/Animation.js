@@ -1,3 +1,5 @@
+import { bind } from 'base';
+
 var SyncTimer = Class(function () {
   this.init = function () {
     this._items = [];

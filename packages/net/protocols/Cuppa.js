@@ -1,3 +1,9 @@
+import {
+  bind,
+  GLOBAL,
+  logger
+} from 'base';
+
 import Callback from 'jsio/lib/Callback';
 import PubSub from 'jsio/lib/PubSub';
 

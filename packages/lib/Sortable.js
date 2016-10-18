@@ -1,3 +1,8 @@
+import {
+  logger,
+  bind
+} from 'base';
+
 exports = Class('lib.Sortable', function (logger) {
   this.toStringPush = function (indexer) {
     if (!this._toString || !this._toString.push) {

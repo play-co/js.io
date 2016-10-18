@@ -1,4 +1,6 @@
 // Sort of like a twisted protocol
+import { logger } from 'base';
+
 import net from './index';
 import Enum from '../lib/Enum';
 import PubSub from '../lib/PubSub';
