@@ -1,6 +1,6 @@
 /*
 * @shim
 */
-import math.geom.Polygon;
+jsio('import math.geom.Polygon');
 exports = math.geom.Polygon;
-logger.log("Warning: math2D.Polygon is deprecated");
+logger.log('Warning: math2D.Polygon is deprecated');

@@ -1,198 +1,211 @@
-import util.path as utilPath;
+jsio('import util.path as utilPath');
 
 var attrs = [
-	"source",
-	"protocol",
-	"authority",
-	"userInfo",
-	"user",
-	"password",
-	"host",
-	"port",
-	"relative",
-	"path",
-	"directory",
-	"file",
-	"query",
-	"anchor"
+  'source',
+  'protocol',
+  'authority',
+  'userInfo',
+  'user',
+  'password',
+  'host',
+  'port',
+  'relative',
+  'path',
+  'directory',
+  'file',
+  'query',
+  'anchor'
 ];
 
-var URI = module.exports = Class(function() {
-	this.init = function(url, isStrict) {
-		if (url instanceof URI) {
-			for (var i = 0, attr; attr = attrs[i]; ++i) {
-				this['_' + attr] = url['_' + attr];
-			}
-			return;
-		}
+var URI = module.exports = Class(function () {
+  this.init = function (url, isStrict) {
+    if (url instanceof URI) {
+      for (var i = 0, attr; attr = attrs[i]; ++i) {
+        this['_' + attr] = url['_' + attr];
+      }
+      return;
+    }
 
-		this._isStrict = isStrict;
 
-		var uriData = URI.parse(url, isStrict);
-		for (var attr in uriData) {
-			this['_' + attr] = uriData[attr];
-		}
-	};
+    this._isStrict = isStrict;
 
-	this.query = function(key) { return URI.parseQuery(this._query)[key]; };
-	this.hash = function(key) { return URI.parseQuery(this._anchor)[key]; };
+    var uriData = URI.parse(url, isStrict);
+    for (var attr in uriData) {
+      this['_' + attr] = uriData[attr];
+    }
+  };
 
-	this.addHash = function(kvp) {
-		var hash = URI.parseQuery(this._anchor);
-		for (var i in kvp) { hash[i] = kvp[i]; }
-		this._anchor = URI.buildQuery(hash);
-		return this;
-	};
+  this.query = function (key) {
+    return URI.parseQuery(this._query)[key];
+  };
+  this.hash = function (key) {
+    return URI.parseQuery(this._anchor)[key];
+  };
 
-	this.setPath = function (path) {
-		var pieces = utilPath.splitPath(path);
-		this._file = pieces.filename;
-		this._directory = pieces.directory;
-		this._path = path;
-		return this;
-	};
+  this.addHash = function (kvp) {
+    var hash = URI.parseQuery(this._anchor);
+    for (var i in kvp) {
+      hash[i] = kvp[i];
+    }
+    this._anchor = URI.buildQuery(hash);
+    return this;
+  };
 
-	this.setFile = function (file) {
-		return this.setPath(utilPath.join(this._directory, file));
-	};
+  this.setPath = function (path) {
+    var pieces = utilPath.splitPath(path);
+    this._file = pieces.filename;
+    this._directory = pieces.directory;
+    this._path = path;
+    return this;
+  };
 
-	this.setDirectory = function (directory) {
-		return this.setPath(utilPath.join(directory, this._file));
-	};
+  this.setFile = function (file) {
+    return this.setPath(utilPath.join(this._directory, file));
+  };
 
-	this.push = function(path) {
-		if (path) {
-			this._path = (this._path + '/' + path).replace(/\/\/+/g, '/');
-		}
-		return this;
-	};
+  this.setDirectory = function (directory) {
+    return this.setPath(utilPath.join(directory, this._file));
+  };
 
-	this.addQuery = function(kvp) {
-		var query = URI.parseQuery(this._query);
-		for (var i in kvp) { query[i] = kvp[i]; }
-		this._query = URI.buildQuery(query);
-		return this;
-	};
+  this.push = function (path) {
+    if (path) {
+      this._path = (this._path + '/' + path).replace(/\/\/+/g, '/');
+    }
+    return this;
+  };
 
-	this.removeQuery = function(keys) {
-		var query = URI.parseQuery(this._query);
-		if (Array.isArray(keys)) {
-			for (var i = 0, n = keys.length; i < n; ++i) {
-				delete query[keys[i]];
-			}
-		} else {
-			delete query[keys];
-		}
-		this._query = URI.buildQuery(query);
-		return this;
-	};
+  this.addQuery = function (kvp) {
+    var query = URI.parseQuery(this._query);
+    for (var i in kvp) {
+      query[i] = kvp[i];
+    }
+    this._query = URI.buildQuery(query);
+    return this;
+  };
 
-	this.toJSON = function() { return this.toString(false); };
+  this.removeQuery = function (keys) {
+    var query = URI.parseQuery(this._query);
+    if (Array.isArray(keys)) {
+      for (var i = 0, n = keys.length; i < n; ++i) {
+        delete query[keys[i]];
+      }
+    } else {
+      delete query[keys];
+    }
+    this._query = URI.buildQuery(query);
+    return this;
+  };
 
-	this.toString = function(onlyBase) {
-		// XXX TODO: This is vaguely reasonable, but not complete. fix it...
-		var a = this._protocol ? this._protocol + "://" : "";
-		var b = this._host ? this._host + ((this._port || 80) == 80 ? "" : ":" + this._port) : "";
+  this.toJSON = function () {
+    return this.toString(false);
+  };
 
-		if (onlyBase) {
-			return a + b;
-		}
+  this.toString = function (onlyBase) {
+    // XXX TODO: This is vaguely reasonable, but not complete. fix it...
+    var a = this._protocol ? this._protocol + '://' : '';
+    var b = this._host ? this._host + ((this._port || 80) == 80 ? '' : ':' + this._port) : '';
 
-		var c = this._path;
-		var d = this._query ? '?' + this._query : '';
-		var e = this._anchor ? '#' + this._anchor : '';
-		return a + b + c + d + e;
-	};
+    if (onlyBase) {
+      return a + b;
+    }
+
+
+    var c = this._path;
+    var d = this._query ? '?' + this._query : '';
+    var e = this._anchor ? '#' + this._anchor : '';
+    return a + b + c + d + e;
+  };
 });
 
 
 for (var i = 0, attr; attr = attrs[i]; ++i) {
-	(function(attr) {
-		var fNameSuffix = attr.charAt(0).toUpperCase() + attr.slice(1);
-		this['get' + fNameSuffix] = function() {
-			return this['_' + attr];
-		};
-		this['set' + fNameSuffix] = function(val) {
-			this['_' + attr] = val;
-			return this;
-		};
-	}).call(URI.prototype, attr);
+  (function (attr) {
+    var fNameSuffix = attr.charAt(0).toUpperCase() + attr.slice(1);
+    this['get' + fNameSuffix] = function () {
+      return this['_' + attr];
+    };
+    this['set' + fNameSuffix] = function (val) {
+      this['_' + attr] = val;
+      return this;
+    };
+  }.call(URI.prototype, attr));
 }
 
 
-URI.relativeTo = function(url, base) {
-	var url = String(url);
-	if (base && !/^http(s?):\/\//.test(url)) {
-		var baseURI = new URI(base)
-			.setAnchor('')
-			.setQuery('')
-			.setFile('')
-			.toString(url.charAt(0) == '/');
 
-		url = URI.resolveRelative(baseURI + url);
-	}
 
-	return new URI(url);
+URI.relativeTo = function (url, base) {
+  var url = String(url);
+  if (base && !/^http(s?):\/\//.test(url)) {
+    var baseURI = new URI(base).setAnchor('').setQuery('').setFile('').toString(url.charAt(0) == '/');
+
+    url = URI.resolveRelative(baseURI + url);
+  }
+
+
+  return new URI(url);
 };
 
-URI.resolveRelative = function(url) {
-	var prevUrl;
+URI.resolveRelative = function (url) {
+  var prevUrl;
 
-	// remove ../ with preceeding folder
-	while((prevUrl = url) != (url = url.replace(/(^|\/)([^\/]+)\/\.\.\//g, '/'))) {};
+  // remove ../ with preceeding folder
+  while ((prevUrl = url) != (url = url.replace(/(^|\/)([^\/]+)\/\.\.\//g, '/'))) {
+  }
+  ;
 
-	// remove ./ if it isn't preceeded by a .
-	return url.replace(/[^.]\.\//g, '');
+  // remove ./ if it isn't preceeded by a .
+  return url.replace(/[^.]\.\//g, '');
 };
 
-URI.buildQuery = function(kvp) {
-	var pairs = [];
-	for (var key in kvp) {
-		pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(kvp[key]));
-	}
-	return pairs.join('&');
+URI.buildQuery = function (kvp) {
+  var pairs = [];
+  for (var key in kvp) {
+    pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(kvp[key]));
+  }
+  return pairs.join('&');
 };
 
-URI.parseQuery = function(str) {
-	var pairs = str.split('&'),
-		n = pairs.length,
-		data = {};
-	for (var i = 0; i < n; ++i) {
-		var pair = pairs[i].split('='),
-			key = decodeURIComponent(pair[0]);
-		if (key) { data[key] = decodeURIComponent(pair[1]); }
-	}
-	return data;
+URI.parseQuery = function (str) {
+  var pairs = str.split('&'), n = pairs.length, data = {};
+  for (var i = 0; i < n; ++i) {
+    var pair = pairs[i].split('='), key = decodeURIComponent(pair[0]);
+    if (key) {
+      data[key] = decodeURIComponent(pair[1]);
+    }
+  }
+  return data;
 };
+
 
 // Regexs are based on parseUri 1.2.2
 // Original: (c) Steven Levithan <stevenlevithan.com>
 // Original: MIT License
-
 var strictRegex = /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
 var looseRegex = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
 var queryStringRegex = /(?:^|&)([^&=]*)=?([^&]*)/g;
 
-URI.parse = function(str, isStrict) {
-	var regex = isStrict ? strictRegex : looseRegex;
-	var result = {};
-	var match = regex.exec(str);
-	for (var i = 0, attr; attr = attrs[i]; ++i) {
-		result[attr] = match[i] || "";
-	}
+URI.parse = function (str, isStrict) {
+  var regex = isStrict ? strictRegex : looseRegex;
+  var result = {};
+  var match = regex.exec(str);
+  for (var i = 0, attr; attr = attrs[i]; ++i) {
+    result[attr] = match[i] || '';
+  }
 
-	var qs = result['queryKey'] = {};
-	result['query'].replace(queryStringRegex, function(check, key, val) {
-		if (check) {
-			qs[key] = val;
-		}
-	});
 
-	return result;
+  var qs = result['queryKey'] = {};
+  result['query'].replace(queryStringRegex, function (check, key, val) {
+    if (check) {
+      qs[key] = val;
+    }
+  });
+
+  return result;
 };
 
-URI.isSameDomain = function(urlA, urlB) {
-	var a = URI.parse(urlA);
-	var b = URI.parse(urlB);
-	return ((a.port == b.port ) && (a.host == b.host) && (a.protocol == b.protocol));
+URI.isSameDomain = function (urlA, urlB) {
+  var a = URI.parse(urlA);
+  var b = URI.parse(urlB);
+  return a.port == b.port && a.host == b.host && a.protocol == b.protocol;
 };

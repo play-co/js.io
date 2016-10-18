@@ -26,62 +26,68 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-
 // helper to test if string 2 is at the beginning of string 1
 exports.startswith = function (str1, str2) {
-	return str1.substring(0, str2.length) == str2;
+  return str1.substring(0, str2.length) == str2;
 };
 
 exports.JSIOError = Class(Error, function () {
-	this.name = 'JSIOError';
-	this.toString = Error.prototype.toString;
-	this.init = function (message, fileName, lineNumber) {
-		this.name = this.name; // promote class property to instance
-		this.message = message || '';
-		this.fileName = fileName || '«filename»'; // location.href; // XXX what should go here?
-		this.lineNumber = isNaN(+lineNumber) ? 0 : +lineNumber
-	};
+  this.name = 'JSIOError';
+  this.toString = Error.prototype.toString;
+  this.init = function (message, fileName, lineNumber) {
+    this.name = this.name;
+    // promote class property to instance
+    this.message = message || '';
+    this.fileName = fileName || '\xABfilename\xBB';
+    // location.href; // XXX what should go here?
+    this.lineNumber = isNaN(+lineNumber) ? 0 : +lineNumber;
+  };
 });
 
 exports.AssertionError = Class(exports.JSIOError, function (supr) {
-	this.name = 'AssertionError'
-	this.init = function () {supr(this, 'init', arguments)}
+  this.name = 'AssertionError';
+  this.init = function () {
+    supr(this, 'init', arguments);
+  };
 });
 
 exports.assert = function (exp, message) {
-	if (!exp) {
-		throw new exports.AssertionError(message)
-	};
+  if (!exp) {
+    throw new exports.AssertionError(message);
+  }
+  ;
 };
 
 // schedule a callback to run at the next available moment,
 // equivalent to setTimeout(callback, 0)
 exports.reschedule = function (callback) {
-	return setTimeout(callback, 0);
+  return setTimeout(callback, 0);
 };
 
 // cached static files
-exports.staticFile = (function(){
-	var cache = {} // static file content indexed by filename
-	var getfile = function(path, callback) {
-		cacheContent = cache[path];
-		if (cacheContent !== undefined) {
-			// the file is in the cache, return it
-			exports.reschedule(function(){
-				callback(null, [cacheContent]);
-			});
-		} else {
-			// load file from disk, save it in the cache, and return it
-			process.fs.readFile(path, 'utf8', function(err, fileContent){
-				if (err) {
-					callback('staticFile readFile error ' + err)
-				} else {
-					cache[path] = fileContent;
-					callback(null, [fileContent]);
-				}
-			})
-		};
-		return promise;
-	};
-	return getfile;
-})();
+exports.staticFile = function () {
+  var cache = {};
+  // static file content indexed by filename
+  var getfile = function (path, callback) {
+    cacheContent = cache[path];
+    if (cacheContent !== undefined) {
+      // the file is in the cache, return it
+      exports.reschedule(function () {
+        callback(null, [cacheContent]);
+      });
+    } else {
+      // load file from disk, save it in the cache, and return it
+      process.fs.readFile(path, 'utf8', function (err, fileContent) {
+        if (err) {
+          callback('staticFile readFile error ' + err);
+        } else {
+          cache[path] = fileContent;
+          callback(null, [fileContent]);
+        }
+      });
+    }
+    ;
+    return promise;
+  };
+  return getfile;
+}();

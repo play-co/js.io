@@ -1,6 +1,6 @@
 /*
 * @shim
 */
-import math.geom.angle;
+jsio('import math.geom.angle');
 exports = math.geom.angle;
-logger.log("Warning: math2D.angle is deprecated");
+logger.log('Warning: math2D.angle is deprecated');

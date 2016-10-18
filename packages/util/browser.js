@@ -1,321 +1,398 @@
 jsio('import .sizzle as Sizzle');
 
-import math.geom.Rect;
+jsio('import math.geom.Rect');
 
 function isWindow(el) {
-	return el && !$.isElement(el) && $.isElement(el.document);
+  return el && !$.isElement(el) && $.isElement(el.document);
 }
+
 
 var singleId = /^#([\w-]+)$/;
 
-var $ = exports.$ = function(selector, win) {
-	switch(typeof selector) {
-		case 'object':
-			if ($.isElement(selector)) {
-				return $.remove(selector);
-			} else if ($.isElement(selector.document && selector.document.body)) {
-				return $.size(selector);
-			}
-			return $.create(selector);
-		case 'string':
-			if (singleId.test(selector)) { return $.id(selector.substring(1), win); }
-			return Sizzle.apply(GLOBAL, arguments);
-	}
+var $ = exports.$ = function (selector, win) {
+  switch (typeof selector) {
+  case 'object':
+    if ($.isElement(selector)) {
+      return $.remove(selector);
+    } else if ($.isElement(selector.document && selector.document.body)) {
+      return $.size(selector);
+    }
+    return $.create(selector);
+  case 'string':
+    if (singleId.test(selector)) {
+      return $.id(selector.substring(1), win);
+    }
+    return Sizzle.apply(GLOBAL, arguments);
+  }
 }
 
-var DOM2 = typeof HTMLElement === "object";
-$.isElement = DOM2
-	? function(el) { return el && el instanceof HTMLElement; }
-	: function(el) { return el && typeof el.nodeType == 'number' && typeof el.nodeName == 'string' };
+;
 
-$.id = function(id, win) { return typeof id == 'string' ? (win || window).document.getElementById(id) : id; }
+var DOM2 = typeof HTMLElement === 'object';
+$.isElement = DOM2 ? function (el) {
+  return el && el instanceof HTMLElement;
+} : function (el) {
+  return el && typeof el.nodeType == 'number' && typeof el.nodeName == 'string';
+};
 
-$.apply = function(el, params) {
-	if (params.attrs) {
-		for(var attr in params.attrs) {
-			el.setAttribute(attr, params.attrs[attr]);
-		}
-	}
-
-	if (params.id) { el.id = params.id; }
-	if (params.style) { $.style(el, params.style); }
-	if (params.src) { el.src = params.src; }
-	if (params['class'] || params['className']) {
-		el.className = params['class'] || params['className'];
-	}
-
-	var parent = params.parent || params.parentNode;
-	if (parent && params.first) {
-		$.insertBefore(parent, el, parent.firstChild);
-	} else if (params.before) {
-		$.insertBefore(params.before.parentNode || parent, el, params.before);
-	} else if (params.after) {
-		$.insertAfter(params.after.parentNode || parent, el, params.after);
-	} else if (parent) {
-		parent.appendChild(el);
-	}
-
-	if ('html' in params) { el.innerHTML = params.html; }
-	if ('text' in params) { $.setText(el, params.text); }
-
-	if (params.children) {
-		var c = params.children;
-		for (var i = 0, n = c.length; i < n; ++i) {
-			el.appendChild($.isElement(c[i]) ? c[i] : $(c[i]));
-		}
-	}
-
-	return el;
+$.id = function (id, win) {
+  return typeof id == 'string' ? (win || window).document.getElementById(id) : id;
 }
+;
 
-$.insertBefore = function(parentNode, el, beforeNode) {
-	if (!parentNode || !el) { return; }
-	if (beforeNode && beforeNode.parentNode == parentNode) {
-		parentNode.insertBefore(el, beforeNode);
-	} else {
-		parentNode.appendChild(el);
-	}
+$.apply = function (el, params) {
+  if (params.attrs) {
+    for (var attr in params.attrs) {
+      el.setAttribute(attr, params.attrs[attr]);
+    }
+  }
+
+
+  if (params.id) {
+    el.id = params.id;
+  }
+  if (params.style) {
+    $.style(el, params.style);
+  }
+  if (params.src) {
+    el.src = params.src;
+  }
+  if (params['class'] || params['className']) {
+    el.className = params['class'] || params['className'];
+  }
+
+
+  var parent = params.parent || params.parentNode;
+  if (parent && params.first) {
+    $.insertBefore(parent, el, parent.firstChild);
+  } else if (params.before) {
+    $.insertBefore(params.before.parentNode || parent, el, params.before);
+  } else if (params.after) {
+    $.insertAfter(params.after.parentNode || parent, el, params.after);
+  } else if (parent) {
+    parent.appendChild(el);
+  }
+
+
+
+
+
+  if ('html' in params) {
+    el.innerHTML = params.html;
+  }
+  if ('text' in params) {
+    $.setText(el, params.text);
+  }
+
+
+  if (params.children) {
+    var c = params.children;
+    for (var i = 0, n = c.length; i < n; ++i) {
+      el.appendChild($.isElement(c[i]) ? c[i] : $(c[i]));
+    }
+  }
+
+
+  return el;
 }
+;
 
-$.insertAfter = function(parentNode, el, afterNode) {
-	if (!parentNode || !el) { return; }
-	if (!afterNode || afterNode.parentNode != parentNode) {
-		$.insertBefore(parentNode, el, parentNode.firstChild);
-	} else if (!afterNode.nextSibling) {
-		parentNode.appendChild(el);
-	} else {
-		parentNode.insertBefore(el, afterNode.nextSibling);
-	}
+$.insertBefore = function (parentNode, el, beforeNode) {
+  if (!parentNode || !el) {
+    return;
+  }
+  if (beforeNode && beforeNode.parentNode == parentNode) {
+    parentNode.insertBefore(el, beforeNode);
+  } else {
+    parentNode.appendChild(el);
+  }
 }
+;
 
-$.create = function(params) {
-	var doc = ((params && params.win) || window).document;
-	if (!params || typeof params == 'string') {
-		return doc.createElement(params || 'div');
-	};
-
-	return $.apply(params.el || doc.createElement(params.tag || params.tagName || 'div'), params);
+$.insertAfter = function (parentNode, el, afterNode) {
+  if (!parentNode || !el) {
+    return;
+  }
+  if (!afterNode || afterNode.parentNode != parentNode) {
+    $.insertBefore(parentNode, el, parentNode.firstChild);
+  } else if (!afterNode.nextSibling) {
+    parentNode.appendChild(el);
+  } else {
+    parentNode.insertBefore(el, afterNode.nextSibling);
+  }
 }
+;
 
-$.show = function(el, how) { $.id(el).style.display = how || 'block'; }
-$.hide = function(el) { $.id(el).style.display = 'none'; }
+$.create = function (params) {
+  var doc = (params && params.win || window).document;
+  if (!params || typeof params == 'string') {
+    return doc.createElement(params || 'div');
+  }
+  ;
+
+  return $.apply(params.el || doc.createElement(params.tag || params.tagName || 'div'), params);
+}
+;
+
+$.show = function (el, how) {
+  $.id(el).style.display = how || 'block';
+};
+$.hide = function (el) {
+  $.id(el).style.display = 'none';
+}
+;
 
 // accepts an array or a space-delimited string of classNames
-$.addClass = function(el, classNames) {
-	if (!el) { return; }
-	var el = $.id(el);
-	if (typeof classNames == "string") {
-		classNames = classNames.split(' ');
-	}
+$.addClass = function (el, classNames) {
+  if (!el) {
+    return;
+  }
+  var el = $.id(el);
+  if (typeof classNames == 'string') {
+    classNames = classNames.split(' ');
+  }
 
-	var current = ' ' + el.className + ' ';
-	for (var i = 0, len = classNames.length; i < len; ++i) {
-		var c = classNames[i];
-		if (current.indexOf(' ' + c + ' ') == -1) {
-			current += c + ' ';
-		}
-	}
 
-	el.className = current.replace(/^\s+|\s+$/g, '');
-	return $;
+  var current = ' ' + el.className + ' ';
+  for (var i = 0, len = classNames.length; i < len; ++i) {
+    var c = classNames[i];
+    if (current.indexOf(' ' + c + ' ') == -1) {
+      current += c + ' ';
+    }
+  }
+
+
+  el.className = current.replace(/^\s+|\s+$/g, '');
+  return $;
 }
+;
 
 /* returns true if the given className is found in the list of
  * classes on the given element.
  */
-$.hasClass = function(el, className) {
-	if (!el) { return false; }
+$.hasClass = function (el, className) {
+  if (!el) {
+    return false;
+  }
 
-	var el = $.id(el);
-	var classNames = el.className.split(' ');
 
-	for (var i = 0, len = classNames.length; i < len; ++i) {
-		if (classNames[i].trim() === className) {
-			return true;
-		}
-	}
+  var el = $.id(el);
+  var classNames = el.className.split(' ');
 
-	return false;
+  for (var i = 0, len = classNames.length; i < len; ++i) {
+    if (classNames[i].trim() === className) {
+      return true;
+    }
+  }
+
+
+  return false;
 };
 
-$.getTag = function(from, tag) { return from.getElementsByTagName(tag); }
-
-$.removeClass = function(el, classNames) {
-	if (!el) { return; }
-	var el = $.id(el);
-	el.className = (' ' + el.className + ' ')
-		.replace(' ', '  ')
-		.replace(new RegExp('( ' + classNames.replace('\s+', ' | ').replace('-','\-') + ' )', 'g'), ' ')
-		.replace(/\s+/, ' ')
-		.replace(/^\s+|\s+$/g, '');
+$.getTag = function (from, tag) {
+  return from.getElementsByTagName(tag);
 }
+;
+
+$.removeClass = function (el, classNames) {
+  if (!el) {
+    return;
+  }
+  var el = $.id(el);
+  el.className = (' ' + el.className + ' ').replace(' ', '  ').replace(new RegExp('( ' + classNames.replace('s+', ' | ').replace('-', '-') + ' )', 'g'), ' ').replace(/\s+/, ' ').replace(/^\s+|\s+$/g, '');
+}
+;
 
 function ieGetAlpha(el) {
-	try {
-		return el.filters.item("alpha");
-	} catch(e) {}
+  try {
+    return el.filters.item('alpha');
+  } catch (e) {
+  }
 
-	try {
-		return el.filters.item("progid:DXImageTransform.Microsoft.Alpha");
-	} catch(e) {}
 
-	return null;
+
+  try {
+    return el.filters.item('progid:DXImageTransform.Microsoft.Alpha');
+  } catch (e) {
+  }
+
+
+
+  return null;
 }
 
-$.style = function(el, style) {
-	if(el instanceof Array) {
-		for(var i = 0, o; o = el[i]; ++i) { $.style(o, style); }
-		return;
-	}
 
-	el = $.id(el);
-	var s = el.style;
-	for(var prop in style) {
-		switch(prop) {
-			case 'styleFloat':
-			case 'cssFloat':
-			case 'float':
-				s.styleFloat = s.cssFloat = style[prop];
-				break;
-			case 'opacity':
-				s.opacity = style[prop];
-				if(el.filters) {
-					try {
-						var alpha = ieGetAlpha();
-						var opacity = style[prop] == 1 ? 99.99 : style[prop] * 100;
-						if(!alpha) {
-							// TODO: this might destroy any existing filters?
-							s.filter = "alpha(opacity=" + opacity + ")";
-						} else {
-							alpha.Opacity = opacity;
-						}
-					} catch(e) {}
-				}
-				break;
-			case 'borderRadius':
-				s.borderRadius = s.MozBorderRadius = style[prop];
-				break;
-			case 'boxSizing':
-				s.MsBoxSizing = s.MozBoxSizing = s.WebkitBoxSizing = style[prop];
-			default:
-				s[prop] = style[prop];
-				break;
-		}
-	}
+$.style = function (el, style) {
+  if (el instanceof Array) {
+    for (var i = 0, o; o = el[i]; ++i) {
+      $.style(o, style);
+    }
+    return;
+  }
+
+
+  el = $.id(el);
+  var s = el.style;
+  for (var prop in style) {
+    switch (prop) {
+    case 'styleFloat':
+    case 'cssFloat':
+    case 'float':
+      s.styleFloat = s.cssFloat = style[prop];
+      break;
+    case 'opacity':
+      s.opacity = style[prop];
+      if (el.filters) {
+        try {
+          var alpha = ieGetAlpha();
+          var opacity = style[prop] == 1 ? 99.99 : style[prop] * 100;
+          if (!alpha) {
+            // TODO: this might destroy any existing filters?
+            s.filter = 'alpha(opacity=' + opacity + ')';
+          } else {
+            alpha.Opacity = opacity;
+          }
+        } catch (e) {
+        }
+      }
+      break;
+    case 'borderRadius':
+      s.borderRadius = s.MozBorderRadius = style[prop];
+      break;
+    case 'boxSizing':
+      s.MsBoxSizing = s.MozBoxSizing = s.WebkitBoxSizing = style[prop];
+    default:
+      s[prop] = style[prop];
+      break;
+    }
+  }
 };
 
-$.onEvent = function(el, name, f) {
-	if (typeof f != 'function') {
-		f = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 2));
-	}
+$.onEvent = function (el, name, f) {
+  if (typeof f != 'function') {
+    f = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 2));
+  }
 
-	var handler = f;
 
-	el = $.id(el);
-	if(el.addEventListener) {
-		el.addEventListener(name, handler, false);
-	} else {
-		handler = function(e) {
-			var evt = e || window.event;
-			// TODO: normalize the event object
-			f(evt);
-		};
+  var handler = f;
 
-		el.attachEvent('on' + name, handler);
-	}
+  el = $.id(el);
+  if (el.addEventListener) {
+    el.addEventListener(name, handler, false);
+  } else {
+    handler = function (e) {
+      var evt = e || window.event;
+      // TODO: normalize the event object
+      f(evt);
+    };
 
-	return bind($, 'removeEvent', el, name, handler);
+    el.attachEvent('on' + name, handler);
+  }
+
+
+  return bind($, 'removeEvent', el, name, handler);
 };
 
-$.removeEvent = function(el, name, f) {
-	el = $.id(el);
-	if (el.addEventListener) {
-		el.removeEventListener(name, f, false);
-	} else {
-		el.detachEvent('on' + name, f);
-	}
+$.removeEvent = function (el, name, f) {
+  el = $.id(el);
+  if (el.addEventListener) {
+    el.removeEventListener(name, f, false);
+  } else {
+    el.detachEvent('on' + name, f);
+  }
 }
+;
 
-$.stopEvent = function(e) {
-	if (e) {
-		e.cancelBubble = true;
-		if(e.stopPropagation) e.stopPropagation();
-		if(e.preventDefault) e.preventDefault();
-	}
+$.stopEvent = function (e) {
+  if (e) {
+    e.cancelBubble = true;
+    if (e.stopPropagation)
+      e.stopPropagation();
+    if (e.preventDefault)
+      e.preventDefault();
+  }
 }
+;
 
-$.setText = function(el, text) {
-	el = $.id(el);
-	text = String(text);
-	if ('textContent' in el) {
-		el.textContent = text;
-	} else if ('innerText' in el) {
-		el.innerText = text.replace(/\n/g, ' ');
-	} else {
-		el.innerHTML = '';
-		el.appendChild(document.createTextNode(text));
-	}
+$.setText = function (el, text) {
+  el = $.id(el);
+  text = String(text);
+  if ('textContent' in el) {
+    el.textContent = text;
+  } else if ('innerText' in el) {
+    el.innerText = text.replace(/\n/g, ' ');
+  } else {
+    el.innerHTML = '';
+    el.appendChild(document.createTextNode(text));
+  }
 }
+;
 
-$.setValue = function(el, value) {
-	el = $.id(el);
-	if ('value' in el) {
-		el.value = value;
-	} else if ('value' in el.firstChild) {
-		el.firstChild.value = value;
-	}
+$.setValue = function (el, value) {
+  el = $.id(el);
+  if ('value' in el) {
+    el.value = value;
+  } else if ('value' in el.firstChild) {
+    el.firstChild.value = value;
+  }
 };
 
-$.remove = function(el) {
-	el = $.id(el);
-	if(el && el.parentNode) {
-		el.parentNode.removeChild(el);
-	}
+$.remove = function (el) {
+  el = $.id(el);
+  if (el && el.parentNode) {
+    el.parentNode.removeChild(el);
+  }
 }
+;
 
-$.cursorPos = function(ev, el) {
-	var offset = $.pos(el);
-	offset.top = ev.clientY - offset.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop);
-	offset.left = ev.clientX - offset.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft);
-	return offset;
+$.cursorPos = function (ev, el) {
+  var offset = $.pos(el);
+  offset.top = ev.clientY - offset.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop);
+  offset.left = ev.clientX - offset.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft);
+  return offset;
 }
+;
 
-$.pos = function(el) {
-	var parent = el;
-	var offset = {top: 0, left: 0};
-	while(parent && parent != document.body) {
-		offset.left += parent.offsetLeft;
-		offset.top += parent.offsetTop;
-		while(parent.offsetParent != parent.parentNode) {
-			offset.top -= parent.scrollTop; offset.left -= parent.scrollLeft;
-			parent = parent.parentNode;
-		}
-		parent = parent.offsetParent;
-	}
-	return offset;
+$.pos = function (el) {
+  var parent = el;
+  var offset = {
+    top: 0,
+    left: 0
+  };
+  while (parent && parent != document.body) {
+    offset.left += parent.offsetLeft;
+    offset.top += parent.offsetTop;
+    while (parent.offsetParent != parent.parentNode) {
+      offset.top -= parent.scrollTop;
+      offset.left -= parent.scrollLeft;
+      parent = parent.parentNode;
+    }
+    parent = parent.offsetParent;
+  }
+  return offset;
 }
+;
 
-$.size = function(el) {
-	if ($.isElement(el)) {
-		return {width: el.offsetWidth, height: el.offsetHeight};
-	} else if (el.document) {
-		var doc = el.document.documentElement || el.document.body;
-		return new math.geom.Rect(
-			doc.offsetTop,
-			doc.offsetLeft,
-			el.innerWidth || (doc.clientWidth || doc.clientWidth),
-			el.innerHeight || (doc.clientHeight || doc.clientHeight)
-		);
-	}
+$.size = function (el) {
+  if ($.isElement(el)) {
+    return {
+      width: el.offsetWidth,
+      height: el.offsetHeight
+    };
+  } else if (el.document) {
+    var doc = el.document.documentElement || el.document.body;
+    return new math.geom.Rect(doc.offsetTop, doc.offsetLeft, el.innerWidth || (doc.clientWidth || doc.clientWidth), el.innerHeight || (doc.clientHeight || doc.clientHeight));
+  }
 }
+;
 
-$.insertCSSFile = function(filename) {
-	document.getElementsByTagName('head')[0].appendChild($({
-		tag: 'link',
-		attrs: {
-			rel: 'stylesheet',
-			type: 'text/css',
-			href: filename
-		}
-	}));
-}
+$.insertCSSFile = function (filename) {
+  document.getElementsByTagName('head')[0].appendChild($({
+    tag: 'link',
+    attrs: {
+      rel: 'stylesheet',
+      type: 'text/css',
+      href: filename
+    }
+  }));
+};
