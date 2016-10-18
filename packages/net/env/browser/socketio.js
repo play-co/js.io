@@ -16,16 +16,13 @@ var _scriptOnLoad = new Callback();
  * @extends net.interfaces.Connector
  */
 exports.Connector = class extends interfaces.Connector {
-  connect() {
+  connect () {
     this._state = interfaces.STATE.CONNECTING;
 
     var url = this._opts.url || '/';
     if (!/\/$/.test(url)) {
       url += '/';
     }
-
-
-
 
     if (typeof io != 'function' && typeof document != 'undefined') {
       _script = document.createElement('script');
@@ -42,35 +39,9 @@ exports.Connector = class extends interfaces.Connector {
       _scriptOnLoad.fire(io);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     _scriptOnLoad.run(bind(this, '_connect'));
   }
-  _connect(io) {
+  _connect (io) {
     logger.debug('opening the connection');
     var socket = io(window.location.origin + this._opts.namespace, { multiplex: false });
     var transport = new Transport(socket);
@@ -86,18 +57,18 @@ exports.Connector = class extends interfaces.Connector {
 };
 
 class Transport extends interfaces.Transport {
-  constructor(socket) {
+  constructor (socket) {
     super();
 
     this._socket = socket;
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     this._socket.on('message', bind(protocol, 'dataReceived'));
   }
-  write(data) {
+  write (data) {
     this._socket.send(data);
   }
-  loseConnection(protocol) {
+  loseConnection (protocol) {
     this._socket.close();
   }
 }

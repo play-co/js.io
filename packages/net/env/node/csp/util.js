@@ -34,7 +34,7 @@ exports.startswith = function (str1, str2) {
 };
 
 exports.JSIOError = class extends Error {
-  constructor(message, fileName, lineNumber) {
+  constructor (message, fileName, lineNumber) {
     super();
 
     this.name = this.name;
@@ -49,7 +49,7 @@ exports.JSIOError = class extends Error {
 exports.JSIOError.prototype.name = 'JSIOError';
 exports.JSIOError.prototype.toString = Error.prototype.toString;
 exports.AssertionError = class extends exports.JSIOError {
-  constructor() {
+  constructor () {
     super(...arguments);
   }
 };
@@ -58,8 +58,7 @@ exports.AssertionError.prototype.name = 'AssertionError';
 exports.assert = function (exp, message) {
   if (!exp) {
     throw new exports.AssertionError(message);
-  }
-  ;
+  };
 };
 
 // schedule a callback to run at the next available moment,
@@ -69,7 +68,7 @@ exports.reschedule = function (callback) {
 };
 
 // cached static files
-exports.staticFile = function () {
+exports.staticFile = (function () {
   var cache = {};
   // static file content indexed by filename
   var getfile = function (path, callback) {
@@ -89,11 +88,10 @@ exports.staticFile = function () {
           callback(null, [fileContent]);
         }
       });
-    }
-    ;
+    };
     return promise;
   };
   return getfile;
-}();
+}());
 
 export default exports;

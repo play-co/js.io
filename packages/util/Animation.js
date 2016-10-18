@@ -3,12 +3,12 @@ let exports = {};
 import { bind } from 'base';
 
 class SyncTimer {
-  constructor() {
+  constructor () {
     this._items = [];
     this._tick = bind(this, 'tick');
     this._length = 0;
   }
-  tick() {
+  tick () {
     var now = +new Date();
     var dt = now - this._last;
     this._last = now;
@@ -18,7 +18,7 @@ class SyncTimer {
       this._items[i](dt);
     }
   }
-  add(cb) {
+  add (cb) {
     if (cb) {
       this._items.push(cb);
       ++this._length;
@@ -26,7 +26,7 @@ class SyncTimer {
       this.start();
     }
   }
-  remove(cb) {
+  remove (cb) {
     for (var i = 0, n = this._items.length; i < n; ++i) {
       if (this._items[i] == cb) {
         this._items.splice(i, 1);
@@ -37,14 +37,14 @@ class SyncTimer {
       }
     }
   }
-  start() {
+  start () {
     if (!this._isRunning) {
       this._isRunning = true;
       this._last = +new Date();
       this._timer = setInterval(this._tick, 15);
     }
   }
-  stop() {
+  stop () {
     if (this._isRunning) {
       this._isRunning = false;
       clearInterval(this._timer);
@@ -55,7 +55,7 @@ class SyncTimer {
 var timer = new SyncTimer();
 
 exports = class {
-  constructor(params) {
+  constructor (params) {
     this._start = 'start' in params ? params.start : 0;
     this._end = 'end' in params ? params.end : 1;
     this._transition = params.transition || null;
@@ -70,28 +70,22 @@ exports = class {
     this._animate = bind(this, 'animate');
     this._timer = null;
   }
-  stop() {
+  stop () {
     this.jumpTo(this._s);
   }
-  play() {
+  play () {
     this.seekTo(this._end);
   }
-  seekTo(s, dur) {
+  seekTo (s, dur) {
     if (s == this._s) {
       return;
     }
-
-
-
 
     this._t0 = 0;
     this._s0 = this._s;
     this._s1 = s;
     if (dur)
-      this._duration = dur;
-
-
-
+      { this._duration = dur; }
 
     this._ds = s - this._s;
     var dt = this._ds / this._range * this._duration;
@@ -102,20 +96,13 @@ exports = class {
       timer.add(this._animate);
     }
 
-
-
-
-
-
-
-
     return this;
   }
-  onFinish(onFinish) {
+  onFinish (onFinish) {
     this._onFinish = onFinish;
     return this;
   }
-  jumpTo(s) {
+  jumpTo (s) {
     this._s1 = this._s0 = s;
     this._t0 = 0;
     this._dt = 1;
@@ -123,7 +110,7 @@ exports = class {
     this.animate(0);
     return this;
   }
-  animate(dt) {
+  animate (dt) {
     var elapsed = this._t0 += dt;
     var dt = elapsed / this._dt;
     if (dt > 1) {

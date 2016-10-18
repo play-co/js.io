@@ -25,21 +25,11 @@ exports.getDoc = function () {
       window.attachEvent('onunload', function () {
         try {
           doc.body.innerHTML = '';
-        } catch (e) {
-        }
+        } catch (e) {}
         doc = null;
       });
     }
-  } catch (e) {
-  }
-
-
-
-
-
-
-
-
+  } catch (e) {}
 
   if (!doc) {
     doc = document;
@@ -48,11 +38,13 @@ exports.getDoc = function () {
 };
 
 var ctor = function () {
-  var win = window, doc = exports.getDoc();
+  var win = window,
+    doc = exports.getDoc();
 
-  //if (doc.parentWindow) { win = doc.parentWindow; }
+  // if (doc.parentWindow) { win = doc.parentWindow; }
   return new (ctor = win.XMLHttpRequest ? win.XMLHttpRequest : function () {
-    return win.ActiveXObject && new win.ActiveXObject('Msxml2.XMLHTTP') || null;
+    return win.ActiveXObject && new win.ActiveXObject('Msxml2.XMLHTTP') ||
+      null;
   })();
 };
 
@@ -62,14 +54,12 @@ exports.createXHR = function () {
 
 exports.post = function (opts, cb) {
   return exports.get(merge({ method: 'POST' }, opts), cb);
-}
-;
-
+};
 
 var _UID = 0;
 
 class Request {
-  constructor(opts, cb) {
+  constructor (opts, cb) {
     if (typeof opts == 'string') {
       opts = { url: opts };
     }
@@ -77,9 +67,6 @@ class Request {
       logger.error('no url provided');
       return;
     }
-
-
-
 
     this.method = (opts.method || 'GET').toUpperCase();
     this.url = opts.url;
@@ -93,33 +80,27 @@ class Request {
 
     if (opts.headers) {
       for (var key in opts.headers)
-        if (opts.headers.hasOwnProperty(key)) {
+        { if (opts.headers.hasOwnProperty(key)) {
           var value = opts.headers[key];
           this.headers[key] = value;
-        }
+        } }
     }
-
-
-
 
     var isObject = opts.data && typeof opts.data == 'object';
 
     if (this.method == 'GET' && opts.data) {
-      this.url = new URI(this.url).addQuery(isObject ? opts.data : URI.parseQuery(opts.data)).toString();
+      this.url = new URI(this.url).addQuery(isObject ? opts.data : URI.parseQuery(
+        opts.data)).toString();
     }
-
-
-
 
     if (opts.query) {
-      this.url = new URI(this.url).addQuery(typeof opts.query == 'object' ? opts.query : URI.parseQuery(opts.query)).toString();
+      this.url = new URI(this.url).addQuery(typeof opts.query == 'object' ?
+        opts.query : URI.parseQuery(opts.query)).toString();
     }
 
-
-
-
     try {
-      this.data = this.method != 'GET' ? isObject ? JSON.stringify(opts.data) : opts.data : null;
+      this.data = this.method != 'GET' ? isObject ? JSON.stringify(opts.data) :
+        opts.data : null;
       if (isObject && !this.headers['Content-Type']) {
         this.headers['Content-Type'] = 'application/json';
       }
@@ -142,8 +123,8 @@ exports.get = function (opts, cb) {
   }
 };
 
-function _sendNext() {
-  //logger.log('====INFLIGHT', _inflight, exports.MAX_SIMULTANEOUS, 'might send next?');
+function _sendNext () {
+  // logger.log('====INFLIGHT', _inflight, exports.MAX_SIMULTANEOUS, 'might send next?');
   if (_inflight < exports.MAX_SIMULTANEOUS) {
     var request = _pending.shift();
     if (request) {
@@ -152,13 +133,10 @@ function _sendNext() {
   }
 }
 
-
-
-
-function _send(request) {
+function _send (request) {
   ++_inflight;
 
-  //logger.log('====INFLIGHT', _inflight, 'sending request', request.id);
+  // logger.log('====INFLIGHT', _inflight, 'sending request', request.id);
   var xhr = exports.createXHR();
   xhr.open(request.method, request.url, !(request.async == false));
   var setContentType = false;
@@ -169,76 +147,48 @@ function _send(request) {
     xhr.setRequestHeader(key, request.headers[key]);
   }
 
-
-
-
   xhr.withCredentials = request.withCredentials;
 
   if (!setContentType) {
     xhr.setRequestHeader('Content-Type', 'text/plain');
   }
 
-
-
-
   xhr.onreadystatechange = bind(this, onReadyStateChange, request, xhr);
   if (request.timeout) {
     request.timeoutRef = setTimeout(bind(this, cancel, xhr, request), request.timeout);
   }
 
-
-
-
-  //logger.log('==== setting timeout for', request.timeout, request.timeoutRef, '<<');
+  // logger.log('==== setting timeout for', request.timeout, request.timeoutRef, '<<');
   request.ts = +new Date();
   xhr.send(request.data || null);
 }
 
-
-
-
-function cancel(xhr, request) {
+function cancel (xhr, request) {
   --_inflight;
   // logger.log('====INFLIGHT', _inflight, 'timeout (cancelled)', request.id);
   if (request.timedOut) {
     logger.log('already timed out?!');
   }
 
-
-
-
   xhr.onreadystatechange = null;
   request.timedOut = true;
   if (xhr.readyState >= xhr.HEADERS_RECEIVED) {
     try {
       var headers = xhr.getAllResponseHeaders();
-    } catch (e) {
-    }
+    } catch (e) {}
   }
-
-
-
 
   request.cb && request.cb({ timeout: true }, null, headers);
 }
 
-
-
-
-function onReadyStateChange(request, xhr) {
+function onReadyStateChange (request, xhr) {
   if (xhr.readyState != 4) {
     return;
   }
 
-
-
-
   if (request.timedOut) {
     throw 'Unexpected?!';
   }
-
-
-
 
   --_inflight;
 
@@ -252,16 +202,14 @@ function onReadyStateChange(request, xhr) {
     request.timeoutRef = null;
   }
 
-
-
-
   // only fire callback once
   if (!cb || request.handled) {
     return;
   }
   request.handled = true;
 
-  var isJSON = /^application\/json(;|$)/.test(xhr.getResponseHeader('Content-Type')) || request.type == 'json';
+  var isJSON = /^application\/json(;|$)/.test(xhr.getResponseHeader(
+    'Content-Type')) || request.type == 'json';
   var response = xhr.response || xhr.responseText;
   var data = response;
   var parseError = false;
@@ -272,9 +220,6 @@ function onReadyStateChange(request, xhr) {
       parseError = true;
     }
   }
-
-
-
 
   // .status will be 0 when requests are filled via app cache on at least iOS 4.x
   if (xhr.status != 200 && xhr.status != 0 || parseError) {
@@ -287,6 +232,5 @@ function onReadyStateChange(request, xhr) {
     cb(null, data, xhr.getAllResponseHeaders());
   }
 }
-
 
 export default exports;

@@ -5,7 +5,7 @@ let exports = {};
  * Pass an "angle" option in radians to this function to initialize an angle.
  */
 exports = class {
-  constructor(opts) {
+  constructor (opts) {
     if ('angle' in opts) {
       this.x = opts.magnitude * Math.cos(opts.angle);
       this.y = opts.magnitude * Math.sin(opts.angle);
@@ -15,45 +15,45 @@ exports = class {
     }
   }
 
-  addForce(f) {
+  addForce (f) {
     this.x += f.x;
     this.y += f.y;
   }
-  getAngle() {
+  getAngle () {
     return Math.atan2(this.y, this.x);
   }
-  getMagnitude() {
+  getMagnitude () {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }
 
-  getUnitVector() {
+  getUnitVector () {
     return new Vec2D({
       magnitude: 1,
       angle: this.getAngle()
     });
   }
-  dot(vec) {
+  dot (vec) {
     return this.x * vec.x + this.y * vec.y;
   }
-  add(vec) {
+  add (vec) {
     return new Vec2D({
       x: this.x + vec.x,
       y: this.y + vec.y
     });
   }
-  minus(vec) {
+  minus (vec) {
     return new Vec2D({
       x: this.x - vec.x,
       y: this.y - vec.y
     });
   }
-  negate() {
+  negate () {
     return new Vec2D({
       x: -this.x,
       y: -this.y
     });
   }
-  multiply(scalar) {
+  multiply (scalar) {
     return new Vec2D({
       angle: this.getAngle(),
       magnitude: this.getMagnitude() * scalar
@@ -61,6 +61,5 @@ exports = class {
   }
 };
 var Vec2D = exports;
-
 
 export default exports;

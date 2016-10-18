@@ -17,21 +17,38 @@ let exports = {};
   var breaker = {};
 
   // Save bytes in the minified (but not gzipped) version:
-  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
+  var ArrayProto = Array.prototype,
+    ObjProto = Object.prototype,
+    FuncProto = Function.prototype;
 
   // Create quick reference variables for speed access to core prototypes.
-  var push = ArrayProto.push, slice = ArrayProto.slice, concat = ArrayProto.concat, toString = ObjProto.toString, hasOwnProperty = ObjProto.hasOwnProperty;
+  var push = ArrayProto.push,
+    slice = ArrayProto.slice,
+    concat = ArrayProto.concat,
+    toString = ObjProto.toString,
+    hasOwnProperty = ObjProto.hasOwnProperty;
 
   // All **ECMAScript 5** native function implementations that we hope to use
   // are declared here.
-  var nativeForEach = ArrayProto.forEach, nativeMap = ArrayProto.map, nativeReduce = ArrayProto.reduce, nativeReduceRight = ArrayProto.reduceRight, nativeFilter = ArrayProto.filter, nativeEvery = ArrayProto.every, nativeSome = ArrayProto.some, nativeIndexOf = ArrayProto.indexOf, nativeLastIndexOf = ArrayProto.lastIndexOf, nativeIsArray = Array.isArray, nativeKeys = Object.keys, nativeBind = FuncProto.bind;
+  var nativeForEach = ArrayProto.forEach,
+    nativeMap = ArrayProto.map,
+    nativeReduce = ArrayProto.reduce,
+    nativeReduceRight = ArrayProto.reduceRight,
+    nativeFilter = ArrayProto.filter,
+    nativeEvery = ArrayProto.every,
+    nativeSome = ArrayProto.some,
+    nativeIndexOf = ArrayProto.indexOf,
+    nativeLastIndexOf = ArrayProto.lastIndexOf,
+    nativeIsArray = Array.isArray,
+    nativeKeys = Object.keys,
+    nativeBind = FuncProto.bind;
 
   // Create a safe reference to the Underscore object for use below.
   var _ = function (obj) {
     if (obj instanceof _)
-      return obj;
+      { return obj; }
     if (!(this instanceof _))
-      return new _(obj);
+      { return new _(obj); }
     this._wrapped = obj;
   };
 
@@ -49,12 +66,8 @@ let exports = {};
     root._ = _;
   }
 
-
-
-
   // Current version.
   _.VERSION = '1.6.0';
-
 
   // Collection Functions
   // --------------------
@@ -63,19 +76,19 @@ let exports = {};
   // Delegates to **ECMAScript 5**'s native `forEach` if available.
   var each = _.each = _.forEach = function (obj, iterator, context) {
     if (obj == null)
-      return obj;
+      { return obj; }
     if (nativeForEach && obj.forEach === nativeForEach) {
       obj.forEach(iterator, context);
     } else if (obj.length === +obj.length) {
       for (var i = 0, length = obj.length; i < length; i++) {
         if (iterator.call(context, obj[i], i, obj) === breaker)
-          return;
+          { return; }
       }
     } else {
       var keys = _.keys(obj);
       for (var i = 0, length = keys.length; i < length; i++) {
         if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker)
-          return;
+          { return; }
       }
     }
     return obj;
@@ -86,9 +99,9 @@ let exports = {};
   _.map = _.collect = function (obj, iterator, context) {
     var results = [];
     if (obj == null)
-      return results;
+      { return results; }
     if (nativeMap && obj.map === nativeMap)
-      return obj.map(iterator, context);
+      { return obj.map(iterator, context); }
     each(obj, function (value, index, list) {
       results.push(iterator.call(context, value, index, list));
     });
@@ -102,10 +115,10 @@ let exports = {};
   _.reduce = _.foldl = _.inject = function (obj, iterator, memo, context) {
     var initial = arguments.length > 2;
     if (obj == null)
-      obj = [];
+      { obj = []; }
     if (nativeReduce && obj.reduce === nativeReduce) {
       if (context)
-        iterator = _.bind(iterator, context);
+        { iterator = _.bind(iterator, context); }
       return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
     }
     each(obj, function (value, index, list) {
@@ -117,7 +130,7 @@ let exports = {};
       }
     });
     if (!initial)
-      throw new TypeError(reduceError);
+      { throw new TypeError(reduceError); }
     return memo;
   };
 
@@ -126,11 +139,12 @@ let exports = {};
   _.reduceRight = _.foldr = function (obj, iterator, memo, context) {
     var initial = arguments.length > 2;
     if (obj == null)
-      obj = [];
+      { obj = []; }
     if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
       if (context)
-        iterator = _.bind(iterator, context);
-      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
+        { iterator = _.bind(iterator, context); }
+      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(
+        iterator);
     }
     var length = obj.length;
     if (length !== +length) {
@@ -147,7 +161,7 @@ let exports = {};
       }
     });
     if (!initial)
-      throw new TypeError(reduceError);
+      { throw new TypeError(reduceError); }
     return memo;
   };
 
@@ -169,12 +183,12 @@ let exports = {};
   _.filter = _.select = function (obj, predicate, context) {
     var results = [];
     if (obj == null)
-      return results;
+      { return results; }
     if (nativeFilter && obj.filter === nativeFilter)
-      return obj.filter(predicate, context);
+      { return obj.filter(predicate, context); }
     each(obj, function (value, index, list) {
       if (predicate.call(context, value, index, list))
-        results.push(value);
+        { results.push(value); }
     });
     return results;
   };
@@ -193,12 +207,13 @@ let exports = {};
     predicate || (predicate = _.identity);
     var result = true;
     if (obj == null)
-      return result;
+      { return result; }
     if (nativeEvery && obj.every === nativeEvery)
-      return obj.every(predicate, context);
+      { return obj.every(predicate, context); }
     each(obj, function (value, index, list) {
-      if (!(result = result && predicate.call(context, value, index, list)))
-        return breaker;
+      if (!(result = result && predicate.call(context, value, index,
+          list)))
+        { return breaker; }
     });
     return !!result;
   };
@@ -210,12 +225,13 @@ let exports = {};
     predicate || (predicate = _.identity);
     var result = false;
     if (obj == null)
-      return result;
+      { return result; }
     if (nativeSome && obj.some === nativeSome)
-      return obj.some(predicate, context);
+      { return obj.some(predicate, context); }
     each(obj, function (value, index, list) {
-      if (result || (result = predicate.call(context, value, index, list)))
-        return breaker;
+      if (result || (result = predicate.call(context, value, index,
+          list)))
+        { return breaker; }
     });
     return !!result;
   };
@@ -224,9 +240,9 @@ let exports = {};
   // Aliased as `include`.
   _.contains = _.include = function (obj, target) {
     if (obj == null)
-      return false;
+      { return false; }
     if (nativeIndexOf && obj.indexOf === nativeIndexOf)
-      return obj.indexOf(target) != -1;
+      { return obj.indexOf(target) != -1; }
     return any(obj, function (value) {
       return value === target;
     });
@@ -262,12 +278,15 @@ let exports = {};
   // Can't optimize arrays of integers longer than 65,535 elements.
   // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
   _.max = function (obj, iterator, context) {
-    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length <
+      65535) {
       return Math.max.apply(Math, obj);
     }
-    var result = -Infinity, lastComputed = -Infinity;
+    var result = -Infinity,
+      lastComputed = -Infinity;
     each(obj, function (value, index, list) {
-      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      var computed = iterator ? iterator.call(context, value, index,
+        list) : value;
       if (computed > lastComputed) {
         result = value;
         lastComputed = computed;
@@ -278,12 +297,15 @@ let exports = {};
 
   // Return the minimum element (or element-based computation).
   _.min = function (obj, iterator, context) {
-    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length <
+      65535) {
       return Math.min.apply(Math, obj);
     }
-    var result = Infinity, lastComputed = Infinity;
+    var result = Infinity,
+      lastComputed = Infinity;
     each(obj, function (value, index, list) {
-      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      var computed = iterator ? iterator.call(context, value, index,
+        list) : value;
       if (computed < lastComputed) {
         result = value;
         lastComputed = computed;
@@ -312,7 +334,7 @@ let exports = {};
   _.sample = function (obj, n, guard) {
     if (n == null || guard) {
       if (obj.length !== +obj.length)
-        obj = _.values(obj);
+        { obj = _.values(obj); }
       return obj[_.random(obj.length - 1)];
     }
     return _.shuffle(obj).slice(0, Math.max(0, n));
@@ -321,9 +343,9 @@ let exports = {};
   // An internal function to generate lookup iterators.
   var lookupIterator = function (value) {
     if (value == null)
-      return _.identity;
+      { return _.identity; }
     if (_.isFunction(value))
-      return value;
+      { return value; }
     return _.property(value);
   };
 
@@ -341,9 +363,9 @@ let exports = {};
       var b = right.criteria;
       if (a !== b) {
         if (a > b || a === void 0)
-          return 1;
+          { return 1; }
         if (a < b || b === void 0)
-          return -1;
+          { return -1; }
       }
       return left.index - right.index;
     }), 'value');
@@ -386,10 +408,12 @@ let exports = {};
   _.sortedIndex = function (array, obj, iterator, context) {
     iterator = lookupIterator(iterator);
     var value = iterator.call(context, obj);
-    var low = 0, high = array.length;
+    var low = 0,
+      high = array.length;
     while (low < high) {
       var mid = low + high >>> 1;
-      iterator.call(context, array[mid]) < value ? low = mid + 1 : high = mid;
+      iterator.call(context, array[mid]) < value ? low = mid + 1 : high =
+        mid;
     }
     return low;
   };
@@ -397,21 +421,20 @@ let exports = {};
   // Safely create a real, live array from anything iterable.
   _.toArray = function (obj) {
     if (!obj)
-      return [];
+      { return []; }
     if (_.isArray(obj))
-      return slice.call(obj);
+      { return slice.call(obj); }
     if (obj.length === +obj.length)
-      return _.map(obj, _.identity);
+      { return _.map(obj, _.identity); }
     return _.values(obj);
   };
 
   // Return the number of elements in an object.
   _.size = function (obj) {
     if (obj == null)
-      return 0;
+      { return 0; }
     return obj.length === +obj.length ? obj.length : _.keys(obj).length;
   };
-
 
   // Array Functions
   // ---------------
@@ -420,11 +443,11 @@ let exports = {};
   // allows it to work with `_.map`.
   _.first = _.head = _.take = function (array, n, guard) {
     if (array == null)
-      return void 0;
+      { return void 0; }
     if (n == null || guard)
-      return array[0];
+      { return array[0]; }
     if (n < 0)
-      return [];
+      { return []; }
     return slice.call(array, 0, n);
   };
 
@@ -440,9 +463,9 @@ let exports = {};
   // values in the array. The **guard** check allows it to work with `_.map`.
   _.last = function (array, n, guard) {
     if (array == null)
-      return void 0;
+      { return void 0; }
     if (n == null || guard)
-      return array[array.length - 1];
+      { return array[array.length - 1]; }
     return slice.call(array, Math.max(array.length - n, 0));
   };
 
@@ -466,7 +489,8 @@ let exports = {};
     }
     each(input, function (value) {
       if (_.isArray(value) || _.isArguments(value)) {
-        shallow ? push.apply(output, value) : flatten(value, shallow, output);
+        shallow ? push.apply(output, value) : flatten(value, shallow,
+          output);
       } else {
         output.push(value);
       }
@@ -487,7 +511,8 @@ let exports = {};
   // Split an array into two arrays: one whose elements all satisfy the given
   // predicate, and one whose elements all do not satisfy the predicate.
   _.partition = function (array, predicate) {
-    var pass = [], fail = [];
+    var pass = [],
+      fail = [];
     each(array, function (elem) {
       (predicate(elem) ? pass : fail).push(elem);
     });
@@ -510,7 +535,8 @@ let exports = {};
     var results = [];
     var seen = [];
     each(initial, function (value, index) {
-      if (isSorted ? !index || seen[seen.length - 1] !== value : !_.contains(seen, value)) {
+      if (isSorted ? !index || seen[seen.length - 1] !== value : !_.contains(
+          seen, value)) {
         seen.push(value);
         results.push(array[index]);
       }
@@ -560,7 +586,7 @@ let exports = {};
   // the corresponding values.
   _.object = function (list, values) {
     if (list == null)
-      return {};
+      { return {}; }
     var result = {};
     for (var i = 0, length = list.length; i < length; i++) {
       if (values) {
@@ -580,8 +606,9 @@ let exports = {};
   // for **isSorted** to use binary search.
   _.indexOf = function (array, item, isSorted) {
     if (array == null)
-      return -1;
-    var i = 0, length = array.length;
+      { return -1; }
+    var i = 0,
+      length = array.length;
     if (isSorted) {
       if (typeof isSorted == 'number') {
         i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
@@ -591,25 +618,26 @@ let exports = {};
       }
     }
     if (nativeIndexOf && array.indexOf === nativeIndexOf)
-      return array.indexOf(item, isSorted);
+      { return array.indexOf(item, isSorted); }
     for (; i < length; i++)
-      if (array[i] === item)
-        return i;
+      { if (array[i] === item)
+        { return i; } }
     return -1;
   };
 
   // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
   _.lastIndexOf = function (array, item, from) {
     if (array == null)
-      return -1;
+      { return -1; }
     var hasIndex = from != null;
     if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) {
-      return hasIndex ? array.lastIndexOf(item, from) : array.lastIndexOf(item);
+      return hasIndex ? array.lastIndexOf(item, from) : array.lastIndexOf(
+        item);
     }
     var i = hasIndex ? from : array.length;
     while (i--)
-      if (array[i] === item)
-        return i;
+      { if (array[i] === item)
+        { return i; } }
     return -1;
   };
 
@@ -632,18 +660,13 @@ let exports = {};
       start += step;
     }
 
-
-
-
     return range;
   };
-
 
   // Function (ahem) Functions
   // ------------------
   // Reusable constructor function for prototype setting.
-  var ctor = function () {
-  };
+  var ctor = function () {};
 
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
@@ -651,19 +674,19 @@ let exports = {};
   _.bind = function (func, context) {
     var args, bound;
     if (nativeBind && func.bind === nativeBind)
-      return nativeBind.apply(func, slice.call(arguments, 1));
+      { return nativeBind.apply(func, slice.call(arguments, 1)); }
     if (!_.isFunction(func))
-      throw new TypeError();
+      { throw new TypeError(); }
     args = slice.call(arguments, 2);
     return bound = function () {
       if (!(this instanceof bound))
-        return func.apply(context, args.concat(slice.call(arguments)));
+        { return func.apply(context, args.concat(slice.call(arguments))); }
       ctor.prototype = func.prototype;
       var self = new ctor();
       ctor.prototype = null;
       var result = func.apply(self, args.concat(slice.call(arguments)));
       if (Object(result) === result)
-        return result;
+        { return result; }
       return self;
     };
   };
@@ -678,10 +701,10 @@ let exports = {};
       var args = boundArgs.slice();
       for (var i = 0, length = args.length; i < length; i++) {
         if (args[i] === _)
-          args[i] = arguments[position++];
+          { args[i] = arguments[position++]; }
       }
       while (position < arguments.length)
-        args.push(arguments[position++]);
+        { args.push(arguments[position++]); }
       return func.apply(this, args);
     };
   };
@@ -692,7 +715,7 @@ let exports = {};
   _.bindAll = function (obj) {
     var funcs = slice.call(arguments, 1);
     if (funcs.length === 0)
-      throw new Error('bindAll must be passed function names');
+      { throw new Error('bindAll must be passed function names'); }
     each(funcs, function (f) {
       obj[f] = _.bind(obj[f], obj);
     });
@@ -705,7 +728,8 @@ let exports = {};
     hasher || (hasher = _.identity);
     return function () {
       var key = hasher.apply(this, arguments);
-      return _.has(memo, key) ? memo[key] : memo[key] = func.apply(this, arguments);
+      return _.has(memo, key) ? memo[key] : memo[key] = func.apply(this,
+        arguments);
     };
   };
 
@@ -746,7 +770,7 @@ let exports = {};
     return function () {
       var now = _.now();
       if (!previous && options.leading === false)
-        previous = now;
+        { previous = now; }
       var remaining = wait - (now - previous);
       context = this;
       args = arguments;
@@ -796,9 +820,6 @@ let exports = {};
         context = args = null;
       }
 
-
-
-
       return result;
     };
   };
@@ -806,10 +827,11 @@ let exports = {};
   // Returns a function that will be executed at most one time, no matter how
   // often you call it. Useful for lazy initialization.
   _.once = function (func) {
-    var ran = false, memo;
+    var ran = false,
+      memo;
     return function () {
       if (ran)
-        return memo;
+        { return memo; }
       ran = true;
       memo = func.apply(this, arguments);
       func = null;
@@ -846,20 +868,19 @@ let exports = {};
     };
   };
 
-
   // Object Functions
   // ----------------
   // Retrieve the names of an object's properties.
   // Delegates to **ECMAScript 5**'s native `Object.keys`
   _.keys = function (obj) {
     if (!_.isObject(obj))
-      return [];
+      { return []; }
     if (nativeKeys)
-      return nativeKeys(obj);
+      { return nativeKeys(obj); }
     var keys = [];
     for (var key in obj)
-      if (_.has(obj, key))
-        keys.push(key);
+      { if (_.has(obj, key))
+        { keys.push(key); } }
     return keys;
   };
 
@@ -904,7 +925,7 @@ let exports = {};
     var names = [];
     for (var key in obj) {
       if (_.isFunction(obj[key]))
-        names.push(key);
+        { names.push(key); }
     }
     return names.sort();
   };
@@ -927,7 +948,7 @@ let exports = {};
     var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
     each(keys, function (key) {
       if (key in obj)
-        copy[key] = obj[key];
+        { copy[key] = obj[key]; }
     });
     return copy;
   };
@@ -938,7 +959,7 @@ let exports = {};
     var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
     for (var key in obj) {
       if (!_.contains(keys, key))
-        copy[key] = obj[key];
+        { copy[key] = obj[key]; }
     }
     return copy;
   };
@@ -949,7 +970,7 @@ let exports = {};
       if (source) {
         for (var prop in source) {
           if (obj[prop] === void 0)
-            obj[prop] = source[prop];
+            { obj[prop] = source[prop]; }
         }
       }
     });
@@ -959,7 +980,7 @@ let exports = {};
   // Create a (shallow-cloned) duplicate of an object.
   _.clone = function (obj) {
     if (!_.isObject(obj))
-      return obj;
+      { return obj; }
     return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
   };
 
@@ -976,41 +997,42 @@ let exports = {};
     // Identical objects are equal. `0 === -0`, but they aren't identical.
     // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
     if (a === b)
-      return a !== 0 || 1 / a == 1 / b;
+      { return a !== 0 || 1 / a == 1 / b; }
     // A strict comparison is necessary because `null == undefined`.
     if (a == null || b == null)
-      return a === b;
+      { return a === b; }
     // Unwrap any wrapped objects.
     if (a instanceof _)
-      a = a._wrapped;
+      { a = a._wrapped; }
     if (b instanceof _)
-      b = b._wrapped;
+      { b = b._wrapped; }
     // Compare `[[Class]]` names.
     var className = toString.call(a);
     if (className != toString.call(b))
-      return false;
+      { return false; }
     switch (className) {
-    // Strings, numbers, dates, and booleans are compared by value.
-    case '[object String]':
+      // Strings, numbers, dates, and booleans are compared by value.
+      case '[object String]':
       // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
       // equivalent to `new String("5")`.
-      return a == String(b);
-    case '[object Number]':
+        return a == String(b);
+      case '[object Number]':
       // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
       // other numeric values.
-      return a != +a ? b != +b : a == 0 ? 1 / a == 1 / b : a == +b;
-    case '[object Date]':
-    case '[object Boolean]':
+        return a != +a ? b != +b : a == 0 ? 1 / a == 1 / b : a == +b;
+      case '[object Date]':
+      case '[object Boolean]':
       // Coerce dates and booleans to numeric primitive values. Dates are compared by their
       // millisecond representations. Note that invalid dates with millisecond representations
       // of `NaN` are not equivalent.
-      return +a == +b;
-    // RegExps are compared by their source patterns and flags.
-    case '[object RegExp]':
-      return a.source == b.source && a.global == b.global && a.multiline == b.multiline && a.ignoreCase == b.ignoreCase;
+        return +a == +b;
+      // RegExps are compared by their source patterns and flags.
+      case '[object RegExp]':
+        return a.source == b.source && a.global == b.global && a.multiline ==
+        b.multiline && a.ignoreCase == b.ignoreCase;
     }
     if (typeof a != 'object' || typeof b != 'object')
-      return false;
+      { return false; }
     // Assume equality for cyclic structures. The algorithm for detecting cyclic
     // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
     var length = aStack.length;
@@ -1018,18 +1040,22 @@ let exports = {};
       // Linear search. Performance is inversely proportional to the number of
       // unique nested structures.
       if (aStack[length] == a)
-        return bStack[length] == b;
+        { return bStack[length] == b; }
     }
     // Objects with different constructors are not equivalent, but `Object`s
     // from different frames are.
-    var aCtor = a.constructor, bCtor = b.constructor;
-    if (aCtor !== bCtor && !(_.isFunction(aCtor) && aCtor instanceof aCtor && _.isFunction(bCtor) && bCtor instanceof bCtor) && ('constructor' in a && 'constructor' in b)) {
+    var aCtor = a.constructor,
+      bCtor = b.constructor;
+    if (aCtor !== bCtor && !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
+        _.isFunction(bCtor) && bCtor instanceof bCtor) && ('constructor' in
+        a && 'constructor' in b)) {
       return false;
     }
     // Add the first object to the stack of traversed objects.
     aStack.push(a);
     bStack.push(b);
-    var size = 0, result = true;
+    var size = 0,
+      result = true;
     // Recursively compare objects and arrays.
     if (className == '[object Array]') {
       // Compare array lengths to determine if a deep comparison is necessary.
@@ -1039,7 +1065,7 @@ let exports = {};
         // Deep compare the contents, ignoring non-numeric properties.
         while (size--) {
           if (!(result = eq(a[size], b[size], aStack, bStack)))
-            break;
+            { break; }
         }
       }
     } else {
@@ -1050,14 +1076,14 @@ let exports = {};
           size++;
           // Deep compare each member.
           if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack)))
-            break;
+            { break; }
         }
       }
       // Ensure that both objects contain the same number of properties.
       if (result) {
         for (key in b) {
           if (_.has(b, key) && !size--)
-            break;
+            { break; }
         }
         result = !size;
       }
@@ -1077,12 +1103,12 @@ let exports = {};
   // An "empty" object has no enumerable own-properties.
   _.isEmpty = function (obj) {
     if (obj == null)
-      return true;
+      { return true; }
     if (_.isArray(obj) || _.isString(obj))
-      return obj.length === 0;
+      { return obj.length === 0; }
     for (var key in obj)
-      if (_.has(obj, key))
-        return false;
+      { if (_.has(obj, key))
+        { return false; } }
     return true;
   };
 
@@ -1124,18 +1150,12 @@ let exports = {};
     };
   }
 
-
-
-
   // Optimize `isFunction` if appropriate.
   if (typeof /./ !== 'function') {
     _.isFunction = function (obj) {
       return typeof obj === 'function';
     };
   }
-
-
-
 
   // Is a given object a finite number?
   _.isFinite = function (obj) {
@@ -1149,7 +1169,8 @@ let exports = {};
 
   // Is a given value a boolean?
   _.isBoolean = function (obj) {
-    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
+    return obj === true || obj === false || toString.call(obj) ==
+      '[object Boolean]';
   };
 
   // Is a given value equal to null?
@@ -1167,7 +1188,6 @@ let exports = {};
   _.has = function (obj, key) {
     return hasOwnProperty.call(obj, key);
   };
-
 
   // Utility Functions
   // -----------------
@@ -1199,11 +1219,11 @@ let exports = {};
   _.matches = function (attrs) {
     return function (obj) {
       if (obj === attrs)
-        return true;
-      //avoid comparing an object to itself.
+        { return true; }
+      // avoid comparing an object to itself.
       for (var key in attrs) {
         if (attrs[key] !== obj[key])
-          return false;
+          { return false; }
       }
       return true;
     };
@@ -1213,7 +1233,7 @@ let exports = {};
   _.times = function (n, iterator, context) {
     var accum = Array(Math.max(0, n));
     for (var i = 0; i < n; i++)
-      accum[i] = iterator.call(context, i);
+      { accum[i] = iterator.call(context, i); }
     return accum;
   };
 
@@ -1246,7 +1266,8 @@ let exports = {};
   // Regexes containing the keys and values listed immediately above.
   var entityRegexes = {
     escape: new RegExp('[' + _.keys(entityMap.escape).join('') + ']', 'g'),
-    unescape: new RegExp('(' + _.keys(entityMap.unescape).join('|') + ')', 'g')
+    unescape: new RegExp('(' + _.keys(entityMap.unescape).join('|') + ')',
+      'g')
   };
 
   // Functions for escaping and unescaping strings to/from HTML interpolation.
@@ -1256,8 +1277,9 @@ let exports = {};
   ], function (method) {
     _[method] = function (string) {
       if (string == null)
-        return '';
-      return ('' + string).replace(entityRegexes[method], function (match) {
+        { return ''; }
+      return ('' + string).replace(entityRegexes[method], function (
+        match) {
         return entityMap[method][match];
       });
     };
@@ -1267,7 +1289,7 @@ let exports = {};
   // `object` as context; otherwise, return it.
   _.result = function (object, property) {
     if (object == null)
-      return void 0;
+      { return void 0; }
     var value = object[property];
     return _.isFunction(value) ? value.call(object) : value;
   };
@@ -1336,16 +1358,20 @@ let exports = {};
     // Compile the template source, escaping string literals appropriately.
     var index = 0;
     var source = '__p+=\'';
-    text.replace(matcher, function (match, escape, interpolate, evaluate, offset) {
-      source += text.slice(index, offset).replace(escaper, function (match) {
+    text.replace(matcher, function (match, escape, interpolate, evaluate,
+      offset) {
+      source += text.slice(index, offset).replace(escaper, function (
+        match) {
         return '\\' + escapes[match];
       });
 
       if (escape) {
-        source += '\'+\n((__t=(' + escape + '))==null?\'\':_.escape(__t))+\n\'';
+        source += '\'+\n((__t=(' + escape +
+          '))==null?\'\':_.escape(__t))+\n\'';
       }
       if (interpolate) {
-        source += '\'+\n((__t=(' + interpolate + '))==null?\'\':__t)+\n\'';
+        source += '\'+\n((__t=(' + interpolate +
+          '))==null?\'\':__t)+\n\'';
       }
       if (evaluate) {
         source += '\';\n' + evaluate + '\n__p+=\'';
@@ -1357,12 +1383,11 @@ let exports = {};
 
     // If a variable is not specified, place data values in local scope.
     if (!settings.variable)
-      source = 'with(obj||{}){\n' + source + '}\n';
+      { source = 'with(obj||{}){\n' + source + '}\n'; }
 
-
-
-
-    source = 'var __t,__p=\'\',__j=Array.prototype.join,' + 'print=function(){__p+=__j.call(arguments,\'\');};\n' + source + 'return __p;\n';
+    source = 'var __t,__p=\'\',__j=Array.prototype.join,' +
+      'print=function(){__p+=__j.call(arguments,\'\');};\n' + source +
+      'return __p;\n';
 
     try {
       render = new Function(settings.variable || 'obj', '_', source);
@@ -1371,22 +1396,15 @@ let exports = {};
       throw e;
     }
 
-
-
-
-
-
-
-
-
     if (data)
-      return render(data, _);
+      { return render(data, _); }
     var template = function (data) {
       return render.call(this, data, _);
     };
 
     // Provide the compiled function source as a convenience for precompilation.
-    template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' +
+      source + '}';
 
     return template;
   };
@@ -1395,7 +1413,6 @@ let exports = {};
   _.chain = function (obj) {
     return _(obj).chain();
   };
-
 
   // OOP
   // ---------------
@@ -1425,7 +1442,7 @@ let exports = {};
       var obj = this._wrapped;
       method.apply(obj, arguments);
       if ((name == 'shift' || name == 'splice') && obj.length === 0)
-        delete obj[0];
+        { delete obj[0]; }
       return result.call(this, obj);
     };
   });

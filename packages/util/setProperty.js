@@ -1,21 +1,15 @@
 let exports = {};
 
-function createGetter(ctx, name) {
+function createGetter (ctx, name) {
   return function () {
     return this[name];
   };
 }
 
-
-
-
-function createSetter(ctx, name, callback, initialValue) {
+function createSetter (ctx, name, callback, initialValue) {
   if (initialValue !== undefined) {
     ctx[name] = initialValue;
   }
-
-
-
 
   if (typeof callback == 'function') {
     return function (value) {
@@ -40,9 +34,6 @@ function createSetter(ctx, name, callback, initialValue) {
   }
 }
 
-
-
-
 exports = function (ctx, name, def) {
   if (!def.get && !def.set && !def.cb && 'value' in def) {
     ctx[name] = def.value;
@@ -56,9 +47,6 @@ exports = function (ctx, name, def) {
     if ('value' in def) {
       ctx['_' + name] = def.value;
     }
-
-
-
 
     delete def.value;
     if (Object.defineProperty) {

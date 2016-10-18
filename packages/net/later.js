@@ -3,14 +3,14 @@ let exports = {};
 import { logger } from 'base';
 
 exports.Later = class {
-  constructor() {
+  constructor () {
     this.cb = null;
     this.eb = null;
     this.values = [];
     this.errors = [];
     this.cancelback = null;
   }
-  callback() {
+  callback () {
     logger.debug('callback', [].slice.call(arguments, 0));
     if (this.cb) {
       var result = this.cb.apply(this, arguments);
@@ -21,7 +21,7 @@ exports.Later = class {
       this.values.push(arguments);
     }
   }
-  errback() {
+  errback () {
     logger.debug('eb', [].slice.call(arguments, 0));
     if (this.eb) {
       this.eb.apply(this, arguments);
@@ -29,14 +29,14 @@ exports.Later = class {
       this.errors.push(arguments);
     }
   }
-  cancel() {
+  cancel () {
     if (this.cancelback) {
       var cb = this.cancelback;
       this.cancelback = null;
       cb.call(this);
     }
   }
-  setCallback(cb) {
+  setCallback (cb) {
     this.cb = cb;
     for (var i = 0, v; v = this.values[i]; ++i) {
       this.cb.apply(this, v);
@@ -44,7 +44,7 @@ exports.Later = class {
     this.values = [];
     return this;
   }
-  setErrback(eb) {
+  setErrback (eb) {
     this.eb = eb;
     for (var i = 0, v; e = this.errors[i]; ++i) {
       this.eb.apply(this, e);
@@ -52,7 +52,7 @@ exports.Later = class {
     this.errors = [];
     return this;
   }
-  setCancelback(cancelback) {
+  setCancelback (cancelback) {
     this.cancelback = cancelback;
     return this;
   }
@@ -68,6 +68,5 @@ exports.Later.succeed = function () {
   var l = new Later();
   return l.succeed.apply(l, arguments);
 };
-
 
 export default exports;

@@ -9,22 +9,22 @@ import interfaces from '../../../interfaces';
 import server from './server';
 
 class Transport extends interfaces.Transport {
-  constructor(socket) {
+  constructor (socket) {
     super();
 
     this._socket = socket;
     logger.debug('init', socket);
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     logger.debug('makeConnection:', protocol);
     this._socket.addListener('receive', bind(protocol, 'dataReceived'));
 
     this._socket.addListener('close', bind(protocol, '_connectionLost'));
   }
-  write(data) {
+  write (data) {
     this._socket.send(data);
   }
-  loseConnection() {
+  loseConnection () {
     this._socket.forceClose();
   }
 }
@@ -33,7 +33,7 @@ class Transport extends interfaces.Transport {
  * @extends net.interfaces.Listener
  */
 exports.Listener = class extends interfaces.Listener {
-  listen() {
+  listen () {
     var s = server.createServer(bind(this, '_onConnect'));
     this._cspServer = s;
     var listenString = (this._opts['interface'] || '') + ':' + this._opts.port;
@@ -51,14 +51,14 @@ exports.Listener = class extends interfaces.Listener {
       s.listen(this._opts.port, this._opts['interface'] || '');
     }
   }
-  _onConnect(socket) {
+  _onConnect (socket) {
     logger.info('Incoming connection');
     socket.setEncoding('utf8');
     socket.addListener('connect', bind(this, function () {
       this.onConnect(new Transport(socket));
     }));
   }
-  createMiddleware() {
+  createMiddleware () {
     return bind(this._cspServer, '_handleRequest');
   }
 };

@@ -26,21 +26,11 @@ let BrowserDetect = browserdetect.BrowserDetect;
         window.attachEvent('onunload', function () {
           try {
             doc.body.innerHTML = '';
-          } catch (e) {
-          }
+          } catch (e) {}
           doc = null;
         });
       }
-    } catch (e) {
-    }
-
-
-
-
-
-
-
-
+    } catch (e) {}
 
     if (!doc) {
       doc = document;
@@ -49,55 +39,47 @@ let BrowserDetect = browserdetect.BrowserDetect;
   };
 
   exports.XHR = function () {
-    var win = window, doc = exports.getDoc();
+    var win = window,
+      doc = exports.getDoc();
 
-    //if (doc.parentWindow) { win = doc.parentWindow; }
-    return new (exports.XHR = win.XMLHttpRequest ? win.XMLHttpRequest : function () {
-      return win.ActiveXObject && new win.ActiveXObject('Msxml2.XMLHTTP') || null;
-    })();
+    // if (doc.parentWindow) { win = doc.parentWindow; }
+    return new (exports.XHR = win.XMLHttpRequest ? win.XMLHttpRequest :
+      function () {
+        return win.ActiveXObject && new win.ActiveXObject(
+          'Msxml2.XMLHTTP') || null;
+      })();
   };
 
   exports.createXHR = function () {
     return new exports.XHR();
   };
-
 }());
 
-function isLocalFile(url) {
+function isLocalFile (url) {
   return /^file:\/\//.test(url);
 }
-function isWindowDomain(url) {
+
+function isWindowDomain (url) {
   return uri.isSameDomain(url, window.location.href);
 }
 
+var xhrSupportsBinary;
 
-
-
-var xhrSupportsBinary = undefined;
-function checkXHRBinarySupport(xhr) {
+function checkXHRBinarySupport (xhr) {
   xhrSupportsBinary = !!xhr.sendAsBinary;
 }
 
-
-
-
-function canUseXHR(url) {
+function canUseXHR (url) {
   // always use jsonp for local files
   if (isLocalFile(url)) {
     return false;
   }
-
-
-
 
   // try to create an XHR using the same function the XHR transport uses
   var xhr = new exports.XHR();
   if (!xhr) {
     return false;
   }
-
-
-
 
   checkXHRBinarySupport(xhr);
 
@@ -107,35 +89,30 @@ function canUseXHR(url) {
     return true;
   }
 
-
-
-
   // if the URL requested is a different domain than the window,
   // then we need to check for cross-domain support
   if (window.XMLHttpRequest && (xhr.__proto__ == XMLHttpRequest.prototype || // WebKit Bug 25205
-    xhr instanceof window.XMLHttpRequest) && xhr.withCredentials !== undefined || window.XDomainRequest && xhr instanceof window.XDomainRequest) {
+      xhr instanceof window.XMLHttpRequest) && xhr.withCredentials !==
+    undefined || window.XDomainRequest && xhr instanceof window.XDomainRequest) {
     return true;
   }
-}
-;
+};
 
 exports.transports = {};
 var transports = exports.transports;
 
 exports.chooseTransport = function (url, options) {
   switch (options.preferredTransport) {
-  case 'jsonp':
-    return transports.jsonp;
-  case 'xhr':
-  default:
-    if (canUseXHR(url)) {
-      return transports.xhr;
-    }
-    ;
-    return transports.jsonp;
+    case 'jsonp':
+      return transports.jsonp;
+    case 'xhr':
+    default:
+      if (canUseXHR(url)) {
+        return transports.xhr;
+      };
+      return transports.jsonp;
   }
 };
-
 
 // TODO: would be nice to use these somewhere...
 var PARAMS = {
@@ -159,76 +136,67 @@ var PARAMS = {
 };
 
 exports.Transport = class {
-  handshake(url, options) {
+  handshake (url, options) {
     throw new Error('handshake Not Implemented');
   }
-  comet(url, sessionKey, lastEventId, options) {
+  comet (url, sessionKey, lastEventId, options) {
     throw new Error('comet Not Implemented');
   }
-  send(url, sessionKey, data, options) {
+  send (url, sessionKey, data, options) {
     throw new Error('send Not Implemented');
   }
-  encodePacket(packetId, data, options) {
+  encodePacket (packetId, data, options) {
     throw new Error('encodePacket Not Implemented');
   }
-  abort() {
+  abort () {
     throw new Error('abort Not Implemented');
   }
 };
 
 class baseTransport extends exports.Transport {
-  constructor() {
+  constructor () {
     super();
 
     this._aborted = false;
     this._handshakeArgs = { ct: 'application/javascript' };
     this._handshakeData = '{}';
   }
-  handshake(url, options) {
+  handshake (url, options) {
     logger.debug('handshake:', url, options);
-    this._makeRequest('send', url + '/handshake', this._handshakeArgs, this._handshakeData, this.handshakeSuccess, this.handshakeFailure);
+    this._makeRequest('send', url + '/handshake', this._handshakeArgs, this
+      ._handshakeData, this.handshakeSuccess, this.handshakeFailure);
   }
-  comet(url, sessionKey, lastEventId, options) {
+  comet (url, sessionKey, lastEventId, options) {
     logger.debug('comet:', url, sessionKey, lastEventId, options);
     var args = {
       s: sessionKey,
       a: lastEventId
     };
-    this._makeRequest('comet', url + '/comet', args, null, this.cometSuccess, this.cometFailure);
+    this._makeRequest('comet', url + '/comet', args, null, this.cometSuccess,
+      this.cometFailure);
   }
-  send(url, sessionKey, lastEventId, data, options) {
-    //logger.debug('send:', url, sessionKey, data, options);
+  send (url, sessionKey, lastEventId, data, options) {
+    // logger.debug('send:', url, sessionKey, data, options);
     var args = {
       s: sessionKey,
       a: lastEventId
     };
-    this._makeRequest('send', url + '/send', args, data, this.sendSuccess, this.sendFailure);
+    this._makeRequest('send', url + '/send', args, data, this.sendSuccess,
+      this.sendFailure);
   }
 }
 
-
-function onReadyStateChange(xhr, rType, cb, eb) {
+function onReadyStateChange (xhr, rType, cb, eb) {
   try {
     var data = { status: xhr.status };
   } catch (e) {
     eb({ response: 'Could not access status' });
   }
 
-
-
-
-
-
-
-
-
   try {
     if (xhr.readyState != 4) {
       return;
     }
-
-
-
 
     data.response = eval(xhr.responseText);
     if (data.status != 200) {
@@ -236,9 +204,6 @@ function onReadyStateChange(xhr, rType, cb, eb) {
       eb(data);
       return;
     }
-
-
-
 
     logger.debug('XHR data received');
   } catch (e) {
@@ -249,21 +214,11 @@ function onReadyStateChange(xhr, rType, cb, eb) {
     return;
   }
 
-
-
-
-
-
-
-
-
   cb(data);
-}
-;
-
+};
 
 transports.xhr = class extends baseTransport {
-  constructor() {
+  constructor () {
     super();
 
     this._xhr = {
@@ -271,7 +226,7 @@ transports.xhr = class extends baseTransport {
       'comet': new exports.XHR()
     };
   }
-  abort() {
+  abort () {
     this._aborted = true;
     for (var i in this._xhr) {
       if (this._xhr.hasOwnProperty(i)) {
@@ -279,7 +234,7 @@ transports.xhr = class extends baseTransport {
       }
     }
   }
-  _abortXHR(type) {
+  _abortXHR (type) {
     logger.debug('aborting XHR');
 
     var xhr = this._xhr[type];
@@ -296,18 +251,10 @@ transports.xhr = class extends baseTransport {
       logger.debug('error aborting xhr', e);
     }
 
-
-
-
-
-
-
-
-
     // do not reuse aborted XHRs
     this._xhr[type] = new exports.XHR();
   }
-  encodePacket(packetId, data, options) {
+  encodePacket (packetId, data, options) {
     // we don't need to base64 encode things unless there's a null character in there
     return !xhrSupportsBinary ? [
       packetId,
@@ -319,7 +266,7 @@ transports.xhr = class extends baseTransport {
       data
     ];
   }
-  _makeRequest(rType, url, args, data, cb, eb) {
+  _makeRequest (rType, url, args, data, cb, eb) {
     if (this._aborted) {
       return;
     }
@@ -332,7 +279,8 @@ transports.xhr = class extends baseTransport {
       xhr.onload = bind(this, onReadyStateChange, xhr, rType, cb, eb);
       xhr.onerror = xhr.ontimeout = eb;
     } else if ('onreadystatechange' in xhr) {
-      xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, rType, cb, eb);
+      xhr.onreadystatechange = bind(this, onReadyStateChange, xhr, rType,
+        cb, eb);
     }
     // NOTE WELL: Firefox (and probably everyone else) likes to encode our nice
     //						binary strings as utf8. Don't let them! Say no to double utf8
@@ -346,8 +294,8 @@ transports.xhr = class extends baseTransport {
   }
 };
 
-var EMPTY_FUNCTION = function () {
-  }, SLICE = Array.prototype.slice;
+var EMPTY_FUNCTION = function () {},
+  SLICE = Array.prototype.slice;
 
 (function () {
   var doc;
@@ -358,13 +306,11 @@ var EMPTY_FUNCTION = function () {
       return false;
     }
 
-
-
-
     var i = doc.createElement('iframe');
 
     i.style.display = 'block';
-    i.style.width = i.style.height = i.style.border = i.style.margin = i.style.padding = '0';
+    i.style.width = i.style.height = i.style.border = i.style.margin = i.style
+      .padding = '0';
     i.style.overflow = i.style.visibility = 'hidden';
     i.style.position = 'absolute';
     i.style.top = i.style.left = '-999px';
@@ -376,16 +322,14 @@ var EMPTY_FUNCTION = function () {
   };
 
   var cleanupIframe = function (ifr) {
-    var win = ifr.contentWindow, doc = win.document;
+    var win = ifr.contentWindow,
+      doc = win.document;
     logger.debug('removing script tags');
 
     var scripts = doc.getElementsByTagName('script');
     for (var i = scripts.length - 1; i >= 0; --i) {
       doc.body.removeChild(scripts[i]);
     }
-
-
-
 
     logger.debug('deleting iframe callbacks');
     win['cb' + ifr.cbId] = win['eb' + ifr.cbId] = EMPTY_FUNCTION;
@@ -399,7 +343,7 @@ var EMPTY_FUNCTION = function () {
     }, 60000);
   };
 
-  function onSuccess(req, response) {
+  function onSuccess (req, response) {
     logger.debug('successful: ', req.url, response);
     req.completed = true;
 
@@ -411,23 +355,16 @@ var EMPTY_FUNCTION = function () {
     logger.debug('cb called');
   }
 
-
-
-
   // IE6/7 onReadyStateChange
-  function onReadyStateChange(req, scriptTag) {
+  function onReadyStateChange (req, scriptTag) {
     if (scriptTag && scriptTag.readyState != 'loaded') {
       return;
     }
-    scriptTag.onreadystatechange = function () {
-    };
+    scriptTag.onreadystatechange = function () {};
     checkForError.call(this, req);
   }
 
-
-
-
-  function checkForError(req, response) {
+  function checkForError (req, response) {
     cleanupIframe(this._ifr[req.type]);
 
     if (!req.completed) {
@@ -442,28 +379,22 @@ var EMPTY_FUNCTION = function () {
     }
   }
 
+  var killLoadingBar = BrowserDetect.isFirefox || BrowserDetect.isOpera ?
+    function () {
+      var b = document.body;
+      if (!b) {
+        return;
+      }
 
-
-
-  var killLoadingBar = BrowserDetect.isFirefox || BrowserDetect.isOpera ? function () {
-    var b = document.body;
-    if (!b) {
-      return;
-    }
-
-
-
-
-    if (!killLoadingBar.iframe) {
-      killLoadingBar.iframe = document.createElement('iframe');
-    }
-    b.insertBefore(killLoadingBar.iframe, b.firstChild);
-    b.removeChild(killLoadingBar.iframe);
-  } : function () {
-  };
+      if (!killLoadingBar.iframe) {
+        killLoadingBar.iframe = document.createElement('iframe');
+      }
+      b.insertBefore(killLoadingBar.iframe, b.firstChild);
+      b.removeChild(killLoadingBar.iframe);
+    } : function () {};
 
   transports.jsonp = class extends baseTransport {
-    constructor() {
+    constructor () {
       super();
 
       this._onReady = [];
@@ -471,7 +402,7 @@ var EMPTY_FUNCTION = function () {
 
       this._createIframes();
     }
-    _createIframes() {
+    _createIframes () {
       this._ifr = {
         send: createIframe(),
         comet: createIframe()
@@ -481,9 +412,6 @@ var EMPTY_FUNCTION = function () {
         return setTimeout(bind(this, '_createIframes'), 100);
       }
 
-
-
-
       this._isReady = true;
 
       var readyArgs = this._onReady;
@@ -492,14 +420,14 @@ var EMPTY_FUNCTION = function () {
         this._makeRequest.apply(this, args);
       }
     }
-    encodePacket(packetId, data, options) {
+    encodePacket (packetId, data, options) {
       return [
         packetId,
         1,
         base64.encode(data)
       ];
     }
-    abort() {
+    abort () {
       this._aborted = true;
       for (var i in this._ifr) {
         if (this._ifr.hasOwnProperty(i)) {
@@ -509,15 +437,14 @@ var EMPTY_FUNCTION = function () {
         }
       }
     }
-    _makeRequest(rType, url, args, data, cb, eb) {
+    _makeRequest (rType, url, args, data, cb, eb) {
       if (!this._isReady) {
         return this._onReady.push(arguments);
       }
 
-
-
-
-      var ifr = this._ifr[rType], id = ++ifr.cbId, req = {
+      var ifr = this._ifr[rType],
+        id = ++ifr.cbId,
+        req = {
           type: rType,
           id: id,
           cb: cb,
@@ -530,23 +457,26 @@ var EMPTY_FUNCTION = function () {
       args.d = data;
       args.n = Math.random();
       switch (rType) {
-      case 'send':
-        args.rs = ';';
-        args.rp = req.cbName;
-        break;
-      case 'comet':
-        args.bs = ';';
-        args.bp = req.cbName;
-        break;
+        case 'send':
+          args.rs = ';';
+          args.rp = req.cbName;
+          break;
+        case 'comet':
+          args.bs = ';';
+          args.bp = req.cbName;
+          break;
       }
 
       req.url = url + '?' + uri.buildQuery(args);
 
       setTimeout(bind(this, '_request', req), 0);
     }
-    _request(req) {
-      var ifr = this._ifr[req.type], win = ifr.contentWindow, doc = win.document, body = doc.body;
-      /*added by skysbird for opera support*/
+    _request (req) {
+      var ifr = this._ifr[req.type],
+        win = ifr.contentWindow,
+        doc = win.document,
+        body = doc.body;
+      /* added by skysbird for opera support*/
       if (!body) {
         return setTimeout(bind(this, '_request', req), 100);
       }
@@ -556,7 +486,8 @@ var EMPTY_FUNCTION = function () {
       if (BrowserDetect.isWebKit) {
         // this will probably cause loading bars in Safari -- might want to rethink?
         doc.open();
-        doc.write('<scr' + 'ipt src="' + req.url + '"></scr' + 'ipt><scr' + 'ipt>' + ebName + '(false)</scr' + 'ipt>');
+        doc.write('<scr' + 'ipt src="' + req.url + '"></scr' + 'ipt><scr' +
+          'ipt>' + ebName + '(false)</scr' + 'ipt>');
         doc.close();
       } else {
         var s = doc.createElement('script');
@@ -575,13 +506,9 @@ var EMPTY_FUNCTION = function () {
         }
       }
 
-
-
-
       killLoadingBar();
     }
   };
-
 }());
 
 export default exports;

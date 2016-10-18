@@ -16,7 +16,7 @@ let exports = {};
  * Technical contact: Christopher A. Taylor <chris@gameclosure.com>
  */
 class RNG {
-  constructor(seed) {
+  constructor (seed) {
     // If seed was not specified,
     if (typeof seed != 'number') {
       var mrx = Math.random() * 4294967296;
@@ -24,16 +24,10 @@ class RNG {
       seed = mrx ^ mry;
     }
 
-
-
-
     // XOR Shift
     if (seed !== 234567891) {
       this.x = seed ^ 234567891;
     }
-
-
-
 
     // Weyl Generator
     this.y = seed ^ 123456789;
@@ -43,7 +37,7 @@ class RNG {
     this.w = 456789123 >>> 0;
     this.c = 0;
   }
-  uint32() {
+  uint32 () {
     // XOR Shift
     var x = this.x;
     x ^= x << 5;
@@ -66,39 +60,33 @@ class RNG {
 
     return x + y + w >>> 0;
   }
-  uint31() {
+  uint31 () {
     return this.uint32() >>> 1;
   }
-  random() {
+  random () {
     return this.uint32() * (1 / 4294967296);
   }
-  rangeReal(a, b) {
+  rangeReal (a, b) {
     return this.uint32() * (1 / 4294967296) * (b - a) + a;
   }
-  rangeInteger(a, b) {
+  rangeInteger (a, b) {
     return this.uint32() * (1 / 4294967296) * (b - a) + a + 0.5 >>> 0;
   }
-  normal() {
-    var u1 = 0, u2 = 0;
+  normal () {
+    var u1 = 0,
+      u2 = 0;
 
     while (u1 * u2 == 0) {
       u1 = this.random();
       u2 = this.random();
     }
 
-
-
-
-
-
-
-
     return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   }
-  gaussian(mean, stddev) {
+  gaussian (mean, stddev) {
     return stddev * this.normal() + mean;
   }
-  gaussianClamp(mean, stddev, clamp_lo, clamp_hi) {
+  gaussianClamp (mean, stddev, clamp_lo, clamp_hi) {
     var x = stddev * this.normal() + mean;
 
     // Clamp to range
@@ -110,13 +98,9 @@ class RNG {
       }
     }
 
-
-
-
     return x;
   }
 }
-
 
 /**
  * Module API.

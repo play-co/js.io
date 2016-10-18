@@ -13,10 +13,11 @@ import Errors from 'net/errors';
  * @extends net.interfaces.Connector
  */
 exports.Connector = class extends interfaces.Connector {
-  connect() {
+  connect () {
     this._state = interfaces.STATE.CONNECTING;
 
-    var url = this._opts.url, ctor = this._opts.wsConstructor || window.WebSocket;
+    var url = this._opts.url,
+      ctor = this._opts.wsConstructor || window.WebSocket;
 
     logger.info('this._opts', this._opts);
 
@@ -24,26 +25,26 @@ exports.Connector = class extends interfaces.Connector {
     ws.onopen = bind(this, 'webSocketOnOpen', ws);
     ws.onclose = bind(this, 'webSocketOnClose', ws);
   }
-  webSocketOnOpen(ws) {
+  webSocketOnOpen (ws) {
     this.onConnect(new Transport(ws));
   }
-  webSocketOnClose(ws, e) {
+  webSocketOnClose (ws, e) {
     var err, data = {
         rawError: e,
         webSocket: ws
       };
     if (e.wasClean) {
-      err = new Errors.ServerClosedConnection('WebSocket Connection Closed', data);
+      err = new Errors.ServerClosedConnection('WebSocket Connection Closed',
+        data);
     } else {
       if (this._state == interfaces.STATE.CONNECTED) {
-        err = new Errors.ConnectionTimeout('WebSocket Connection Timed Out', data);
+        err = new Errors.ConnectionTimeout('WebSocket Connection Timed Out',
+          data);
       } else {
-        err = new Errors.ServerUnreachable('WebSocket Connection Failed', data);
+        err = new Errors.ServerUnreachable('WebSocket Connection Failed',
+          data);
       }
     }
-
-
-
 
     logger.debug('conn closed', err);
     this.onDisconnect(err);
@@ -51,25 +52,25 @@ exports.Connector = class extends interfaces.Connector {
 };
 
 class Transport extends interfaces.Transport {
-  constructor(ws) {
+  constructor (ws) {
     super();
 
     this._ws = ws;
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     this._ws.onmessage = function (data) {
       var payload = utf8.encode(data.data);
       protocol.dataReceived(payload);
     };
   }
-  write(data, encoding) {
+  write (data, encoding) {
     if (this._encoding == 'plain') {
       result = utf8.decode(data);
       data = result[0];
     }
     this._ws.send(data);
   }
-  loseConnection(protocol) {
+  loseConnection (protocol) {
     this._ws.close();
   }
 }

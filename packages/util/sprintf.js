@@ -6,7 +6,7 @@ let exports = {};
 // Seems to be an MIT-like license, with linking in source code required
 // License:
 //   As long as you leave the copyright notice of the original script, or link
-//   back to this website, you can use any of the content published on this 
+//   back to this website, you can use any of the content published on this
 //   website free of charge for any use: commercial or noncommercial.
 //   (http://www.webtoolkit.info/licence.html 9/18/09)
 // there was no original copyright notice in the code. just a link to:
@@ -26,11 +26,9 @@ var sprintfWrapper = {
       return null;
     }
 
-
-
-
     var string = arguments[0];
-    var exp = new RegExp(/(%([%]|(\-)?(\+|\x20)?(0)?(\d+)?(\.(\d)?)?([bcdfosxX])))/g);
+    var exp = new RegExp(
+      /(%([%]|(\-)?(\+|\x20)?(0)?(\d+)?(\.(\d)?)?([bcdfosxX])))/g);
     var matches = new Array();
     var strings = new Array();
     var convCount = 0;
@@ -45,12 +43,10 @@ var sprintfWrapper = {
         convCount += 1;
       }
 
-
-
-
       stringPosStart = matchPosEnd;
       stringPosEnd = exp.lastIndex - match[0].length;
-      strings[strings.length] = string.substring(stringPosStart, stringPosEnd);
+      strings[strings.length] = string.substring(stringPosStart,
+        stringPosEnd);
 
       matchPosEnd = exp.lastIndex;
       matches[matches.length] = {
@@ -62,7 +58,8 @@ var sprintfWrapper = {
         precision: match[8],
         code: match[9] || '%',
         negative: parseInt(arguments[convCount]) < 0 ? true : false,
-        argument: typeof arguments[convCount] == 'object' ? JSON.stringify(arguments[convCount]) : String(arguments[convCount])
+        argument: typeof arguments[convCount] == 'object' ? JSON.stringify(
+          arguments[convCount]) : String(arguments[convCount])
       };
     }
     strings[strings.length] = string.substring(matchPosEnd);
@@ -74,9 +71,6 @@ var sprintfWrapper = {
       return null;
     }
 
-
-
-
     var code = null;
     var match = null;
     var i = null;
@@ -85,140 +79,46 @@ var sprintfWrapper = {
       if (matches[i].code == '%') {
         substitution = '%';
       } else if (matches[i].code == 'b') {
-        matches[i].argument = String(Math.abs(parseInt(matches[i].argument)).toString(2));
+        matches[i].argument = String(Math.abs(parseInt(matches[i].argument))
+          .toString(2));
         substitution = sprintfWrapper.convert(matches[i], true);
       } else if (matches[i].code == 'c') {
-        matches[i].argument = String(String.fromCharCode(parseInt(Math.abs(parseInt(matches[i].argument)))));
+        matches[i].argument = String(String.fromCharCode(parseInt(Math.abs(
+          parseInt(matches[i].argument)))));
         substitution = sprintfWrapper.convert(matches[i], true);
       } else if (matches[i].code == 'd') {
         matches[i].argument = String(Math.abs(parseInt(matches[i].argument)));
         substitution = sprintfWrapper.convert(matches[i]);
       } else if (matches[i].code == 'f') {
-        matches[i].argument = String(Math.abs(parseFloat(matches[i].argument)).toFixed(matches[i].precision ? matches[i].precision : 6));
+        matches[i].argument = String(Math.abs(parseFloat(matches[i].argument))
+          .toFixed(matches[i].precision ? matches[i].precision : 6));
         substitution = sprintfWrapper.convert(matches[i]);
       } else if (matches[i].code == 'o') {
-        matches[i].argument = String(Math.abs(parseInt(matches[i].argument)).toString(8));
+        matches[i].argument = String(Math.abs(parseInt(matches[i].argument))
+          .toString(8));
         substitution = sprintfWrapper.convert(matches[i]);
       } else if (matches[i].code == 's') {
-        matches[i].argument = matches[i].argument.substring(0, matches[i].precision ? matches[i].precision : matches[i].argument.length);
+        matches[i].argument = matches[i].argument.substring(0, matches[i].precision ?
+          matches[i].precision : matches[i].argument.length);
         substitution = sprintfWrapper.convert(matches[i], true);
       } else if (matches[i].code == 'x') {
-        matches[i].argument = String(Math.abs(parseInt(matches[i].argument)).toString(16));
+        matches[i].argument = String(Math.abs(parseInt(matches[i].argument))
+          .toString(16));
         substitution = sprintfWrapper.convert(matches[i]);
       } else if (matches[i].code == 'X') {
-        matches[i].argument = String(Math.abs(parseInt(matches[i].argument)).toString(16));
+        matches[i].argument = String(Math.abs(parseInt(matches[i].argument))
+          .toString(16));
         substitution = sprintfWrapper.convert(matches[i]).toUpperCase();
       } else {
         substitution = matches[i].match;
       }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       newString += strings[i];
       newString += substitution;
-
     }
     newString += strings[i];
 
     return newString;
-
   },
   convert: function (match, nosign) {
     if (nosign) {

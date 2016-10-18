@@ -16,12 +16,9 @@ var gSrcTable = {};
 var gDynamicList = {};
 var gCompilerOpts = {};
 
-function testComment(match) {
+function testComment (match) {
   return !/\/\//.test(match[1]);
 }
-
-
-
 
 exports = function (path, moduleDef, opts) {
   opts = opts || {};
@@ -30,9 +27,6 @@ exports = function (path, moduleDef, opts) {
     moduleDef.src = '';
     return;
   }
-
-
-
 
   logger.info('compiling', moduleDef.path);
   checkDynamicImports(moduleDef);
@@ -61,9 +55,6 @@ exports = function (path, moduleDef, opts) {
     }
   }
 
-
-
-
   var jsioNormal = /^(.*)jsio\s*\(\s*(['"].+?['"])\s*(,\s*\{[^}]+\})?\)/gm;
   while (true) {
     var match = jsioNormal.exec(moduleDef.src);
@@ -74,12 +65,10 @@ exports = function (path, moduleDef, opts) {
       continue;
     }
 
-
-
-
     logger.debug(moduleDef.path, 'detected', match[0]);
 
-    var cmd = match[2], inlineOpts = match[3] ? match[3].substring(1) : '';
+    var cmd = match[2],
+      inlineOpts = match[3] ? match[3].substring(1) : '';
 
     try {
       cmd = eval(cmd);
@@ -88,31 +77,18 @@ exports = function (path, moduleDef, opts) {
       continue;
     }
 
-
-
-
-
-
-
-
-
     if (inlineOpts) {
       try {
         inlineOpts = eval('(' + inlineOpts + ')') || {};
       } catch (e) {
-        logger.warn('could not parse opts for jsio in', self + ':', inlineOpts);
+        logger.warn('could not parse opts for jsio in', self + ':',
+          inlineOpts);
       }
     }
-
-
-
 
     if (!inlineOpts) {
       inlineOpts = {};
     }
-
-
-
 
     if (gCompilerOpts.preprocessors) {
       if (!inlineOpts.preprocessors) {
@@ -126,9 +102,6 @@ exports = function (path, moduleDef, opts) {
       }
     }
 
-
-
-
     try {
       run(moduleDef, cmd, inlineOpts);
     } catch (e) {
@@ -136,18 +109,13 @@ exports = function (path, moduleDef, opts) {
     }
   }
 
-
-
-
-  var jsioDynamic = /^(.*)jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/gm;
+  var jsioDynamic =
+    /^(.*)jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/gm;
   while (true) {
     var match = jsioDynamic.exec(moduleDef.src);
     if (!match || !testComment(match)) {
       break;
     }
-
-
-
 
     var cmd = match[2];
     var inlineOpts;
@@ -156,14 +124,6 @@ exports = function (path, moduleDef, opts) {
     } catch (e) {
       inlineOpts = {};
     }
-
-
-
-
-
-
-
-
 
     if (gCompilerOpts.dynamicImports && cmd in gCompilerOpts.dynamicImports) {
       var dynamicImports = gCompilerOpts.dynamicImports[cmd];
@@ -180,12 +140,12 @@ exports = function (path, moduleDef, opts) {
         run(moduleDef, dynamicImports, inlineOpts);
       }
     } else {
-      logger.error('Missing: import definition\nConstant', cmd, 'for DYNAMIC_IMPORT_' + cmd, ' was not provided to the compiler for ', path, 'from', moduleDef.path);
+      logger.error('Missing: import definition\nConstant', cmd,
+        'for DYNAMIC_IMPORT_' + cmd,
+        ' was not provided to the compiler for ', path, 'from', moduleDef.path
+      );
     }
   }
-
-
-
 
   // store a copy of the module def (with the source code)
   gSrcTable[moduleDef.path] = merge({}, moduleDef);
@@ -217,9 +177,6 @@ exports.generateSrc = function (opts, callback) {
     opts.preCompress(gSrcTable);
   }
 
-
-
-
   var cb = bind(this, buildJsio, opts, callback);
   if (opts.compressSources) {
     compressTable(gSrcTable, opts, cb);
@@ -233,33 +190,28 @@ exports.getPathJS = function () {
 
   var cache = {};
   Object.keys(jsio.path.cache).forEach(function (key) {
-    cache[key] = replaceSlashes(path.relative(cwd, jsio.path.cache[key])) || './';
+    cache[key] = replaceSlashes(path.relative(cwd, jsio.path.cache[key])) ||
+      './';
   });
 
-  return 'jsio.path.set(' + JSON.stringify(jsio.path.get().map(function (value) {
+  return 'jsio.path.set(' + JSON.stringify(jsio.path.get().map(function (
+    value) {
     return replaceSlashes(path.relative(cwd, value));
   })) + ');jsio.path.cache=' + JSON.stringify(cache) + ';';
-
 };
 
-function replaceSlashes(str) {
+function replaceSlashes (str) {
   return str.replace(/\\+/g, '/').replace(/\/{2,}/g, '/');
 }
 
-
-
-
-function buildJsio(opts, callback) {
-  function getJsioSrc() {
+function buildJsio (opts, callback) {
+  function getJsioSrc () {
     var src = jsio.__jsio.__init__.toString(-1);
     if (src.substring(0, 8) == 'function') {
       src = 'jsio=(' + src + ')();';
     }
     return src;
   }
-
-
-
 
   var src;
   var jsioSrc = (opts.includeJsio ? getJsioSrc() : '') + exports.getPathJS();
@@ -270,11 +222,9 @@ function buildJsio(opts, callback) {
     var relPath = replaceSlashes(path.relative(cwd, entry));
     table[relPath] = gSrcTable[entry];
     table[relPath].path = relPath;
-    table[relPath].directory = replaceSlashes(path.relative(cwd, gSrcTable[entry].directory));
+    table[relPath].directory = replaceSlashes(path.relative(cwd, gSrcTable[
+      entry].directory));
   }
-
-
-
 
   // if we're not allowed to modify the jsio source or we're not including the jsio source
   // then use jsio.setCachedSrc to include the source strings
@@ -283,7 +233,8 @@ function buildJsio(opts, callback) {
 
     var lines = [];
     for (var i in table) {
-      lines.push('jsio.setCachedSrc(\'' + table[i].path + '\',' + JSON.stringify(table[i].src) + ');');
+      lines.push('jsio.setCachedSrc(\'' + table[i].path + '\',' + JSON.stringify(
+        table[i].src) + ');');
     }
     src = jsioSrc + lines.join('\n');
   } else {
@@ -291,9 +242,6 @@ function buildJsio(opts, callback) {
 
     src = jsioSrc + 'jsio.setCache(' + JSON.stringify(table) + ');';
   }
-
-
-
 
   if (opts.compressResult && gCompilerOpts.compressor) {
     logger.info('compressing final code...');
@@ -303,10 +251,7 @@ function buildJsio(opts, callback) {
   }
 }
 
-
-
-
-function compressTable(table, opts, callback) {
+function compressTable (table, opts, callback) {
   logger.info('compressing sources');
 
   var queue = [];
@@ -314,16 +259,10 @@ function compressTable(table, opts, callback) {
     queue.push(i);
   }
 
-
-
-
   compressStep(queue, table, opts, queue.pop(), callback);
 }
 
-
-
-
-function compressStep(queue, table, opts, key, callback) {
+function compressStep (queue, table, opts, key, callback) {
   if (key && gCompilerOpts.compressor) {
     logger.log('compressing', key + '...');
     gCompilerOpts.compressor(key, table[key].src, opts, function (result) {
@@ -334,13 +273,6 @@ function compressStep(queue, table, opts, key, callback) {
     callback();
   }
 }
-
-
-
-
-
-
-
 
 exports.getTable = function () {
   return gSrcTable;
@@ -353,9 +285,6 @@ exports.setCompilerOpts = function (opts) {
   if ('debugLevel' in opts) {
     logger.setLevel(opts.debugLevel);
   }
-
-
-
 
   if (opts.path) {
     if (isArray(opts.path)) {
@@ -372,14 +301,12 @@ exports.compile = function (statement, opts) {
   JSIO(statement, updateOpts(opts));
 };
 
-function run(moduleDef, cmd, opts) {
-  JSIO.__require({}, moduleDef.directory, moduleDef.filename, cmd, updateOpts(opts));
+function run (moduleDef, cmd, opts) {
+  JSIO.__require({}, moduleDef.directory, moduleDef.filename, cmd, updateOpts(
+    opts));
 }
 
-
-
-
-function updateOpts(opts) {
+function updateOpts (opts) {
   opts = opts || {};
 
   if (!opts.preprocessors) {
@@ -388,30 +315,20 @@ function updateOpts(opts) {
     opts.preprocessors.push('compiler');
   }
 
-
-
-
-
-
-
-
-
   opts.reload = true;
   opts.initialImport = true;
   return opts;
 }
 
-
-
-
-function checkDynamicImports(moduleDef) {
+function checkDynamicImports (moduleDef) {
   var directory = moduleDef.directory;
 
   // have we checked this directory for dynamic imports?
   if (!gDynamicList[directory]) {
     gDynamicList[directory] = true;
 
-    logger.info('Checking directory', directory, 'for dynamic imports... (' + gCompilerOpts.environment + ')');
+    logger.info('Checking directory', directory, 'for dynamic imports... (' +
+      gCompilerOpts.environment + ')');
 
     // try to do a commonJS-style import
     var filename = path.join(directory, '__imports__');
@@ -423,17 +340,10 @@ function checkDynamicImports(moduleDef) {
       try {
         var imports = module.resolve(gCompilerOpts.environment, gCompilerOpts);
       } catch (e) {
-        logger.error('Error running module.resolve for', filename, '\n\n', e, '\n\n');
+        logger.error('Error running module.resolve for', filename, '\n\n', e,
+          '\n\n');
         throw e;
       }
-
-
-
-
-
-
-
-
 
       if (imports && imports.forEach) {
         imports.forEach(function (imp) {
@@ -444,13 +354,11 @@ function checkDynamicImports(moduleDef) {
             opts.preprocessors = gCompilerOpts.preprocessors.slice(0);
           }
 
-
-
-
           try {
             run(moduleDef, 'import ' + imp, opts);
           } catch (e) {
-            logger.error('module', imp, 'failed to compile (requested from', filename, ')\n\n');
+            logger.error('module', imp, 'failed to compile (requested from',
+              filename, ')\n\n');
             throw e;
           }
         });
@@ -460,6 +368,5 @@ function checkDynamicImports(moduleDef) {
     }
   }
 }
-
 
 export default exports;

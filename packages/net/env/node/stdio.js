@@ -5,14 +5,14 @@ import { bind } from 'base';
 import interfaces from '../../interfaces';
 
 class Transport extends interfaces.Transport {
-  constructor(inStream, outStream) {
+  constructor (inStream, outStream) {
     super();
 
     this._inStream = inStream;
     this._outStream = outStream;
     this.setEncoding('plain');
   }
-  setEncoding(encoding) {
+  setEncoding (encoding) {
     super.setEncoding(...arguments);
     if (encoding == 'plain') {
       encoding = 'binary';
@@ -20,23 +20,22 @@ class Transport extends interfaces.Transport {
     this._inStream.setEncoding(encoding);
     this._outStream.setEncoding(encoding);
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     this._inStream.on('data', bind(protocol, 'dataReceived'));
     this._inStream.on('end', bind(protocol, 'connectionLost'));
   }
-  write(data) {
+  write (data) {
     this._outStream.write(data);
     this._outStream.flush();
   }
-  loseConnection() {
-  }
+  loseConnection () {}
 }
 
 /**
  * @extends net.interfaces.Connector
  */
 exports.Connector = class extends interfaces.Connector {
-  connect() {
+  connect () {
     var stdin = process.openStdin();
     var stdout = process.stdout;
     var transport = new Transport(stdin, stdout);

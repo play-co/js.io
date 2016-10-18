@@ -35,21 +35,21 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', trailingPad = '=', padChar = alphabet.charAt(alphabet.length - 1);
+var alphabet =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+  trailingPad = '=',
+  padChar = alphabet.charAt(alphabet.length - 1);
 
 var decodeMap = {};
 for (var i = 0, len = alphabet.length; i < len; i++) {
   decodeMap[alphabet.charAt(i)] = i;
 }
 
-
-
-
 // use this regexp in the decode function to sniff out invalid characters.
 var alphabet_inverse = new RegExp('[^' + alphabet.replace('-', '\\-') + ']');
 
 exports.Base64CodecError = class extends Error {
-  constructor(message) {
+  constructor (message) {
     super();
 
     this.message = message;
@@ -60,23 +60,24 @@ exports.Base64CodecError.prototype.name = 'Base64CodecError';
 var assertOrBadInput = function (exp, message) {
   if (!exp) {
     throw new exports.Base64CodecError(message);
-  }
-  ;
+  };
 };
 
 exports.encode = function (bytes, skipPadding) {
   assertOrBadInput(!/[^\x00-\xFF]/.test(bytes), // disallow two-byte chars
-  'Input contains out-of-range characters.');
+    'Input contains out-of-range characters.');
   var paddingSize = bytes.length % 3;
   var padding = '\0\0\0'.slice(paddingSize || 3);
   bytes += padding;
   // pad with null bytes
   var out_array = [];
   for (var i = 0, n = bytes.length; i < n; i += 3) {
-    var newchars = (bytes.charCodeAt(i) << 16) + (bytes.charCodeAt(i + 1) << 8) + bytes.charCodeAt(i + 2);
-    out_array.push(alphabet.charAt(newchars >> 18 & 63), alphabet.charAt(newchars >> 12 & 63), alphabet.charAt(newchars >> 6 & 63), alphabet.charAt(newchars & 63));
-  }
-  ;
+    var newchars = (bytes.charCodeAt(i) << 16) + (bytes.charCodeAt(i + 1) <<
+      8) + bytes.charCodeAt(i + 2);
+    out_array.push(alphabet.charAt(newchars >> 18 & 63), alphabet.charAt(
+        newchars >> 12 & 63), alphabet.charAt(newchars >> 6 & 63), alphabet
+      .charAt(newchars & 63));
+  };
 
   out_array.length -= padding.length;
   var ret = out_array.join('');
@@ -88,9 +89,6 @@ exports.encode = function (bytes, skipPadding) {
     }
   }
 
-
-
-
   return ret;
 };
 
@@ -101,26 +99,28 @@ exports.decode = function (b64text) {
   // kill whitespace
   // strip trailing pad characters from input; // XXX maybe some better way?
   var i = b64text.length;
-  while (b64text.charAt(--i) === trailingPad) {
-  }
-  ;
+  while (b64text.charAt(--i) === trailingPad) {};
   b64text = b64text.slice(0, i + 1);
 
-  assertOrBadInput(!alphabet_inverse.test(b64text), 'Input contains out-of-range characters.');
+  assertOrBadInput(!alphabet_inverse.test(b64text),
+    'Input contains out-of-range characters.');
 
-  var padLength = 4 - (b64text.length % 4 || 4), padding = Array(padLength + 1).join(padChar);
+  var padLength = 4 - (b64text.length % 4 || 4),
+    padding = Array(padLength + 1).join(padChar);
 
   b64text += padding;
 
   // pad with last letter of alphabet
-  var out_array = [], length = i + padLength + 1;
+  var out_array = [],
+    length = i + padLength + 1;
 
   // length of b64text
   for (var i = 0; i < length; i += 4) {
-    newchars = (decodeMap[b64text.charAt(i)] << 18) + (decodeMap[b64text.charAt(i + 1)] << 12) + (decodeMap[b64text.charAt(i + 2)] << 6) + decodeMap[b64text.charAt(i + 3)];
+    newchars = (decodeMap[b64text.charAt(i)] << 18) + (decodeMap[b64text.charAt(
+      i + 1)] << 12) + (decodeMap[b64text.charAt(i + 2)] << 6) + decodeMap[
+      b64text.charAt(i + 3)];
     out_array.push(newchars >> 16 & 255, newchars >> 8 & 255, newchars & 255);
-  }
-  ;
+  };
 
   length = out_array.length -= padLength;
 
@@ -129,9 +129,11 @@ exports.decode = function (b64text) {
 
   if (length > MAX_CHUNK) {
     result = [];
-    var i = 0, j = 0;
+    var i = 0,
+      j = 0;
     while (i < length) {
-      result[j++] = String.fromCharCode.apply(String, out_array.slice(i, i + MAX_CHUNK));
+      result[j++] = String.fromCharCode.apply(String, out_array.slice(i, i +
+        MAX_CHUNK));
       i += MAX_CHUNK;
     }
     result = result.join('');

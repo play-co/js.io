@@ -18,16 +18,13 @@ var attrs = [
 ];
 
 var URI = module.exports = class {
-  constructor(url, isStrict) {
+  constructor (url, isStrict) {
     if (url instanceof URI) {
       for (var i = 0, attr; attr = attrs[i]; ++i) {
         this['_' + attr] = url['_' + attr];
       }
       return;
     }
-
-
-
 
     this._isStrict = isStrict;
 
@@ -36,13 +33,13 @@ var URI = module.exports = class {
       this['_' + attr] = uriData[attr];
     }
   }
-  query(key) {
+  query (key) {
     return URI.parseQuery(this._query)[key];
   }
-  hash(key) {
+  hash (key) {
     return URI.parseQuery(this._anchor)[key];
   }
-  addHash(kvp) {
+  addHash (kvp) {
     var hash = URI.parseQuery(this._anchor);
     for (var i in kvp) {
       hash[i] = kvp[i];
@@ -50,26 +47,26 @@ var URI = module.exports = class {
     this._anchor = URI.buildQuery(hash);
     return this;
   }
-  setPath(path) {
+  setPath (path) {
     var pieces = utilPath.splitPath(path);
     this._file = pieces.filename;
     this._directory = pieces.directory;
     this._path = path;
     return this;
   }
-  setFile(file) {
+  setFile (file) {
     return this.setPath(utilPath.join(this._directory, file));
   }
-  setDirectory(directory) {
+  setDirectory (directory) {
     return this.setPath(utilPath.join(directory, this._file));
   }
-  push(path) {
+  push (path) {
     if (path) {
       this._path = (this._path + '/' + path).replace(/\/\/+/g, '/');
     }
     return this;
   }
-  addQuery(kvp) {
+  addQuery (kvp) {
     var query = URI.parseQuery(this._query);
     for (var i in kvp) {
       query[i] = kvp[i];
@@ -77,7 +74,7 @@ var URI = module.exports = class {
     this._query = URI.buildQuery(query);
     return this;
   }
-  removeQuery(keys) {
+  removeQuery (keys) {
     var query = URI.parseQuery(this._query);
     if (Array.isArray(keys)) {
       for (var i = 0, n = keys.length; i < n; ++i) {
@@ -89,20 +86,18 @@ var URI = module.exports = class {
     this._query = URI.buildQuery(query);
     return this;
   }
-  toJSON() {
+  toJSON () {
     return this.toString(false);
   }
-  toString(onlyBase) {
+  toString (onlyBase) {
     // XXX TODO: This is vaguely reasonable, but not complete. fix it...
     var a = this._protocol ? this._protocol + '://' : '';
-    var b = this._host ? this._host + ((this._port || 80) == 80 ? '' : ':' + this._port) : '';
+    var b = this._host ? this._host + ((this._port || 80) == 80 ? '' : ':' +
+      this._port) : '';
 
     if (onlyBase) {
       return a + b;
     }
-
-
-
 
     var c = this._path;
     var d = this._query ? '?' + this._query : '';
@@ -110,7 +105,6 @@ var URI = module.exports = class {
     return a + b + c + d + e;
   }
 };
-
 
 for (var i = 0, attr; attr = attrs[i]; ++i) {
   (function (attr) {
@@ -125,23 +119,14 @@ for (var i = 0, attr; attr = attrs[i]; ++i) {
   }.call(URI.prototype, attr));
 }
 
-
-
-
-
-
-
-
 URI.relativeTo = function (url, base) {
   var url = String(url);
   if (base && !/^http(s?):\/\//.test(url)) {
-    var baseURI = new URI(base).setAnchor('').setQuery('').setFile('').toString(url.charAt(0) == '/');
+    var baseURI = new URI(base).setAnchor('').setQuery('').setFile('').toString(
+      url.charAt(0) == '/');
 
     url = URI.resolveRelative(baseURI + url);
   }
-
-
-
 
   return new URI(url);
 };
@@ -150,9 +135,7 @@ URI.resolveRelative = function (url) {
   var prevUrl;
 
   // remove ../ with preceeding folder
-  while ((prevUrl = url) != (url = url.replace(/(^|\/)([^\/]+)\/\.\.\//g, '/'))) {
-  }
-  ;
+  while ((prevUrl = url) != (url = url.replace(/(^|\/)([^\/]+)\/\.\.\//g, '/'))) {};
 
   // remove ./ if it isn't preceeded by a .
   return url.replace(/[^.]\.\//g, '');
@@ -167,9 +150,12 @@ URI.buildQuery = function (kvp) {
 };
 
 URI.parseQuery = function (str) {
-  var pairs = str.split('&'), n = pairs.length, data = {};
+  var pairs = str.split('&'),
+    n = pairs.length,
+    data = {};
   for (var i = 0; i < n; ++i) {
-    var pair = pairs[i].split('='), key = decodeURIComponent(pair[0]);
+    var pair = pairs[i].split('='),
+      key = decodeURIComponent(pair[0]);
     if (key) {
       data[key] = decodeURIComponent(pair[1]);
     }
@@ -177,12 +163,13 @@ URI.parseQuery = function (str) {
   return data;
 };
 
-
 // Regexs are based on parseUri 1.2.2
 // Original: (c) Steven Levithan <stevenlevithan.com>
 // Original: MIT License
-var strictRegex = /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
-var looseRegex = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
+var strictRegex =
+  /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
+var looseRegex =
+  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
 var queryStringRegex = /(?:^|&)([^&=]*)=?([^&]*)/g;
 
 URI.parse = function (str, isStrict) {
@@ -192,9 +179,6 @@ URI.parse = function (str, isStrict) {
   for (var i = 0, attr; attr = attrs[i]; ++i) {
     result[attr] = match[i] || '';
   }
-
-
-
 
   var qs = result['queryKey'] = {};
   result['query'].replace(queryStringRegex, function (check, key, val) {

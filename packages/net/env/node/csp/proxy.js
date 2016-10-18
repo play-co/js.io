@@ -48,7 +48,9 @@ var msp = this.msp = exports;
     'close',
     'data'
   ];
-  var FRAME_OPENED = 0, FRAME_CLOSED = 1, FRAME_DATA = 2;
+  var FRAME_OPENED = 0,
+    FRAME_CLOSED = 1,
+    FRAME_DATA = 2;
   var errorCodes = {
     InvalidHandshake: 102,
     UserConnectionReset: 103,
@@ -59,18 +61,21 @@ var msp = this.msp = exports;
     ProtocolError: 110
   };
   msp.ProxyConnection = class {
-    constructor(inConnection) {
+    constructor (inConnection) {
       this.inConnection = inConnection;
       this.inBuffer = '';
       this.outConnections = {};
-      this.inConnection.addListener('receive', bind(this, this.receiveData)).addListener('eof', bind(this, this.shutdown)).addListener('disconnect', bind(this, this.shutdown)).setEncoding('bytes');
+      this.inConnection.addListener('receive', bind(this, this.receiveData))
+        .addListener('eof', bind(this, this.shutdown)).addListener(
+          'disconnect', bind(this, this.shutdown)).setEncoding('bytes');
     }
-    receiveData(data) {
+    receiveData (data) {
       var frameBegin;
       this.inBuffer += data;
       try {
         while ((frameBegin = this.inBuffer.indexOf('[')) != -1) {
-          var frameEnd = parseInt(this.inBuffer.slice(0, frameBegin)) + frameBegin;
+          var frameEnd = parseInt(this.inBuffer.slice(0, frameBegin)) +
+            frameBegin;
           cspUtil.assert(!isNaN(frameEnd), 'Invalid frame size prefix');
           if (this.inBuffer.length < frameEnd) {
             break;
@@ -80,7 +85,8 @@ var msp = this.msp = exports;
           this.inBuffer = this.inBuffer.slice(frameEnd);
           // remove frame from buffer
           // frame consists of connection id, frame type, arbitrary other arguments
-          cspUtil.assert(frame instanceof Array && frame.length >= 2, 'Invalid frame');
+          cspUtil.assert(frame instanceof Array && frame.length >= 2,
+            'Invalid frame');
           var connectionId = frame.shift();
           var frameType = frameTypes[frame.shift()];
           cspUtil.assert(frameType, 'Unrecognized frame type');
@@ -88,15 +94,13 @@ var msp = this.msp = exports;
           args.unshift(connectionId);
           // put back connection ID
           dispatchFrame[frameType].apply(this, args);
-        }
-        ;
+        };
       } catch (e) {
         debug('PROTOCOL ERROR: ', e.message || 'unknown error');
         this.shutdown(true);
-      }
-      ;
+      };
     }
-    shutdown(had_error) {
+    shutdown (had_error) {
       // close all outgoing TCP connections
       for (var connectionId in this.outConnections) {
         if (had_error) {
@@ -113,11 +117,11 @@ var msp = this.msp = exports;
       // outConn.listeners('disconnect') = [];
       ;
     }
-    send(frame) {
+    send (frame) {
       payload = JSON.stringify(frame);
       this.inConnection.send(payload.length + ',' + payload, 'bytes');
     }
-    closeOutgoing(connectionId, errorType) {
+    closeOutgoing (connectionId, errorType) {
       if (connectionId in this.outConnections) {
         var code = errorCodes[errorType];
         this.send([
@@ -127,16 +131,17 @@ var msp = this.msp = exports;
         ]);
         this.outConnections[connectionId].close();
         delete this.outConnections[connectionId];
-      }
-      ;
+      };
     }
   };
 
   msp.ProxyConnection.prototype.dispatchFrame = {
     open: function (connectionId, host, port) {
-      cspUtil.assert(!(connectionId in this.outConnections), 'OPEN frame for existing connection');
+      cspUtil.assert(!(connectionId in this.outConnections),
+        'OPEN frame for existing connection');
       cspUtil.assert(host && port, 'Invalid host or port');
-      var outConn = this.outConnections[connectionId] = node.tcp.createConnection(port, host);
+      var outConn = this.outConnections[connectionId] = node.tcp.createConnection(
+        port, host);
       outConn.setEncoding('bytes');
       outConn.addListener('connect', function () {
         this.send([
@@ -164,25 +169,23 @@ var msp = this.msp = exports;
     }
   };
   msp.Proxy = class {
-    constructor() {
+    constructor () {
       this.cspserver = csp.createServer(function (connection) {
         proxyConnection = new msp.ProxyConnection(connection);
       });
     }
-    listen(port, host) {
+    listen (port, host) {
       this.cspserver.listen(port, host);
     }
   };
-
 }());
 
 // end closure w/ code for msp
-function start_server() {
+function start_server () {
   var server = new msp.Proxy();
   server.listen(8050);
   log('Proxying from http://:8050');
-}
-;
+};
 start_server();
 
 export default exports;

@@ -12,8 +12,6 @@ import {
 exports.log = jsio.__env.log;
 exports.GLOBAL = jsio.__env.global;
 
-
-
 /**
  * Various polyfill methods to ensure js.io implementations provide
  * a baseline of JavaScript functionality. Feature compatibility (localStorage,
@@ -26,9 +24,7 @@ if (!Array.isArray) {
   Array.isArray = function (arg) {
     return Object.prototype.toString.call(arg) === '[object Array]';
   };
-}
-;
-
+};
 
 // Function.prototype.bind
 // Not available before ECMAScript 5.
@@ -37,15 +33,17 @@ if (!Function.prototype.bind) {
   Function.prototype.bind = function (oThis) {
     if (typeof this !== 'function') {
       // closest thing possible to the ECMAScript 5 internal IsCallable function
-      throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+      throw new TypeError(
+        'Function.prototype.bind - what is trying to be bound is not callable'
+      );
     }
 
-
-
-
-    var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {
-      }, fBound = function () {
-        return fToBind.apply(this instanceof fNOP ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+      fToBind = this,
+      fNOP = function () {},
+      fBound = function () {
+        return fToBind.apply(this instanceof fNOP ? this : oThis, aArgs.concat(
+          Array.prototype.slice.call(arguments)));
       };
 
     fNOP.prototype = this.prototype;
@@ -54,13 +52,6 @@ if (!Function.prototype.bind) {
     return fBound;
   };
 }
-
-
-
-
-
-
-
 
 /**
  * DEPRECATED. Old js.io polyfills.
@@ -77,37 +68,33 @@ if (typeof Array.isArray === 'function') {
   };
 }
 
-
-
-
 exports.bind = function (context, method)
   /*, VARGS*/
   {
-    if (arguments.length > 2) {
-      var args = SLICE.call(arguments, 2);
-      return typeof method == 'string' ? function __bound() {
-        if (context[method]) {
-          return context[method].apply(context, args.concat(SLICE.call(arguments, 0)));
-        } else {
-          throw logger.error('No method:', method, 'for context', context);
-        }
-      } : function __bound() {
-        return method.apply(context, args.concat(SLICE.call(arguments, 0)));
-      };
-    } else {
-      return typeof method == 'string' ? function __bound() {
-        if (context[method]) {
-          return context[method].apply(context, arguments);
-        } else {
-          throw logger.error('No method:', method, 'for context', context);
-        }
-      } : function __bound() {
-        return method.apply(context, arguments);
-      };
-    }
+  if (arguments.length > 2) {
+    var args = SLICE.call(arguments, 2);
+    return typeof method == 'string' ? function __bound () {
+      if (context[method]) {
+        return context[method].apply(context, args.concat(SLICE.call(
+            arguments, 0)));
+      } else {
+        throw logger.error('No method:', method, 'for context', context);
+      }
+    } : function __bound () {
+      return method.apply(context, args.concat(SLICE.call(arguments, 0)));
+    };
+  } else {
+    return typeof method == 'string' ? function __bound () {
+      if (context[method]) {
+        return context[method].apply(context, arguments);
+      } else {
+        throw logger.error('No method:', method, 'for context', context);
+      }
+    } : function __bound () {
+      return method.apply(context, arguments);
+    };
   }
-;
-
+};
 
 /**
  * Class constructor.
@@ -119,8 +106,7 @@ exports.Class = function (name, parent, proto) {
 };
 
 exports.__class__ = function (cls, name, parent, proto) {
-  var clsProto = function () {
-  };
+  var clsProto = function () {};
   var logger;
 
   if (typeof name != 'string') {
@@ -129,15 +115,9 @@ exports.__class__ = function (cls, name, parent, proto) {
     name = null;
   }
 
-
-
-
   if (name) {
     logger = exports.logging.get(name);
   }
-
-
-
 
   if (!parent) {
     throw new Error('parent or prototype not provided');
@@ -146,9 +126,6 @@ exports.__class__ = function (cls, name, parent, proto) {
     proto = parent;
     parent = null;
   }
-
-
-
 
   if (parent) {
     if (exports.isArray(parent)) {
@@ -173,9 +150,6 @@ exports.__class__ = function (cls, name, parent, proto) {
     }
   }
 
-
-
-
   var supr = parent ? function (context, method, args) {
     var f = parent.prototype[method];
     if (!f) {
@@ -194,16 +168,14 @@ exports.__class__ = function (cls, name, parent, proto) {
   return cls;
 };
 
-var ErrorParentClass = exports.__class__(function ErrorCls() {
+var ErrorParentClass = exports.__class__(function ErrorCls () {
   var err = Error.prototype.constructor.apply(this, arguments);
   for (var prop in err) {
     if (err.hasOwnProperty(prop)) {
       this[prop] = err[prop];
     }
   }
-}, function () {
-});
-
+}, function () {});
 
 /**
  * Merge two objects together.
@@ -220,25 +192,9 @@ exports.merge = function (base, extra) {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return base;
 };
 exports.Class.defaults = exports.merge;
-
 
 /**
  * Create a timer delay.
@@ -257,14 +213,12 @@ exports.delay = function (orig, timeout) {
     }
     _timer = setTimeout(f, timeout || 0);
   };
-}
-;
-
+};
 
 /**
  * Log constructor and default "logger".
  */
-exports.logging = function () {
+exports.logging = (function () {
   // logging namespace, this is what is exported
   var logging = {
     DEBUG: 1,
@@ -292,7 +246,8 @@ exports.logging = function () {
   };
 
   logging.get = function (name) {
-    var logger = name in _loggers ? _loggers[name] : _loggers[name] = new Logger(name);
+    var logger = name in _loggers ? _loggers[name] : _loggers[name] = new Logger(
+      name);
     logger.setProduction(_production);
     return logger;
   };
@@ -309,7 +264,7 @@ exports.logging = function () {
     ctx.logger = logging.get(pkg);
   };
 
-  var Logger = exports.__class__(function Logger(name, level) {
+  var Logger = exports.__class__(function Logger (name, level) {
     this._name = name;
     this._isProduction = _production;
 
@@ -327,9 +282,6 @@ exports.logging = function () {
         level = logging.NONE;
       }
 
-
-
-
       this.DEBUG = level <= logging.DEBUG;
       this.LOG = level <= logging.LOG;
       this.INFO = level <= logging.INFO;
@@ -337,25 +289,19 @@ exports.logging = function () {
       this.ERROR = level <= logging.ERROR;
     };
 
-    function makeLogger(type) {
+    function makeLogger (type) {
       var level = logging[type];
       return function () {
         if (!this._isProduction && level >= this._level) {
           var prefix = type + ' ' + _prefix + this._name;
           var listener = this._listener || exports.log;
 
-          return listener && listener.apply(this._listener, [prefix].concat(SLICE.call(arguments)));
+          return listener && listener.apply(this._listener, [prefix].concat(
+            SLICE.call(arguments)));
         }
         return arguments[0];
       };
     }
-
-
-
-
-
-
-
 
     this.setListener = function (listener) {
       this._listener = listener;
@@ -369,9 +315,8 @@ exports.logging = function () {
   });
 
   return logging;
-}();
+}());
 
 var logger = exports.logging.get('jsiocore');
-
 
 export default exports;

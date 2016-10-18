@@ -10,24 +10,21 @@ import PubSub from '../lib/PubSub';
 var ctx = jsio.__env.global;
 
 exports.Protocol = class {
-  connectionMade(isReconnect) {
-  }
-  dataReceived(data) {
-  }
-  connectionLost(reason) {
-  }
-  _connectionMade() {
+  connectionMade (isReconnect) {}
+  dataReceived (data) {}
+  connectionLost (reason) {}
+  _connectionMade () {
     this._isConnected = true;
     this.connectionMade.apply(this, arguments);
   }
-  _connectionLost() {
+  _connectionLost () {
     this._isConnected = false;
     this.connectionLost.apply(this, arguments);
   }
-  isConnected() {
+  isConnected () {
     return !!this._isConnected;
   }
-  end() {
+  end () {
     if (this.transport) {
       this.transport.loseConnection();
     }
@@ -36,10 +33,10 @@ exports.Protocol = class {
 
 exports.Protocol.prototype._isConnected = false;
 exports.Client = class {
-  constructor(protocol) {
+  constructor (protocol) {
     this._protocol = protocol;
   }
-  connect(transportName, opts) {
+  connect (transportName, opts) {
     this._remote = new this._protocol();
     this._remote._client = this;
     net.connect(this._remote, transportName, opts);
@@ -48,28 +45,28 @@ exports.Client = class {
 
 // Sort of like a twisted factory
 exports.Server = class {
-  constructor(protocolClass) {
+  constructor (protocolClass) {
     this._protocolClass = protocolClass;
   }
-  buildProtocol() {
+  buildProtocol () {
     return new this._protocolClass();
   }
-  listen(transportName, opts) {
+  listen (transportName, opts) {
     return net.listen(this, transportName, opts);
   }
 };
 
 exports.Transport = class {
-  write(data, encoding) {
+  write (data, encoding) {
     throw new Error('Not implemented');
   }
-  getPeer() {
+  getPeer () {
     throw new Error('Not implemented');
   }
-  setEncoding(encoding) {
+  setEncoding (encoding) {
     this._encoding = encoding;
   }
-  getEncoding() {
+  getEncoding () {
     return this._encoding;
   }
 };
@@ -77,14 +74,14 @@ exports.Transport = class {
 exports.Transport.prototype._encoding = 'plain';
 // emits 'error' event if listen fails
 exports.Listener = class extends PubSub {
-  constructor(server, opts) {
+  constructor (server, opts) {
     super();
 
     this._server = server;
     this._opts = opts || {};
   }
-  onConnect(transport) {
-    //try {
+  onConnect (transport) {
+    // try {
     var p = this._server.buildProtocol();
     p.transport = transport;
     p.server = this._server;
@@ -92,24 +89,23 @@ exports.Listener = class extends PubSub {
     transport.makeConnection(p);
     p._connectionMade();
   }
-  listen() {
+  listen () {
     throw new Error('Abstract class');
   }
-  stop() {
-  }
+  stop () {}
 };
 
 exports.STATE = Enum('INITIAL', 'DISCONNECTED', 'CONNECTING', 'CONNECTED');
 exports.Connector = class {
-  constructor(protocol, opts) {
+  constructor (protocol, opts) {
     this._protocol = protocol;
     this._opts = opts;
     this._state = exports.STATE.INITIAL;
   }
-  getState() {
+  getState () {
     return this._state;
   }
-  onConnect(transport) {
+  onConnect (transport) {
     this._state = exports.STATE.CONNECTED;
 
     transport.makeConnection(this._protocol);
@@ -120,7 +116,7 @@ exports.Connector = class {
       throw logger.error(e);
     }
   }
-  onDisconnect(err) {
+  onDisconnect (err) {
     var wasConnected = this._state == exports.STATE.CONNECTED;
     this._state = exports.STATE.DISCONNECTED;
 
@@ -130,7 +126,7 @@ exports.Connector = class {
       throw logger.error(e);
     }
   }
-  getProtocol() {
+  getProtocol () {
     return this._protocol;
   }
 };

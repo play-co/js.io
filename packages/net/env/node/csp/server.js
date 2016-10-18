@@ -45,7 +45,8 @@ import cspUtil from './util';
 var http = require('http');
 var nodeUrl = require('url');
 
-var sessionDict = {}, varNames = {
+var sessionDict = {},
+  varNames = {
     // per session
     'ct': 'contentType',
     'ps': 'prebufferSize',
@@ -68,7 +69,7 @@ var sessionDict = {}, varNames = {
 var updatedHeaders = new Hash('gzipOk', 'contentType');
 
 exports.Session = class {
-  constructor() {
+  constructor () {
     // this.lastAck = 0; // 'a' variable
     this.key = uuid.uuid(8);
     // generate 8-character base-62 UUID
@@ -102,17 +103,19 @@ exports.Session = class {
     };
     this.resetTimeoutTimer();
   }
-  teardownSession() {
+  teardownSession () {
     clearTimeout(this.durationTimer);
-    this.connection.readyState = this.connection.readyState === 'open' ? 'writeOnly' : 'closed';
+    this.connection.readyState = this.connection.readyState === 'open' ?
+      'writeOnly' : 'closed';
     this.connection.emit('eof');
     // XXX when the client calls close, do we want to allow the server to
     // keep sending them stuff, write only? And what about when they time out?
     delete sessionDict[this.key];
   }
-  send(data) {
+  send (data) {
     // base64-encode any string data with control characters or non-ASCII
-    var packet = typeof data === 'string' && /[^\r\n\t\x32-\x7E]/.test(data) ? [
+    var packet = typeof data === 'string' && /[^\r\n\t\x32-\x7E]/.test(data) ?
+    [
       this.outgoingPacketId,
       1,
       base64.encode(data)
@@ -125,27 +128,27 @@ exports.Session = class {
     this.outgoingPacketBuffer.push(packet);
     if (this.cometResponse) {
       this.sendBatch([packet]);
-    }
-    ;
+    };
   }
-  close() {
+  close () {
     // call this to close a comet connection, and stop writing to it.
     // any remaining incoming packets will still fire 'receive' events.
     this.send(null);
-    this.connection.readyState = this.connection.readyState === 'open' ? 'readOnly' : 'closed';
+    this.connection.readyState = this.connection.readyState === 'open' ?
+      'readOnly' : 'closed';
     this.connection.emit('close');
   }
-  updateVars(params) {
+  updateVars (params) {
     for (var param in params) {
       var key = varNames[param];
       if (!key)
-        continue;
+        { continue; }
       var value = params[param];
       // if gzipOk or contentType changes value, finish up any comet response with the previous values
-      if (updatedHeaders.contains(key) && value != this.variables[key] && this.cometResponse) {
+      if (updatedHeaders.contains(key) && value != this.variables[key] &&
+        this.cometResponse) {
         this.completeResponse();
-      }
-      ;
+      };
       if (key in this.variables) {
         this.variables[key] = value;
       } else if (key == 'prebufferSize') {
@@ -153,37 +156,36 @@ exports.Session = class {
         if (prebufferSize > 0) {
           // string of spaces of length prebufferSize
           this.variables.prebuffer = new Array(prebufferSize + 1).join(' ');
-        }
-        ;
-      }
-      ;
-    }
-    ;
+        };
+      };
+    };
   }
-  isStreaming() {
-    return this.variables.isStreaming === '1' && parseInt(this.variables.duration) > 0;
+  isStreaming () {
+    return this.variables.isStreaming === '1' && parseInt(this.variables.duration) >
+      0;
   }
-  resetDurationTimer() {
+  resetDurationTimer () {
     var duration = 1000 * parseInt(this.variables.duration);
-    this.durationTimer = setTimeout(bind(this, this.completeResponse), duration);
+    this.durationTimer = setTimeout(bind(this, this.completeResponse),
+      duration);
   }
-  resetIntervalTimer() {
+  resetIntervalTimer () {
     clearTimeout(this.intervalTimer);
     if (this.variables.interval === '0') {
       return;
-    }
-    ;
+    };
     var interval = 1000 * parseInt(this.variables.interval);
     this.intervalTimer = setTimeout(bind(this, this.sendBatch), interval);
   }
-  resetTimeoutTimer() {
+  resetTimeoutTimer () {
     clearTimeout(this.timeoutTimer);
     // Give the client 50% longer than the duration of a comet request before
     // we time them out.
     var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
-    this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
+    this.timeoutTimer = setTimeout(bind(this, this.teardownSession),
+      timeout);
   }
-  sendHeaders(response, contentLength) {
+  sendHeaders (response, contentLength) {
     var allowOrigin = '*';
     // XXX: Make Access-Control configurable
     if (contentLength === 'stream') {
@@ -200,31 +202,27 @@ exports.Session = class {
         'Content-Length': contentLength,
         'Access-Control-Allow-Origin': allowOrigin
       });
-    }
-    ;
+    };
   }
-  startStream() {
+  startStream () {
     this.sendHeaders(this.cometResponse, 'stream');
     var preamble = this.variables.prebuffer + this.variables.preamble;
     if (preamble) {
       this.cometResponse.write(preamble);
-    }
-    ;
+    };
     this.resetIntervalTimer();
   }
-  sendBatch(packetArray) {
+  sendBatch (packetArray) {
     if (!packetArray) {
       packetArray = [];
-    }
-    ;
+    };
     // default value
     var prefix = this.variables.batchPrefix + '(';
     var suffix = ')' + this.variables.batchSuffix;
     if (this.variables.sse === '1' && packetArray) {
       // ID of last packet in the batch is the "SSE ID"
       suffix += 'id: ' + packetArray[packetArray.length - 1][0] + '\r\n';
-    }
-    ;
+    };
     var batch = prefix + JSON.stringify(packetArray) + suffix;
     if (this.isStreaming()) {
       this.cometResponse.write(batch);
@@ -236,10 +234,9 @@ exports.Session = class {
       this.cometResponse.end();
       this.cometResponse = null;
       clearTimeout(this.durationTimer);
-    }
-    ;
+    };
   }
-  completeResponse() {
+  completeResponse () {
     if (this.isStreaming()) {
       this.cometResponse.end();
       // close a stream
@@ -252,15 +249,16 @@ exports.Session = class {
     // send empty batch to poll/longpoll
     ;
   }
-  receiveAck(ackId) {
+  receiveAck (ackId) {
     this.resetTimeoutTimer();
-    while (this.outgoingPacketBuffer.length && ackId >= this.outgoingPacketBuffer[0][0]) {
+    while (this.outgoingPacketBuffer.length && ackId >= this.outgoingPacketBuffer[
+        0][0]) {
       this.outgoingPacketBuffer.shift();
     }
     // remove first element
     ;
   }
-  renderResponse(response, body) {
+  renderResponse (response, body) {
     var prefix = this.variables.requestPrefix + '(';
     var suffix = ')' + this.variables.requestSuffix;
     body = prefix + body + suffix;
@@ -270,7 +268,6 @@ exports.Session = class {
   }
 };
 
-
 exports.Session.prototype.dispatch = {
   handshake: function (request, response) {
     this.renderResponse(response, JSON.stringify({ 'session': this.key }));
@@ -279,26 +276,26 @@ exports.Session.prototype.dispatch = {
     this.cometResponse = response;
     if (this.isStreaming()) {
       this.startStream();
-    }
-    ;
+    };
     // we have buffered packets, so send them.
     if (this.outgoingPacketBuffer.length) {
       this.sendBatch(this.outgoingPacketBuffer);
-    }
-    ;
+    };
     // if we have no events to deliver, or if this is a stream, start a
     // duration timer, after which the response will always complete
     if (!this.outgoingPacketBuffer.length || this.isStreaming()) {
       this.resetDurationTimer();
-    }
-    ;
+    };
   },
   send: function (request, response) {
     var batch = JSON.parse(request.data);
     logger.debug('received packet batch:', batch);
     while (batch[0] != undefined) {
       // packetId, encoding, content = batch.shift()
-      var packetContent, packet = batch.shift(), packetId = packet[0], encoding = packet[1], content = packet[2];
+      var packetContent, packet = batch.shift(),
+        packetId = packet[0],
+        encoding = packet[1],
+        content = packet[2];
 
       if (content === null) {
         this.close();
@@ -307,21 +304,21 @@ exports.Session.prototype.dispatch = {
       } else if (encoding === 1) {
         packetContent = base64.decode(content);
       } else {
-        logger.debug('BAD PACKET ENCODING,', encoding, '... dropping packet');
+        logger.debug('BAD PACKET ENCODING,', encoding,
+          '... dropping packet');
         break;
       }
       // XXX probably should end connection here.
       ;
-      this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] = packetContent;
-    }
-    ;
+      this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] =
+        packetContent;
+    };
     logger.debug('incomingPacketBuffer', this.incomingPacketBuffer);
     while (this.incomingPacketBuffer[0] !== undefined) {
       var nextPacketPayload = this.incomingPacketBuffer.shift();
       this.lastSequentialIncomingId += 1;
       this.connection._receive(nextPacketPayload);
-    }
-    ;
+    };
     // this can leave packets in the buffer, to handled later, in order
     this.renderResponse(response, '"OK"');
   },
@@ -343,9 +340,8 @@ exports.Session.prototype.dispatch = {
 var validEncodings = new Hash('utf8', 'plain', 'binary');
 var validReadyStates = new Hash('writeOnly', 'open');
 
-
 exports.Connection = class extends process.EventEmitter {
-  constructor(session) {
+  constructor (session) {
     super();
 
     this.remoteAddress = null;
@@ -355,38 +351,41 @@ exports.Connection = class extends process.EventEmitter {
     this._encoding = 'binary';
     this._utf8buffer = '';
   }
-  _receive(data) {
+  _receive (data) {
     if (this._encoding === 'utf8') {
       this._utf8buffer += data;
       // data, len_parsed = utf8.decode(this._utf8buffer)
-      var x = utf8.decode(this._utf8buffer), data = x[0], len_parsed = x[1];
+      var x = utf8.decode(this._utf8buffer),
+        data = x[0],
+        len_parsed = x[1];
       this._utf8buffer = this._utf8buffer.slice(len_parsed);
     }
     // buffer unparsed bytes
     ;
     this.emit('receive', data);
   }
-  setEncoding(encoding) {
-    cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
+  setEncoding (encoding) {
+    cspUtil.assert(validEncodings.contains(encoding),
+      'unrecognized encoding: ' + encoding);
     if (encoding !== 'utf8') {
-      cspUtil.assert(!this._utf8buffer, 'cannot switch encodings with dirty utf8 buffer');
-    }
-    ;
+      cspUtil.assert(!this._utf8buffer,
+        'cannot switch encodings with dirty utf8 buffer');
+    };
     this._encoding = encoding;
   }
-  send(data, encoding) {
+  send (data, encoding) {
     if (!validReadyStates.contains(this.readyState)) {
       // XXX make error type for this
       throw new Error('Socket is not writable in readyState: ' + this.readyState);
-    }
-    ;
+    };
     encoding = encoding || this._encoding || 'binary';
     // default to 'binary'
-    cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
+    cspUtil.assert(validEncodings.contains(encoding),
+      'unrecognized encoding: ' + encoding);
     data = encoding === 'utf8' ? utf8.encode(data) : data;
     this._session.send(data);
   }
-  close() {
+  close () {
     this._session.close();
   }
 };
@@ -397,20 +396,19 @@ exports.createServer = function (connection_listener) {
 
 (function () {
   class CSPError extends cspUtil.AssertionError {
-    constructor(code)
+    constructor (code)
       /*, other args */
       {
-        super(...args);
-        this.code = code;
-        var args = Array.prototype.slice.call(arguments, 1);
-      }
+      super(...args);
+      this.code = code;
+      var args = Array.prototype.slice.call(arguments, 1);
+    }
   }
   CSPError.prototype.name = 'CSPError';
   var assertOrRenderError = function (exp, code, message) {
     if (!exp) {
       throw new CSPError(code, message);
-    }
-    ;
+    };
   };
   var renderError = function (response, code, message) {
     response.writeHead(code, {
@@ -450,56 +448,63 @@ exports.createServer = function (connection_listener) {
       }).addListener('end', function () {
         callback(body.join(''));
       });
-    }
-    ;
+    };
   };
   // The logic of the server goes in the 'handleRequest' function, which is
   // called every time a new request comes in.
-  var validResources = new Hash('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest'), validMethods = new Hash('GET', 'POST');
+  var validResources = new Hash('static', 'handshake', 'comet', 'send',
+      'close', 'reflect', 'streamtest'),
+    validMethods = new Hash('GET', 'POST');
 
   exports.Server = class extends process.EventEmitter {
-    constructor(sessionURL) {
+    constructor (sessionURL) {
       super();
 
       process.EventEmitter.call(this);
       this._sessionUrl = sessionURL || '';
       log('starting server, session url is <' + this._sessionUrl + '>');
     }
-    _handleRequest(request, response) {
+    _handleRequest (request, response) {
       getRequestBody(request, bind(this, function (body) {
         logger.debug('received request', request.url);
         try {
-          var uri = nodeUrl.parse(request.url, true), path = uri.pathname, sessionUrl = this._sessionUrl;
+          var uri = nodeUrl.parse(request.url, true),
+            path = uri.pathname,
+            sessionUrl = this._sessionUrl;
 
-          assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'), 404, 'Request to invalid session URL');
+          assertOrRenderError(cspUtil.startswith(path, sessionUrl +
+            '/'), 404, 'Request to invalid session URL');
           logger.debug(request.method);
-          assertOrRenderError(validMethods.contains(request.method), 405, 'Invalid HTTP method, ' + request.method);
+          assertOrRenderError(validMethods.contains(request.method),
+            405, 'Invalid HTTP method, ' + request.method);
 
           var resource = path.split('/').pop();
           if (resource === 'static') {
-            assertOrRenderError(cspUtil.startswith(path, sessionUrl + '/'), 404, 'sendStatic Not Implemented');
+            assertOrRenderError(cspUtil.startswith(path, sessionUrl +
+              '/'), 404, 'sendStatic Not Implemented');
             // TODO: sendStatic(relativePath, response);
             return;
-          }
-          ;
+          };
 
-          assertOrRenderError(validResources.contains(resource), 404, 'Invalid resource, ' + path);
+          assertOrRenderError(validResources.contains(resource),
+            404, 'Invalid resource, ' + path);
 
           var params = uri.query;
 
           // 'data' is either the POST body if it exists, or the 'd' variable
           request.data = body || params.d || null;
           if (resource === 'handshake') {
-            assertOrRenderError(!params.s, 400, 'Handshake cannot have session');
+            assertOrRenderError(!params.s, 400,
+              'Handshake cannot have session');
             try {
               var dict = JSON.parse(request.data);
               // make sure our json dict is an object literal
               cspUtil.assert(dict instanceof Object && !(dict instanceof Array));
             } catch (err) {
               logger.debug('INVALID HANDSHAKE, ', request, err);
-              throw new CSPError(400, 'Invalid data parameter for handshake');
-            }
-            ;
+              throw new CSPError(400,
+                'Invalid data parameter for handshake');
+            };
             var session = new exports.Session();
             var connection = new exports.Connection(session);
             session.connection = connection;
@@ -507,14 +512,16 @@ exports.createServer = function (connection_listener) {
             connection.emit('connect');
           } else {
             var session = sessionDict[params.s];
-            assertOrRenderError(session, 400, 'Invalid or missing session');
+            assertOrRenderError(session, 400,
+              'Invalid or missing session');
             // 'ackId' is either the 'Last-Event-Id' header, or the 'a' variable
-            var ackId = parseInt(request.headers['Last-Event-Id']) || parseInt(params.a) || -1;
+            var ackId = parseInt(request.headers['Last-Event-Id']) ||
+              parseInt(params.a) || -1;
             session.receiveAck(ackId);
-          }
-          ;
+          };
           session.updateVars(params);
-          session.dispatch[resource].call(session, request, response);
+          session.dispatch[resource].call(session, request,
+            response);
         } // logic is in session
         catch (err) {
           if (err instanceof CSPError) {
@@ -522,13 +529,11 @@ exports.createServer = function (connection_listener) {
           } else {
             logger.warn('Unexpected Error: ', err.message, err.stack);
             renderError(response, 500, 'Unknown Server error');
-          }
-          ;
-        }
-        ;
+          };
+        };
       }));
     }
-    listen(port, host) {
+    listen (port, host) {
       var server = http.createServer(bind(this, this._handleRequest));
       if (!port) {
         throw logger.error('No port specified');
@@ -537,22 +542,6 @@ exports.createServer = function (connection_listener) {
     }
   };
 }());
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* // un-comment to run echo server when this file runs
 
@@ -570,60 +559,3 @@ function start_echo_server () {
 start_echo_server();
 */
 export default exports;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -39,7 +39,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-//var utf8 = this.utf8 = exports;
+// var utf8 = this.utf8 = exports;
 exports.UnicodeCodecError = function (message) {
   this.message = message;
 };
@@ -58,8 +58,7 @@ exports.encode = function (unicode_string) {
     return unescape(encodeURIComponent(unicode_string));
   } catch (err) {
     throw new UnicodeCodecError('invalid input string');
-  }
-  ;
+  };
 };
 exports.decode = function (bytes) {
   // Unicode decoder: Given a string of characters with code points in
@@ -71,8 +70,7 @@ exports.decode = function (bytes) {
   // deals with partial multi-byte characters at the end of the byte string.
   if (/[^\x00-\xFF]/.test(bytes)) {
     throw new UnicodeCodecError('invalid utf-8 bytes');
-  }
-  ;
+  };
   var len, len_parsed;
   len = len_parsed = bytes.length;
   var last = len - 1;
@@ -86,20 +84,15 @@ exports.decode = function (bytes) {
       if (bytes.charCodeAt(len - i) >= 192) {
         len_parsed = len - i;
         break;
-      }
-      ;
-    }
-    ;
+      };
+    };
     try {
       // if the last few bytes are a complete multi-byte character, parse
       // everything (by setting len_parsed)
       decodeURIComponent(escape(bytes.slice(len_parsed)));
       len_parsed = len;
-    } catch (err) {
-    }
-    ;
-  }
-  ;
+    } catch (err) {};
+  };
   try {
     return [
       decodeURIComponent(escape(bytes.slice(0, len_parsed))),
@@ -107,8 +100,7 @@ exports.decode = function (bytes) {
     ];
   } catch (err) {
     throw new UnicodeCodecError('invalid utf-8 bytes');
-  }
-  ;
+  };
 };
 
 export default exports;

@@ -8,21 +8,21 @@ import {
 import interfaces from '../../interfaces';
 
 class Transport extends interfaces.Transport {
-  constructor(socket) {
+  constructor (socket) {
     super();
 
     this._socket = socket;
     logger.debug('init', socket);
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     logger.debug('makeConnection:', protocol);
     this._socket.on('message', bind(protocol, 'dataReceived'));
     this._socket.on('disconnect', bind(protocol, '_connectionLost'));
   }
-  write(data) {
+  write (data) {
     this._socket.send(data);
   }
-  loseConnection() {
+  loseConnection () {
     this._socket.close();
   }
 }
@@ -31,7 +31,7 @@ class Transport extends interfaces.Transport {
  * @extends net.interfaces.Listener
  */
 exports.Listener = class extends interfaces.Listener {
-  listen() {
+  listen () {
     if (this._opts.port) {
       // if a port is provided, create an http server and host socket.io
       // at the specified port
@@ -48,21 +48,15 @@ exports.Listener = class extends interfaces.Listener {
       }
     }
 
-
-
-
-
-
-
-
-
     if (this._ioServer) {
       this._ioServer.on('connection', bind(this, '_onConnect'));
     } else {
-      logger.warn('socket.io not setup properly: please provide an io instance or an http port to the net.listen opts');
+      logger.warn(
+        'socket.io not setup properly: please provide an io instance or an http port to the net.listen opts'
+      );
     }
   }
-  _onConnect(socket) {
+  _onConnect (socket) {
     logger.info('Incoming connection');
     this.onConnect(new Transport(socket));
   }

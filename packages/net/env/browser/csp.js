@@ -14,7 +14,7 @@ import utf8 from '../../../std/utf8';
  * @extends net.interfaces.Connector
  */
 exports.Connector = class extends interfaces.Connector {
-  connect() {
+  connect () {
     this._state = interfaces.STATE.CONNECTING;
 
     var conn = new CometSession();
@@ -27,25 +27,25 @@ exports.Connector = class extends interfaces.Connector {
     }
     conn.connect(this._opts.url, this._opts);
   }
-  cometSessionOnConnect(conn) {
+  cometSessionOnConnect (conn) {
     logger.debug('conn has opened');
     this.onConnect(new Transport(conn));
   }
 };
 
 class Transport extends interfaces.Transport {
-  constructor(conn) {
+  constructor (conn) {
     super();
 
     this._conn = conn;
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     this._conn.onread = bind(protocol, 'dataReceived');
   }
-  write(data) {
+  write (data) {
     this._conn.write(data);
   }
-  loseConnection(protocol) {
+  loseConnection (protocol) {
     this._conn.close();
   }
 }

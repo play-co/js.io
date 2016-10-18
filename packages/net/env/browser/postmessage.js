@@ -10,35 +10,26 @@ import browser from 'util/browser';
 let $ = browser.$;
 import uuid from 'std/uuid';
 
-
 var ID = 0;
 var uniqueId = 1;
-
 
 /**
  * @extends net.interfaces.Listener
  */
 exports.Listener = class extends interfaces.Listener {
-  constructor() {
+  constructor () {
     super(...arguments);
     this._clients = {};
     if (!this._opts.clientUrl) {
       this._opts.clientUrl = jsio.__dir + '/networkConsole.html';
     }
 
-
-
-
-
-
-
-
     this._port = '' + (this._opts.port || '');
   }
-  listen() {
+  listen () {
     $.onEvent(window, 'message', bind(this, '_onMessage'));
   }
-  getButton(url, text) {
+  getButton (url, text) {
     var button = $({
       tagName: 'button',
       text: text || 'launch client',
@@ -47,7 +38,7 @@ exports.Listener = class extends interfaces.Listener {
     $.onEvent(button, 'click', bind(this, 'openWindow', url || this._opts.clientUrl));
     return button;
   }
-  openWindow(url) {
+  openWindow (url) {
     var options = {
       menubar: 'no',
       location: 'no',
@@ -67,8 +58,9 @@ exports.Listener = class extends interfaces.Listener {
     var win = window.open(url, 'W' + uniqueId++, arr.join(','));
     win.focus();
   }
-  _onMessage(evt) {
-    if (typeof evt.data != 'string' || this._port != evt.data.substring(0, this._port.length)) {
+  _onMessage (evt) {
+    if (typeof evt.data != 'string' || this._port != evt.data.substring(0,
+        this._port.length)) {
       return;
     }
     var data = evt.data.substring(this._port.length);
@@ -80,40 +72,33 @@ exports.Listener = class extends interfaces.Listener {
       return;
     }
 
-
-
-
-
-
-
-
-
     switch (data.type) {
-    case 'open':
-      var transport = this._clients[data.uid] = new exports.Transport(evt.source, this._port, data.uid);
-      evt.source.postMessage(this._port + JSON.stringify({
-        'type': 'open',
-        uid: data.uid
-      }), '*');
-      this.onConnect(transport);
-      break;
-    case 'data':
-      var transport = this._clients[data.uid];
-      if (transport) {
-        transport.onData(data.payload);
-      }
-      break;
-    case 'close':
-      var transport = this._clients[data.uid];
-      if (transport) {
-        transport.onClose();
-      }
-      evt.source.postMessage(this._port + JSON.stringify({
-        'type': 'close',
-        uid: data.uid
-      }), '*');
-      delete this._clients[data.uid];
-      break;
+      case 'open':
+        var transport = this._clients[data.uid] = new exports.Transport(evt.source,
+        this._port, data.uid);
+        evt.source.postMessage(this._port + JSON.stringify({
+          'type': 'open',
+          uid: data.uid
+        }), '*');
+        this.onConnect(transport);
+        break;
+      case 'data':
+        var transport = this._clients[data.uid];
+        if (transport) {
+          transport.onData(data.payload);
+        }
+        break;
+      case 'close':
+        var transport = this._clients[data.uid];
+        if (transport) {
+          transport.onClose();
+        }
+        evt.source.postMessage(this._port + JSON.stringify({
+          'type': 'close',
+          uid: data.uid
+        }), '*');
+        delete this._clients[data.uid];
+        break;
     }
   }
 };
@@ -122,7 +107,7 @@ exports.Listener = class extends interfaces.Listener {
  * @extends net.interfaces.Connector
  */
 exports.Connector = class extends interfaces.Connector {
-  connect() {
+  connect () {
     this._port = '' + (this._opts.port || '');
     this._win = this._opts.win || window.opener || window.parent;
     $.onEvent(window, 'message', bind(this, '_onMessage'));
@@ -133,8 +118,9 @@ exports.Connector = class extends interfaces.Connector {
       uid: this._uid
     }), '*');
   }
-  _onMessage(evt) {
-    if (typeof evt.data != 'string' || this._port != evt.data.substring(0, this._port.length)) {
+  _onMessage (evt) {
+    if (typeof evt.data != 'string' || this._port != evt.data.substring(0,
+        this._port.length)) {
       return;
     }
     var data = evt.data.substring(this._port.length);
@@ -149,31 +135,23 @@ exports.Connector = class extends interfaces.Connector {
       return;
     }
 
-
-
-
-
-
-
-
-
     switch (data.type) {
-    case 'open':
-      this._transport = new exports.Transport(evt.source, this._port, this._uid);
-      this.onConnect(this._transport);
-      break;
-    case 'close':
-      if (data.uid != this._uid) {
-        return;
-      }
-      this._transport.onClose();
-      break;
-    case 'data':
-      if (data.uid != this._uid) {
-        return;
-      }
-      this._transport.onData(data.payload);
-      break;
+      case 'open':
+        this._transport = new exports.Transport(evt.source, this._port, this._uid);
+        this.onConnect(this._transport);
+        break;
+      case 'close':
+        if (data.uid != this._uid) {
+          return;
+        }
+        this._transport.onClose();
+        break;
+      case 'data':
+        if (data.uid != this._uid) {
+          return;
+        }
+        this._transport.onData(data.payload);
+        break;
     }
   }
 };
@@ -182,19 +160,19 @@ exports.Connector = class extends interfaces.Connector {
  * @extends net.interfaces.Transport
  */
 exports.Transport = class extends interfaces.Transport {
-  constructor(win, port, uid) {
+  constructor (win, port, uid) {
     super();
 
     if (!uid)
-      debugger;
+      { debugger; }
     this._win = win;
     this._port = port;
     this._uid = uid;
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     this._protocol = protocol;
   }
-  write(data, encoding) {
+  write (data, encoding) {
     if (this.encoding == 'utf8') {
       this._win.postMessage(this._port + JSON.stringify({
         type: 'data',
@@ -209,17 +187,17 @@ exports.Transport = class extends interfaces.Transport {
       }), '*');
     }
   }
-  loseConnection(protocol) {
+  loseConnection (protocol) {
     this._win.postMessage(this._port + JSON.stringify({
       type: 'close',
       uid: this._uid,
       code: 301
     }), '*');
   }
-  onData() {
+  onData () {
     this._protocol.dataReceived.apply(this._protocol, arguments);
   }
-  onClose() {
+  onClose () {
     this._protocol._connectionLost.apply(this._protocol, arguments);
   }
 };

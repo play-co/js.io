@@ -8,7 +8,7 @@ import interfaces from '../interfaces';
  * @extends net.interfaces.Protocol
  */
 exports.DelimitedProtocol = class extends interfaces.Protocol {
-  constructor(delimiter) {
+  constructor (delimiter) {
     super();
 
     if (!delimiter) {
@@ -17,10 +17,10 @@ exports.DelimitedProtocol = class extends interfaces.Protocol {
     this.delimiter = delimiter;
     this.buffer = '';
   }
-  connectionMade() {
+  connectionMade () {
     logger.debug('connectionMade');
   }
-  dataReceived(data) {
+  dataReceived (data) {
     if (!data) {
       return;
     }
@@ -33,18 +33,17 @@ exports.DelimitedProtocol = class extends interfaces.Protocol {
       this.lineReceived(line);
     }
   }
-  lineReceived(line) {
+  lineReceived (line) {
     logger.debug('Not implemented, lineReceived:', line);
   }
-  sendLine(line) {
+  sendLine (line) {
     var data = line + this.delimiter;
     logger.debug('WRITE:', data);
     this.transport && this.transport.write(data);
   }
-  connectionLost() {
+  connectionLost () {
     logger.debug('connectionLost');
   }
 };
-
 
 export default exports;

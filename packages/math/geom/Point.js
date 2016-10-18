@@ -5,25 +5,28 @@ let exports = {};
  * Models a Point in 2D space.
  */
 exports = class {
-  constructor(a, b) {
+  constructor (a, b) {
     switch (arguments.length) {
-    case 0:
-      this.x = 0;
-      this.y = 0;
-      break;
-    case 1:
-      this.x = a.x || 0;
-      this.y = a.y || 0;
-      break;
-    case 2:
-      this.x = a || 0;
-      this.y = b || 0;
-      break;
+      case 0:
+        this.x = 0;
+        this.y = 0;
+        break;
+      case 1:
+        this.x = a.x || 0;
+        this.y = a.y || 0;
+        break;
+      case 2:
+        this.x = a || 0;
+        this.y = b || 0;
+        break;
     }
   }
 
-  rotate(r) {
-    var x = this.x, y = this.y, cosr = Math.cos(r), sinr = Math.sin(r);
+  rotate (r) {
+    var x = this.x,
+      y = this.y,
+      cosr = Math.cos(r),
+      sinr = Math.sin(r);
 
     this.x = x * cosr - y * sinr;
     this.y = x * sinr + y * cosr;
@@ -31,7 +34,7 @@ exports = class {
     return this;
   }
 
-  add(x, y) {
+  add (x, y) {
     if (typeof x == 'number') {
       this.x += x;
       this.y += y;
@@ -42,7 +45,7 @@ exports = class {
     return this;
   }
 
-  subtract(x, y) {
+  subtract (x, y) {
     if (typeof x == 'number') {
       this.x -= x;
       this.y -= y;
@@ -53,42 +56,39 @@ exports = class {
     return this;
   }
 
-  scale(sx, sy) {
-    //if no scaleY specified
+  scale (sx, sy) {
+    // if no scaleY specified
     if (sy === undefined)
-      sy = sx;
-
-
-
+      { sy = sx; }
 
     this.x *= sx;
     this.y *= sy;
     return this;
   }
 
-  setMagnitude(m) {
+  setMagnitude (m) {
     var theta = this.getAngle();
     this.x = m * Math.cos(theta);
     this.y = m * Math.sin(theta);
     return this;
   }
 
-  normalize() {
+  normalize () {
     var m = this.getMagnitude();
     this.x /= m;
     this.y /= m;
     return this;
   }
-  addMagnitude(m) {
+  addMagnitude (m) {
     return this.setMagnitude(this.getMagnitude() + m);
   }
-  getMagnitude() {
+  getMagnitude () {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }
-  getSquaredMagnitude() {
+  getSquaredMagnitude () {
     return this.x * this.x + this.y * this.y;
   }
-  getAngle() {
+  getAngle () {
     return Math.atan2(this.y, this.x);
   }
 };
@@ -124,12 +124,12 @@ Point.getPolarTheta = function (x, y) {
  */
 Point.add = Point.translate = function (a, b, c, d) {
   switch (arguments.length) {
-  case 2:
-    return new Point(a).add(b);
-  case 3:
-    return new Point(a).add(b, c);
-  case 4:
-    return new Point(a, b).add(c, d);
+    case 2:
+      return new Point(a).add(b);
+    case 3:
+      return new Point(a).add(b, c);
+    case 4:
+      return new Point(a, b).add(c, d);
   }
 };
 
@@ -143,17 +143,17 @@ Point.add = Point.translate = function (a, b, c, d) {
  */
 Point.subtract = function (a, b, c, d) {
   switch (arguments.length) {
-  case 2:
-    return new Point(a).subtract(b);
-  case 3:
-    return new Point(a).subtract(b, c);
-  case 4:
-    return new Point(a, b).subtract(c, d);
+    case 2:
+      return new Point(a).subtract(b);
+    case 3:
+      return new Point(a).subtract(b, c);
+    case 4:
+      return new Point(a, b).subtract(c, d);
   }
 };
 
 /*
-	### Class Method: Point.scale (a, b, c) 
+	### Class Method: Point.scale (a, b, c)
 	1. `a {number}`
 	2. `b {number}`
 	3. `c {number}`
@@ -161,10 +161,10 @@ Point.subtract = function (a, b, c, d) {
  */
 Point.scale = function (a, b, c) {
   switch (arguments.length) {
-  case 2:
-    return new Point(a).scale(b);
-  case 3:
-    return new Point(a, b).scale(c);
+    case 2:
+      return new Point(a).scale(b);
+    case 3:
+      return new Point(a, b).scale(c);
   }
 };
 
@@ -177,10 +177,10 @@ Point.scale = function (a, b, c) {
 */
 Point.setMagnitude = function (a, b, c) {
   switch (arguments.length) {
-  case 2:
-    return new Point(a).setMagnitude(c);
-  case 3:
-    return new Point(a, b).setMagnitude(c);
+    case 2:
+      return new Point(a).setMagnitude(c);
+    case 3:
+      return new Point(a, b).setMagnitude(c);
   }
 };
 
@@ -193,13 +193,13 @@ Point.setMagnitude = function (a, b, c) {
  */
 Point.addMagnitude = function (a, b, c) {
   switch (arguments.length) {
-  case 2:
-    pt = new Point(a);
-    break;
-  case 3:
-    pt = new Point(a, b);
-    b = c;
-    break;
+    case 2:
+      pt = new Point(a);
+      break;
+    case 3:
+      pt = new Point(a, b);
+      b = c;
+      break;
   }
 
   return pt.addMagnitude(b);
@@ -224,10 +224,10 @@ Point.getMagnitude = function (a, b) {
  */
 Point.rotate = function (a, b, c) {
   switch (arguments.length) {
-  case 2:
-    return new Point(a).rotate(b);
-  case 3:
-    return new Point(a, b).rotate(c);
+    case 2:
+      return new Point(a).rotate(b);
+    case 3:
+      return new Point(a, b).rotate(c);
   }
 };
 

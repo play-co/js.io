@@ -10,10 +10,7 @@ exports.parseString = function (str) {
       var parser = new DOMParser();
       return parser.parseFromString(str, 'text/xml');
     }
-  } else if (jsio.__env.name == 'node') {
-  }
-  ;
-
+  } else if (jsio.__env.name == 'node') {};
 };
 
 export default exports;

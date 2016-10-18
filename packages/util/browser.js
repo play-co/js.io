@@ -9,33 +9,26 @@ import Sizzle from './sizzle';
 
 import Rect from 'math/geom/Rect';
 
-function isWindow(el) {
+function isWindow (el) {
   return el && !$.isElement(el) && $.isElement(el.document);
 }
-
-
-
-
-
-
-
 
 var singleId = /^#([\w-]+)$/;
 
 exports.$ = function (selector, win) {
   switch (typeof selector) {
-  case 'object':
-    if ($.isElement(selector)) {
-      return $.remove(selector);
-    } else if ($.isElement(selector.document && selector.document.body)) {
-      return $.size(selector);
-    }
-    return $.create(selector);
-  case 'string':
-    if (singleId.test(selector)) {
-      return $.id(selector.substring(1), win);
-    }
-    return Sizzle.apply(GLOBAL, arguments);
+    case 'object':
+      if ($.isElement(selector)) {
+        return $.remove(selector);
+      } else if ($.isElement(selector.document && selector.document.body)) {
+        return $.size(selector);
+      }
+      return $.create(selector);
+    case 'string':
+      if (singleId.test(selector)) {
+        return $.id(selector.substring(1), win);
+      }
+      return Sizzle.apply(GLOBAL, arguments);
   }
 };
 var $ = exports.$;
@@ -44,11 +37,13 @@ var DOM2 = typeof HTMLElement === 'object';
 $.isElement = DOM2 ? function (el) {
   return el && el instanceof HTMLElement;
 } : function (el) {
-  return el && typeof el.nodeType == 'number' && typeof el.nodeName == 'string';
+  return el && typeof el.nodeType == 'number' && typeof el.nodeName ==
+    'string';
 };
 
 $.id = function (id, win) {
-  return typeof id == 'string' ? (win || window).document.getElementById(id) : id;
+  return typeof id == 'string' ? (win || window).document.getElementById(id) :
+    id;
 };
 
 $.apply = function (el, params) {
@@ -57,9 +52,6 @@ $.apply = function (el, params) {
       el.setAttribute(attr, params.attrs[attr]);
     }
   }
-
-
-
 
   if (params.id) {
     el.id = params.id;
@@ -74,9 +66,6 @@ $.apply = function (el, params) {
     el.className = params['class'] || params['className'];
   }
 
-
-
-
   var parent = params.parent || params.parentNode;
   if (parent && params.first) {
     $.insertBefore(parent, el, parent.firstChild);
@@ -88,30 +77,6 @@ $.apply = function (el, params) {
     parent.appendChild(el);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   if ('html' in params) {
     el.innerHTML = params.html;
   }
@@ -119,22 +84,12 @@ $.apply = function (el, params) {
     $.setText(el, params.text);
   }
 
-
-
-
   if (params.children) {
     var c = params.children;
     for (var i = 0, n = c.length; i < n; ++i) {
       el.appendChild($.isElement(c[i]) ? c[i] : $(c[i]));
     }
   }
-
-
-
-
-
-
-
 
   return el;
 };
@@ -167,10 +122,10 @@ $.create = function (params) {
   var doc = (params && params.win || window).document;
   if (!params || typeof params == 'string') {
     return doc.createElement(params || 'div');
-  }
-  ;
+  };
 
-  return $.apply(params.el || doc.createElement(params.tag || params.tagName || 'div'), params);
+  return $.apply(params.el || doc.createElement(params.tag || params.tagName ||
+    'div'), params);
 };
 
 $.show = function (el, how) {
@@ -190,9 +145,6 @@ $.addClass = function (el, classNames) {
     classNames = classNames.split(' ');
   }
 
-
-
-
   var current = ' ' + el.className + ' ';
   for (var i = 0, len = classNames.length; i < len; ++i) {
     var c = classNames[i];
@@ -200,13 +152,6 @@ $.addClass = function (el, classNames) {
       current += c + ' ';
     }
   }
-
-
-
-
-
-
-
 
   el.className = current.replace(/^\s+|\s+$/g, '');
   return $;
@@ -220,9 +165,6 @@ $.hasClass = function (el, className) {
     return false;
   }
 
-
-
-
   var el = $.id(el);
   var classNames = el.className.split(' ');
 
@@ -231,9 +173,6 @@ $.hasClass = function (el, className) {
       return true;
     }
   }
-
-
-
 
   return false;
 };
@@ -247,41 +186,22 @@ $.removeClass = function (el, classNames) {
     return;
   }
   var el = $.id(el);
-  el.className = (' ' + el.className + ' ').replace(' ', '  ').replace(new RegExp('( ' + classNames.replace('s+', ' | ').replace('-', '-') + ' )', 'g'), ' ').replace(/\s+/, ' ').replace(/^\s+|\s+$/g, '');
+  el.className = (' ' + el.className + ' ').replace(' ', '  ').replace(new RegExp(
+      '( ' + classNames.replace('s+', ' | ').replace('-', '-') + ' )', 'g'),
+    ' ').replace(/\s+/, ' ').replace(/^\s+|\s+$/g, '');
 };
 
-function ieGetAlpha(el) {
+function ieGetAlpha (el) {
   try {
     return el.filters.item('alpha');
-  } catch (e) {
-  }
-
-
-
-
-
-
-
-
+  } catch (e) {}
 
   try {
     return el.filters.item('progid:DXImageTransform.Microsoft.Alpha');
-  } catch (e) {
-  }
-
-
-
-
-
-
-
-
+  } catch (e) {}
 
   return null;
 }
-
-
-
 
 $.style = function (el, style) {
   if (el instanceof Array) {
@@ -291,42 +211,38 @@ $.style = function (el, style) {
     return;
   }
 
-
-
-
   el = $.id(el);
   var s = el.style;
   for (var prop in style) {
     switch (prop) {
-    case 'styleFloat':
-    case 'cssFloat':
-    case 'float':
-      s.styleFloat = s.cssFloat = style[prop];
-      break;
-    case 'opacity':
-      s.opacity = style[prop];
-      if (el.filters) {
-        try {
-          var alpha = ieGetAlpha();
-          var opacity = style[prop] == 1 ? 99.99 : style[prop] * 100;
-          if (!alpha) {
+      case 'styleFloat':
+      case 'cssFloat':
+      case 'float':
+        s.styleFloat = s.cssFloat = style[prop];
+        break;
+      case 'opacity':
+        s.opacity = style[prop];
+        if (el.filters) {
+          try {
+            var alpha = ieGetAlpha();
+            var opacity = style[prop] == 1 ? 99.99 : style[prop] * 100;
+            if (!alpha) {
             // TODO: this might destroy any existing filters?
-            s.filter = 'alpha(opacity=' + opacity + ')';
-          } else {
-            alpha.Opacity = opacity;
-          }
-        } catch (e) {
+              s.filter = 'alpha(opacity=' + opacity + ')';
+            } else {
+              alpha.Opacity = opacity;
+            }
+          } catch (e) {}
         }
-      }
-      break;
-    case 'borderRadius':
-      s.borderRadius = s.MozBorderRadius = style[prop];
-      break;
-    case 'boxSizing':
-      s.MsBoxSizing = s.MozBoxSizing = s.WebkitBoxSizing = style[prop];
-    default:
-      s[prop] = style[prop];
-      break;
+        break;
+      case 'borderRadius':
+        s.borderRadius = s.MozBorderRadius = style[prop];
+        break;
+      case 'boxSizing':
+        s.MsBoxSizing = s.MozBoxSizing = s.WebkitBoxSizing = style[prop];
+      default:
+        s[prop] = style[prop];
+        break;
     }
   }
 };
@@ -335,9 +251,6 @@ $.onEvent = function (el, name, f) {
   if (typeof f != 'function') {
     f = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 2));
   }
-
-
-
 
   var handler = f;
 
@@ -353,9 +266,6 @@ $.onEvent = function (el, name, f) {
 
     el.attachEvent('on' + name, handler);
   }
-
-
-
 
   return bind($, 'removeEvent', el, name, handler);
 };
@@ -373,9 +283,9 @@ $.stopEvent = function (e) {
   if (e) {
     e.cancelBubble = true;
     if (e.stopPropagation)
-      e.stopPropagation();
+      { e.stopPropagation(); }
     if (e.preventDefault)
-      e.preventDefault();
+      { e.preventDefault(); }
   }
 };
 
@@ -410,8 +320,10 @@ $.remove = function (el) {
 
 $.cursorPos = function (ev, el) {
   var offset = $.pos(el);
-  offset.top = ev.clientY - offset.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop);
-  offset.left = ev.clientX - offset.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft);
+  offset.top = ev.clientY - offset.top + (window.pageYOffset || document.documentElement
+    .scrollTop || document.body.scrollTop);
+  offset.left = ev.clientX - offset.left + (window.pageXOffset || document.documentElement
+    .scrollLeft || document.body.scrollLeft);
   return offset;
 };
 
@@ -442,7 +354,8 @@ $.size = function (el) {
     };
   } else if (el.document) {
     var doc = el.document.documentElement || el.document.body;
-    return new Rect(doc.offsetTop, doc.offsetLeft, el.innerWidth || (doc.clientWidth || doc.clientWidth), el.innerHeight || (doc.clientHeight || doc.clientHeight));
+    return new Rect(doc.offsetTop, doc.offsetLeft, el.innerWidth || (doc.clientWidth ||
+      doc.clientWidth), el.innerHeight || (doc.clientHeight || doc.clientHeight));
   }
 };
 

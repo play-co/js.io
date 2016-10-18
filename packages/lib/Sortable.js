@@ -6,29 +6,23 @@ import {
 } from 'base';
 
 exports = class {
-  toStringPush(indexer) {
+  toStringPush (indexer) {
     if (!this._toString || !this._toString.push) {
       this._toString = [this.toString];
     } else {
       this._toString.push(this.toString);
     }
 
-
-
-
-
-
-
-
     this.toString = indexer;
   }
-  toStringPop() {
+  toStringPop () {
     this.toString = this._toString.pop();
   }
 };
 
 var zeroPadding = [];
-function ensurePadding(n) {
+
+function ensurePadding (n) {
   for (var i = zeroPadding.length; i < n; ++i) {
     var str = [];
     for (var j = 0; j < i; ++j) {
@@ -38,23 +32,22 @@ function ensurePadding(n) {
   }
 }
 
-
-
-
 /**
  * Here we handle arbitrary sorting indexes transparently converting numbers to strings
  * for efficient sorting with toString.  Unfortunately, this does not work for large floating
  * point values, but that functionality could theoretically be added if desired.
  */
-function sortIndex(i) {
+function sortIndex (i) {
   return this[i];
 }
 
-
-
-
 exports.sort = function (arr, indexer) {
-  var len = arr.length, index = new Array(len), result = new Array(len), toString = new Array(len), indexers = Array.prototype.slice.call(arguments, 1), haveMultiple = !!indexers[1];
+  var len = arr.length,
+    index = new Array(len),
+    result = new Array(len),
+    toString = new Array(len),
+    indexers = Array.prototype.slice.call(arguments, 1),
+    haveMultiple = !!indexers[1];
 
   if (haveMultiple) {
     for (var i = 0; i < len; ++i) {
@@ -62,22 +55,17 @@ exports.sort = function (arr, indexer) {
     }
   }
 
-
-
-
   for (var k = 0, indexer; indexer = indexers[k]; ++k) {
     for (var i = 0; i < len; ++i) {
       index[i] = indexer.call(arr[i], i);
     }
 
-
-
-
     if (typeof index[0] == 'number') {
       // we do two passes here:
       //  1: find the max and min numerical indices
       //  2: convert the indices to strings with appropriate zero-padding
-      var largest = index[0], smallest = index[0];
+      var largest = index[0],
+        smallest = index[0];
 
       for (var i = 1; i < len; ++i) {
         if (index[i] > largest) {
@@ -87,12 +75,10 @@ exports.sort = function (arr, indexer) {
         }
       }
 
-
-
-
       // we have to be very careful here - large floating point numbers will break the
       // string padding code
-      var paddingPositive = String(Math.floor(largest)).length, paddingNegative = String(Math.floor(smallest)).length;
+      var paddingPositive = String(Math.floor(largest)).length,
+        paddingNegative = String(Math.floor(smallest)).length;
 
       ensurePadding(Math.max(paddingPositive, paddingNegative));
 
@@ -110,9 +96,6 @@ exports.sort = function (arr, indexer) {
       }
     }
 
-
-
-
     if (haveMultiple) {
       for (var i = 0; i < len; ++i) {
         result[i].push(index[i]);
@@ -122,23 +105,15 @@ exports.sort = function (arr, indexer) {
     }
   }
 
-
-
-
   for (var i = 0; i < len; ++i) {
     if (haveMultiple) {
       result[i] = result[i].join('|');
     }
 
-
-
-
-    toString[i] = arr[i].hasOwnProperty('toString') && arr[i].toString || null;
+    toString[i] = arr[i].hasOwnProperty('toString') && arr[i].toString ||
+      null;
     arr[i].toString = bind(result, sortIndex, i);
   }
-
-
-
 
   Array.prototype.sort.apply(arr);
 

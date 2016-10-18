@@ -7,7 +7,6 @@ import buffered from 'net/protocols/buffered';
 let BufferedProtocol = buffered.BufferedProtocol;
 import utf8 from 'std/utf8';
 
-
 /*
 works like this:
 OPEN
@@ -39,31 +38,32 @@ var frames = {
 };
 
 exports.MSPPStream = class {
-  setMultiplexer(multiplexer) {
+  setMultiplexer (multiplexer) {
     loggers.stream.debug('setMultiplexer: ' + multiplexer);
     this.multiplexer = multiplexer;
   }
-  setEncoding(encoding) {
+  setEncoding (encoding) {
     loggers.stream.debug('setEncoding: ' + encoding);
     this.encoding = encoding;
   }
-  open(host, port, isBinary) {
+  open (host, port, isBinary) {
     if (isBinary)
-      this.encoding = 'utf8';
+      { this.encoding = 'utf8'; }
     this.id = this.multiplexer.openStream(this, host, port);
-    loggers.stream.debug('open ' + this.id + ': ' + host + ' ' + port + ' ' + isBinary);
+    loggers.stream.debug('open ' + this.id + ': ' + host + ' ' + port + ' ' +
+      isBinary);
   }
-  close() {
+  close () {
     loggers.stream.debug('close ' + this.id);
     this.multiplexer.close(this.id);
   }
-  send(data, encoding) {
+  send (data, encoding) {
     loggers.stream.debug('send ' + this.id + ': ' + data + ' ' + encoding);
     if ((encoding || this.encoding) == 'utf8')
-      data = utf8.encode(data);
+      { data = utf8.encode(data); }
     this.multiplexer.writeToStream(this.id, data);
   }
-  _onreadraw(data) {
+  _onreadraw (data) {
     if (this.encoding == 'utf8') {
       var raw = utf8.decode(data);
       var length = raw[1];
@@ -76,12 +76,9 @@ exports.MSPPStream = class {
     loggers.stream.debug('_onreadraw ' + data);
     this.onread(data);
   }
-  onopen() {
-  }
-  onclose(err) {
-  }
-  onread(data) {
-  }
+  onopen () {}
+  onclose (err) {}
+  onread (data) {}
 };
 
 var state = {};
@@ -93,7 +90,7 @@ state.consuming = 2;
  * @extends net.protocols.buffered.BufferedProtocol
  */
 exports.MSPPProtocol = class extends BufferedProtocol {
-  constructor() {
+  constructor () {
     loggers.protocol.debug('new MSPPProtocol');
     super();
     this.state = state.closed;
@@ -103,24 +100,24 @@ exports.MSPPProtocol = class extends BufferedProtocol {
     this.streams = {};
     this.writeBuffer = [];
   }
-  setTransport(transportType, transportOptions) {
+  setTransport (transportType, transportOptions) {
     this.transportType = transportType;
     this.transportOptions = transportOptions;
   }
-  connectionMade(isReconnect) {
+  connectionMade (isReconnect) {
     loggers.protocol.debug('connectionMade');
     this.state = state.consuming;
     for (var i = 0; i < this.writeBuffer.length; i++)
-      this._write(this.writeBuffer[i]);
+      { this._write(this.writeBuffer[i]); }
     writeBuffer = [];
   }
-  connectionLost(reason) {
+  connectionLost (reason) {
     loggers.protocol.debug('closed: ' + reason);
     this.state = state.closed;
     for (var stream in this.streams)
-      this.streams[stream].onclose(reason);
+      { this.streams[stream].onclose(reason); }
   }
-  openStream(stream, host, port) {
+  openStream (stream, host, port) {
     if (this.state == state.closed) {
       this.state = state.connecting;
       net.connect(this, this.transportType, this.transportOptions);
@@ -134,30 +131,31 @@ exports.MSPPProtocol = class extends BufferedProtocol {
     ]);
     return id;
   }
-  closeStream(id) {
+  closeStream (id) {
     this._write([
       id,
       frames.CLOSE,
       ''
     ]);
   }
-  writeToStream(id, data) {
+  writeToStream (id, data) {
     this._write([
       id,
       frames.DATA,
       data
     ]);
   }
-  bufferUpdated() {
-    loggers.protocol.debug('bufferUpdated. state: ' + this.state + '. buffer: ' + this.buffer._rawBuffer);
+  bufferUpdated () {
+    loggers.protocol.debug('bufferUpdated. state: ' + this.state +
+      '. buffer: ' + this.buffer._rawBuffer);
     if (this.state != state.consuming)
-      throw new Error('buffer update in invalid MSPP state: ' + this.state);
+      { throw new Error('buffer update in invalid MSPP state: ' + this.state); }
     if (!this.buffer.hasDelimiter(':'))
-      return;
+      { return; }
     var lStr = this.buffer.peekToDelimiter(':');
     var len = parseInt(lStr);
     if (!this.buffer.hasBytes(len + lStr.length + 1))
-      return;
+      { return; }
     this.buffer.consumeThroughDelimiter(':');
     var streamId = this.buffer.consumeToDelimiter(',');
     this.buffer.consumeBytes(1);
@@ -166,20 +164,20 @@ exports.MSPPProtocol = class extends BufferedProtocol {
     streamId = parseInt(streamId);
     var data = this.buffer.consumeBytes(len);
     switch (frameType) {
-    case frames.OPEN:
-      this.streams[streamId].onopen();
-      break;
-    case frames.CLOSE:
-      this.streams[streamId].onclose(data);
-      break;
-    case frames.DATA:
-      this.streams[streamId]._onreadraw(data);
-      break;
-    default:
-      throw new Error('invalid MSPP data type!');
+      case frames.OPEN:
+        this.streams[streamId].onopen();
+        break;
+      case frames.CLOSE:
+        this.streams[streamId].onclose(data);
+        break;
+      case frames.DATA:
+        this.streams[streamId]._onreadraw(data);
+        break;
+      default:
+        throw new Error('invalid MSPP data type!');
     }
   }
-  _write(data) {
+  _write (data) {
     if (this.state != state.consuming) {
       loggers.protocol.debug('buffering write: ' + data);
       this.writeBuffer.push(data);

@@ -10,8 +10,6 @@ import {
 import jsonSchema from './jsonSchema';
 import Enum from '../lib/Enum';
 
-
-
 /* optparser */
 /*
 
@@ -26,15 +24,12 @@ optsDef = {
 }
 
 */
-function ERROR(msg) {
+function ERROR (msg) {
   logger.error(msg);
   process.exit(1);
 }
 
-
-
-
-function addAlso(optsDef, also, value) {
+function addAlso (optsDef, also, value) {
   if (typeof also == 'string') {
     optsDef[also] = value;
   } else if (isArray(also)) {
@@ -42,67 +37,65 @@ function addAlso(optsDef, also, value) {
       optsDef[key] = value;
     });
   } else {
-    logger.warn('Key specified in option', optsDef.name, 'is invalid.  Ignoring:', also);
+    logger.warn('Key specified in option', optsDef.name,
+      'is invalid.  Ignoring:', also);
   }
 }
 
+var truthyValues = Enum('true', '1', 'yes'),
+  falsyValues = Enum('false', '0', 'no');
 
-
-
-
-
-
-
-var truthyValues = Enum('true', '1', 'yes'), falsyValues = Enum('false', '0', 'no');
-
-function addArg(result, optsDef, argv, i) {
-  var val, srcName = argv[i], itemSchema = optsDef[argv[i]], len = argv.length, itemType = itemSchema && itemSchema.type && itemSchema.type.toLowerCase();
+function addArg (result, optsDef, argv, i) {
+  var val, srcName = argv[i],
+    itemSchema = optsDef[argv[i]],
+    len = argv.length,
+    itemType = itemSchema && itemSchema.type && itemSchema.type.toLowerCase();
 
   ++i;
   switch (itemType) {
-  case 'boolean':
-    if (typeof argv[i] == 'undefined') {
-      val = true;
-      --i;
-    } else if (argv[i].toLowerCase() in truthyValues) {
-      val = true;
-    } else if (argv[i].toLowerCase() in falsyValues) {
-      val = false;
-    } else {
-      val = true;
-      --i;
-    }
-    break;
-  case 'int':
-  case 'integer':
-    val = parseInt(argv[i]);
-    break;
-  case 'float':
-  case 'double':
-  case 'number':
-    val = parseFloat(argv[i]);
-    break;
-  case 'array':
-  case 'object':
-    var buf = argv[i];
-    while (true) {
-      try {
-        var val = eval('(' + buf + ')');
-        break;
-      } catch (e) {
+    case 'boolean':
+      if (typeof argv[i] == 'undefined') {
+        val = true;
+        --i;
+      } else if (argv[i].toLowerCase() in truthyValues) {
+        val = true;
+      } else if (argv[i].toLowerCase() in falsyValues) {
+        val = false;
+      } else {
+        val = true;
+        --i;
       }
-      ++i;
-      if (i >= len) {
-        ERROR('Could not parse "' + srcName + '": ' + itemSchema.type + '\n' + buf + '\n' + JSON.stringify(argv));
+      break;
+    case 'int':
+    case 'integer':
+      val = parseInt(argv[i]);
+      break;
+    case 'float':
+    case 'double':
+    case 'number':
+      val = parseFloat(argv[i]);
+      break;
+    case 'array':
+    case 'object':
+      var buf = argv[i];
+      while (true) {
+        try {
+          var val = eval('(' + buf + ')');
+          break;
+        } catch (e) {}
+        ++i;
+        if (i >= len) {
+          ERROR('Could not parse "' + srcName + '": ' + itemSchema.type + '\n' +
+          buf + '\n' + JSON.stringify(argv));
+        }
+        buf += argv[i];
       }
-      buf += argv[i];
-    }
-    break;
-  case 'any':
-  case 'string':
-  default:
-    val = argv[i];
-    break;
+      break;
+    case 'any':
+    case 'string':
+    default:
+      val = argv[i];
+      break;
   }
 
   var status = jsonSchema.validate(val, itemSchema);
@@ -115,26 +108,19 @@ function addArg(result, optsDef, argv, i) {
       log.push('\n\t\t' + (e.property ? e.property + ': ' : '') + e.message);
     }
 
-
-
-
-    ERROR('\n' + srcName + ': provided value ' + argv[i] + '\n\t' + itemSchema.name + ' option:' + log.join(''));
+    ERROR('\n' + srcName + ': provided value ' + argv[i] + '\n\t' + itemSchema.name +
+      ' option:' + log.join(''));
   }
 }
 
-
-
-
 exports = function (argv, origDef) {
-  var optsDef = merge({}, origDef), result = {};
+  var optsDef = merge({}, origDef),
+    result = {};
   for (var i in optsDef) {
     var opt = optsDef[i];
     if ('default' in opt) {
       result[opt.name] = opt['default'];
     }
-
-
-
 
     var also = opt.also;
     if (also) {
@@ -148,10 +134,9 @@ exports = function (argv, origDef) {
     }
   }
 
-
-
-
-  var unprocessed = [], i = 0, len = argv.length;
+  var unprocessed = [],
+    i = 0,
+    len = argv.length;
 
   while (i < len) {
     if (argv[i] in optsDef) {
@@ -162,16 +147,11 @@ exports = function (argv, origDef) {
     }
   }
 
-
-
-
   return {
     args: unprocessed,
     opts: result
   };
-}
-;
-
+};
 
 import wordWrap from '../util/wordWrap';
 

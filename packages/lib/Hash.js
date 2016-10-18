@@ -6,8 +6,8 @@ import { GLOBAL } from 'base';
  * Summary: a basic Hash/Set class for number and string values.
  * Methods:
  *  - init(args...) - if args is a single JS object, this will be used to define
- *      the keys and values for the Hash.  
- *  - contains(value) 
+ *      the keys and values for the Hash.
+ *  - contains(value)
  * Example:
  *  var h = new Hash('a', 'b', 'c');
  *  h.contains('a') ==> true
@@ -17,7 +17,7 @@ import { GLOBAL } from 'base';
  *  h.hasKey('a') ==> true
  */
 exports = class {
-  constructor() {
+  constructor () {
     this._keys = {};
     this._dict = {};
     this._values = {};
@@ -33,17 +33,16 @@ exports = class {
       for (var i = 0, len = arguments.length; i < len; i++) {
         this._keys[arguments[i]] = true;
         this._values[arguments[i]] = true;
-      }
-      ;
+      };
     }
   }
-  contains(val) {
+  contains (val) {
     return this._values.hasOwnProperty(val);
   }
-  containsKey(key) {
+  containsKey (key) {
     return this._keys.hasOwnProperty(key);
   }
-  each(f, ctx) {
+  each (f, ctx) {
     for (var i in keys) {
       if (this._keys.hasOwnProperty(i)) {
         f.call(ctx || GLOBAL, i, this._values[i], this);

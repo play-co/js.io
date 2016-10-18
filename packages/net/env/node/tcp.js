@@ -9,19 +9,19 @@ import interfaces from '../../interfaces';
 var net = require('net');
 
 class Transport extends interfaces.Transport {
-  constructor(socket) {
+  constructor (socket) {
     super();
 
     this._socket = socket;
   }
-  makeConnection(protocol) {
+  makeConnection (protocol) {
     this._socket.addListener('data', bind(protocol, 'dataReceived'));
     this._socket.addListener('close', bind(protocol, 'connectionLost'));
   }
-  write(data) {
+  write (data) {
     this._socket.write(data);
   }
-  loseConnection() {
+  loseConnection () {
     this._socket.end();
   }
 }
@@ -30,7 +30,7 @@ class Transport extends interfaces.Transport {
  * @extends net.interfaces.Connector
  */
 exports.Connector = class extends interfaces.Connector {
-  connect() {
+  connect () {
     var conn = net.createConnection(this._opts.port, this._opts.host);
     conn.addListener('connect', bind(this, function () {
       this.onConnect(new Transport(conn));
@@ -51,14 +51,11 @@ exports.Connector = class extends interfaces.Connector {
  * @extends net.interfaces.Listener
  */
 exports.Listener = class extends interfaces.Listener {
-  listen() {
+  listen () {
     var s = net.createServer(bind(this, function (socket) {
       if (typeof this._opts.timeout == 'number') {
         socket.setTimeout(this._opts.timeout);
       }
-
-
-
 
       socket.setEncoding('utf8');
       this.onConnect(new Transport(socket));
@@ -67,10 +64,11 @@ exports.Listener = class extends interfaces.Listener {
     var listenString = (this._opts['interface'] || '') + ':' + this._opts.port;
     // TODO: Show class name
     logger.info('Listening tcp@' + listenString);
-    s.listen(this._opts.port, this._opts['interface'] || '').on('error', bind(this, function (err) {
-      logger.error(err);
-      this.emit('error', err);
-    }));
+    s.listen(this._opts.port, this._opts['interface'] || '').on('error',
+      bind(this, function (err) {
+        logger.error(err);
+        this.emit('error', err);
+      }));
   }
 };
 

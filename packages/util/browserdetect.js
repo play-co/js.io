@@ -2,11 +2,10 @@ let exports = {};
 
 exports.BrowserDetect = new function () {
   var versionSearchString;
-  var dataBrowser = [
-    {
-      string: navigator.userAgent,
-      subString: 'Chrome'
-    },
+  var dataBrowser = [{
+    string: navigator.userAgent,
+    subString: 'Chrome'
+  },
     {
       string: navigator.userAgent,
       subString: 'OmniWeb',
@@ -65,12 +64,11 @@ exports.BrowserDetect = new function () {
     }
   ];
 
-  var dataOS = [
-    {
-      string: navigator.platform,
-      subString: 'Win',
-      identity: 'Windows'
-    },
+  var dataOS = [{
+    string: navigator.platform,
+    subString: 'Win',
+    identity: 'Windows'
+  },
     {
       string: navigator.platform,
       subString: 'Mac'
@@ -86,7 +84,7 @@ exports.BrowserDetect = new function () {
     }
   ];
 
-  function searchString(data) {
+  function searchString (data) {
     for (var i = 0, item; item = data[i]; i++) {
       var dataString = item.string;
       var dataProp = item.prop;
@@ -94,30 +92,26 @@ exports.BrowserDetect = new function () {
       versionSearchString = item.versionSearch || item.identity;
       if (dataString) {
         if (dataString.indexOf(item.subString) != -1)
-          return item.identity;
+          { return item.identity; }
       } else if (dataProp)
-        return item.identity;
+        { return item.identity; }
     }
   }
 
-
-
-
-  function searchVersion(dataString) {
+  function searchVersion (dataString) {
     if (dataString && typeof dataString === 'string') {
       var index = dataString.indexOf(versionSearchString);
       if (index == -1)
-        return;
-      return parseFloat(dataString.substring(index + versionSearchString.length + 1));
+        { return; }
+      return parseFloat(dataString.substring(index + versionSearchString.length +
+        1));
     }
     return;
   }
 
-
-
-
   this.browser = searchString(dataBrowser) || 'unknown';
-  this.version = searchVersion(navigator.userAgent) || searchVersion(navigator.appVersion) || 'unknown';
+  this.version = searchVersion(navigator.userAgent) || searchVersion(
+    navigator.appVersion) || 'unknown';
   this.OS = searchString(dataOS) || 'unknown';
   this.isWebKit = RegExp(' AppleWebKit/').test(navigator.userAgent);
   this['is' + this.browser] = this.version;

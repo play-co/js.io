@@ -8,25 +8,23 @@ exports = function (str, maxWidth, prefix, tabWidth) {
     return prefix + str;
   }
 
+  var words = str.split(' '),
+    numWords = words.length,
+    lines = [{
+      str: [],
+      len: 0
+    }],
+    i = 0;
 
-
-
-  var words = str.split(' '), numWords = words.length, lines = [{
-        str: [],
-        len: 0
-      }], i = 0;
-
-  function finalize() {
+  function finalize () {
     lines[i] = prefix + curLine.str.join(' ');
     ++i;
   }
 
-
-
-
   var curLine = lines[i];
   for (var j = 0; j < numWords; ++j) {
-    var word = words[j], wordLen = word.length;
+    var word = words[j],
+      wordLen = word.length;
     if (curLine.len && curLine.len + wordLen + 1 > maxWidth) {
       finalize();
       curLine = lines[i] = {
@@ -42,21 +40,11 @@ exports = function (str, maxWidth, prefix, tabWidth) {
     }
   }
 
-
-
-
   if (curLine.len) {
     finalize();
   } else {
     lines.pop();
   }
-
-
-
-
-
-
-
 
   return lines.join('\n');
 };

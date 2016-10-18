@@ -3,26 +3,26 @@ let exports = {};
 import { bind } from 'base';
 
 exports = class {
-  constructor() {
+  constructor () {
     this._run = [];
   }
-  fired() {
+  fired () {
     return this._fired;
   }
-  reset() {
+  reset () {
     this._args = [];
     this._fired = false;
   }
-  clear() {
+  clear () {
     this.reset();
     this._run = [];
     this._pending = null;
     this._stat = null;
   }
-  forward(args) {
+  forward (args) {
     this.run.apply(this, args);
   }
-  run(ctx, method) {
+  run (ctx, method) {
     var f = method ? bind.apply(this, arguments) : ctx;
     if (f) {
       if (this._fired) {
@@ -33,13 +33,10 @@ exports = class {
     }
     return this;
   }
-  runOrTimeout(onFire, onTimeout, duration) {
+  runOrTimeout (onFire, onTimeout, duration) {
     if (!onFire && !onTimeout) {
       return;
     }
-
-
-
 
     if (this._fired) {
       onFire.apply(this, this._args);
@@ -59,14 +56,11 @@ exports = class {
           }
         }
 
-
-
-
         onTimeout();
       }), duration);
     }
   }
-  fire() {
+  fire () {
     if (this._fired) {
       return;
     }
@@ -80,7 +74,7 @@ exports = class {
       }
     }
   }
-  chain(id) {
+  chain (id) {
     if (!this._pending) {
       this._pending = {};
     }
@@ -92,16 +86,13 @@ exports = class {
     this.reset();
     return bind(this, '_deferred', id);
   }
-  _deferred(id) {
+  _deferred (id) {
     if (!this._stat) {
       this._stat = {};
     }
     if (this._stat.hasOwnProperty(id)) {
       return;
     }
-
-
-
 
     this._stat[id] = Array.prototype.slice.call(arguments, 1);
     var pending = this._pending;
@@ -111,9 +102,6 @@ exports = class {
         return;
       }
     }
-
-
-
 
     this.fire(this._stat);
   }

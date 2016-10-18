@@ -9,14 +9,13 @@ let Buffer = buffer.Buffer;
  * @extends net.interfaces.Protocol
  */
 exports.BufferedProtocol = class extends Protocol {
-  constructor() {
+  constructor () {
     super();
 
     this.buffer = new Buffer();
   }
-  bufferUpdated() {
-  }
-  dataReceived(data) {
+  bufferUpdated () {}
+  dataReceived (data) {
     this.buffer.append(data);
     this.bufferUpdated();
   }

@@ -21,15 +21,13 @@ exports.READYSTATE = Enum({
 });
 var READYSTATE = exports.READYSTATE;
 
-
 var id = 0;
 var kDefaultBackoff = 50;
 var kDefaultTimeoutInterval = 45000;
 var kDefaultHandshakeTimeout = 10000;
 
-
 exports.CometSession = class {
-  constructor() {
+  constructor () {
     this._id = ++id;
     this._url = null;
     this.readyState = READYSTATE.INITIAL;
@@ -51,7 +49,6 @@ exports.CometSession = class {
 
     this._timeoutTimer = null;
 
-
     this._writeBackoff = kDefaultBackoff;
     this._cometBackoff = kDefaultBackoff;
 
@@ -61,7 +58,7 @@ exports.CometSession = class {
     this._nullReceived = false;
   }
 
-  setEncoding(encoding) {
+  setEncoding (encoding) {
     if (encoding == this._options.encoding) {
       return;
     }
@@ -76,7 +73,7 @@ exports.CometSession = class {
     this._options.encoding = encoding;
   }
 
-  connect(url, options) {
+  connect (url, options) {
     this._url = url.replace(/\/$/, '');
     this._options = options || {};
 
@@ -84,7 +81,8 @@ exports.CometSession = class {
     this.setEncoding(this._options.encoding);
 
     // enforce encoding constraints
-    this._options.connectTimeout = this._options.connectTimeout || kDefaultHandshakeTimeout;
+    this._options.connectTimeout = this._options.connectTimeout ||
+      kDefaultHandshakeTimeout;
 
     var transportClass = transports.chooseTransport(url, this._options);
     this._transport = new transportClass();
@@ -100,9 +98,10 @@ exports.CometSession = class {
     this.readyState = READYSTATE.CONNECTING;
     this._transport.handshake(this._url, this._options);
 
-    this._handshakeTimeoutTimer = setTimeout(bind(this, this._handshakeTimeout), this._options.connectTimeout);
+    this._handshakeTimeoutTimer = setTimeout(bind(this, this._handshakeTimeout),
+      this._options.connectTimeout);
   }
-  write(data, encoding) {
+  write (data, encoding) {
     if (this.readyState != READYSTATE.CONNECTED) {
       throw new errors.ReadyStateError();
     }
@@ -113,7 +112,7 @@ exports.CometSession = class {
     this._writeBuffer += data;
     this._doWrite();
   }
-  _protocolError(msg) {
+  _protocolError (msg) {
     logger.debug('_protocolError', msg);
     // Immediately fire the onclose
     // send a null packet to the server
@@ -122,7 +121,7 @@ exports.CometSession = class {
     this._doWrite(true);
     this._doOnDisconnect(new errors.ServerProtocolError(msg));
   }
-  _receivedNullPacket() {
+  _receivedNullPacket () {
     logger.debug('_receivedNullPacket');
     // send a null packet back to the server
     this._receivedNull = true;
@@ -135,14 +134,10 @@ exports.CometSession = class {
       this.readyState = READYSTATE.DISCONNECTED;
     }
 
-
-
-
     // fire an onclose
     this._doOnDisconnect(new errors.ConnectionClosedCleanly());
-
   }
-  _sentNullPacket() {
+  _sentNullPacket () {
     logger.debug('_sentNullPacket');
     this._nullSent = true;
     if (this._nullSent && this._nullReceived) {
@@ -150,27 +145,26 @@ exports.CometSession = class {
     }
   }
 
-  close(err) {
+  close (err) {
     logger.debug('close called', err, 'readyState', this.readyState);
 
-    // 
+    //
     switch (this.readyState) {
-    case READYSTATE.CONNECTING:
-      clearTimeout(this._handshakeRetryTimer);
-      clearTimeout(this._handshakeTimeoutTimer);
-      this.readyState = READYSTATE.DISCONNECTED;
-      this._doOnDisconnect(err);
-      break;
-    case READYSTATE.CONNECTED:
-      this.readyState = READYSTATE.DISCONNECTING;
-      this._doWrite(true);
-      clearTimeout(this._timeoutTimer);
-      break;
-    case READYSTATE.DISCONNECTED:
-      throw new errors.ReadyStateError('Session is already disconnected');
-      break;
+      case READYSTATE.CONNECTING:
+        clearTimeout(this._handshakeRetryTimer);
+        clearTimeout(this._handshakeTimeoutTimer);
+        this.readyState = READYSTATE.DISCONNECTED;
+        this._doOnDisconnect(err);
+        break;
+      case READYSTATE.CONNECTED:
+        this.readyState = READYSTATE.DISCONNECTING;
+        this._doWrite(true);
+        clearTimeout(this._timeoutTimer);
+        break;
+      case READYSTATE.DISCONNECTED:
+        throw new errors.ReadyStateError('Session is already disconnected');
+        break;
     }
-
 
     this._opened = false;
     // what is this used for???
@@ -179,7 +173,7 @@ exports.CometSession = class {
     this._doOnDisconnect(err);
     this._sessionKey = null;
   }
-  _handshakeTimeout() {
+  _handshakeTimeout () {
     logger.debug('handshake timeout');
     this._handshakeTimeoutTimer = null;
     clearTimeout(this._handshakeRetryTimer);
@@ -187,19 +181,13 @@ exports.CometSession = class {
       this.readyState = READYSTATE.DISCONNECTED;
     }
 
-
-
-
-
-
-
-
     this._doOnDisconnect(new errors.ServerUnreachable());
   }
-  _handshakeSuccess(data) {
+  _handshakeSuccess (data) {
     logger.debug('handshake success', data);
     if (this.readyState != READYSTATE.CONNECTING) {
-      logger.debug('received handshake success in invalid readyState:', this.readyState);
+      logger.debug('received handshake success in invalid readyState:',
+        this.readyState);
       return;
     }
     clearTimeout(this._handshakeTimeoutTimer);
@@ -210,7 +198,7 @@ exports.CometSession = class {
     this._doOnConnect();
     this._doConnectComet();
   }
-  _handshakeFailure(data) {
+  _handshakeFailure (data) {
     logger.debug('handshake failure', data);
     if (this.readyState != READYSTATE.CONNECTING) {
       return;
@@ -220,9 +208,6 @@ exports.CometSession = class {
       return this._doOnDisconnect(new errors.ServerUnreachable());
     }
 
-
-
-
     logger.debug('trying again in ', this._handshakeBackoff);
     this._handshakeRetryTimer = setTimeout(bind(this, function () {
       this._handshakeRetryTimer = null;
@@ -231,8 +216,9 @@ exports.CometSession = class {
 
     this._handshakeBackoff *= 2;
   }
-  _writeSuccess() {
-    if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
+  _writeSuccess () {
+    if (this.readyState != READYSTATE.CONNECTED && this.readyState !=
+      READYSTATE.DISCONNECTING) {
       return;
     }
     if (this._nullInFlight) {
@@ -245,8 +231,9 @@ exports.CometSession = class {
       this._doWrite(this._nullInBuffer);
     }
   }
-  _writeFailure() {
-    if (this.readyState != READYSTATE.CONNECTED && this.READYSTATE != READYSTATE.DISCONNECTING) {
+  _writeFailure () {
+    if (this.readyState != READYSTATE.CONNECTED && this.READYSTATE !=
+      READYSTATE.DISCONNECTING) {
       return;
     }
     this._writeTimer = setTimeout(bind(this, function () {
@@ -255,7 +242,7 @@ exports.CometSession = class {
     }), this._writeBackoff);
     this._writeBackoff *= 2;
   }
-  _doWrite(sendNull) {
+  _doWrite (sendNull) {
     if (this._packetsInFlight) {
       if (sendNull) {
         this._nullInBuffer = true;
@@ -265,10 +252,11 @@ exports.CometSession = class {
     }
     this.__doWrite(sendNull);
   }
-  __doWrite(sendNull) {
+  __doWrite (sendNull) {
     logger.debug('_writeBuffer:', this._writeBuffer);
     if (!this._packetsInFlight && this._writeBuffer) {
-      this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
+      this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId,
+        this._writeBuffer, this._options)];
       this._writeBuffer = '';
     }
     if (sendNull && !this._writeBuffer) {
@@ -287,14 +275,16 @@ exports.CometSession = class {
       return;
     }
     logger.debug('sending packets:', JSON.stringify(this._packetsInFlight));
-    this._transport.send(this._url, this._sessionKey, this._lastEventId || 0, JSON.stringify(this._packetsInFlight), this._options);
+    this._transport.send(this._url, this._sessionKey, this._lastEventId ||
+      0, JSON.stringify(this._packetsInFlight), this._options);
   }
-  _doConnectComet() {
+  _doConnectComet () {
     logger.debug('_doConnectComet');
     //		return;
-    this._transport.comet(this._url, this._sessionKey, this._lastEventId || 0, this._options);
+    this._transport.comet(this._url, this._sessionKey, this._lastEventId ||
+      0, this._options);
   }
-  _cometFailure(data) {
+  _cometFailure (data) {
     if (this.readyState != READYSTATE.CONNECTED) {
       return;
     }
@@ -302,18 +292,12 @@ exports.CometSession = class {
       return this.close(new errors.ExpiredSession(data));
     }
 
-
-
-
-
-
-
-
     this._cometTimer = setTimeout(bind(this, '_doConnectComet'), this._cometBackoff);
     this._cometBackoff *= 2;
   }
-  _cometSuccess(data) {
-    if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
+  _cometSuccess (data) {
+    if (this.readyState != READYSTATE.CONNECTED && this.readyState !=
+      READYSTATE.DISCONNECTING) {
       return;
     }
     logger.debug('comet Success:', data);
@@ -321,7 +305,8 @@ exports.CometSession = class {
     this._resetTimeoutTimer();
 
     var response = data.response;
-    for (var i = 0, packet; (packet = response[i]) || i < response.length; i++) {
+    for (var i = 0, packet;
+      (packet = response[i]) || i < response.length; i++) {
       logger.debug('process packet:', packet);
       if (packet === null) {
         return this.close(new errors.ServerProtocolError(data));
@@ -333,7 +318,8 @@ exports.CometSession = class {
       if (typeof this._lastEventId == 'number' && ackId <= this._lastEventId) {
         continue;
       }
-      if (typeof this._lastEventId == 'number' && ackId != this._lastEventId + 1) {
+      if (typeof this._lastEventId == 'number' && ackId != this._lastEventId +
+        1) {
         return this._protocolError('Ack id too high');
       }
       this._lastEventId = ackId;
@@ -357,7 +343,8 @@ exports.CometSession = class {
         var result = utf8.decode(this._utf8ReadBuffer);
         data = result[0];
         this._utf8ReadBuffer = this._utf8ReadBuffer.slice(result[1]);
-        logger.debug('after utf8 decode, _utf8ReadBuffer:', this._utf8ReadBuffer, 'data:', data);
+        logger.debug('after utf8 decode, _utf8ReadBuffer:', this._utf8ReadBuffer,
+          'data:', data);
       }
       logger.debug('dispatching data:', data);
 
@@ -365,21 +352,15 @@ exports.CometSession = class {
       this._doOnRead(data);
     }
 
-
-
-
-    if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
+    if (this.readyState != READYSTATE.CONNECTED && this.readyState !=
+      READYSTATE.DISCONNECTING) {
       return;
     }
 
-
-
-
     // reconnect comet last, after we process all of the packet ids
     this._doConnectComet();
-
   }
-  _doOnRead(data) {
+  _doOnRead (data) {
     if (typeof this.onread == 'function') {
       logger.debug('call onread function', data);
       this.onread(data);
@@ -387,7 +368,7 @@ exports.CometSession = class {
       logger.debug('skipping onread callback (function missing)');
     }
   }
-  _doOnDisconnect(err) {
+  _doOnDisconnect (err) {
     if (typeof this.ondisconnect == 'function') {
       logger.debug('call ondisconnect function', err);
       this.ondisconnect(err);
@@ -395,7 +376,7 @@ exports.CometSession = class {
       logger.debug('skipping ondisconnect callback (function missing)');
     }
   }
-  _doOnConnect() {
+  _doOnConnect () {
     if (typeof this.onconnect == 'function') {
       logger.debug('call onconnect function');
       try {
@@ -411,14 +392,14 @@ exports.CometSession = class {
       logger.debug('skipping onconnect callback (function missing)');
     }
   }
-  _resetTimeoutTimer() {
+  _resetTimeoutTimer () {
     clearTimeout(this._timeoutTimer);
     this._timeoutTimer = setTimeout(bind(this, function () {
       logger.debug('connection timeout expired');
       this.close(new errors.ConnectionTimeout());
     }), this._getTimeoutInterval());
   }
-  _getTimeoutInterval() {
+  _getTimeoutInterval () {
     return kDefaultTimeoutInterval;
   }
 };

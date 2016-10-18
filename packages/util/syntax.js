@@ -2,7 +2,7 @@ let exports = {};
 
 import esprima from './esprima';
 
-function validate(code, filename) {
+function validate (code, filename) {
   try {
     var syntax = esprima.parse(code, {
       tolerant: true,
@@ -17,10 +17,7 @@ function validate(code, filename) {
   }
 }
 
-
-
-
-function padString(str, pad) {
+function padString (str, pad) {
   str = str + '';
   while (str.length < pad) {
     str = ' ' + str;
@@ -28,10 +25,7 @@ function padString(str, pad) {
   return str;
 }
 
-
-
-
-function logColor(color, str) {
+function logColor (color, str) {
   if (console.group) {
     str = '%c' + str;
     console.log(str, 'color:' + color);
@@ -40,19 +34,13 @@ function logColor(color, str) {
   }
 }
 
-
-
-
-function logErrors(filename, code, errors) {
+function logErrors (filename, code, errors) {
   var title = 'Syntax Error (' + filename + '):';
   if (console.group) {
     console.group('%c' + title, 'color: red; text-decoration: underline');
   } else {
     console.error('Syntax Error:');
   }
-
-
-
 
   var linesBefore = 3;
   var linesAfter = 3;
@@ -70,22 +58,13 @@ function logErrors(filename, code, errors) {
     logColor('red', 'Line ' + e.lineNumber + ': ' + e.description);
   }
 
-
-
-
   console.groupEnd && console.groupEnd();
 }
 
-
-
-
-
-
-
-
 var printLines = console.group ? function (pad, lines, from, to) {
   for (var j = from; j <= to; ++j) {
-    console.log('%c' + padString(j, pad) + ' %c' + lines[j - 1], 'color: gray', 'color: auto');
+    console.log('%c' + padString(j, pad) + ' %c' + lines[j - 1],
+      'color: gray', 'color: auto');
   }
 } : function (pad, lines, from, to) {
   for (var j = from; j <= to; ++j) {
