@@ -32,6 +32,8 @@ function ERROR(msg) {
 }
 
 
+
+
 function addAlso(optsDef, also, value) {
   if (typeof also == 'string') {
     optsDef[also] = value;
@@ -43,6 +45,10 @@ function addAlso(optsDef, also, value) {
     logger.warn('Key specified in option', optsDef.name, 'is invalid.  Ignoring:', also);
   }
 }
+
+
+
+
 
 
 
@@ -110,9 +116,13 @@ function addArg(result, optsDef, argv, i) {
     }
 
 
+
+
     ERROR('\n' + srcName + ': provided value ' + argv[i] + '\n\t' + itemSchema.name + ' option:' + log.join(''));
   }
 }
+
+
 
 
 exports = function (argv, origDef) {
@@ -122,6 +132,8 @@ exports = function (argv, origDef) {
     if ('default' in opt) {
       result[opt.name] = opt['default'];
     }
+
+
 
 
     var also = opt.also;
@@ -137,6 +149,8 @@ exports = function (argv, origDef) {
   }
 
 
+
+
   var unprocessed = [], i = 0, len = argv.length;
 
   while (i < len) {
@@ -149,12 +163,13 @@ exports = function (argv, origDef) {
   }
 
 
+
+
   return {
     args: unprocessed,
     opts: result
   };
 }
-
 ;
 
 

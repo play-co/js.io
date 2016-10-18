@@ -35,6 +35,12 @@ exports.getDoc = function () {
 
 
 
+
+
+
+
+
+
   if (!doc) {
     doc = document;
   }
@@ -57,14 +63,13 @@ exports.createXHR = function () {
 exports.post = function (opts, cb) {
   return exports.get(merge({ method: 'POST' }, opts), cb);
 }
-
 ;
 
 
 var _UID = 0;
 
-var Request = Class(function () {
-  this.init = function (opts, cb) {
+class Request {
+  constructor(opts, cb) {
     if (typeof opts == 'string') {
       opts = { url: opts };
     }
@@ -72,6 +77,8 @@ var Request = Class(function () {
       logger.error('no url provided');
       return;
     }
+
+
 
 
     this.method = (opts.method || 'GET').toUpperCase();
@@ -93,6 +100,8 @@ var Request = Class(function () {
     }
 
 
+
+
     var isObject = opts.data && typeof opts.data == 'object';
 
     if (this.method == 'GET' && opts.data) {
@@ -100,9 +109,13 @@ var Request = Class(function () {
     }
 
 
+
+
     if (opts.query) {
       this.url = new URI(this.url).addQuery(typeof opts.query == 'object' ? opts.query : URI.parseQuery(opts.query)).toString();
     }
+
+
 
 
     try {
@@ -114,8 +127,8 @@ var Request = Class(function () {
       cb && cb({ invalidData: true }, null, '');
       return;
     }
-  };
-});
+  }
+}
 
 var _pending = [];
 
@@ -140,6 +153,8 @@ function _sendNext() {
 }
 
 
+
+
 function _send(request) {
   ++_inflight;
 
@@ -155,11 +170,15 @@ function _send(request) {
   }
 
 
+
+
   xhr.withCredentials = request.withCredentials;
 
   if (!setContentType) {
     xhr.setRequestHeader('Content-Type', 'text/plain');
   }
+
+
 
 
   xhr.onreadystatechange = bind(this, onReadyStateChange, request, xhr);
@@ -168,10 +187,14 @@ function _send(request) {
   }
 
 
+
+
   //logger.log('==== setting timeout for', request.timeout, request.timeoutRef, '<<');
   request.ts = +new Date();
   xhr.send(request.data || null);
 }
+
+
 
 
 function cancel(xhr, request) {
@@ -180,6 +203,8 @@ function cancel(xhr, request) {
   if (request.timedOut) {
     logger.log('already timed out?!');
   }
+
+
 
 
   xhr.onreadystatechange = null;
@@ -192,8 +217,12 @@ function cancel(xhr, request) {
   }
 
 
+
+
   request.cb && request.cb({ timeout: true }, null, headers);
 }
+
+
 
 
 function onReadyStateChange(request, xhr) {
@@ -202,9 +231,13 @@ function onReadyStateChange(request, xhr) {
   }
 
 
+
+
   if (request.timedOut) {
     throw 'Unexpected?!';
   }
+
+
 
 
   --_inflight;
@@ -218,6 +251,8 @@ function onReadyStateChange(request, xhr) {
     clearTimeout(request.timeoutRef);
     request.timeoutRef = null;
   }
+
+
 
 
   // only fire callback once
@@ -239,6 +274,8 @@ function onReadyStateChange(request, xhr) {
   }
 
 
+
+
   // .status will be 0 when requests are filled via app cache on at least iOS 4.x
   if (xhr.status != 200 && xhr.status != 0 || parseError) {
     cb({
@@ -250,5 +287,6 @@ function onReadyStateChange(request, xhr) {
     cb(null, data, xhr.getAllResponseHeaders());
   }
 }
+
 
 export default exports;

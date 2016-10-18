@@ -20,7 +20,6 @@ exports.weightedAverage = function (a, w, n) {
   }
   return s / n;
 }
-
 ;
 
 
@@ -47,7 +46,6 @@ exports.average = function (a, n) {
   }
   return s / n;
 }
-
 ;
 
 
@@ -64,7 +62,6 @@ exports.stddev = function (a, n) {
   }
   return Math.sqrt(s / (n - 1));
 }
-
 ;
 
 
@@ -80,7 +77,6 @@ exports.shuffle = function (a, randGen) {
   }
   return a;
 }
-
 ;
 
 
@@ -98,10 +94,16 @@ exports.rotate = function (a, count) {
   }
 
 
+
+
   for (var i = 0; i < len; ++i) {
     b[i] = a[j];
     j = (j + 1) % len;
   }
+
+
+
+
 
 
 

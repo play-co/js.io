@@ -36,6 +36,12 @@ let BrowserDetect = browserdetect.BrowserDetect;
 
 
 
+
+
+
+
+
+
     if (!doc) {
       doc = document;
     }
@@ -65,10 +71,14 @@ function isWindowDomain(url) {
 }
 
 
+
+
 var xhrSupportsBinary = undefined;
 function checkXHRBinarySupport(xhr) {
   xhrSupportsBinary = !!xhr.sendAsBinary;
 }
+
+
 
 
 function canUseXHR(url) {
@@ -78,11 +88,15 @@ function canUseXHR(url) {
   }
 
 
+
+
   // try to create an XHR using the same function the XHR transport uses
   var xhr = new exports.XHR();
   if (!xhr) {
     return false;
   }
+
+
 
 
   checkXHRBinarySupport(xhr);
@@ -92,6 +106,8 @@ function canUseXHR(url) {
   if (isWindowDomain(url)) {
     return true;
   }
+
+
 
 
   // if the URL requested is a different domain than the window,
@@ -142,54 +158,53 @@ var PARAMS = {
   }
 };
 
-exports.Transport = Class(function (supr) {
-  this.handshake = function (url, options) {
+exports.Transport = class {
+  handshake(url, options) {
     throw new Error('handshake Not Implemented');
-  };
-  this.comet = function (url, sessionKey, lastEventId, options) {
+  }
+  comet(url, sessionKey, lastEventId, options) {
     throw new Error('comet Not Implemented');
-  };
-  this.send = function (url, sessionKey, data, options) {
+  }
+  send(url, sessionKey, data, options) {
     throw new Error('send Not Implemented');
-  };
-  this.encodePacket = function (packetId, data, options) {
+  }
+  encodePacket(packetId, data, options) {
     throw new Error('encodePacket Not Implemented');
-  };
-  this.abort = function () {
+  }
+  abort() {
     throw new Error('abort Not Implemented');
-  };
-});
+  }
+};
 
-var baseTransport = Class(exports.Transport, function (supr) {
-  this.init = function () {
+class baseTransport extends exports.Transport {
+  constructor() {
+    super();
+
     this._aborted = false;
     this._handshakeArgs = { ct: 'application/javascript' };
     this._handshakeData = '{}';
-  };
-
-  this.handshake = function (url, options) {
+  }
+  handshake(url, options) {
     logger.debug('handshake:', url, options);
     this._makeRequest('send', url + '/handshake', this._handshakeArgs, this._handshakeData, this.handshakeSuccess, this.handshakeFailure);
-  };
-
-  this.comet = function (url, sessionKey, lastEventId, options) {
+  }
+  comet(url, sessionKey, lastEventId, options) {
     logger.debug('comet:', url, sessionKey, lastEventId, options);
     var args = {
       s: sessionKey,
       a: lastEventId
     };
     this._makeRequest('comet', url + '/comet', args, null, this.cometSuccess, this.cometFailure);
-  };
-
-  this.send = function (url, sessionKey, lastEventId, data, options) {
+  }
+  send(url, sessionKey, lastEventId, data, options) {
     //logger.debug('send:', url, sessionKey, data, options);
     var args = {
       s: sessionKey,
       a: lastEventId
     };
     this._makeRequest('send', url + '/send', args, data, this.sendSuccess, this.sendFailure);
-  };
-});
+  }
+}
 
 
 function onReadyStateChange(xhr, rType, cb, eb) {
@@ -201,10 +216,18 @@ function onReadyStateChange(xhr, rType, cb, eb) {
 
 
 
+
+
+
+
+
+
   try {
     if (xhr.readyState != 4) {
       return;
     }
+
+
 
 
     data.response = eval(xhr.responseText);
@@ -213,6 +236,8 @@ function onReadyStateChange(xhr, rType, cb, eb) {
       eb(data);
       return;
     }
+
+
 
 
     logger.debug('XHR data received');
@@ -226,31 +251,35 @@ function onReadyStateChange(xhr, rType, cb, eb) {
 
 
 
+
+
+
+
+
+
   cb(data);
 }
 ;
 
 
-transports.xhr = Class(baseTransport, function (supr) {
-  this.init = function () {
-    supr(this, 'init');
+transports.xhr = class extends baseTransport {
+  constructor() {
+    super();
 
     this._xhr = {
       'send': new exports.XHR(),
       'comet': new exports.XHR()
     };
-  };
-
-  this.abort = function () {
+  }
+  abort() {
     this._aborted = true;
     for (var i in this._xhr) {
       if (this._xhr.hasOwnProperty(i)) {
         this._abortXHR(i);
       }
     }
-  };
-
-  this._abortXHR = function (type) {
+  }
+  _abortXHR(type) {
     logger.debug('aborting XHR');
 
     var xhr = this._xhr[type];
@@ -269,11 +298,16 @@ transports.xhr = Class(baseTransport, function (supr) {
 
 
 
+
+
+
+
+
+
     // do not reuse aborted XHRs
     this._xhr[type] = new exports.XHR();
-  };
-
-  this.encodePacket = function (packetId, data, options) {
+  }
+  encodePacket(packetId, data, options) {
     // we don't need to base64 encode things unless there's a null character in there
     return !xhrSupportsBinary ? [
       packetId,
@@ -284,12 +318,8 @@ transports.xhr = Class(baseTransport, function (supr) {
       0,
       data
     ];
-  };
-
-  /**
-	 * even though we encode the POST body as in application/x-www-form-urlencoded
-	 */
-  this._makeRequest = function (rType, url, args, data, cb, eb) {
+  }
+  _makeRequest(rType, url, args, data, cb, eb) {
     if (this._aborted) {
       return;
     }
@@ -313,8 +343,8 @@ transports.xhr = Class(baseTransport, function (supr) {
     setTimeout(function () {
       xhr[xhrSupportsBinary ? 'sendAsBinary' : 'send'](data || null);
     }, 0);
-  };
-});
+  }
+};
 
 var EMPTY_FUNCTION = function () {
   }, SLICE = Array.prototype.slice;
@@ -327,6 +357,8 @@ var EMPTY_FUNCTION = function () {
     if (!doc.body) {
       return false;
     }
+
+
 
 
     var i = doc.createElement('iframe');
@@ -351,6 +383,8 @@ var EMPTY_FUNCTION = function () {
     for (var i = scripts.length - 1; i >= 0; --i) {
       doc.body.removeChild(scripts[i]);
     }
+
+
 
 
     logger.debug('deleting iframe callbacks');
@@ -378,6 +412,8 @@ var EMPTY_FUNCTION = function () {
   }
 
 
+
+
   // IE6/7 onReadyStateChange
   function onReadyStateChange(req, scriptTag) {
     if (scriptTag && scriptTag.readyState != 'loaded') {
@@ -387,6 +423,8 @@ var EMPTY_FUNCTION = function () {
     };
     checkForError.call(this, req);
   }
+
+
 
 
   function checkForError(req, response) {
@@ -405,11 +443,15 @@ var EMPTY_FUNCTION = function () {
   }
 
 
+
+
   var killLoadingBar = BrowserDetect.isFirefox || BrowserDetect.isOpera ? function () {
     var b = document.body;
     if (!b) {
       return;
     }
+
+
 
 
     if (!killLoadingBar.iframe) {
@@ -420,17 +462,16 @@ var EMPTY_FUNCTION = function () {
   } : function () {
   };
 
-  transports.jsonp = Class(baseTransport, function (supr) {
-    this.init = function () {
-      supr(this, 'init');
+  transports.jsonp = class extends baseTransport {
+    constructor() {
+      super();
 
       this._onReady = [];
       this._isReady = false;
 
       this._createIframes();
-    };
-
-    this._createIframes = function () {
+    }
+    _createIframes() {
       this._ifr = {
         send: createIframe(),
         comet: createIframe()
@@ -441,6 +482,8 @@ var EMPTY_FUNCTION = function () {
       }
 
 
+
+
       this._isReady = true;
 
       var readyArgs = this._onReady;
@@ -448,17 +491,15 @@ var EMPTY_FUNCTION = function () {
       for (var i = 0, args; args = readyArgs[i]; ++i) {
         this._makeRequest.apply(this, args);
       }
-    };
-
-    this.encodePacket = function (packetId, data, options) {
+    }
+    encodePacket(packetId, data, options) {
       return [
         packetId,
         1,
         base64.encode(data)
       ];
-    };
-
-    this.abort = function () {
+    }
+    abort() {
       this._aborted = true;
       for (var i in this._ifr) {
         if (this._ifr.hasOwnProperty(i)) {
@@ -467,12 +508,13 @@ var EMPTY_FUNCTION = function () {
           removeIframe(ifr);
         }
       }
-    };
-
-    this._makeRequest = function (rType, url, args, data, cb, eb) {
+    }
+    _makeRequest(rType, url, args, data, cb, eb) {
       if (!this._isReady) {
         return this._onReady.push(arguments);
       }
+
+
 
 
       var ifr = this._ifr[rType], id = ++ifr.cbId, req = {
@@ -501,9 +543,8 @@ var EMPTY_FUNCTION = function () {
       req.url = url + '?' + uri.buildQuery(args);
 
       setTimeout(bind(this, '_request', req), 0);
-    };
-
-    this._request = function (req) {
+    }
+    _request(req) {
       var ifr = this._ifr[req.type], win = ifr.contentWindow, doc = win.document, body = doc.body;
       /*added by skysbird for opera support*/
       if (!body) {
@@ -535,9 +576,11 @@ var EMPTY_FUNCTION = function () {
       }
 
 
+
+
       killLoadingBar();
-    };
-  });
+    }
+  };
 
 }());
 

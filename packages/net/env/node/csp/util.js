@@ -33,26 +33,28 @@ exports.startswith = function (str1, str2) {
   return str1.substring(0, str2.length) == str2;
 };
 
-exports.JSIOError = Class(Error, function () {
-  this.name = 'JSIOError';
-  this.toString = Error.prototype.toString;
-  this.init = function (message, fileName, lineNumber) {
+exports.JSIOError = class extends Error {
+  constructor(message, fileName, lineNumber) {
+    super();
+
     this.name = this.name;
     // promote class property to instance
     this.message = message || '';
     this.fileName = fileName || '\xABfilename\xBB';
     // location.href; // XXX what should go here?
     this.lineNumber = isNaN(+lineNumber) ? 0 : +lineNumber;
-  };
-});
+  }
+};
 
-exports.AssertionError = Class(exports.JSIOError, function (supr) {
-  this.name = 'AssertionError';
-  this.init = function () {
-    supr(this, 'init', arguments);
-  };
-});
+exports.JSIOError.prototype.name = 'JSIOError';
+exports.JSIOError.prototype.toString = Error.prototype.toString;
+exports.AssertionError = class extends exports.JSIOError {
+  constructor() {
+    super(...arguments);
+  }
+};
 
+exports.AssertionError.prototype.name = 'AssertionError';
 exports.assert = function (exp, message) {
   if (!exp) {
     throw new exports.AssertionError(message);

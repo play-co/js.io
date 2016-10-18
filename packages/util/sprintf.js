@@ -27,6 +27,8 @@ var sprintfWrapper = {
     }
 
 
+
+
     var string = arguments[0];
     var exp = new RegExp(/(%([%]|(\-)?(\+|\x20)?(0)?(\d+)?(\.(\d)?)?([bcdfosxX])))/g);
     var matches = new Array();
@@ -42,6 +44,8 @@ var sprintfWrapper = {
       if (match[9]) {
         convCount += 1;
       }
+
+
 
 
       stringPosStart = matchPosEnd;
@@ -69,6 +73,8 @@ var sprintfWrapper = {
     if (arguments.length - 1 < convCount) {
       return null;
     }
+
+
 
 
     var code = null;
@@ -105,6 +111,96 @@ var sprintfWrapper = {
       } else {
         substitution = matches[i].match;
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

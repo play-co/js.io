@@ -67,8 +67,8 @@ var sessionDict = {}, varNames = {
 // 'n'	: 'noCache',
 var updatedHeaders = new Hash('gzipOk', 'contentType');
 
-exports.Session = Class(function () {
-  this.init = function () {
+exports.Session = class {
+  constructor() {
     // this.lastAck = 0; // 'a' variable
     this.key = uuid.uuid(8);
     // generate 8-character base-62 UUID
@@ -101,17 +101,16 @@ exports.Session = Class(function () {
       'sse': ''
     };
     this.resetTimeoutTimer();
-  };
-  this.teardownSession = function () {
+  }
+  teardownSession() {
     clearTimeout(this.durationTimer);
     this.connection.readyState = this.connection.readyState === 'open' ? 'writeOnly' : 'closed';
     this.connection.emit('eof');
     // XXX when the client calls close, do we want to allow the server to
     // keep sending them stuff, write only? And what about when they time out?
     delete sessionDict[this.key];
-  };
-  // send data to the client
-  this.send = function (data) {
+  }
+  send(data) {
     // base64-encode any string data with control characters or non-ASCII
     var packet = typeof data === 'string' && /[^\r\n\t\x32-\x7E]/.test(data) ? [
       this.outgoingPacketId,
@@ -128,17 +127,15 @@ exports.Session = Class(function () {
       this.sendBatch([packet]);
     }
     ;
-  };
-  // else if no comet connection, just keep buffering packets
-  this.close = function () {
+  }
+  close() {
     // call this to close a comet connection, and stop writing to it.
     // any remaining incoming packets will still fire 'receive' events.
     this.send(null);
     this.connection.readyState = this.connection.readyState === 'open' ? 'readOnly' : 'closed';
     this.connection.emit('close');
-  };
-
-  this.updateVars = function (params) {
+  }
+  updateVars(params) {
     for (var param in params) {
       var key = varNames[param];
       if (!key)
@@ -162,15 +159,15 @@ exports.Session = Class(function () {
       ;
     }
     ;
-  };
-  this.isStreaming = function () {
+  }
+  isStreaming() {
     return this.variables.isStreaming === '1' && parseInt(this.variables.duration) > 0;
-  };
-  this.resetDurationTimer = function () {
+  }
+  resetDurationTimer() {
     var duration = 1000 * parseInt(this.variables.duration);
     this.durationTimer = setTimeout(bind(this, this.completeResponse), duration);
-  };
-  this.resetIntervalTimer = function () {
+  }
+  resetIntervalTimer() {
     clearTimeout(this.intervalTimer);
     if (this.variables.interval === '0') {
       return;
@@ -178,15 +175,15 @@ exports.Session = Class(function () {
     ;
     var interval = 1000 * parseInt(this.variables.interval);
     this.intervalTimer = setTimeout(bind(this, this.sendBatch), interval);
-  };
-  this.resetTimeoutTimer = function () {
+  }
+  resetTimeoutTimer() {
     clearTimeout(this.timeoutTimer);
     // Give the client 50% longer than the duration of a comet request before
     // we time them out.
     var timeout = 1000 * parseInt(this.variables.duration) * 1.5;
     this.timeoutTimer = setTimeout(bind(this, this.teardownSession), timeout);
-  };
-  this.sendHeaders = function (response, contentLength) {
+  }
+  sendHeaders(response, contentLength) {
     var allowOrigin = '*';
     // XXX: Make Access-Control configurable
     if (contentLength === 'stream') {
@@ -205,8 +202,8 @@ exports.Session = Class(function () {
       });
     }
     ;
-  };
-  this.startStream = function () {
+  }
+  startStream() {
     this.sendHeaders(this.cometResponse, 'stream');
     var preamble = this.variables.prebuffer + this.variables.preamble;
     if (preamble) {
@@ -214,8 +211,8 @@ exports.Session = Class(function () {
     }
     ;
     this.resetIntervalTimer();
-  };
-  this.sendBatch = function (packetArray) {
+  }
+  sendBatch(packetArray) {
     if (!packetArray) {
       packetArray = [];
     }
@@ -241,8 +238,8 @@ exports.Session = Class(function () {
       clearTimeout(this.durationTimer);
     }
     ;
-  };
-  this.completeResponse = function () {
+  }
+  completeResponse() {
     if (this.isStreaming()) {
       this.cometResponse.end();
       // close a stream
@@ -254,111 +251,111 @@ exports.Session = Class(function () {
     }
     // send empty batch to poll/longpoll
     ;
-  };
-  this.receiveAck = function (ackId) {
+  }
+  receiveAck(ackId) {
     this.resetTimeoutTimer();
     while (this.outgoingPacketBuffer.length && ackId >= this.outgoingPacketBuffer[0][0]) {
       this.outgoingPacketBuffer.shift();
     }
     // remove first element
     ;
-  };
-  // used for handshake, send, and close (not comet or reflect)
-  this.renderResponse = function (response, body) {
+  }
+  renderResponse(response, body) {
     var prefix = this.variables.requestPrefix + '(';
     var suffix = ')' + this.variables.requestSuffix;
     body = prefix + body + suffix;
     this.sendHeaders(response, body.length);
     response.write(body);
     response.end();
-  };
-  // a Server instance dispatches resources to this object's functions
-  this.dispatch = {
-    handshake: function (request, response) {
-      this.renderResponse(response, JSON.stringify({ 'session': this.key }));
-    },
-    comet: function (request, response) {
-      this.cometResponse = response;
-      if (this.isStreaming()) {
-        this.startStream();
-      }
-      ;
-      // we have buffered packets, so send them.
-      if (this.outgoingPacketBuffer.length) {
-        this.sendBatch(this.outgoingPacketBuffer);
-      }
-      ;
-      // if we have no events to deliver, or if this is a stream, start a
-      // duration timer, after which the response will always complete
-      if (!this.outgoingPacketBuffer.length || this.isStreaming()) {
-        this.resetDurationTimer();
-      }
-      ;
-    },
-    send: function (request, response) {
-      var batch = JSON.parse(request.data);
-      logger.debug('received packet batch:', batch);
-      while (batch[0] != undefined) {
-        // packetId, encoding, content = batch.shift()
-        var packetContent, packet = batch.shift(), packetId = packet[0], encoding = packet[1], content = packet[2];
+  }
+};
 
-        if (content === null) {
-          this.close();
-        } else if (encoding === 0) {
-          packetContent = content;
-        } else if (encoding === 1) {
-          packetContent = base64.decode(content);
-        } else {
-          logger.debug('BAD PACKET ENCODING,', encoding, '... dropping packet');
-          break;
-        }
-        // XXX probably should end connection here.
-        ;
-        this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] = packetContent;
-      }
-      ;
-      logger.debug('incomingPacketBuffer', this.incomingPacketBuffer);
-      while (this.incomingPacketBuffer[0] !== undefined) {
-        var nextPacketPayload = this.incomingPacketBuffer.shift();
-        this.lastSequentialIncomingId += 1;
-        this.connection._receive(nextPacketPayload);
-      }
-      ;
-      // this can leave packets in the buffer, to handled later, in order
-      this.renderResponse(response, '"OK"');
-    },
-    close: function (request, response) {
-      this.teardownSession();
-      this.renderResponse(response, '"OK"');
-    },
-    reflect: function (request, response) {
-      var body = request.data;
-      this.sendHeaders(response, body.length);
-      response.write(body);
-      response.end();
-    },
-    streamtest: function (request, response) {
-      logger.debug('streamtest');
+
+exports.Session.prototype.dispatch = {
+  handshake: function (request, response) {
+    this.renderResponse(response, JSON.stringify({ 'session': this.key }));
+  },
+  comet: function (request, response) {
+    this.cometResponse = response;
+    if (this.isStreaming()) {
+      this.startStream();
     }
-  };
-});
+    ;
+    // we have buffered packets, so send them.
+    if (this.outgoingPacketBuffer.length) {
+      this.sendBatch(this.outgoingPacketBuffer);
+    }
+    ;
+    // if we have no events to deliver, or if this is a stream, start a
+    // duration timer, after which the response will always complete
+    if (!this.outgoingPacketBuffer.length || this.isStreaming()) {
+      this.resetDurationTimer();
+    }
+    ;
+  },
+  send: function (request, response) {
+    var batch = JSON.parse(request.data);
+    logger.debug('received packet batch:', batch);
+    while (batch[0] != undefined) {
+      // packetId, encoding, content = batch.shift()
+      var packetContent, packet = batch.shift(), packetId = packet[0], encoding = packet[1], content = packet[2];
 
-
+      if (content === null) {
+        this.close();
+      } else if (encoding === 0) {
+        packetContent = content;
+      } else if (encoding === 1) {
+        packetContent = base64.decode(content);
+      } else {
+        logger.debug('BAD PACKET ENCODING,', encoding, '... dropping packet');
+        break;
+      }
+      // XXX probably should end connection here.
+      ;
+      this.incomingPacketBuffer[packetId - 1 - this.lastSequentialIncomingId] = packetContent;
+    }
+    ;
+    logger.debug('incomingPacketBuffer', this.incomingPacketBuffer);
+    while (this.incomingPacketBuffer[0] !== undefined) {
+      var nextPacketPayload = this.incomingPacketBuffer.shift();
+      this.lastSequentialIncomingId += 1;
+      this.connection._receive(nextPacketPayload);
+    }
+    ;
+    // this can leave packets in the buffer, to handled later, in order
+    this.renderResponse(response, '"OK"');
+  },
+  close: function (request, response) {
+    this.teardownSession();
+    this.renderResponse(response, '"OK"');
+  },
+  reflect: function (request, response) {
+    var body = request.data;
+    this.sendHeaders(response, body.length);
+    response.write(body);
+    response.end();
+  },
+  streamtest: function (request, response) {
+    logger.debug('streamtest');
+  }
+};
 // XXX who knows what this does...?
 var validEncodings = new Hash('utf8', 'plain', 'binary');
 var validReadyStates = new Hash('writeOnly', 'open');
 
 
-exports.Connection = Class(process.EventEmitter, function () {
-  this.init = function (session) {
+exports.Connection = class extends process.EventEmitter {
+  constructor(session) {
+    super();
+
     this.remoteAddress = null;
     // XXX get remote address from requests
     this.readyState = 'open';
     this._session = session;
     this._encoding = 'binary';
     this._utf8buffer = '';
-  };
-  this._receive = function (data) {
+  }
+  _receive(data) {
     if (this._encoding === 'utf8') {
       this._utf8buffer += data;
       // data, len_parsed = utf8.decode(this._utf8buffer)
@@ -368,18 +365,16 @@ exports.Connection = Class(process.EventEmitter, function () {
     // buffer unparsed bytes
     ;
     this.emit('receive', data);
-  };
-
-  this.setEncoding = function (encoding) {
+  }
+  setEncoding(encoding) {
     cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
     if (encoding !== 'utf8') {
       cspUtil.assert(!this._utf8buffer, 'cannot switch encodings with dirty utf8 buffer');
     }
     ;
     this._encoding = encoding;
-  };
-
-  this.send = function (data, encoding) {
+  }
+  send(data, encoding) {
     if (!validReadyStates.contains(this.readyState)) {
       // XXX make error type for this
       throw new Error('Socket is not writable in readyState: ' + this.readyState);
@@ -390,27 +385,27 @@ exports.Connection = Class(process.EventEmitter, function () {
     cspUtil.assert(validEncodings.contains(encoding), 'unrecognized encoding: ' + encoding);
     data = encoding === 'utf8' ? utf8.encode(data) : data;
     this._session.send(data);
-  };
-  this.close = function () {
+  }
+  close() {
     this._session.close();
-  };
-});
+  }
+};
 
 exports.createServer = function (connection_listener) {
   return new exports.Server().addListener('connection', connection_listener);
 };
 
 (function () {
-  var CSPError = Class(cspUtil.AssertionError, function (supr) {
-    this.name = 'CSPError';
-    this.init = function (code)
+  class CSPError extends cspUtil.AssertionError {
+    constructor(code)
       /*, other args */
       {
-        supr(this, 'init', args);
+        super(...args);
         this.code = code;
         var args = Array.prototype.slice.call(arguments, 1);
-      };
-  });
+      }
+  }
+  CSPError.prototype.name = 'CSPError';
   var assertOrRenderError = function (exp, code, message) {
     if (!exp) {
       throw new CSPError(code, message);
@@ -462,14 +457,15 @@ exports.createServer = function (connection_listener) {
   // called every time a new request comes in.
   var validResources = new Hash('static', 'handshake', 'comet', 'send', 'close', 'reflect', 'streamtest'), validMethods = new Hash('GET', 'POST');
 
-  exports.Server = Class(process.EventEmitter, function () {
-    this.init = function (sessionURL) {
+  exports.Server = class extends process.EventEmitter {
+    constructor(sessionURL) {
+      super();
+
       process.EventEmitter.call(this);
       this._sessionUrl = sessionURL || '';
       log('starting server, session url is <' + this._sessionUrl + '>');
-    };
-
-    this._handleRequest = function (request, response) {
+    }
+    _handleRequest(request, response) {
       getRequestBody(request, bind(this, function (body) {
         logger.debug('received request', request.url);
         try {
@@ -531,16 +527,34 @@ exports.createServer = function (connection_listener) {
         }
         ;
       }));
-    };
-    this.listen = function (port, host) {
+    }
+    listen(port, host) {
       var server = http.createServer(bind(this, this._handleRequest));
       if (!port) {
         throw logger.error('No port specified');
       }
       server.listen(port, host);
-    };
-  });
-}());  /* // un-comment to run echo server when this file runs
+    }
+  };
+}());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* // un-comment to run echo server when this file runs
 
 jsio.__env.include('/utils.js');
 function start_echo_server () {
@@ -555,24 +569,35 @@ function start_echo_server () {
 
 start_echo_server();
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export default exports;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

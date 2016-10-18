@@ -227,6 +227,8 @@ function is_unicode_digit(ch) {
 }
 
 
+
+
 function is_alphanumeric_char(ch) {
   return is_digit(ch) || is_letter(ch);
 }
@@ -531,6 +533,8 @@ function tokenizer($TEXT) {
         warn('*** Found "conditional comment": ' + text);
         warn('*** UglifyJS DISCARDS ALL COMMENTS.  This means your code might no longer work properly in Internet Explorer.');
       }
+
+
 
 
       return token('comment2', text, true);
@@ -940,8 +944,12 @@ function parse($TEXT, exigent_mode, embed_tokens) {
       return simple_statement();
 
 
+
+
     case 'name':
       return is_token(peek(), 'punc', ':') ? labeled_statement(prog1(S.token.value, next, next)) : simple_statement();
+
+
 
 
     case 'punc':
@@ -959,19 +967,27 @@ function parse($TEXT, exigent_mode, embed_tokens) {
       }
 
 
+
+
     case 'keyword':
       switch (prog1(S.token.value, next)) {
       case 'break':
         return break_cont('break');
 
 
+
+
       case 'continue':
         return break_cont('continue');
+
+
 
 
       case 'debugger':
         semicolon();
         return as('debugger');
+
+
 
 
       case 'do':
@@ -981,20 +997,30 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         }(in_loop(statement));
 
 
+
+
       case 'import':
         return import_();
+
+
 
 
       case 'for':
         return for_();
 
 
+
+
       case 'function':
         return function_(true);
 
 
+
+
       case 'if':
         return if_();
+
+
 
 
       case 'return':
@@ -1003,8 +1029,12 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         return as('return', is('punc', ';') ? (next(), null) : can_insert_semicolon() ? null : prog1(expression, semicolon));
 
 
+
+
       case 'switch':
         return as('switch', parenthesised(), switch_block_());
+
+
 
 
       case 'throw':
@@ -1013,24 +1043,36 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         return as('throw', prog1(expression, semicolon));
 
 
+
+
       case 'try':
         return try_();
+
+
 
 
       case 'var':
         return prog1(var_, semicolon);
 
 
+
+
       case 'const':
         return prog1(const_, semicolon);
+
+
 
 
       case 'while':
         return as('while', parenthesised(), in_loop(statement));
 
 
+
+
       case 'with':
         return as('with', parenthesised(), statement());
+
+
 
 
       default:
@@ -1078,6 +1120,8 @@ function parse($TEXT, exigent_mode, embed_tokens) {
     }
 
 
+
+
     var item = expr_atom(false);
 
     logger.error(S.token.type, S.token.value);
@@ -1090,9 +1134,13 @@ function parse($TEXT, exigent_mode, embed_tokens) {
     }
 
 
+
+
     semicolon();
     return retVal;
   }
+
+
 
 
   function for_() {

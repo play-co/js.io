@@ -43,17 +43,20 @@ for (var i = 0, len = alphabet.length; i < len; i++) {
 }
 
 
+
+
 // use this regexp in the decode function to sniff out invalid characters.
 var alphabet_inverse = new RegExp('[^' + alphabet.replace('-', '\\-') + ']');
 
-exports.Base64CodecError = Class(Error, function (supr) {
-  this.name = 'Base64CodecError';
+exports.Base64CodecError = class extends Error {
+  constructor(message) {
+    super();
 
-  this.init = function (message) {
     this.message = message;
-  };
-});
+  }
+};
 
+exports.Base64CodecError.prototype.name = 'Base64CodecError';
 var assertOrBadInput = function (exp, message) {
   if (!exp) {
     throw new exports.Base64CodecError(message);
@@ -84,6 +87,8 @@ exports.encode = function (bytes, skipPadding) {
       ret += '=';
     }
   }
+
+
 
 
   return ret;

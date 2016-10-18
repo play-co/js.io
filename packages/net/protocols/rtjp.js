@@ -14,26 +14,21 @@ var error = function (e) {
 /**
  * @extends net.protocols.delimited.DelimitedProtocol
  */
-exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
-  this.init = function () {
+exports.RTJPProtocol = class extends DelimitedProtocol {
+  constructor() {
     var delimiter = '\r\n';
-    supr(this, 'init', [delimiter]);
+    super(delimiter);
     this.frameId = 0;
-  };
-
-  this.connectionMade = function () {
+  }
+  connectionMade() {
     if (this._client && this._client.connectionMade) {
       this._client.connectionMade();
     }
     logger.debug('connectionMade');
-  };
-
-  // Inherit and overwrite
-  this.frameReceived = function (id, name, args) {
-  };
-
-  // Public
-  this.sendFrame = function (name, args) {
+  }
+  frameReceived(id, name, args) {
+  }
+  sendFrame(name, args) {
     if (!args) {
       args = {};
     }
@@ -44,9 +39,8 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
       args
     ]));
     return this.frameId;
-  };
-
-  this.lineReceived = function (line) {
+  }
+  lineReceived(line) {
     try {
       var frame = JSON.parse(line);
       if (frame.length != 3) {
@@ -65,15 +59,20 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
 
 
 
+
+
+
+
+
+
     if (frame) {
       this.frameReceived(frame[0], frame[1], frame[2]);
     }
-  };
-
-  this.connectionLost = function () {
+  }
+  connectionLost() {
     logger.debug('conn lost');
-  };
-});
+  }
+};
 
 
 
@@ -81,6 +80,9 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
 
 
 export default exports;
+
+
+
 
 
 

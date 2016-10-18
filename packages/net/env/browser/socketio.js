@@ -15,14 +15,16 @@ var _scriptOnLoad = new Callback();
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(interfaces.Connector, function () {
-  this.connect = function () {
+exports.Connector = class extends interfaces.Connector {
+  connect() {
     this._state = interfaces.STATE.CONNECTING;
 
     var url = this._opts.url || '/';
     if (!/\/$/.test(url)) {
       url += '/';
     }
+
+
 
 
     if (typeof io != 'function' && typeof document != 'undefined') {
@@ -48,10 +50,27 @@ exports.Connector = Class(interfaces.Connector, function () {
 
 
 
-    _scriptOnLoad.run(bind(this, '_connect'));
-  };
 
-  this._connect = function (io) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    _scriptOnLoad.run(bind(this, '_connect'));
+  }
+  _connect(io) {
     logger.debug('opening the connection');
     var socket = io(window.location.origin + this._opts.namespace, { multiplex: false });
     var transport = new Transport(socket);
@@ -63,25 +82,24 @@ exports.Connector = Class(interfaces.Connector, function () {
     } else {
       socket.on('connect', onConnect);
     }
-  };
-});
+  }
+};
 
-var Transport = Class(interfaces.Transport, function () {
-  this.init = function (socket) {
+class Transport extends interfaces.Transport {
+  constructor(socket) {
+    super();
+
     this._socket = socket;
-  };
-
-  this.makeConnection = function (protocol) {
+  }
+  makeConnection(protocol) {
     this._socket.on('message', bind(protocol, 'dataReceived'));
-  };
-
-  this.write = function (data) {
+  }
+  write(data) {
     this._socket.send(data);
-  };
-
-  this.loseConnection = function (protocol) {
+  }
+  loseConnection(protocol) {
     this._socket.close();
-  };
-});
+  }
+}
 
 export default exports;

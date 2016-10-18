@@ -10,47 +10,41 @@ let sprintf = _sprintf.sprintf;
 /**
  * @extends net.protocols.buffered.BufferedProtocol
  */
-exports.StompProtocol = Class(BufferedProtocol, function (supr) {
-  this.init = function () {
-    supr(this, 'init', []);
+exports.StompProtocol = class extends BufferedProtocol {
+  constructor() {
+    super();
     this.state = 'peek';
-  };
-
-  this.connect = function (username, password) {
+  }
+  connect(username, password) {
     var frame = new StompFrame('CONNECT');
     if (!!username)
       frame.setHeader('login', username);
     if (!!password)
       frame.setHeader('passcode', password);
     this.sendFrame(frame);
-  };
-
-  this.send = function (destination, body, headers) {
+  }
+  send(destination, body, headers) {
     var frame = new StompFrame('SEND', body, headers);
     frame.setHeader('destination', destination);
     this.sendFrame(frame);
-  };
-
-  this.subscribe = function (destination, headers) {
+  }
+  subscribe(destination, headers) {
     var frame = new StompFrame('SUBSCRIBE', null, headers);
     frame.setHeader('destination', destination);
     this.sendFrame(frame);
-  };
-  this.unsubscribe = function (destination, headers) {
+  }
+  unsubscribe(destination, headers) {
     var frame = new StompFrame('UNSUBSCRIBE', null, headers);
     frame.setHeader('destination', destination);
     this.sendFrame(frame);
-  };
-
-  this.sendFrame = function (frame) {
+  }
+  sendFrame(frame) {
     this.transport.write(frame.serialize());
-  };
-
-  this.frameReceived = function (frame) {
+  }
+  frameReceived(frame) {
     logger.info('frame received', frame);
-  };
-
-  this.bufferUpdated = function () {
+  }
+  bufferUpdated() {
     logger.debug('bufferUpdated');
     var counter = 0;
     while (++counter < 10) {
@@ -117,57 +111,60 @@ exports.StompProtocol = Class(BufferedProtocol, function (supr) {
 
 
 
-  };
 
-});
+
+
+
+  }
+};
 
 /* FALL THROUGH and LOOP */
-exports.StompFrame = Class(function () {
-  this.init = function (_method, _body, _headers) {
+exports.StompFrame = class {
+  constructor(_method, _body, _headers) {
     this._headers = !!_headers ? _headers : {};
     this._method = !!_method ? _method : null;
     this._body = !!_body ? _body : '';
-  };
-  this.setHeader = function (key, val) {
+  }
+  setHeader(key, val) {
     this._headers[key] = val;
-  };
-  this.getHeader = function (key) {
+  }
+  getHeader(key) {
     return this._headers[key];
-  };
-  this.getHeaders = function () {
+  }
+  getHeaders() {
     return this._headers;
-  };
-  this.setMethod = function (m) {
+  }
+  setMethod(m) {
     // TODO: enforce method constraints here?
     //	   -mcarter 9/18/09
     this._method = m;
-  };
-  this.getMethod = function () {
+  }
+  getMethod() {
     return this._method;
-  };
-  this.setBody = function (b) {
+  }
+  setBody(b) {
     this._body = b;
-  };
-  this.getbody = function () {
+  }
+  getbody() {
     return this._body;
-  };
-  this.toString = function () {
+  }
+  toString() {
     var i = 0;
     for (var key in this._headers) {
       ++i;
     }
     return sprintf('[StompFrame method(%s), num-headers(%d), body-length(%d)]', this._method, i, this._body.length);
-  };
-  this.getContentLength = function () {
+  }
+  getContentLength() {
     return parseInt(this._headers['content-length']);
-  };
-  this.getBodyMode = function () {
+  }
+  getBodyMode() {
     if ('content-length' in this._headers) {
       return 'length';
     }
     return 'delimited';
-  };
-  this.serialize = function () {
+  }
+  serialize() {
     var output = this._method + '\n';
     for (var key in this._headers) {
       output += key + ': ' + this._headers[key] + '\n';
@@ -177,8 +174,8 @@ exports.StompFrame = Class(function () {
     output += this._body;
     output += '\0';
     return output;
-  };
-});
+  }
+};
 var StompFrame = exports.StompFrame;
 
 export default exports;

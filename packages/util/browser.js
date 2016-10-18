@@ -16,6 +16,10 @@ function isWindow(el) {
 
 
 
+
+
+
+
 var singleId = /^#([\w-]+)$/;
 
 exports.$ = function (selector, win) {
@@ -55,6 +59,8 @@ $.apply = function (el, params) {
   }
 
 
+
+
   if (params.id) {
     el.id = params.id;
   }
@@ -67,6 +73,8 @@ $.apply = function (el, params) {
   if (params['class'] || params['className']) {
     el.className = params['class'] || params['className'];
   }
+
+
 
 
   var parent = params.parent || params.parentNode;
@@ -84,6 +92,26 @@ $.apply = function (el, params) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if ('html' in params) {
     el.innerHTML = params.html;
   }
@@ -92,12 +120,18 @@ $.apply = function (el, params) {
   }
 
 
+
+
   if (params.children) {
     var c = params.children;
     for (var i = 0, n = c.length; i < n; ++i) {
       el.appendChild($.isElement(c[i]) ? c[i] : $(c[i]));
     }
   }
+
+
+
+
 
 
 
@@ -157,6 +191,8 @@ $.addClass = function (el, classNames) {
   }
 
 
+
+
   var current = ' ' + el.className + ' ';
   for (var i = 0, len = classNames.length; i < len; ++i) {
     var c = classNames[i];
@@ -164,6 +200,10 @@ $.addClass = function (el, classNames) {
       current += c + ' ';
     }
   }
+
+
+
+
 
 
 
@@ -181,6 +221,8 @@ $.hasClass = function (el, className) {
   }
 
 
+
+
   var el = $.id(el);
   var classNames = el.className.split(' ');
 
@@ -189,6 +231,8 @@ $.hasClass = function (el, className) {
       return true;
     }
   }
+
+
 
 
   return false;
@@ -214,6 +258,12 @@ function ieGetAlpha(el) {
 
 
 
+
+
+
+
+
+
   try {
     return el.filters.item('progid:DXImageTransform.Microsoft.Alpha');
   } catch (e) {
@@ -221,8 +271,16 @@ function ieGetAlpha(el) {
 
 
 
+
+
+
+
+
+
   return null;
 }
+
+
 
 
 $.style = function (el, style) {
@@ -232,6 +290,8 @@ $.style = function (el, style) {
     }
     return;
   }
+
+
 
 
   el = $.id(el);
@@ -277,6 +337,8 @@ $.onEvent = function (el, name, f) {
   }
 
 
+
+
   var handler = f;
 
   el = $.id(el);
@@ -291,6 +353,8 @@ $.onEvent = function (el, name, f) {
 
     el.attachEvent('on' + name, handler);
   }
+
+
 
 
   return bind($, 'removeEvent', el, name, handler);

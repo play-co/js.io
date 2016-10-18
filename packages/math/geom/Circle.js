@@ -8,8 +8,10 @@ import Point from './Point';
  *   Circle(x, y, radius)
  *   Circle({x: default 0, y: default 0, radius: default 0})
  */
-exports = Class(Point, function (supr) {
-  this.init = function (a, b, c) {
+exports = class extends Point {
+  constructor(a, b, c) {
+    super();
+
     switch (arguments.length) {
     case 0:
       this.x = 0;
@@ -30,17 +32,11 @@ exports = Class(Point, function (supr) {
     }
   }
 
-;
-
-
-  /**
-	 * Scale the position and radius of this circle by a percentage.
-	 */
-  this.scale = function (s) {
-    supr(this, 'scale', arguments);
+  scale(s) {
+    super.scale(...arguments);
     this.radius *= s;
     return this;
-  };
-});
+  }
+};
 
 export default exports;

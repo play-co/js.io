@@ -9,11 +9,15 @@ exports.integer = function (number, prefix, unitPlural, unitSingular) {
   }
 
 
+
+
   if (unitSingular) {
     unitSingular = ' ' + unitSingular;
   } else {
     unitSingular = unitPlural;
   }
+
+
 
 
   var arr = ('' + Math.round(number)).split('');
@@ -28,6 +32,24 @@ exports.integer = function (number, prefix, unitPlural, unitSingular) {
       }
     }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

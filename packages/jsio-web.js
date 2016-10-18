@@ -58,6 +58,8 @@ import { bind } from 'base';
     }
 
 
+
+
     // Creates an object containing metadata about a module.
     function ModuleDef(path) {
       this.path = path;
@@ -66,6 +68,8 @@ import { bind } from 'base';
       util.splitPath(path, this);
       this.directory = util.resolve(ENV.getCwd(), this.directory);
     }
+
+
 
 
     ModuleDef.prototype.setBase = function (baseMod, basePath) {
@@ -126,12 +130,16 @@ import { bind } from 'base';
         }
 
 
+
+
         var sA = util.removeEndSlash(path).split(ENV.pathSep), sB = util.removeEndSlash(relativeTo).split(ENV.pathSep), i = 0;
 
         /* Count how many segments match. */
         while (sA[i] == sB[i]) {
           ++i;
         }
+
+
 
 
         if (i) {
@@ -143,6 +151,8 @@ import { bind } from 'base';
             path = '../' + path;
           }
         }
+
+
 
 
         return path;
@@ -158,10 +168,14 @@ import { bind } from 'base';
           }
 
 
+
+
           if (piece != '.' && piece != './' && piece) {
             pieces.push(piece);
           }
         }
+
+
 
 
         return util.resolveRelativePath(pieces.join('/'));
@@ -175,6 +189,8 @@ import { bind } from 'base';
         if (protocol) {
           path = protocol[2];
         }
+
+
 
 
         /* Remove multiple slashes and trivial dots (`/./ -> /`). */
@@ -217,6 +233,8 @@ import { bind } from 'base';
         }
 
 
+
+
         // resolve absolute paths with respect to jsio packages/
         var pathSegments = modulePath.split('.');
         var n = pathSegments.length;
@@ -231,6 +249,8 @@ import { bind } from 'base';
             ];
           }
         }
+
+
 
 
         var baseMod = pathSegments[0];
@@ -347,8 +367,12 @@ import { bind } from 'base';
         }
 
 
+
+
         ENV = new envCtor(util);
       }
+
+
 
 
       this.__env = ENV;
@@ -357,6 +381,8 @@ import { bind } from 'base';
       if (!ENV.loadModule) {
         ENV.loadModule = loadModule;
       }
+
+
 
 
       jsio.path.cache['jsio'] = cloneFrom ? cloneFrom.path.cache.jsio : ENV.getPath();
@@ -379,6 +405,26 @@ import { bind } from 'base';
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     jsio.main = ENV && ENV.main;
 
     var boundJsio;
@@ -386,6 +432,8 @@ import { bind } from 'base';
       if (!boundJsio) {
         boundJsio = util.bind(this, _require, {}, ENV.getPath(), 'jsio.js');
       }
+
+
 
 
       return boundJsio(req, {
@@ -419,6 +467,8 @@ import { bind } from 'base';
       }
 
 
+
+
       if (window.console && console.log) {
         if (!console.log.apply || /Android|iPhone|iPad|iPod/.test(navigator.userAgent)) {
           this.log = function () {
@@ -437,6 +487,8 @@ import { bind } from 'base';
           return JOIN.call(arguments, ' ');
         };
       }
+
+
 
 
       this.getCwd = function () {
@@ -464,6 +516,12 @@ import { bind } from 'base';
             }
           } catch (e) {
           }
+
+
+
+
+
+
 
 
 
@@ -523,6 +581,12 @@ import { bind } from 'base';
 
 
 
+
+
+
+
+
+
         // firefox file://
         if (xhr.status == 404 || // all browsers, http://
           xhr.status == -1100 || // safari file://
@@ -532,6 +596,8 @@ import { bind } from 'base';
           false) {
           return false;
         }
+
+
 
 
         return xhr.responseText;
@@ -560,6 +626,8 @@ import { bind } from 'base';
         }
 
 
+
+
         /* if (/^\.\//.test(path)) {
           // remove one path segment for each dot from the cwd
           path = addEndSlash(ENV.getCwd()) + path;
@@ -575,8 +643,12 @@ import { bind } from 'base';
       }
 
 
+
+
       return false;
     }
+
+
 
 
     function processStack() {
@@ -588,9 +660,13 @@ import { bind } from 'base';
         }
 
 
+
+
         return index + 1 + ': "' + item.friendlyPath + '" ' + item.path + (item.line || '');
       });
     }
+
+
 
 
     // load a module from a file
@@ -604,10 +680,14 @@ import { bind } from 'base';
         }
 
 
+
+
         if (path in failedFetch) {
           possibilities.splice(i--, 1);
         }
       }
+
+
 
 
       if (!possibilities.length) {
@@ -619,6 +699,8 @@ import { bind } from 'base';
         e.code = MODULE_NOT_FOUND;
         throw e;
       }
+
+
 
 
       var moduleDef = findModule(possibilities);
@@ -636,6 +718,8 @@ import { bind } from 'base';
       }
 
 
+
+
       // a (potentially) nicer way to refer to a module -- how it was referenced in code when it was first imported
       moduleDef.friendlyPath = modulePath;
 
@@ -644,6 +728,8 @@ import { bind } from 'base';
       if (moduleDef.baseMod && !(moduleDef.baseMod in jsioPath.cache)) {
         jsioPath.cache[moduleDef.baseMod] = moduleDef.basePath;
       }
+
+
 
 
       // don't apply the standard preprocessors to base.js.  If we're reloading
@@ -660,14 +746,20 @@ import { bind } from 'base';
       }
 
 
+
+
       // any additional preprocessors?
       if (opts.preprocessors) {
         applyPreprocessors(fromDir, moduleDef, opts.preprocessors, opts);
       }
 
 
+
+
       return moduleDef;
     }
+
+
 
 
     function applyPreprocessors(path, moduleDef, names, opts) {
@@ -684,10 +776,14 @@ import { bind } from 'base';
     }
 
 
+
+
     function getPreprocessor(name) {
       var module = jsio.__modules['jsio.preprocessors.' + name];
       return typeof name == 'function' ? name : module && module.exports || localJsio('import jsio.preprocessors.' + name);
     }
+
+
 
 
     function execModuleDef(context, moduleDef) {
@@ -718,6 +814,8 @@ import { bind } from 'base';
     }
 
 
+
+
     function resolveImportRequest(context, request, opts) {
       var cmds = jsio.__cmds, imports = [], result = false;
 
@@ -728,13 +826,19 @@ import { bind } from 'base';
       }
 
 
+
+
       if (result !== true) {
         throw new (typeof SyntaxError != 'undefined' ? SyntaxError : Error)(String(result || 'invalid jsio command: jsio(\'' + request + '\')'));
       }
 
 
+
+
       return imports;
     }
+
+
 
 
     function makeContext(ctx, modulePath, moduleDef, dontAddBase) {
@@ -744,6 +848,8 @@ import { bind } from 'base';
       if (!ctx.exports) {
         ctx.exports = {};
       }
+
+
 
 
       ctx.jsio = util.bind(this, _require, ctx, moduleDef.directory, moduleDef.filename);
@@ -767,6 +873,8 @@ import { bind } from 'base';
       }
 
 
+
+
       // TODO: FIX for "trailing ." case
       ctx.jsio.__jsio = jsio;
       ctx.jsio.__env = jsio.__env;
@@ -778,6 +886,8 @@ import { bind } from 'base';
       ctx.__filename = util.buildPath(ctx.__dirname, moduleDef.filename);
       return ctx;
     }
+
+
 
 
     var importStack = [];
@@ -811,11 +921,23 @@ import { bind } from 'base';
 
 
 
+
+
+
+
+
+
         if (moduleDef) {
           path = moduleDef.path;
         } else if (moduleDef === false) {
           return false;
         }
+
+
+
+
+
+
 
 
 
@@ -829,8 +951,12 @@ import { bind } from 'base';
           }
 
 
+
+
           throw err;
         }
+
+
 
 
         if (moduleDef) {
@@ -842,10 +968,14 @@ import { bind } from 'base';
         }
 
 
+
+
         // eval any packages that we don't know about already
         if (!(path in modules)) {
           modules[path] = moduleDef;
         }
+
+
 
 
         if (!moduleDef.exports) {
@@ -861,8 +991,12 @@ import { bind } from 'base';
           }
 
 
+
+
           execModuleDef(newContext, moduleDef);
         }
+
+
 
 
         importStack.pop();
@@ -873,6 +1007,8 @@ import { bind } from 'base';
         if (numImports == 1) {
           retVal = module;
         }
+
+
 
 
         if (!opts.dontExport) {
@@ -891,6 +1027,8 @@ import { bind } from 'base';
               }
               c = c[segment];
             }
+
+
 
 
             c[segments[kMax]] = module;
@@ -916,8 +1054,12 @@ import { bind } from 'base';
       }
 
 
+
+
       return retVal;
     }
+
+
 
 
     // DEFINE SYNTAX FOR JSIO('cmd')
@@ -976,6 +1118,8 @@ import { bind } from 'base';
         }
 
 
+
+
         imports[0] = {
           from: (isRelative ? '.' : '') + req,
           original: request
@@ -1010,8 +1154,12 @@ import { bind } from 'base';
     }
 
 
+
+
     return jsio;
   }
+
+
 
 
   var J = init(null, {});

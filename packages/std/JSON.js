@@ -41,6 +41,8 @@ exports.createGlobal = function () {
   }
 
 
+
+
   // Produce a string from holder[key].
   function str(key, holder) {
     var mind = gap, value = holder[key];
@@ -51,11 +53,15 @@ exports.createGlobal = function () {
     }
 
 
+
+
     // If we were called with a replacer function, then call the replacer to
     // obtain a replacement value.
     if (typeof rep === 'function') {
       value = rep.call(holder, key, value);
     }
+
+
 
 
     switch (typeof value) {
@@ -77,6 +83,8 @@ exports.createGlobal = function () {
       }
 
 
+
+
       gap += indent;
       var partial = [];
 
@@ -88,11 +96,15 @@ exports.createGlobal = function () {
         }
 
 
+
+
         // Join all of the elements together, separated with commas, and wrap them in brackets.
         var v = partial.length === 0 ? '[]' : gap ? '[\n' + gap + partial.join(',\n' + gap) + '\n' + mind + ']' : '[' + partial.join(',') + ']';
         gap = mind;
         return v;
       }
+
+
 
 
       if (rep && typeof rep === 'object') {
@@ -120,6 +132,8 @@ exports.createGlobal = function () {
       }
 
 
+
+
       // Join all of the member texts together, separated with commas,
       // and wrap them in braces.
       var v = partial.length === 0 ? '{}' : gap ? '{\n' + gap + partial.join(',\n' + gap) + '\n' + mind + '}' : '{' + partial.join(',') + '}';
@@ -127,6 +141,10 @@ exports.createGlobal = function () {
       return v;
     }
   }
+
+
+
+
 
 
 
@@ -153,11 +171,19 @@ exports.createGlobal = function () {
 
 
 
+
+
+
+
+
+
     // If there is a replacer, it must be a function or an array.
     rep = replacer;
     if (replacer && typeof replacer !== 'function' && (typeof replacer !== 'object' || typeof replacer.length !== 'number')) {
       throw new Error('JSON stringify: invalid replacer');
     }
+
+
 
 
     // Make a fake root object containing our value under the key of ''.
@@ -197,6 +223,24 @@ exports.createGlobal = function () {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return '"' + year + '-' + month + '-' + day + 'T' + hours + ':' + minutes + ':' + seconds + '.' + ms + 'Z"';
   };
 
@@ -214,6 +258,12 @@ exports.createGlobal = function () {
         return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
       });
     }
+
+
+
+
+
+
 
 
 
@@ -259,6 +309,8 @@ exports.createGlobal = function () {
         return walk({ '': j }, '');
       }
     }
+
+
 
 
     // If the text is not JSON parseable, then a SyntaxError is thrown.

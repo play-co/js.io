@@ -4,8 +4,8 @@ let exports = {};
  * @package math.geom.Point;
  * Models a Point in 2D space.
  */
-exports = Class(function () {
-  this.init = function (a, b) {
+exports = class {
+  constructor(a, b) {
     switch (arguments.length) {
     case 0:
       this.x = 0;
@@ -22,13 +22,7 @@ exports = Class(function () {
     }
   }
 
-;
-
-
-  /**
-	 * Rotates this point around the origin by a value in radians.
-	 */
-  this.rotate = function (r) {
+  rotate(r) {
     var x = this.x, y = this.y, cosr = Math.cos(r), sinr = Math.sin(r);
 
     this.x = x * cosr - y * sinr;
@@ -37,13 +31,7 @@ exports = Class(function () {
     return this;
   }
 
-;
-
-
-  /**
-	 * Translate this point by two scalars or by another point.
-	 */
-  this.translate = this.add = function (x, y) {
+  add(x, y) {
     if (typeof x == 'number') {
       this.x += x;
       this.y += y;
@@ -54,13 +42,7 @@ exports = Class(function () {
     return this;
   }
 
-;
-
-
-  /**
-	 * Subtract this point by two scalars or by another point.
-	 */
-  this.subtract = function (x, y) {
+  subtract(x, y) {
     if (typeof x == 'number') {
       this.x -= x;
       this.y -= y;
@@ -71,16 +53,12 @@ exports = Class(function () {
     return this;
   }
 
-;
-
-
-  /**
-	 * Scale this number.
-	 */
-  this.scale = function (sx, sy) {
+  scale(sx, sy) {
     //if no scaleY specified
     if (sy === undefined)
       sy = sx;
+
+
 
 
     this.x *= sx;
@@ -88,53 +66,34 @@ exports = Class(function () {
     return this;
   }
 
-;
-
-
-  /**
-	 * Set the magnitude of this point at a constant angle.
-	 */
-  this.setMagnitude = function (m) {
+  setMagnitude(m) {
     var theta = this.getAngle();
     this.x = m * Math.cos(theta);
     this.y = m * Math.sin(theta);
     return this;
   }
 
-;
-
-
-  /**
-	 * Normalize this point to the unit circle.
-	 */
-  this.normalize = function () {
+  normalize() {
     var m = this.getMagnitude();
     this.x /= m;
     this.y /= m;
     return this;
-  };
-
-
-  /**
-	 * Add magnitude to this point.
-	 */
-  this.addMagnitude = function (m) {
+  }
+  addMagnitude(m) {
     return this.setMagnitude(this.getMagnitude() + m);
-  };
-
-  this.getMagnitude = function () {
+  }
+  getMagnitude() {
     return Math.sqrt(this.x * this.x + this.y * this.y);
-  };
-
-  this.getSquaredMagnitude = function () {
+  }
+  getSquaredMagnitude() {
     return this.x * this.x + this.y * this.y;
-  };
-
-  this.getDirection = this.getAngle = function () {
+  }
+  getAngle() {
     return Math.atan2(this.y, this.x);
-  };
-
-});
+  }
+};
+exports.prototype.translate = exports.prototype.add;
+exports.prototype.getDirection = exports.prototype.getAngle;
 var Point = exports;
 
 /*

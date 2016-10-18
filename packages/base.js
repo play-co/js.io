@@ -41,6 +41,8 @@ if (!Function.prototype.bind) {
     }
 
 
+
+
     var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {
       }, fBound = function () {
         return fToBind.apply(this instanceof fNOP ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
@@ -52,6 +54,10 @@ if (!Function.prototype.bind) {
     return fBound;
   };
 }
+
+
+
+
 
 
 
@@ -70,6 +76,8 @@ if (typeof Array.isArray === 'function') {
     return Object.prototype.toString.call(obj) === '[object Array]';
   };
 }
+
+
 
 
 exports.bind = function (context, method)
@@ -98,7 +106,6 @@ exports.bind = function (context, method)
       };
     }
   }
-
 ;
 
 
@@ -123,9 +130,13 @@ exports.__class__ = function (cls, name, parent, proto) {
   }
 
 
+
+
   if (name) {
     logger = exports.logging.get(name);
   }
+
+
 
 
   if (!parent) {
@@ -135,6 +146,8 @@ exports.__class__ = function (cls, name, parent, proto) {
     proto = parent;
     parent = null;
   }
+
+
 
 
   if (parent) {
@@ -159,6 +172,8 @@ exports.__class__ = function (cls, name, parent, proto) {
       clsProto.prototype = parent.prototype;
     }
   }
+
+
 
 
   var supr = parent ? function (context, method, args) {
@@ -212,6 +227,14 @@ exports.merge = function (base, extra) {
 
 
 
+
+
+
+
+
+
+
+
   return base;
 };
 exports.Class.defaults = exports.merge;
@@ -235,7 +258,6 @@ exports.delay = function (orig, timeout) {
     _timer = setTimeout(f, timeout || 0);
   };
 }
-
 ;
 
 
@@ -306,6 +328,8 @@ exports.logging = function () {
       }
 
 
+
+
       this.DEBUG = level <= logging.DEBUG;
       this.LOG = level <= logging.LOG;
       this.INFO = level <= logging.INFO;
@@ -325,6 +349,10 @@ exports.logging = function () {
         return arguments[0];
       };
     }
+
+
+
+
 
 
 

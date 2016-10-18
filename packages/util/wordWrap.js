@@ -9,6 +9,8 @@ exports = function (str, maxWidth, prefix, tabWidth) {
   }
 
 
+
+
   var words = str.split(' '), numWords = words.length, lines = [{
         str: [],
         len: 0
@@ -18,6 +20,8 @@ exports = function (str, maxWidth, prefix, tabWidth) {
     lines[i] = prefix + curLine.str.join(' ');
     ++i;
   }
+
+
 
 
   var curLine = lines[i];
@@ -39,11 +43,17 @@ exports = function (str, maxWidth, prefix, tabWidth) {
   }
 
 
+
+
   if (curLine.len) {
     finalize();
   } else {
     lines.pop();
   }
+
+
+
+
 
 
 

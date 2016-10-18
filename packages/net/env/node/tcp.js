@@ -8,31 +8,29 @@ import {
 import interfaces from '../../interfaces';
 var net = require('net');
 
-var Transport = Class(interfaces.Transport, function () {
-  this.init = function (socket) {
-    this._socket = socket;
-  };
+class Transport extends interfaces.Transport {
+  constructor(socket) {
+    super();
 
-  this.makeConnection = function (protocol) {
+    this._socket = socket;
+  }
+  makeConnection(protocol) {
     this._socket.addListener('data', bind(protocol, 'dataReceived'));
     this._socket.addListener('close', bind(protocol, 'connectionLost'));
-  };
-
-  // TODO: map error codes
-  this.write = function (data) {
+  }
+  write(data) {
     this._socket.write(data);
-  };
-
-  this.loseConnection = function () {
+  }
+  loseConnection() {
     this._socket.end();
-  };
-});
+  }
+}
 
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(interfaces.Connector, function () {
-  this.connect = function () {
+exports.Connector = class extends interfaces.Connector {
+  connect() {
     var conn = net.createConnection(this._opts.port, this._opts.host);
     conn.addListener('connect', bind(this, function () {
       this.onConnect(new Transport(conn));
@@ -46,18 +44,20 @@ exports.Connector = Class(interfaces.Connector, function () {
     if (typeof this._opts.timeout == 'number') {
       conn.setTimeout(this._opts.timeout);
     }
-  };
-});
+  }
+};
 
 /**
  * @extends net.interfaces.Listener
  */
-exports.Listener = Class(interfaces.Listener, function (supr) {
-  this.listen = function () {
+exports.Listener = class extends interfaces.Listener {
+  listen() {
     var s = net.createServer(bind(this, function (socket) {
       if (typeof this._opts.timeout == 'number') {
         socket.setTimeout(this._opts.timeout);
       }
+
+
 
 
       socket.setEncoding('utf8');
@@ -71,7 +71,7 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
       logger.error(err);
       this.emit('error', err);
     }));
-  };
-});
+  }
+};
 
 export default exports;

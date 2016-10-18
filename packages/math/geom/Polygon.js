@@ -11,6 +11,8 @@ function smallest(arr, compare) {
   }
 
 
+
+
   var min = arr[0];
   for (var k = 1; k < n; k++) {
     if (compare(arr[k], min) == -1) {
@@ -19,8 +21,12 @@ function smallest(arr, compare) {
   }
 
 
+
+
   return min;
 }
+
+
 
 
 /*
@@ -35,9 +41,13 @@ function array_sum(arr) {
 }
 
 
+
+
 function len(vec) {
   return Math.pow(vec[0] * vec[0] + vec[1] * vec[1], 0.5);
 }
+
+
 
 
 function normalize(v) {
@@ -49,9 +59,13 @@ function normalize(v) {
 }
 
 
+
+
 function vec_len(v) {
   return Math.pow(v[0] * v[0] + v[1] * v[1], 0.5);
 }
+
+
 
 
 function sign(n) {
@@ -59,9 +73,13 @@ function sign(n) {
 }
 
 
+
+
 function approx(a, b, epsilon) {
   return Math.abs(a - b) < epsilon;
 }
+
+
 
 
 function norm(v) {
@@ -71,8 +89,12 @@ function norm(v) {
 
 
 
-exports = Class(function () {
-  this.init = function (opts) {
+
+
+
+
+exports = class {
+  constructor(opts) {
     this.x = opts.x;
     this.y = opts.y;
 
@@ -81,22 +103,7 @@ exports = Class(function () {
     }
   }
 
-;
-
-
-  /**
-	 *
-	 * Polygon representation : { 
-	 *                                 x : [x1, x2, ... , xn], 
-	 *                                 y : [y1, y2, ... , yn],
-	 *                            convex : boolean
-	 *                                                          } 
-	 * 
-	 **/
-  /*
-	 * Check for convexity using Jarvis's march (aka giftwrapping)
-	 */
-  this.isConvex = function () {
+  isConvex() {
     var x = this.x;
     var y = this.y;
     var length = x.length;
@@ -105,6 +112,8 @@ exports = Class(function () {
     if (length < 3) {
       return false;
     }
+
+
 
 
     var ax = x[0] - x[length - 1];
@@ -142,6 +151,8 @@ exports = Class(function () {
     }
 
 
+
+
     ax = x[length - 1] - x[length - 2];
     ay = y[length - 1] - y[length - 2];
     bx = x[0] - x[length - 1];
@@ -160,12 +171,12 @@ exports = Class(function () {
     }
 
 
+
+
     this.convex = true;
     return true;
-  };
-
-
-  this.getCenter = function () {
+  }
+  getCenter() {
     var x = this.x;
     var y = this.y;
     var center = [
@@ -173,9 +184,8 @@ exports = Class(function () {
       array_sum(y) / y.length
     ];
     return center;
-  };
-
-  this.containsPoint = function (point) {
+  }
+  containsPoint(point) {
     var x = point[0];
     var y = point[1];
     var j = 0;
@@ -208,15 +218,12 @@ exports = Class(function () {
     }
 
 
+
+
     theta = Math.abs(theta);
     return approx(theta, 2 * Math.PI, 0.000001);
-  };
-
-  /* 
-	 * Scale the polygon about the 'center of mass'
-	 * @scalar : the scaling factor
-	 */
-  this.scale = function (scalar) {
+  }
+  scale(scalar) {
     var x = this.x;
     var y = this.y;
     var center = [
@@ -228,23 +235,13 @@ exports = Class(function () {
       x[k] = center[0] + (x[k] - center[0]) * scalar;
       y[k] = center[1] + (y[k] - center[1]) * scalar;
     }
-  };
-
-  /* 
-	 * Translate the polygon along the given vector
-	 * @displacement : vector specifying translation
-	 */
-  this.translate = function (displacement) {
+  }
+  translate(displacement) {
     for (var k = 0; k < this.x.length; k++) {
       this.x[k] += displacement[0], this.y[k] += displacement[1];
     }
-  };
-
-  /* 
-	 * Rotate the polygon about the center*
-	 * @theta : angle which to rotate counterclockwise
-	 */
-  this.rotate = function (theta) {
+  }
+  rotate(theta) {
     var x = this.x;
     var y = this.y;
     var center = [
@@ -263,7 +260,7 @@ exports = Class(function () {
       this.x[k] = cos * offset[0] - sin * offset[1];
       this.y[k] = sin * offset[0] - cos * offset[1];
     }
-  };
-});
+  }
+};
 
 export default exports;

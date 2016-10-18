@@ -7,32 +7,31 @@ import {
 
 import interfaces from '../../interfaces';
 
-var Transport = Class(interfaces.Transport, function () {
-  this.init = function (socket) {
+class Transport extends interfaces.Transport {
+  constructor(socket) {
+    super();
+
     this._socket = socket;
     logger.debug('init', socket);
-  };
-
-  this.makeConnection = function (protocol) {
+  }
+  makeConnection(protocol) {
     logger.debug('makeConnection:', protocol);
     this._socket.on('message', bind(protocol, 'dataReceived'));
     this._socket.on('disconnect', bind(protocol, '_connectionLost'));
-  };
-
-  this.write = function (data) {
+  }
+  write(data) {
     this._socket.send(data);
-  };
-
-  this.loseConnection = function () {
+  }
+  loseConnection() {
     this._socket.close();
-  };
-});
+  }
+}
 
 /**
  * @extends net.interfaces.Listener
  */
-exports.Listener = Class(interfaces.Listener, function (supr) {
-  this.listen = function () {
+exports.Listener = class extends interfaces.Listener {
+  listen() {
     if (this._opts.port) {
       // if a port is provided, create an http server and host socket.io
       // at the specified port
@@ -51,17 +50,22 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
 
 
 
+
+
+
+
+
+
     if (this._ioServer) {
       this._ioServer.on('connection', bind(this, '_onConnect'));
     } else {
       logger.warn('socket.io not setup properly: please provide an io instance or an http port to the net.listen opts');
     }
-  };
-
-  this._onConnect = function (socket) {
+  }
+  _onConnect(socket) {
     logger.info('Incoming connection');
     this.onConnect(new Transport(socket));
-  };
-});
+  }
+};
 
 export default exports;

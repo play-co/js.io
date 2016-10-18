@@ -5,80 +5,70 @@ import { logger } from 'base';
 import interfaces from 'net/interfaces';
 let Protocol = interfaces.Protocol;
 
-exports.EmptyBufferError = Class(function () {
-  this.init = function (message) {
+exports.EmptyBufferError = class {
+  constructor(message) {
     this.message = message;
-  };
-});
+  }
+};
 var EmptyBufferError = exports.EmptyBufferError;
 
-exports.Buffer = Class(function (supr) {
-  this.init = function (rawBuffer) {
+exports.Buffer = class {
+  constructor(rawBuffer) {
     this._rawBuffer = !!rawBuffer ? rawBuffer : '';
-  };
-
-  this.getLength = function () {
+  }
+  getLength() {
     return this._rawBuffer.length;
-  };
-
-  this.append = function (data) {
+  }
+  append(data) {
     logger.debug('append', JSON.stringify(data));
     this._rawBuffer += data;
-  };
-
-  this.peekBytes = function (num) {
+  }
+  peekBytes(num) {
     if (!!num)
       return this._rawBuffer.slice(0, num);
     else
       return this._rawBuffer;
-  };
-
-  this.peekToDelimiter = function (delimiter) {
+  }
+  peekToDelimiter(delimiter) {
     delimiter = delimiter ? delimiter : '\n';
     var i = this._rawBuffer.indexOf(delimiter);
     if (i == -1)
       throw new EmptyBufferError('delimiter ' + delimiter + 'not present in buffer');
     else
       return this._rawBuffer.slice(0, i);
-  };
-
-  this.consumeBytes = function (num) {
+  }
+  consumeBytes(num) {
     var output = this.peekBytes(num);
     this._rawBuffer = this._rawBuffer.slice(output.length);
     return output;
-  };
-  this.consumeMaxBytes = function (num) {
+  }
+  consumeMaxBytes(num) {
     var output = this._rawBuffer.slice(0, num);
     this._rawBuffer = this._rawBuffer(num);
     return output;
-  };
-  this.consumeAllBytes = function () {
+  }
+  consumeAllBytes() {
     var temp = this._rawBuffer;
     this._rawBuffer = '';
     return temp;
-  };
-
-  this.consumeThroughDelimiter = function (delimiter) {
+  }
+  consumeThroughDelimiter(delimiter) {
     return this.consumeToDelimiter(delimiter) + this.consumeBytes(delimiter.length);
-  };
-
-  this.consumeToDelimiter = function (delimiter) {
+  }
+  consumeToDelimiter(delimiter) {
     delimiter = !!delimiter ? delimiter : '\n';
     var output = this.peekToDelimiter(delimiter);
     this._rawBuffer = this._rawBuffer.slice(output.length);
     return output;
-  };
-
-  this.hasBytes = function (num) {
+  }
+  hasBytes(num) {
     num = num ? num : 0;
     return this._rawBuffer.length >= num;
-  };
-
-  this.hasDelimiter = function (delimiter) {
+  }
+  hasDelimiter(delimiter) {
     delimiter = !!delimiter ? delimiter : '\n';
     return this._rawBuffer.indexOf(delimiter) != -1;
-  };
-
-});
+  }
+};
 
 export default exports;

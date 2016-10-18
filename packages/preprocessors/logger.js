@@ -19,6 +19,8 @@ exports.replaceLogger = function (src, prefix) {
     }
 
 
+
+
     var i = match.index + match[0].length;
     var tokens = [];
     function nextToken() {
@@ -28,12 +30,16 @@ exports.replaceLogger = function (src, prefix) {
       }
 
 
+
+
       // we have a delimiter token next, max length of 2
       var match = (src[i] + src[i + 1]).match(delimiterRegex);
       if (match) {
         i += match[0].length;
         return match[0];
       }
+
+
 
 
       // advance to next delimiter
@@ -45,12 +51,16 @@ exports.replaceLogger = function (src, prefix) {
     }
 
 
+
+
     function consumeString(startQuote) {
       var token;
       do {
         token = nextToken();
       } while (token && token != startQuote);
     }
+
+
 
 
     function consumeParens() {
@@ -64,12 +74,16 @@ exports.replaceLogger = function (src, prefix) {
         }
 
 
+
+
         // start a nested parenthesis
         if (token == '(') {
           consumeParens();
         }
       } while (token && token != ')');
     }
+
+
 
 
     // consume string up until close parenthesis for logger.log(...)
@@ -86,6 +100,10 @@ exports.replaceLogger = function (src, prefix) {
 
     loggerRegex.lastIndex = match.index + replacement.length;
   }
+
+
+
+
 
 
 

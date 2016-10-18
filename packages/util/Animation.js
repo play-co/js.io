@@ -2,14 +2,13 @@ let exports = {};
 
 import { bind } from 'base';
 
-var SyncTimer = Class(function () {
-  this.init = function () {
+class SyncTimer {
+  constructor() {
     this._items = [];
     this._tick = bind(this, 'tick');
     this._length = 0;
-  };
-
-  this.tick = function () {
+  }
+  tick() {
     var now = +new Date();
     var dt = now - this._last;
     this._last = now;
@@ -18,18 +17,16 @@ var SyncTimer = Class(function () {
     for (var i = 0; i < this._length; ++i) {
       this._items[i](dt);
     }
-  };
-
-  this.add = function (cb) {
+  }
+  add(cb) {
     if (cb) {
       this._items.push(cb);
       ++this._length;
       cb(0);
       this.start();
     }
-  };
-
-  this.remove = function (cb) {
+  }
+  remove(cb) {
     for (var i = 0, n = this._items.length; i < n; ++i) {
       if (this._items[i] == cb) {
         this._items.splice(i, 1);
@@ -39,28 +36,26 @@ var SyncTimer = Class(function () {
         return;
       }
     }
-  };
-
-  this.start = function () {
+  }
+  start() {
     if (!this._isRunning) {
       this._isRunning = true;
       this._last = +new Date();
       this._timer = setInterval(this._tick, 15);
     }
-  };
-
-  this.stop = function () {
+  }
+  stop() {
     if (this._isRunning) {
       this._isRunning = false;
       clearInterval(this._timer);
     }
-  };
-});
+  }
+}
 
 var timer = new SyncTimer();
 
-exports = Class(function () {
-  this.init = function (params) {
+exports = class {
+  constructor(params) {
     this._start = 'start' in params ? params.start : 0;
     this._end = 'end' in params ? params.end : 1;
     this._transition = params.transition || null;
@@ -74,19 +69,19 @@ exports = Class(function () {
     this._isAnimating = false;
     this._animate = bind(this, 'animate');
     this._timer = null;
-  };
-
-  this.stop = function () {
+  }
+  stop() {
     this.jumpTo(this._s);
-  };
-  this.play = function () {
+  }
+  play() {
     this.seekTo(this._end);
-  };
-
-  this.seekTo = function (s, dur) {
+  }
+  seekTo(s, dur) {
     if (s == this._s) {
       return;
     }
+
+
 
 
     this._t0 = 0;
@@ -94,6 +89,8 @@ exports = Class(function () {
     this._s1 = s;
     if (dur)
       this._duration = dur;
+
+
 
 
     this._ds = s - this._s;
@@ -108,24 +105,25 @@ exports = Class(function () {
 
 
 
-    return this;
-  };
 
-  this.onFinish = function (onFinish) {
+
+
+
+    return this;
+  }
+  onFinish(onFinish) {
     this._onFinish = onFinish;
     return this;
-  };
-
-  this.jumpTo = function (s) {
+  }
+  jumpTo(s) {
     this._s1 = this._s0 = s;
     this._t0 = 0;
     this._dt = 1;
     this._ds = 0;
     this.animate(0);
     return this;
-  };
-
-  this.animate = function (dt) {
+  }
+  animate(dt) {
     var elapsed = this._t0 += dt;
     var dt = elapsed / this._dt;
     if (dt > 1) {
@@ -145,8 +143,8 @@ exports = Class(function () {
         }
       }
     }
-  };
-});
+  }
+};
 
 exports.linear = function (n) {
   return n;

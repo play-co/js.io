@@ -9,8 +9,8 @@ import intersect from './intersect';
 /**
  * Model a rectangle.
  */
-exports = Class(function () {
-  this.init = function (a, b, c, d) {
+exports = class {
+  constructor(a, b, c, d) {
     switch (arguments.length) {
     case 0:
       // init
@@ -47,18 +47,13 @@ exports = Class(function () {
     }
   }
 
-;
-
-
-  /**
-	 * Normalize negative height and width dimensions by adjusting the position
-	 * of the rect.
-	 */
-  this.normalize = function () {
+  normalize() {
     if (this.width < 0) {
       this.x -= this.width;
       this.width = -this.width;
     }
+
+
 
 
     if (this.height < 0) {
@@ -68,13 +63,7 @@ exports = Class(function () {
     return this;
   }
 
-;
-
-
-  /**
-	 * Generate the intersection of a rectange with another rectangle.
-	 */
-  this.intersectRect = function (rect) {
+  intersectRect(rect) {
     if (intersect.isRectAndRect(this, rect)) {
       var x1 = this.x;
       var y1 = this.y;
@@ -89,17 +78,13 @@ exports = Class(function () {
     }
   }
 
-;
-
-
-  /**
-	 * Generate the union of a rectange with another rectangle.
-	 */
-  this.unionRect = function (rect) {
+  unionRect(rect) {
     this.normalize();
     if (rect.normalize) {
       rect.normalize();
     }
+
+
 
 
     var x2 = this.x + this.width, y2 = this.y + this.height;
@@ -111,13 +96,8 @@ exports = Class(function () {
 
     this.width = (x2 > rx2 ? x2 : rx2) - this.x;
     this.height = (y2 > ry2 ? y2 : ry2) - this.y;
-  };
-
-
-  /**
-	 * Get a point for the given corner.
-	 */
-  this.getCorner = function (i) {
+  }
+  getCorner(i) {
     switch (i) {
     case CORNERS.TOP_LEFT:
       return new Point(this.x, this.y);
@@ -130,13 +110,7 @@ exports = Class(function () {
     }
   }
 
-;
-
-
-  /**
-	 * Return a line corresponding to the given side.
-	 */
-  this.getSide = function (i) {
+  getSide(i) {
     switch (i) {
     case SIDES.TOP:
       return new Line(this.getCorner(CORNERS.TOP_LEFT), this.getCorner(CORNERS.TOP_RIGHT));
@@ -149,16 +123,10 @@ exports = Class(function () {
     }
   }
 
-;
-
-
-  /**
-	 * Return the center point of a rectangle.
-	 */
-  this.getCenter = function () {
+  getCenter() {
     return new Point(this.x + this.width / 2, this.y + this.height / 2);
-  };
-});
+  }
+};
 var Rect = exports;
 
 var SIDES = Rect.SIDES = Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT');

@@ -115,6 +115,12 @@ exports = function (dateString, formats, isLocal, offset) {
 
 
 
+
+
+
+
+
+
   var seconds = (new Date() - date - offset) / 1000 + (isLocal ? new Date().getTimezoneOffset() * 60 : 0);
   var postfix = 'ago', listChoice = 1;
   if (seconds < 0) {
@@ -124,9 +130,13 @@ exports = function (dateString, formats, isLocal, offset) {
   }
 
 
+
+
   if (seconds < 60) {
     return 'just now';
   }
+
+
 
 
   for (var i = 0, format; format = FORMATS[i]; ++i) {
@@ -134,6 +144,10 @@ exports = function (dateString, formats, isLocal, offset) {
       return typeof format[2] == 'string' ? format[listChoice] : (seconds / format[2] | 0) + ' ' + format[1] + ' ' + postfix;
     }
   }
+
+
+
+
 
 
 

@@ -14,6 +14,8 @@ function ensurePadding(n) {
 }
 
 
+
+
 /**
  * Here we handle arbitrary sorting indexes transparently converting numbers to strings
  * for efficient sorting with toString.  Unfortunately, this does not work for large floating
@@ -22,6 +24,8 @@ function ensurePadding(n) {
 function sortIndex(i) {
   return this[i];
 }
+
+
 
 
 exports = function (arr, indexer) {
@@ -34,10 +38,14 @@ exports = function (arr, indexer) {
   }
 
 
+
+
   for (var k = 0, indexer; indexer = indexers[k]; ++k) {
     for (var i = 0; i < len; ++i) {
       index[i] = indexer.call(arr[i], i);
     }
+
+
 
 
     if (typeof index[0] == 'number') {
@@ -53,6 +61,8 @@ exports = function (arr, indexer) {
           smallest = index[i];
         }
       }
+
+
 
 
       // we have to be very careful here - large floating point numbers will break the
@@ -76,6 +86,8 @@ exports = function (arr, indexer) {
     }
 
 
+
+
     if (haveMultiple) {
       for (var i = 0; i < len; ++i) {
         result[i].push(index[i]);
@@ -86,15 +98,21 @@ exports = function (arr, indexer) {
   }
 
 
+
+
   for (var i = 0; i < len; ++i) {
     if (haveMultiple) {
       result[i] = result[i].join('|');
     }
 
 
+
+
     toString[i] = arr[i].hasOwnProperty('toString') && arr[i].toString || null;
     arr[i].toString = bind(result, sortIndex, i);
   }
+
+
 
 
   Array.prototype.sort.apply(arr);

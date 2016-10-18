@@ -18,9 +18,13 @@ exports = function () {
     }
 
 
+
+
     if (!selector || typeof selector !== 'string') {
       return results;
     }
+
+
 
 
     var parts = [], m, set, checkSet, check, mode, extra, prune = true, contextXML = isXML(context);
@@ -38,6 +42,8 @@ exports = function () {
     }
 
 
+
+
     if (parts.length > 1 && origPOS.exec(selector)) {
       if (parts.length === 2 && Expr.relative[parts[0]]) {
         set = posProcess(parts[0] + parts[1], context);
@@ -51,6 +57,8 @@ exports = function () {
             selector += parts.shift();
 
 
+
+
           set = posProcess(selector, set);
         }
       }
@@ -61,6 +69,8 @@ exports = function () {
         var ret = Sizzle.find(parts.shift(), context, contextXML);
         context = ret.expr ? Sizzle.filter(ret.expr, ret.set)[0] : ret.set[0];
       }
+
+
 
 
       if (context) {
@@ -77,6 +87,8 @@ exports = function () {
         }
 
 
+
+
         while (parts.length) {
           var cur = parts.pop(), pop = cur;
 
@@ -87,9 +99,13 @@ exports = function () {
           }
 
 
+
+
           if (pop == null) {
             pop = context;
           }
+
+
 
 
           Expr.relative[cur](checkSet, pop, contextXML);
@@ -100,14 +116,20 @@ exports = function () {
     }
 
 
+
+
     if (!checkSet) {
       checkSet = set;
     }
 
 
+
+
     if (!checkSet) {
       throw 'Syntax error, unrecognized expression: ' + (cur || selector);
     }
+
+
 
 
     if (toString.call(checkSet) === '[object Array]') {
@@ -131,10 +153,14 @@ exports = function () {
     }
 
 
+
+
     if (extra) {
       Sizzle(extra, origContext, results, seed);
       Sizzle.uniqueSort(results);
     }
+
+
 
 
     return results;
@@ -167,6 +193,8 @@ exports = function () {
     }
 
 
+
+
     for (var i = 0, l = Expr.order.length; i < l; i++) {
       var type = Expr.order[i], match;
 
@@ -185,9 +213,13 @@ exports = function () {
     }
 
 
+
+
     if (!set) {
       set = context.getElementsByTagName('*');
     }
+
+
 
 
     return {
@@ -210,6 +242,8 @@ exports = function () {
           }
 
 
+
+
           if (Expr.preFilter[type]) {
             match = Expr.preFilter[type](match, curLoop, inplace, result, not, isXMLFilter);
 
@@ -219,6 +253,8 @@ exports = function () {
               continue;
             }
           }
+
+
 
 
           if (match) {
@@ -242,10 +278,14 @@ exports = function () {
           }
 
 
+
+
           if (found !== undefined) {
             if (!inplace) {
               curLoop = result;
             }
+
+
 
 
             expr = expr.replace(Expr.match[type], '');
@@ -255,10 +295,14 @@ exports = function () {
             }
 
 
+
+
             break;
           }
         }
       }
+
+
 
 
       // Improper expression
@@ -271,8 +315,12 @@ exports = function () {
       }
 
 
+
+
       old = expr;
     }
+
+
 
 
     return curLoop;
@@ -312,15 +360,21 @@ exports = function () {
         }
 
 
+
+
         for (var i = 0, l = checkSet.length, elem; i < l; i++) {
           if (elem = checkSet[i]) {
             while ((elem = elem.previousSibling) && elem.nodeType !== 1) {
             }
 
 
+
+
             checkSet[i] = isPartStrNotTag || elem && elem.nodeName === part ? elem || false : elem === part;
           }
         }
+
+
 
 
         if (isPartStrNotTag) {
@@ -349,6 +403,8 @@ exports = function () {
           }
 
 
+
+
           if (isPartStr) {
             Sizzle.filter(part, checkSet, true);
           }
@@ -363,6 +419,8 @@ exports = function () {
         }
 
 
+
+
         checkFn('parentNode', part, doneName, checkSet, nodeCheck, isXML);
       },
       '~': function (checkSet, part, isXML) {
@@ -372,6 +430,8 @@ exports = function () {
           var nodeCheck = part = isXML ? part : part.toUpperCase();
           checkFn = dirNodeCheck;
         }
+
+
 
 
         checkFn('previousSibling', part, doneName, checkSet, nodeCheck, isXML);
@@ -395,6 +455,8 @@ exports = function () {
           }
 
 
+
+
           return ret.length === 0 ? null : ret;
         }
       },
@@ -411,6 +473,8 @@ exports = function () {
         }
 
 
+
+
         for (var i = 0, elem; (elem = curLoop[i]) != null; i++) {
           if (elem) {
             if (not ^ (elem.className && (' ' + elem.className + ' ').indexOf(match) >= 0)) {
@@ -421,6 +485,8 @@ exports = function () {
             }
           }
         }
+
+
 
 
         return false;
@@ -444,6 +510,8 @@ exports = function () {
         }
 
 
+
+
         // TODO: Move to normal caching system
         match[0] = done++;
 
@@ -457,9 +525,13 @@ exports = function () {
         }
 
 
+
+
         if (match[2] === '~=') {
           match[4] = ' ' + match[4] + ' ';
         }
+
+
 
 
         return match;
@@ -479,6 +551,12 @@ exports = function () {
         } else if (Expr.match.POS.test(match[0]) || Expr.match.CHILD.test(match[0])) {
           return true;
         }
+
+
+
+
+
+
 
 
 
@@ -592,6 +670,8 @@ exports = function () {
           }
 
 
+
+
           return true;
         }
       },
@@ -621,6 +701,8 @@ exports = function () {
           }
 
 
+
+
           var doneName = match[0], parent = elem.parentNode;
 
           if (parent && (parent.sizcache !== doneName || !elem.nodeIndex)) {
@@ -632,6 +714,8 @@ exports = function () {
             }
             parent.sizcache = doneName;
           }
+
+
 
 
           var diff = elem.nodeIndex - last;
@@ -673,6 +757,8 @@ exports = function () {
   }
 
 
+
+
   var makeArray = function (array, results) {
     array = Array.prototype.slice.call(array, 0);
 
@@ -680,6 +766,8 @@ exports = function () {
       results.push.apply(results, array);
       return results;
     }
+
+
 
 
     return array;
@@ -710,9 +798,17 @@ exports = function () {
       }
 
 
+
+
       return ret;
     };
   }
+
+
+
+
+
+
 
 
 
@@ -752,6 +848,18 @@ exports = function () {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   // Check to see if the browser returns elements by name when
   // querying by getElementById (and provide a workaround)
   (function () {
@@ -778,6 +886,8 @@ exports = function () {
         return elem.nodeType === 1 && node && node.nodeValue === match;
       };
     }
+
+
 
 
     root.removeChild(form);
@@ -808,13 +918,19 @@ exports = function () {
           }
 
 
+
+
           results = tmp;
         }
+
+
 
 
         return results;
       };
     }
+
+
 
 
     // Check to see if an attribute returns normalized href attributes
@@ -824,6 +940,8 @@ exports = function () {
         return elem.getAttribute('href', 2);
       };
     }
+
+
 
 
     div = null;
@@ -842,6 +960,8 @@ exports = function () {
       }
 
 
+
+
       Sizzle = function (query, context, extra, seed) {
         context = context || document;
 
@@ -855,6 +975,8 @@ exports = function () {
         }
 
 
+
+
         return oldSizzle(query, context, extra, seed);
       };
 
@@ -863,8 +985,12 @@ exports = function () {
       }
 
 
+
+
       div = null;
     }());
+
+
 
 
   // release memory in IE
@@ -878,11 +1004,15 @@ exports = function () {
         return;
 
 
+
+
       // Safari caches class attributes, doesn't catch changes (in 3.2)
       div.lastChild.className = 'e';
 
       if (div.getElementsByClassName('e').length === 1)
         return;
+
+
 
 
       Expr.order.splice(1, 0, 'CLASS');
@@ -894,6 +1024,8 @@ exports = function () {
 
       div = null;
     }());
+
+
 
 
   // release memory in IE
@@ -916,10 +1048,14 @@ exports = function () {
           }
 
 
+
+
           if (elem.nodeType === 1 && !isXML) {
             elem.sizcache = doneName;
             elem.sizset = i;
           }
+
+
 
 
           if (elem.nodeName === cur) {
@@ -928,14 +1064,20 @@ exports = function () {
           }
 
 
+
+
           elem = elem[dir];
         }
+
+
 
 
         checkSet[i] = match;
       }
     }
   }
+
+
 
 
   function dirCheck(dir, cur, doneName, checkSet, nodeCheck, isXML) {
@@ -957,6 +1099,8 @@ exports = function () {
           }
 
 
+
+
           if (elem.nodeType === 1) {
             if (!isXML) {
               elem.sizcache = doneName;
@@ -969,6 +1113,8 @@ exports = function () {
               }
 
 
+
+
             } else if (Sizzle.filter(cur, [elem]).length > 0) {
               match = elem;
               break;
@@ -976,14 +1122,20 @@ exports = function () {
           }
 
 
+
+
           elem = elem[dir];
         }
+
+
 
 
         checkSet[i] = match;
       }
     }
   }
+
+
 
 
   var contains = document.compareDocumentPosition ? function (a, b) {
@@ -1007,11 +1159,15 @@ exports = function () {
     }
 
 
+
+
     selector = Expr.relative[selector] ? selector + '*' : selector;
 
     for (var i = 0, l = root.length; i < l; i++) {
       Sizzle(selector, root[i], tmpSet);
     }
+
+
 
 
     return Sizzle.filter(later, tmpSet);

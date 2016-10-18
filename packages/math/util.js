@@ -13,7 +13,6 @@ import Enum from 'lib/Enum';
 exports.interpolate = function (a, b, x) {
   return a * (1 - x) + b * x;
 }
-
 ;
 
 
@@ -24,7 +23,6 @@ exports.interpolate = function (a, b, x) {
 exports.random = function (a, b, rand) {
   return a + ((rand || Math.random)() * (b - a) | 0);
 }
-
 ;
 
 
@@ -35,7 +33,6 @@ exports.random = function (a, b, rand) {
 exports.randomInclusive = function (a, b, rand) {
   return exports.random(a, b + 1, rand);
 }
-
 ;
 
 
@@ -45,7 +42,6 @@ exports.randomInclusive = function (a, b, rand) {
 exports.clip = function (num, min, max) {
   return Math.max(Math.min(num, max), min);
 }
-
 ;
 
 
@@ -92,16 +88,22 @@ exports.round = function (a, precision, method) {
   }
 
 
+
+
   if (!precision) {
     if (method == round.ROUND_HALF_UP) {
       Math.round(a);
     }
 
 
+
+
     var i = a | 0, frac = a - i, half = frac == 0.5 || frac == -0.5;
     if (!half) {
       return Math.round(a);
     }
+
+
 
 
     var sign = a < 0 ? -1 : 1;
@@ -118,10 +120,11 @@ exports.round = function (a, precision, method) {
   }
 
 
+
+
   var i = a | 0, frac = a - i, p = Math.pow(10, precision);
   return (i + round(frac * p, 0, method) / p).toFixed(precision);
 }
-
 
 ;
 var round = exports.round;

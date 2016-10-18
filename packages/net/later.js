@@ -2,16 +2,15 @@ let exports = {};
 
 import { logger } from 'base';
 
-exports.Later = Class(function () {
-  this.init = function () {
+exports.Later = class {
+  constructor() {
     this.cb = null;
     this.eb = null;
     this.values = [];
     this.errors = [];
     this.cancelback = null;
-  };
-
-  this.succeed = this.callback = function () {
+  }
+  callback() {
     logger.debug('callback', [].slice.call(arguments, 0));
     if (this.cb) {
       var result = this.cb.apply(this, arguments);
@@ -21,46 +20,46 @@ exports.Later = Class(function () {
     } else {
       this.values.push(arguments);
     }
-  };
-
-  this.fail = this.errback = function () {
+  }
+  errback() {
     logger.debug('eb', [].slice.call(arguments, 0));
     if (this.eb) {
       this.eb.apply(this, arguments);
     } else {
       this.errors.push(arguments);
     }
-  };
-
-  this.cancel = function () {
+  }
+  cancel() {
     if (this.cancelback) {
       var cb = this.cancelback;
       this.cancelback = null;
       cb.call(this);
     }
-  };
-  this.setCallback = function (cb) {
+  }
+  setCallback(cb) {
     this.cb = cb;
     for (var i = 0, v; v = this.values[i]; ++i) {
       this.cb.apply(this, v);
     }
     this.values = [];
     return this;
-  };
-  this.setErrback = function (eb) {
+  }
+  setErrback(eb) {
     this.eb = eb;
     for (var i = 0, v; e = this.errors[i]; ++i) {
       this.eb.apply(this, e);
     }
     this.errors = [];
     return this;
-  };
-  this.setCancelback = function (cancelback) {
+  }
+  setCancelback(cancelback) {
     this.cancelback = cancelback;
     return this;
-  };
-});
+  }
+};
 
+exports.Later.prototype.succeed = exports.Later.prototype.callback;
+exports.Later.prototype.fail = exports.Later.prototype.errback;
 exports.Later.fail = function () {
   var l = new Later();
   return l.fail.apply(l, arguments);

@@ -4,46 +4,44 @@ import { bind } from 'base';
 
 import interfaces from '../../interfaces';
 
-var Transport = Class(interfaces.Transport, function (supr) {
-  this.init = function (inStream, outStream) {
+class Transport extends interfaces.Transport {
+  constructor(inStream, outStream) {
+    super();
+
     this._inStream = inStream;
     this._outStream = outStream;
     this.setEncoding('plain');
-  };
-
-  this.setEncoding = function (encoding) {
-    supr(this, 'setEncoding', arguments);
+  }
+  setEncoding(encoding) {
+    super.setEncoding(...arguments);
     if (encoding == 'plain') {
       encoding = 'binary';
     }
     this._inStream.setEncoding(encoding);
     this._outStream.setEncoding(encoding);
-  };
-
-  this.makeConnection = function (protocol) {
+  }
+  makeConnection(protocol) {
     this._inStream.on('data', bind(protocol, 'dataReceived'));
     this._inStream.on('end', bind(protocol, 'connectionLost'));
-  };
-
-  this.write = function (data) {
+  }
+  write(data) {
     this._outStream.write(data);
     this._outStream.flush();
-  };
-
-  this.loseConnection = function () {
-  };
-});
+  }
+  loseConnection() {
+  }
+}
 
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(interfaces.Connector, function () {
-  this.connect = function () {
+exports.Connector = class extends interfaces.Connector {
+  connect() {
     var stdin = process.openStdin();
     var stdout = process.stdout;
     var transport = new Transport(stdin, stdout);
     this.onConnect(transport);
-  };
-});
+  }
+};
 
 export default exports;

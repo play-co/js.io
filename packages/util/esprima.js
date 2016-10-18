@@ -264,9 +264,13 @@ let exports = {};
   }
 
 
+
+
   function isDecimalDigit(ch) {
     return ch >= 48 && ch <= 57;
   }
+
+
 
 
   // 0..9
@@ -275,9 +279,13 @@ let exports = {};
   }
 
 
+
+
   function isOctalDigit(ch) {
     return '01234567'.indexOf(ch) >= 0;
   }
+
+
 
 
   function octalToDecimal(ch) {
@@ -296,11 +304,17 @@ let exports = {};
     }
 
 
+
+
     return {
       code: code,
       octal: octal
     };
   }
+
+
+
+
 
 
 
@@ -331,10 +345,18 @@ let exports = {};
 
 
 
+
+
+
+
   // 7.3 Line Terminators
   function isLineTerminator(ch) {
     return ch === 10 || ch === 13 || ch === 8232 || ch === 8233;
   }
+
+
+
+
 
 
 
@@ -349,6 +371,8 @@ let exports = {};
   }
 
 
+
+
   function isIdentifierPart(ch) {
     return ch === 36 || ch === 95 || // $ (dollar) and _ (underscore)
     ch >= 65 && ch <= 90 || // A..Z
@@ -357,6 +381,10 @@ let exports = {};
     ch === 92 || // \ (backslash)
     ch >= 128 && Regex.NonAsciiIdentifierPart.test(String.fromCharCode(ch));
   }
+
+
+
+
 
 
 
@@ -373,6 +401,10 @@ let exports = {};
       return false;
     }
   }
+
+
+
+
 
 
 
@@ -396,9 +428,15 @@ let exports = {};
   }
 
 
+
+
   function isRestrictedWord(id) {
     return id === 'eval' || id === 'arguments';
   }
+
+
+
+
 
 
 
@@ -433,6 +471,10 @@ let exports = {};
 
 
 
+
+
+
+
   // 7.4 Comments
   function addComment(type, value, start, end, loc) {
     var comment;
@@ -460,6 +502,8 @@ let exports = {};
       extra.trailingComments.push(comment);
     }
   }
+
+
 
 
   function skipSingleLineComment(offset) {
@@ -496,6 +540,8 @@ let exports = {};
     }
 
 
+
+
     if (extra.comments) {
       comment = source.slice(start + offset, index);
       loc.end = {
@@ -505,6 +551,8 @@ let exports = {};
       addComment('Line', comment, start, index, loc);
     }
   }
+
+
 
 
   function skipMultiLineComment() {
@@ -519,6 +567,8 @@ let exports = {};
         }
       };
     }
+
+
 
 
     while (index < length) {
@@ -553,6 +603,8 @@ let exports = {};
     }
 
 
+
+
     // Ran off the end of the file - the whole thing is a comment
     if (extra.comments) {
       loc.end = {
@@ -564,6 +616,8 @@ let exports = {};
     }
     tolerateUnexpectedToken();
   }
+
+
 
 
   function skipComment() {
@@ -633,6 +687,8 @@ let exports = {};
   }
 
 
+
+
   function scanHexEscape(prefix) {
     var i, len, ch, code = 0;
 
@@ -649,6 +705,8 @@ let exports = {};
   }
 
 
+
+
   function scanUnicodeCodePointEscape() {
     var ch, code, cu1, cu2;
 
@@ -661,6 +719,8 @@ let exports = {};
     }
 
 
+
+
     while (index < length) {
       ch = source[index++];
       if (!isHexDigit(ch)) {
@@ -670,9 +730,13 @@ let exports = {};
     }
 
 
+
+
     if (code > 1114111 || ch !== '}') {
       throwUnexpectedToken();
     }
+
+
 
 
     // UTF-16 Encoding
@@ -683,6 +747,8 @@ let exports = {};
     cu2 = (code - 65536 & 1023) + 56320;
     return String.fromCharCode(cu1, cu2);
   }
+
+
 
 
   function getEscapedIdentifier() {
@@ -703,6 +769,8 @@ let exports = {};
       }
       id = ch;
     }
+
+
 
 
     while (index < length) {
@@ -729,8 +797,12 @@ let exports = {};
     }
 
 
+
+
     return id;
   }
+
+
 
 
   function getIdentifier() {
@@ -752,8 +824,12 @@ let exports = {};
     }
 
 
+
+
     return source.slice(start, index);
   }
+
+
 
 
   function scanIdentifier() {
@@ -782,6 +858,26 @@ let exports = {};
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return {
       type: type,
       value: id,
@@ -791,6 +887,12 @@ let exports = {};
       end: index
     };
   }
+
+
+
+
+
+
 
 
 
@@ -821,6 +923,8 @@ let exports = {};
       break;
 
 
+
+
     case '{':
       if (extra.tokenize) {
         extra.openCurlyToken = extra.tokens.length;
@@ -828,6 +932,8 @@ let exports = {};
       state.curlyStack.push('{');
       ++index;
       break;
+
+
 
 
     case '.':
@@ -838,6 +944,8 @@ let exports = {};
         str = '...';
       }
       break;
+
+
 
 
     case '}':
@@ -854,6 +962,8 @@ let exports = {};
     case '~':
       ++index;
       break;
+
+
 
 
     default:
@@ -887,10 +997,16 @@ let exports = {};
     }
 
 
+
+
     token.end = index;
     token.value = str;
     return token;
   }
+
+
+
+
 
 
 
@@ -907,14 +1023,20 @@ let exports = {};
     }
 
 
+
+
     if (number.length === 0) {
       throwUnexpectedToken();
     }
 
 
+
+
     if (isIdentifierStart(source.charCodeAt(index))) {
       throwUnexpectedToken();
     }
+
+
 
 
     return {
@@ -926,6 +1048,8 @@ let exports = {};
       end: index
     };
   }
+
+
 
 
   function scanBinaryLiteral(start) {
@@ -942,10 +1066,14 @@ let exports = {};
     }
 
 
+
+
     if (number.length === 0) {
       // only 0b or 0B
       throwUnexpectedToken();
     }
+
+
 
 
     if (index < length) {
@@ -957,6 +1085,8 @@ let exports = {};
     }
 
 
+
+
     return {
       type: Token.NumericLiteral,
       value: parseInt(number, 2),
@@ -966,6 +1096,8 @@ let exports = {};
       end: index
     };
   }
+
+
 
 
   function scanOctalLiteral(prefix, start) {
@@ -981,6 +1113,8 @@ let exports = {};
     }
 
 
+
+
     while (index < length) {
       if (!isOctalDigit(source[index])) {
         break;
@@ -989,15 +1123,21 @@ let exports = {};
     }
 
 
+
+
     if (!octal && number.length === 0) {
       // only 0o or 0O
       throwUnexpectedToken();
     }
 
 
+
+
     if (isIdentifierStart(source.charCodeAt(index)) || isDecimalDigit(source.charCodeAt(index))) {
       throwUnexpectedToken();
     }
+
+
 
 
     return {
@@ -1010,6 +1150,8 @@ let exports = {};
       end: index
     };
   }
+
+
 
 
   function isImplicitOctalLiteral() {
@@ -1028,8 +1170,12 @@ let exports = {};
     }
 
 
+
+
     return true;
   }
+
+
 
 
   function scanNumericLiteral() {
@@ -1062,6 +1208,8 @@ let exports = {};
         }
 
 
+
+
         if (isOctalDigit(ch)) {
           if (isImplicitOctalLiteral()) {
             return scanOctalLiteral(ch, start);
@@ -1070,11 +1218,15 @@ let exports = {};
       }
 
 
+
+
       while (isDecimalDigit(source.charCodeAt(index))) {
         number += source[index++];
       }
       ch = source[index];
     }
+
+
 
 
     if (ch === '.') {
@@ -1084,6 +1236,8 @@ let exports = {};
       }
       ch = source[index];
     }
+
+
 
 
     if (ch === 'e' || ch === 'E') {
@@ -1103,9 +1257,13 @@ let exports = {};
     }
 
 
+
+
     if (isIdentifierStart(source.charCodeAt(index))) {
       throwUnexpectedToken();
     }
+
+
 
 
     return {
@@ -1117,6 +1275,10 @@ let exports = {};
       end: index
     };
   }
+
+
+
+
 
 
 
@@ -1177,6 +1339,8 @@ let exports = {};
             throw throwUnexpectedToken();
 
 
+
+
           default:
             if (isOctalDigit(ch)) {
               octToDec = octalToDecimal(ch);
@@ -1203,9 +1367,13 @@ let exports = {};
     }
 
 
+
+
     if (quote !== '') {
       throwUnexpectedToken();
     }
+
+
 
 
     return {
@@ -1218,6 +1386,8 @@ let exports = {};
       end: index
     };
   }
+
+
 
 
   function scanTemplate() {
@@ -1286,6 +1456,8 @@ let exports = {};
             break;
 
 
+
+
           default:
             if (ch === '0') {
               if (isDecimalDigit(source.charCodeAt(index))) {
@@ -1321,14 +1493,20 @@ let exports = {};
     }
 
 
+
+
     if (!terminated) {
       throwUnexpectedToken();
     }
 
 
+
+
     if (!head) {
       state.curlyStack.pop();
     }
+
+
 
 
     return {
@@ -1345,6 +1523,8 @@ let exports = {};
       end: index
     };
   }
+
+
 
 
   function testRegExp(pattern, flags) {
@@ -1370,12 +1550,20 @@ let exports = {};
     }
 
 
+
+
     // First, detect invalid regular expressions.
     try {
       RegExp(tmp);
     } catch (e) {
       throwUnexpectedToken(null, Messages.InvalidRegExp);
     }
+
+
+
+
+
+
 
 
 
@@ -1388,6 +1576,8 @@ let exports = {};
       return null;
     }
   }
+
+
 
 
   function scanRegExpBody() {
@@ -1426,9 +1616,13 @@ let exports = {};
     }
 
 
+
+
     if (!terminated) {
       throwUnexpectedToken(null, Messages.UnterminatedRegExp);
     }
+
+
 
 
     // Exclude leading and trailing slash.
@@ -1438,6 +1632,8 @@ let exports = {};
       literal: str
     };
   }
+
+
 
 
   function scanRegExpFlags() {
@@ -1450,6 +1646,8 @@ let exports = {};
       if (!isIdentifierPart(ch.charCodeAt(0))) {
         break;
       }
+
+
 
 
       ++index;
@@ -1481,11 +1679,15 @@ let exports = {};
     }
 
 
+
+
     return {
       value: flags,
       literal: str
     };
   }
+
+
 
 
   function scanRegExp() {
@@ -1516,6 +1718,8 @@ let exports = {};
     }
 
 
+
+
     return {
       literal: body.literal + flags.literal,
       value: value,
@@ -1527,6 +1731,8 @@ let exports = {};
       end: index
     };
   }
+
+
 
 
   function collectRegex() {
@@ -1562,6 +1768,8 @@ let exports = {};
       }
 
 
+
+
       extra.tokens.push({
         type: 'RegularExpression',
         value: regex.literal,
@@ -1575,13 +1783,19 @@ let exports = {};
     }
 
 
+
+
     return regex;
   }
+
+
 
 
   function isIdentifierName(token) {
     return token.type === Token.Identifier || token.type === Token.Keyword || token.type === Token.BooleanLiteral || token.type === Token.NullLiteral;
   }
+
+
 
 
   function advanceSlash() {
@@ -1640,6 +1854,8 @@ let exports = {};
   }
 
 
+
+
   function advance() {
     var ch, token;
 
@@ -1654,6 +1870,8 @@ let exports = {};
     }
 
 
+
+
     ch = source.charCodeAt(index);
 
     if (isIdentifierStart(ch)) {
@@ -1665,16 +1883,22 @@ let exports = {};
     }
 
 
+
+
     // Very common: ( and ) and ;
     if (ch === 40 || ch === 41 || ch === 59) {
       return scanPunctuator();
     }
 
 
+
+
     // String literal starts with single quote (U+0027) or double quote (U+0022).
     if (ch === 39 || ch === 34) {
       return scanStringLiteral();
     }
+
+
 
 
     // Dot (.) U+002E can also start a floating-point number, hence the need
@@ -1687,15 +1911,21 @@ let exports = {};
     }
 
 
+
+
     if (isDecimalDigit(ch)) {
       return scanNumericLiteral();
     }
+
+
 
 
     // Slash (/) U+002F can also start a regex.
     if (extra.tokenize && ch === 47) {
       return advanceSlash();
     }
+
+
 
 
     // Template literals start with ` (U+0060) for template head
@@ -1705,8 +1935,12 @@ let exports = {};
     }
 
 
+
+
     return scanPunctuator();
   }
+
+
 
 
   function collectToken() {
@@ -1746,8 +1980,12 @@ let exports = {};
     }
 
 
+
+
     return token;
   }
+
+
 
 
   function lex() {
@@ -1772,6 +2010,8 @@ let exports = {};
   }
 
 
+
+
   function peek() {
     scanning = true;
 
@@ -1790,16 +2030,22 @@ let exports = {};
   }
 
 
+
+
   function Position() {
     this.line = startLineNumber;
     this.column = startIndex - startLineStart;
   }
 
 
+
+
   function SourceLocation() {
     this.start = new Position();
     this.end = null;
   }
+
+
 
 
   function WrappingSourceLocation(startToken) {
@@ -1809,6 +2055,8 @@ let exports = {};
     };
     this.end = null;
   }
+
+
 
 
   function Node() {
@@ -1824,6 +2072,8 @@ let exports = {};
   }
 
 
+
+
   function WrappingNode(startToken) {
     if (extra.range) {
       this.range = [
@@ -1837,6 +2087,8 @@ let exports = {};
   }
 
 
+
+
   WrappingNode.prototype = Node.prototype = {
     processComment: function () {
       var lastChild, leadingComments, trailingComments, bottomRight = extra.bottomRightStack, i, comment, last = bottomRight[bottomRight.length - 1];
@@ -1846,6 +2098,8 @@ let exports = {};
           return;
         }
       }
+
+
 
 
       if (extra.trailingComments.length > 0) {
@@ -1868,11 +2122,17 @@ let exports = {};
 
 
 
+
+
+
+
       // Eating the stack.
       while (last && last.range[0] >= this.range[0]) {
         lastChild = bottomRight.pop();
         last = bottomRight[bottomRight.length - 1];
       }
+
+
 
 
       if (lastChild) {
@@ -1885,6 +2145,8 @@ let exports = {};
               lastChild.leadingComments.splice(i, 1);
             }
           }
+
+
 
 
           if (!lastChild.leadingComments.length) {
@@ -1907,12 +2169,26 @@ let exports = {};
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       if (leadingComments && leadingComments.length > 0) {
         this.leadingComments = leadingComments;
       }
       if (trailingComments && trailingComments.length > 0) {
         this.trailingComments = trailingComments;
       }
+
+
 
 
       bottomRight.push(this);
@@ -1930,6 +2206,8 @@ let exports = {};
           this.loc.source = extra.source;
         }
       }
+
+
 
 
       if (extra.attachComment) {
@@ -2406,8 +2684,12 @@ let exports = {};
     }
 
 
+
+
     extra.errors.push(error);
   }
+
+
 
 
   function createError(line, pos, description) {
@@ -2418,6 +2700,10 @@ let exports = {};
     error.description = description;
     return error;
   }
+
+
+
+
 
 
 
@@ -2434,6 +2720,8 @@ let exports = {};
 
     throw createError(lastLineNumber, lastIndex, msg);
   }
+
+
 
 
   function tolerateError(messageFormat) {
@@ -2457,6 +2745,10 @@ let exports = {};
 
 
 
+
+
+
+
   // Throw an exception because of the token.
   function unexpectedTokenError(token, message) {
     var value, msg = message || Messages.UnexpectedToken;
@@ -2475,10 +2767,14 @@ let exports = {};
       }
 
 
+
+
       value = token.type === Token.Template ? token.value.raw : token.value;
     } else {
       value = 'ILLEGAL';
     }
+
+
 
 
     msg = msg.replace('%0', value);
@@ -2487,9 +2783,13 @@ let exports = {};
   }
 
 
+
+
   function throwUnexpectedToken(token, message) {
     throw unexpectedTokenError(token, message);
   }
+
+
 
 
   function tolerateUnexpectedToken(token, message) {
@@ -2504,6 +2804,10 @@ let exports = {};
 
 
 
+
+
+
+
   // Expect the next token to match the specified punctuator.
   // If not, an exception will be thrown.
   function expect(value) {
@@ -2512,6 +2816,8 @@ let exports = {};
       throwUnexpectedToken(token);
     }
   }
+
+
 
 
   /**
@@ -2541,6 +2847,10 @@ let exports = {};
 
 
 
+
+
+
+
   // Expect the next token to match the specified keyword.
   // If not, an exception will be thrown.
   function expectKeyword(keyword) {
@@ -2553,10 +2863,18 @@ let exports = {};
 
 
 
+
+
+
+
   // Return true if the next token matches the specified punctuator.
   function match(value) {
     return lookahead.type === Token.Punctuator && lookahead.value === value;
   }
+
+
+
+
 
 
 
@@ -2569,11 +2887,19 @@ let exports = {};
 
 
 
+
+
+
+
   // Return true if the next token matches the specified contextual keyword
   // (where an identifier is sometimes a keyword depending on the context)
   function matchContextualKeyword(keyword) {
     return lookahead.type === Token.Identifier && lookahead.value === keyword;
   }
+
+
+
+
 
 
 
@@ -2590,6 +2916,8 @@ let exports = {};
   }
 
 
+
+
   function consumeSemicolon() {
     // Catch the very common case first: immediately a semicolon (U+003B).
     if (source.charCodeAt(startIndex) === 59 || match(';')) {
@@ -2598,9 +2926,13 @@ let exports = {};
     }
 
 
+
+
     if (hasLineTerminator) {
       return;
     }
+
+
 
 
     // FIXME(ikarienator): this is seemingly an issue in the previous location info convention.
@@ -2612,6 +2944,8 @@ let exports = {};
       throwUnexpectedToken(lookahead);
     }
   }
+
+
 
 
   // Cover grammar support.
@@ -2661,6 +2995,8 @@ let exports = {};
   }
 
 
+
+
   function inheritCoverGrammar(parser) {
     var oldIsBindingElement = isBindingElement, oldIsAssignmentTarget = isAssignmentTarget, oldFirstCoverInitializedNameError = firstCoverInitializedNameError, result;
     isBindingElement = true;
@@ -2672,6 +3008,8 @@ let exports = {};
     firstCoverInitializedNameError = oldFirstCoverInitializedNameError || firstCoverInitializedNameError;
     return result;
   }
+
+
 
 
   function parseArrayPattern(params) {
@@ -2699,13 +3037,19 @@ let exports = {};
       }
 
 
+
+
     }
+
+
 
 
     expect(']');
 
     return node.finishArrayPattern(elements);
   }
+
+
 
 
   function parsePropertyPattern(params) {
@@ -2732,6 +3076,8 @@ let exports = {};
   }
 
 
+
+
   function parseObjectPattern(params) {
     var node = new Node(), properties = [];
 
@@ -2745,10 +3091,14 @@ let exports = {};
     }
 
 
+
+
     lex();
 
     return node.finishObjectPattern(properties);
   }
+
+
 
 
   function parsePattern(params) {
@@ -2766,6 +3116,8 @@ let exports = {};
   }
 
 
+
+
   function parsePatternWithDefault(params) {
     var startToken = lookahead, pattern, right;
     pattern = parsePattern(params);
@@ -2776,6 +3128,10 @@ let exports = {};
     }
     return pattern;
   }
+
+
+
+
 
 
 
@@ -2810,10 +3166,16 @@ let exports = {};
     }
 
 
+
+
     lex();
 
     return node.finishArrayExpression(elements);
   }
+
+
+
+
 
 
 
@@ -2835,9 +3197,13 @@ let exports = {};
     }
 
 
+
+
     strict = previousStrict;
     return node.finishFunctionExpression(null, paramInfo.params, paramInfo.defaults, body, isGenerator);
   }
+
+
 
 
   function parsePropertyMethodFunction() {
@@ -2853,6 +3219,8 @@ let exports = {};
 
     return method;
   }
+
+
 
 
   function parseObjectPropertyKey() {
@@ -2887,6 +3255,8 @@ let exports = {};
   }
 
 
+
+
   function lookaheadPropertyName() {
     switch (lookahead.type) {
     case Token.Identifier:
@@ -2901,6 +3271,8 @@ let exports = {};
     }
     return false;
   }
+
+
 
 
   // This function is to try to parse a MethodDefinition as defined in 14.3. But in the case of object literals,
@@ -2981,15 +3353,25 @@ let exports = {};
 
 
 
+
+
+
+
+
+
     if (key && match('(')) {
       value = parsePropertyMethodFunction();
       return node.finishProperty('init', key, computed, value, true, false);
     }
 
 
+
+
     // Not a MethodDefinition.
     return null;
   }
+
+
 
 
   function checkProto(key, computed, hasProto) {
@@ -3001,6 +3383,8 @@ let exports = {};
       }
     }
   }
+
+
 
 
   function parseObjectProperty(hasProto) {
@@ -3021,9 +3405,13 @@ let exports = {};
     }
 
 
+
+
     if (!key) {
       throwUnexpectedToken(lookahead);
     }
+
+
 
 
     // init property or short hand property.
@@ -3034,6 +3422,8 @@ let exports = {};
       value = inheritCoverGrammar(parseAssignmentExpression);
       return node.finishProperty('init', key, computed, value, false, false);
     }
+
+
 
 
     if (token.type === Token.Identifier) {
@@ -3047,8 +3437,12 @@ let exports = {};
     }
 
 
+
+
     throwUnexpectedToken(lookahead);
   }
+
+
 
 
   function parseObjectInitialiser() {
@@ -3065,10 +3459,14 @@ let exports = {};
     }
 
 
+
+
     expect('}');
 
     return node.finishObjectExpression(properties);
   }
+
+
 
 
   function reinterpretExpressionAsPattern(expr) {
@@ -3108,12 +3506,16 @@ let exports = {};
   }
 
 
+
+
   function parseTemplateElement(option) {
     var node, token;
 
     if (lookahead.type !== Token.Template || option.head && !lookahead.head) {
       throwUnexpectedToken();
     }
+
+
 
 
     node = new Node();
@@ -3124,6 +3526,8 @@ let exports = {};
       cooked: token.value.cooked
     }, token.tail);
   }
+
+
 
 
   function parseTemplateLiteral() {
@@ -3140,8 +3544,14 @@ let exports = {};
     }
 
 
+
+
     return node.finishTemplateLiteral(quasis, expressions);
   }
+
+
+
+
 
 
 
@@ -3165,6 +3575,8 @@ let exports = {};
     }
 
 
+
+
     startToken = lookahead;
     if (match('...')) {
       expr = parseRestElement(params);
@@ -3177,6 +3589,8 @@ let exports = {};
         params: [expr]
       };
     }
+
+
 
 
     isBindingElement = true;
@@ -3212,12 +3626,20 @@ let exports = {};
         }
 
 
+
+
         expressions.push(inheritCoverGrammar(parseAssignmentExpression));
       }
 
 
+
+
       expr = new WrappingNode(startToken).finishSequenceExpression(expressions);
     }
+
+
+
+
 
 
 
@@ -3230,6 +3652,8 @@ let exports = {};
       }
 
 
+
+
       if (expr.type === Syntax.SequenceExpression) {
         for (i = 0; i < expr.expressions.length; i++) {
           reinterpretExpressionAsPattern(expr.expressions[i]);
@@ -3237,6 +3661,8 @@ let exports = {};
       } else {
         reinterpretExpressionAsPattern(expr);
       }
+
+
 
 
       expr = {
@@ -3253,6 +3679,12 @@ let exports = {};
 
 
 
+
+
+
+
+
+
   // 11.1 Primary Expressions
   function parsePrimaryExpression() {
     var type, token, expr, node;
@@ -3263,14 +3695,20 @@ let exports = {};
     }
 
 
+
+
     if (match('[')) {
       return inheritCoverGrammar(parseArrayInitialiser);
     }
 
 
+
+
     if (match('{')) {
       return inheritCoverGrammar(parseObjectInitialiser);
     }
+
+
 
 
     type = lookahead.type;
@@ -3331,8 +3769,68 @@ let exports = {};
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return expr;
   }
+
+
+
+
 
 
 
@@ -3361,10 +3859,14 @@ let exports = {};
     }
 
 
+
+
     expect(')');
 
     return args;
   }
+
+
 
 
   function parseNonComputedProperty() {
@@ -3377,8 +3879,12 @@ let exports = {};
     }
 
 
+
+
     return node.finishIdentifier(token.value);
   }
+
+
 
 
   function parseNonComputedMember() {
@@ -3386,6 +3892,8 @@ let exports = {};
 
     return parseNonComputedProperty();
   }
+
+
 
 
   function parseComputedMember() {
@@ -3401,6 +3909,8 @@ let exports = {};
   }
 
 
+
+
   function parseNewExpression() {
     var callee, args, node = new Node();
 
@@ -3412,6 +3922,8 @@ let exports = {};
 
     return node.finishNewExpression(callee, args);
   }
+
+
 
 
   function parseLeftHandSideExpressionAllowCall() {
@@ -3430,6 +3942,8 @@ let exports = {};
     } else {
       expr = inheritCoverGrammar(matchKeyword('new') ? parseNewExpression : parsePrimaryExpression);
     }
+
+
 
 
     for (;;) {
@@ -3461,6 +3975,8 @@ let exports = {};
   }
 
 
+
+
   function parseLeftHandSideExpression() {
     var quasi, expr, property, startToken;
     assert(state.allowIn, 'callee of new expression always allow in keyword.');
@@ -3477,6 +3993,8 @@ let exports = {};
     } else {
       expr = inheritCoverGrammar(matchKeyword('new') ? parseNewExpression : parsePrimaryExpression);
     }
+
+
 
 
     for (;;) {
@@ -3503,6 +4021,10 @@ let exports = {};
 
 
 
+
+
+
+
   // 11.3 Postfix Expressions
   function parsePostfixExpression() {
     var expr, token, startToken = lookahead;
@@ -3517,9 +4039,13 @@ let exports = {};
         }
 
 
+
+
         if (!isAssignmentTarget) {
           tolerateError(Messages.InvalidLHSInAssignment);
         }
+
+
 
 
         isAssignmentTarget = isBindingElement = false;
@@ -3530,8 +4056,14 @@ let exports = {};
     }
 
 
+
+
     return expr;
   }
+
+
+
+
 
 
 
@@ -3550,6 +4082,8 @@ let exports = {};
       if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
         tolerateError(Messages.StrictLHSPrefix);
       }
+
+
 
 
       if (!isAssignmentTarget) {
@@ -3580,8 +4114,30 @@ let exports = {};
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return expr;
   }
+
+
 
 
   function binaryPrecedence(token, allowIn) {
@@ -3592,10 +4148,14 @@ let exports = {};
     }
 
 
+
+
     switch (token.value) {
     case '||':
       prec = 1;
       break;
+
+
 
 
     case '&&':
@@ -3603,9 +4163,13 @@ let exports = {};
       break;
 
 
+
+
     case '|':
       prec = 3;
       break;
+
+
 
 
     case '^':
@@ -3613,9 +4177,13 @@ let exports = {};
       break;
 
 
+
+
     case '&':
       prec = 5;
       break;
+
+
 
 
     case '==':
@@ -3624,6 +4192,8 @@ let exports = {};
     case '!==':
       prec = 6;
       break;
+
+
 
 
     case '<':
@@ -3635,9 +4205,13 @@ let exports = {};
       break;
 
 
+
+
     case 'in':
       prec = allowIn ? 7 : 0;
       break;
+
+
 
 
     case '<<':
@@ -3647,10 +4221,14 @@ let exports = {};
       break;
 
 
+
+
     case '+':
     case '-':
       prec = 9;
       break;
+
+
 
 
     case '*':
@@ -3660,12 +4238,18 @@ let exports = {};
       break;
 
 
+
+
     default:
       break;
     }
 
     return prec;
   }
+
+
+
+
 
 
 
@@ -3716,6 +4300,8 @@ let exports = {};
       }
 
 
+
+
       // Shift.
       token = lex();
       token.prec = prec;
@@ -3724,6 +4310,8 @@ let exports = {};
       expr = isolateCoverGrammar(parseUnaryExpression);
       stack.push(expr);
     }
+
+
 
 
     // Final reduce to clean-up the stack.
@@ -3736,8 +4324,16 @@ let exports = {};
     }
 
 
+
+
     return expr;
   }
+
+
+
+
+
+
 
 
 
@@ -3765,8 +4361,14 @@ let exports = {};
     }
 
 
+
+
     return expr;
   }
+
+
+
+
 
 
 
@@ -3778,6 +4380,8 @@ let exports = {};
     }
     return isolateCoverGrammar(parseAssignmentExpression);
   }
+
+
 
 
   function checkPatternParam(options, param) {
@@ -3844,15 +4448,21 @@ let exports = {};
     }
 
 
+
+
     if (options.message === Messages.StrictParamDupe) {
       token = strict ? options.stricted : options.firstRestricted;
       throwUnexpectedToken(token, options.message);
     }
 
 
+
+
     if (defaultCount === 0) {
       defaults = [];
     }
+
+
 
 
     return {
@@ -3863,6 +4473,8 @@ let exports = {};
       message: options.message
     };
   }
+
+
 
 
   function parseArrowFunctionExpression(options, node) {
@@ -3884,10 +4496,16 @@ let exports = {};
     }
 
 
+
+
     strict = previousStrict;
 
     return node.finishArrowFunctionExpression(options.params, options.defaults, body, body.type !== Syntax.BlockStatement);
   }
+
+
+
+
 
 
 
@@ -3901,6 +4519,8 @@ let exports = {};
     if (!state.allowYield) {
       tolerateUnexpectedToken(lookahead, Messages.IllegalYield);
     }
+
+
 
 
     expectKeyword('yield');
@@ -3918,8 +4538,14 @@ let exports = {};
     }
 
 
+
+
     return expr.finishYieldExpression(argument, delegate);
   }
+
+
+
+
 
 
 
@@ -3936,6 +4562,8 @@ let exports = {};
     }
 
 
+
+
     expr = parseConditionalExpression();
 
     if (expr.type === PlaceHolders.ArrowParameterPlaceHolder || match('=>')) {
@@ -3948,8 +4576,12 @@ let exports = {};
       }
 
 
+
+
       return expr;
     }
+
+
 
 
     if (matchAssign()) {
@@ -3958,10 +4590,14 @@ let exports = {};
       }
 
 
+
+
       // 11.13.1
       if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
         tolerateUnexpectedToken(token, Messages.StrictLHSAssignment);
       }
+
+
 
 
       if (!match('=')) {
@@ -3971,6 +4607,8 @@ let exports = {};
       }
 
 
+
+
       token = lex();
       right = isolateCoverGrammar(parseAssignmentExpression);
       expr = new WrappingNode(startToken).finishAssignmentExpression(token.value, expr, right);
@@ -3978,8 +4616,14 @@ let exports = {};
     }
 
 
+
+
     return expr;
   }
+
+
+
+
 
 
 
@@ -4002,12 +4646,20 @@ let exports = {};
       }
 
 
+
+
       expr = new WrappingNode(startToken).finishSequenceExpression(expressions);
     }
 
 
+
+
     return expr;
   }
+
+
+
+
 
 
 
@@ -4037,8 +4689,12 @@ let exports = {};
     }
 
 
+
+
     return parseStatement();
   }
+
+
 
 
   function parseStatementList() {
@@ -4051,8 +4707,12 @@ let exports = {};
     }
 
 
+
+
     return list;
   }
+
+
 
 
   function parseBlock() {
@@ -4066,6 +4726,10 @@ let exports = {};
 
     return node.finishBlockStatement(block);
   }
+
+
+
+
 
 
 
@@ -4085,8 +4749,12 @@ let exports = {};
     }
 
 
+
+
     return node.finishIdentifier(token.value);
   }
+
+
 
 
   function parseVariableDeclaration() {
@@ -4100,6 +4768,8 @@ let exports = {};
     }
 
 
+
+
     if (match('=')) {
       lex();
       init = isolateCoverGrammar(parseAssignmentExpression);
@@ -4109,8 +4779,16 @@ let exports = {};
 
 
 
+
+
+
+
+
+
     return node.finishVariableDeclarator(id, init);
   }
+
+
 
 
   function parseVariableDeclarationList() {
@@ -4128,6 +4806,8 @@ let exports = {};
   }
 
 
+
+
   function parseVariableStatement(node) {
     var declarations;
 
@@ -4141,6 +4821,8 @@ let exports = {};
   }
 
 
+
+
   function parseLexicalBinding(kind, options) {
     var init = null, id, node = new Node(), params = [];
 
@@ -4150,6 +4832,8 @@ let exports = {};
     if (strict && id.type === Syntax.Identifier && isRestrictedWord(id.name)) {
       tolerateError(Messages.StrictVarName);
     }
+
+
 
 
     if (kind === 'const') {
@@ -4164,8 +4848,16 @@ let exports = {};
 
 
 
+
+
+
+
+
+
     return node.finishVariableDeclarator(id, init);
   }
+
+
 
 
   function parseBindingList(kind, options) {
@@ -4183,6 +4875,8 @@ let exports = {};
   }
 
 
+
+
   function parseLexicalDeclaration(options) {
     var kind, declarations, node = new Node();
 
@@ -4197,6 +4891,8 @@ let exports = {};
   }
 
 
+
+
   function parseRestElement(params) {
     var param, node = new Node();
 
@@ -4205,6 +4901,8 @@ let exports = {};
     if (match('{')) {
       throwError(Messages.ObjectPatternAsRestParameter);
     }
+
+
 
 
     params.push(lookahead);
@@ -4216,13 +4914,21 @@ let exports = {};
     }
 
 
+
+
     if (!match(')')) {
       throwError(Messages.ParameterAfterRestParameter);
     }
 
 
+
+
     return node.finishRestElement(param);
   }
+
+
+
+
 
 
 
@@ -4236,12 +4942,20 @@ let exports = {};
 
 
 
+
+
+
+
   // 12.4 Expression Statement
   function parseExpressionStatement(node) {
     var expr = parseExpression();
     consumeSemicolon();
     return node.finishExpressionStatement(expr);
   }
+
+
+
+
 
 
 
@@ -4268,8 +4982,14 @@ let exports = {};
     }
 
 
+
+
     return node.finishIfStatement(test, consequent, alternate);
   }
+
+
+
+
 
 
 
@@ -4300,8 +5020,12 @@ let exports = {};
     }
 
 
+
+
     return node.finishDoWhileStatement(body, test);
   }
+
+
 
 
   function parseWhileStatement(node) {
@@ -4324,6 +5048,8 @@ let exports = {};
 
     return node.finishWhileStatement(test, body);
   }
+
+
 
 
   function parseForStatement(node) {
@@ -4398,6 +5124,8 @@ let exports = {};
           }
 
 
+
+
           lex();
           reinterpretExpressionAsPattern(init);
           left = init;
@@ -4407,6 +5135,8 @@ let exports = {};
           if (!isAssignmentTarget) {
             tolerateError(Messages.InvalidLHSInForLoop);
           }
+
+
 
 
           lex();
@@ -4430,6 +5160,8 @@ let exports = {};
     }
 
 
+
+
     if (typeof left === 'undefined') {
       if (!match(';')) {
         test = parseExpression();
@@ -4440,6 +5172,8 @@ let exports = {};
         update = parseExpression();
       }
     }
+
+
 
 
     expect(')');
@@ -4453,6 +5187,10 @@ let exports = {};
 
     return typeof left === 'undefined' ? node.finishForStatement(init, test, update, body) : forIn ? node.finishForInStatement(left, right, body) : node.finishForOfStatement(left, right, body);
   }
+
+
+
+
 
 
 
@@ -4472,8 +5210,12 @@ let exports = {};
       }
 
 
+
+
       return node.finishContinueStatement(null);
     }
+
+
 
 
     if (hasLineTerminator) {
@@ -4482,8 +5224,12 @@ let exports = {};
       }
 
 
+
+
       return node.finishContinueStatement(null);
     }
+
+
 
 
     if (lookahead.type === Token.Identifier) {
@@ -4496,6 +5242,8 @@ let exports = {};
     }
 
 
+
+
     consumeSemicolon();
 
     if (label === null && !state.inIteration) {
@@ -4503,8 +5251,14 @@ let exports = {};
     }
 
 
+
+
     return node.finishContinueStatement(label);
   }
+
+
+
+
 
 
 
@@ -4524,8 +5278,12 @@ let exports = {};
       }
 
 
+
+
       return node.finishBreakStatement(null);
     }
+
+
 
 
     if (hasLineTerminator) {
@@ -4534,8 +5292,12 @@ let exports = {};
       }
 
 
+
+
       return node.finishBreakStatement(null);
     }
+
+
 
 
     if (lookahead.type === Token.Identifier) {
@@ -4548,6 +5310,8 @@ let exports = {};
     }
 
 
+
+
     consumeSemicolon();
 
     if (label === null && !(state.inIteration || state.inSwitch)) {
@@ -4555,8 +5319,14 @@ let exports = {};
     }
 
 
+
+
     return node.finishBreakStatement(label);
   }
+
+
+
+
 
 
 
@@ -4572,6 +5342,8 @@ let exports = {};
     }
 
 
+
+
     // 'return' followed by a space and an identifier is very common.
     if (source.charCodeAt(lastIndex) === 32) {
       if (isIdentifierStart(source.charCodeAt(lastIndex + 1))) {
@@ -4582,10 +5354,14 @@ let exports = {};
     }
 
 
+
+
     if (hasLineTerminator) {
       // HACK
       return node.finishReturnStatement(null);
     }
+
+
 
 
     if (!match(';')) {
@@ -4595,10 +5371,16 @@ let exports = {};
     }
 
 
+
+
     consumeSemicolon();
 
     return node.finishReturnStatement(argument);
   }
+
+
+
+
 
 
 
@@ -4610,6 +5392,8 @@ let exports = {};
     if (strict) {
       tolerateError(Messages.StrictModeWith);
     }
+
+
 
 
     expectKeyword('with');
@@ -4624,6 +5408,10 @@ let exports = {};
 
     return node.finishWithStatement(object, body);
   }
+
+
+
+
 
 
 
@@ -4650,8 +5438,12 @@ let exports = {};
     }
 
 
+
+
     return node.finishSwitchCase(test, consequent);
   }
+
+
 
 
   function parseSwitchStatement(node) {
@@ -4675,6 +5467,8 @@ let exports = {};
     }
 
 
+
+
     oldInSwitch = state.inSwitch;
     state.inSwitch = true;
     defaultFound = false;
@@ -4694,12 +5488,18 @@ let exports = {};
     }
 
 
+
+
     state.inSwitch = oldInSwitch;
 
     expect('}');
 
     return node.finishSwitchStatement(discriminant, cases);
   }
+
+
+
+
 
 
 
@@ -4715,12 +5515,18 @@ let exports = {};
     }
 
 
+
+
     argument = parseExpression();
 
     consumeSemicolon();
 
     return node.finishThrowStatement(argument);
   }
+
+
+
+
 
 
 
@@ -4737,6 +5543,8 @@ let exports = {};
     }
 
 
+
+
     param = parsePattern(params);
     for (i = 0; i < params.length; i++) {
       key = '$' + params[i].value;
@@ -4747,16 +5555,22 @@ let exports = {};
     }
 
 
+
+
     // 12.14.1
     if (strict && isRestrictedWord(param.name)) {
       tolerateError(Messages.StrictCatchVariable);
     }
 
 
+
+
     expect(')');
     body = parseBlock();
     return node.finishCatchClause(param, body);
   }
+
+
 
 
   function parseTryStatement(node) {
@@ -4771,10 +5585,14 @@ let exports = {};
     }
 
 
+
+
     if (matchKeyword('finally')) {
       lex();
       finalizer = parseBlock();
     }
+
+
 
 
     if (!handler && !finalizer) {
@@ -4782,8 +5600,14 @@ let exports = {};
     }
 
 
+
+
     return node.finishTryStatement(block, handler, finalizer);
   }
+
+
+
+
 
 
 
@@ -4800,6 +5624,10 @@ let exports = {};
 
 
 
+
+
+
+
   // 12 Statements
   function parseStatement() {
     var type = lookahead.type, expr, labeledBody, key, node;
@@ -4807,6 +5635,8 @@ let exports = {};
     if (type === Token.EOF) {
       throwUnexpectedToken(lookahead);
     }
+
+
 
 
     if (type === Token.Punctuator && lookahead.value === '{') {
@@ -4861,6 +5691,12 @@ let exports = {};
 
 
 
+
+
+
+
+
+
     expr = parseExpression();
 
     // 12.12 Labelled Statements
@@ -4873,6 +5709,8 @@ let exports = {};
       }
 
 
+
+
       state.labelSet[key] = true;
       labeledBody = parseStatement();
       delete state.labelSet[key];
@@ -4880,10 +5718,16 @@ let exports = {};
     }
 
 
+
+
     consumeSemicolon();
 
     return node.finishExpressionStatement(expr);
   }
+
+
+
+
 
 
 
@@ -4920,6 +5764,8 @@ let exports = {};
     }
 
 
+
+
     oldLabelSet = state.labelSet;
     oldInIteration = state.inIteration;
     oldInSwitch = state.inSwitch;
@@ -4940,6 +5786,8 @@ let exports = {};
     }
 
 
+
+
     expect('}');
 
     state.labelSet = oldLabelSet;
@@ -4950,6 +5798,8 @@ let exports = {};
 
     return node.finishBlockStatement(body);
   }
+
+
 
 
   function validateParam(options, param, name) {
@@ -4979,6 +5829,8 @@ let exports = {};
   }
 
 
+
+
   function parseParam(options) {
     var token, param, params = [], i, def;
 
@@ -4992,10 +5844,14 @@ let exports = {};
     }
 
 
+
+
     param = parsePatternWithDefault(params);
     for (i = 0; i < params.length; i++) {
       validateParam(options, params[i], params[i].value);
     }
+
+
 
 
     if (param.type === Syntax.AssignmentPattern) {
@@ -5005,11 +5861,15 @@ let exports = {};
     }
 
 
+
+
     options.params.push(param);
     options.defaults.push(def);
 
     return !match(')');
   }
+
+
 
 
   function parseParams(firstRestricted) {
@@ -5035,11 +5895,15 @@ let exports = {};
     }
 
 
+
+
     expect(')');
 
     if (options.defaultCount === 0) {
       options.defaults = [];
     }
+
+
 
 
     return {
@@ -5052,6 +5916,8 @@ let exports = {};
   }
 
 
+
+
   function parseFunctionDeclaration(node, identifierIsOptional) {
     var id = null, params = [], defaults = [], body, token, stricted, tmp, firstRestricted, message, previousStrict, isGenerator, previousAllowYield;
 
@@ -5061,6 +5927,8 @@ let exports = {};
     if (isGenerator) {
       lex();
     }
+
+
 
 
     if (!identifierIsOptional || !match('(')) {
@@ -5082,6 +5950,8 @@ let exports = {};
     }
 
 
+
+
     previousAllowYield = state.allowYield;
     state.allowYield = false;
     tmp = parseParams(firstRestricted);
@@ -5094,6 +5964,8 @@ let exports = {};
     if (tmp.message) {
       message = tmp.message;
     }
+
+
 
 
     previousAllowYield = state.allowYield;
@@ -5113,6 +5985,8 @@ let exports = {};
   }
 
 
+
+
   function parseFunctionExpression() {
     var token, id = null, stricted, firstRestricted, message, tmp, params = [], defaults = [], body, previousStrict, node = new Node(), isGenerator, previousAllowYield;
 
@@ -5122,6 +5996,8 @@ let exports = {};
     if (isGenerator) {
       lex();
     }
+
+
 
 
     if (!match('(')) {
@@ -5143,6 +6019,8 @@ let exports = {};
     }
 
 
+
+
     previousAllowYield = state.allowYield;
     state.allowYield = false;
     tmp = parseParams(firstRestricted);
@@ -5155,6 +6033,8 @@ let exports = {};
     if (tmp.message) {
       message = tmp.message;
     }
+
+
 
 
     previousStrict = strict;
@@ -5173,6 +6053,10 @@ let exports = {};
 
     return node.finishFunctionExpression(id, params, defaults, body, isGenerator);
   }
+
+
+
+
 
 
 
@@ -5244,6 +6128,8 @@ let exports = {};
   }
 
 
+
+
   function parseClassDeclaration(identifierIsOptional) {
     var id = null, superClass = null, classNode = new Node(), classBody, previousStrict = strict;
     strict = true;
@@ -5253,6 +6139,8 @@ let exports = {};
     if (!identifierIsOptional || lookahead.type === Token.Identifier) {
       id = parseVariableIdentifier();
     }
+
+
 
 
     if (matchKeyword('extends')) {
@@ -5266,6 +6154,8 @@ let exports = {};
   }
 
 
+
+
   function parseClassExpression() {
     var id = null, superClass = null, classNode = new Node(), classBody, previousStrict = strict;
     strict = true;
@@ -5275,6 +6165,8 @@ let exports = {};
     if (lookahead.type === Token.Identifier) {
       id = parseVariableIdentifier();
     }
+
+
 
 
     if (matchKeyword('extends')) {
@@ -5290,6 +6182,10 @@ let exports = {};
 
 
 
+
+
+
+
   // Modules grammar from:
   // people.mozilla.org/~jorendorff/es6-draft.html
   function parseModuleSpecifier() {
@@ -5300,6 +6196,8 @@ let exports = {};
     }
     return node.finishLiteral(lex());
   }
+
+
 
 
   function parseExportSpecifier() {
@@ -5320,6 +6218,8 @@ let exports = {};
   }
 
 
+
+
   function parseExportNamedDeclaration(node) {
     var declaration = null, isExportFromIdentifier, src = null, specifiers = [];
 
@@ -5337,6 +6237,8 @@ let exports = {};
         return node.finishExportNamedDeclaration(declaration, specifiers, null);
       }
     }
+
+
 
 
     expect('{');
@@ -5368,6 +6270,8 @@ let exports = {};
   }
 
 
+
+
   function parseExportDefaultDeclaration(node) {
     var declaration = null, expression = null;
 
@@ -5388,9 +6292,13 @@ let exports = {};
     }
 
 
+
+
     if (matchContextualKeyword('from')) {
       throwError(Messages.UnexpectedToken, lookahead.value);
     }
+
+
 
 
     // covers:
@@ -5407,6 +6315,8 @@ let exports = {};
     consumeSemicolon();
     return node.finishExportDefaultDeclaration(expression);
   }
+
+
 
 
   function parseExportAllDeclaration(node) {
@@ -5426,11 +6336,15 @@ let exports = {};
   }
 
 
+
+
   function parseExportDeclaration() {
     var node = new Node();
     if (state.inFunctionBody) {
       throwError(Messages.IllegalExportDeclaration);
     }
+
+
 
 
     expectKeyword('export');
@@ -5445,6 +6359,8 @@ let exports = {};
   }
 
 
+
+
   function parseImportSpecifier() {
     // import {<foo as bar>} ...;
     var local, imported, node = new Node();
@@ -5456,8 +6372,12 @@ let exports = {};
     }
 
 
+
+
     return node.finishImportSpecifier(local, imported);
   }
+
+
 
 
   function parseNamedImports() {
@@ -5474,6 +6394,8 @@ let exports = {};
   }
 
 
+
+
   function parseImportDefaultSpecifier() {
     // import <foo> ...;
     var local, node = new Node();
@@ -5482,6 +6404,8 @@ let exports = {};
 
     return node.finishImportDefaultSpecifier(local);
   }
+
+
 
 
   function parseImportNamespaceSpecifier() {
@@ -5499,12 +6423,16 @@ let exports = {};
   }
 
 
+
+
   function parseImportDeclaration() {
     var specifiers, src, node = new Node();
 
     if (state.inFunctionBody) {
       throwError(Messages.IllegalImportDeclaration);
     }
+
+
 
 
     expectKeyword('import');
@@ -5517,6 +6445,8 @@ let exports = {};
       consumeSemicolon();
       return node.finishImportDeclaration(specifiers, src);
     }
+
+
 
 
     if (!matchKeyword('default') && isIdentifierName(lookahead)) {
@@ -5542,6 +6472,12 @@ let exports = {};
 
 
 
+
+
+
+
+
+
     if (!matchContextualKeyword('from')) {
       throwError(lookahead.value ? Messages.UnexpectedToken : Messages.MissingFromClause, lookahead.value);
     }
@@ -5555,6 +6491,10 @@ let exports = {};
 
 
 
+
+
+
+
   // 14 Program
   function parseScriptBody() {
     var statement, body = [], token, directive, firstRestricted;
@@ -5564,6 +6504,8 @@ let exports = {};
       if (token.type !== Token.StringLiteral) {
         break;
       }
+
+
 
 
       statement = parseStatementListItem();
@@ -5586,6 +6528,8 @@ let exports = {};
     }
 
 
+
+
     while (startIndex < length) {
       statement = parseStatementListItem();
       /* istanbul ignore if */
@@ -5598,6 +6542,8 @@ let exports = {};
   }
 
 
+
+
   function parseProgram() {
     var body, node;
 
@@ -5607,6 +6553,8 @@ let exports = {};
     body = parseScriptBody();
     return node.finishProgram(body);
   }
+
+
 
 
   function filterTokenLocation() {
@@ -5634,8 +6582,12 @@ let exports = {};
     }
 
 
+
+
     extra.tokens = tokens;
   }
+
+
 
 
   function tokenize(code, options) {
@@ -5645,6 +6597,8 @@ let exports = {};
     if (typeof code !== 'string' && !(code instanceof String)) {
       code = toString(code);
     }
+
+
 
 
     source = code;
@@ -5691,11 +6645,15 @@ let exports = {};
     }
 
 
+
+
     try {
       peek();
       if (lookahead.type === Token.EOF) {
         return extra.tokens;
       }
+
+
 
 
       lex();
@@ -5715,6 +6673,8 @@ let exports = {};
       }
 
 
+
+
       filterTokenLocation();
       tokens = extra.tokens;
       if (typeof extra.comments !== 'undefined') {
@@ -5732,6 +6692,8 @@ let exports = {};
   }
 
 
+
+
   function parse(code, options) {
     var program, toString;
 
@@ -5739,6 +6701,8 @@ let exports = {};
     if (typeof code !== 'string' && !(code instanceof String)) {
       code = toString(code);
     }
+
+
 
 
     source = code;
@@ -5774,6 +6738,8 @@ let exports = {};
       }
 
 
+
+
       if (typeof options.tokens === 'boolean' && options.tokens) {
         extra.tokens = [];
       }
@@ -5798,6 +6764,8 @@ let exports = {};
     }
 
 
+
+
     try {
       program = parseProgram();
       if (typeof extra.comments !== 'undefined') {
@@ -5817,8 +6785,12 @@ let exports = {};
     }
 
 
+
+
     return program;
   }
+
+
 
 
   // Sync with *.json manifests.
@@ -5838,6 +6810,8 @@ let exports = {};
     }
 
 
+
+
     for (name in Syntax) {
       if (Syntax.hasOwnProperty(name)) {
         types[name] = Syntax[name];
@@ -5845,14 +6819,19 @@ let exports = {};
     }
 
 
+
+
     if (typeof Object.freeze === 'function') {
       Object.freeze(types);
     }
 
 
+
+
     return types;
   }();
 
-}));  /* vim: set sw=4 ts=4 et tw=80 : */
+}));
 
+/* vim: set sw=4 ts=4 et tw=80 : */
 export default exports;

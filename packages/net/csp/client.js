@@ -28,8 +28,8 @@ var kDefaultTimeoutInterval = 45000;
 var kDefaultHandshakeTimeout = 10000;
 
 
-exports.CometSession = Class(function (supr) {
-  this.init = function () {
+exports.CometSession = class {
+  constructor() {
     this._id = ++id;
     this._url = null;
     this.readyState = READYSTATE.INITIAL;
@@ -61,10 +61,7 @@ exports.CometSession = Class(function (supr) {
     this._nullReceived = false;
   }
 
-;
-
-
-  this.setEncoding = function (encoding) {
+  setEncoding(encoding) {
     if (encoding == this._options.encoding) {
       return;
     }
@@ -79,10 +76,7 @@ exports.CometSession = Class(function (supr) {
     this._options.encoding = encoding;
   }
 
-;
-
-
-  this.connect = function (url, options) {
+  connect(url, options) {
     this._url = url.replace(/\/$/, '');
     this._options = options || {};
 
@@ -107,9 +101,8 @@ exports.CometSession = Class(function (supr) {
     this._transport.handshake(this._url, this._options);
 
     this._handshakeTimeoutTimer = setTimeout(bind(this, this._handshakeTimeout), this._options.connectTimeout);
-  };
-
-  this.write = function (data, encoding) {
+  }
+  write(data, encoding) {
     if (this.readyState != READYSTATE.CONNECTED) {
       throw new errors.ReadyStateError();
     }
@@ -119,10 +112,8 @@ exports.CometSession = Class(function (supr) {
     }
     this._writeBuffer += data;
     this._doWrite();
-  };
-
-  // Close due to protocol error
-  this._protocolError = function (msg) {
+  }
+  _protocolError(msg) {
     logger.debug('_protocolError', msg);
     // Immediately fire the onclose
     // send a null packet to the server
@@ -130,9 +121,8 @@ exports.CometSession = Class(function (supr) {
     this.readyState = READYSTATE.DISCONNECTED;
     this._doWrite(true);
     this._doOnDisconnect(new errors.ServerProtocolError(msg));
-  };
-
-  this._receivedNullPacket = function () {
+  }
+  _receivedNullPacket() {
     logger.debug('_receivedNullPacket');
     // send a null packet back to the server
     this._receivedNull = true;
@@ -146,12 +136,13 @@ exports.CometSession = Class(function (supr) {
     }
 
 
+
+
     // fire an onclose
     this._doOnDisconnect(new errors.ConnectionClosedCleanly());
 
-  };
-
-  this._sentNullPacket = function () {
+  }
+  _sentNullPacket() {
     logger.debug('_sentNullPacket');
     this._nullSent = true;
     if (this._nullSent && this._nullReceived) {
@@ -159,11 +150,7 @@ exports.CometSession = Class(function (supr) {
     }
   }
 
-;
-
-
-  // User Calls close
-  this.close = function (err) {
+  close(err) {
     logger.debug('close called', err, 'readyState', this.readyState);
 
     // 
@@ -191,9 +178,8 @@ exports.CometSession = Class(function (supr) {
 
     this._doOnDisconnect(err);
     this._sessionKey = null;
-  };
-
-  this._handshakeTimeout = function () {
+  }
+  _handshakeTimeout() {
     logger.debug('handshake timeout');
     this._handshakeTimeoutTimer = null;
     clearTimeout(this._handshakeRetryTimer);
@@ -204,10 +190,13 @@ exports.CometSession = Class(function (supr) {
 
 
 
-    this._doOnDisconnect(new errors.ServerUnreachable());
-  };
 
-  this._handshakeSuccess = function (data) {
+
+
+
+    this._doOnDisconnect(new errors.ServerUnreachable());
+  }
+  _handshakeSuccess(data) {
     logger.debug('handshake success', data);
     if (this.readyState != READYSTATE.CONNECTING) {
       logger.debug('received handshake success in invalid readyState:', this.readyState);
@@ -220,9 +209,8 @@ exports.CometSession = Class(function (supr) {
     this.readyState = READYSTATE.CONNECTED;
     this._doOnConnect();
     this._doConnectComet();
-  };
-
-  this._handshakeFailure = function (data) {
+  }
+  _handshakeFailure(data) {
     logger.debug('handshake failure', data);
     if (this.readyState != READYSTATE.CONNECTING) {
       return;
@@ -233,6 +221,8 @@ exports.CometSession = Class(function (supr) {
     }
 
 
+
+
     logger.debug('trying again in ', this._handshakeBackoff);
     this._handshakeRetryTimer = setTimeout(bind(this, function () {
       this._handshakeRetryTimer = null;
@@ -240,9 +230,8 @@ exports.CometSession = Class(function (supr) {
     }), this._handshakeBackoff);
 
     this._handshakeBackoff *= 2;
-  };
-
-  this._writeSuccess = function () {
+  }
+  _writeSuccess() {
     if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
       return;
     }
@@ -255,9 +244,8 @@ exports.CometSession = Class(function (supr) {
     if (this._writeBuffer || this._nullInBuffer) {
       this._doWrite(this._nullInBuffer);
     }
-  };
-
-  this._writeFailure = function () {
+  }
+  _writeFailure() {
     if (this.readyState != READYSTATE.CONNECTED && this.READYSTATE != READYSTATE.DISCONNECTING) {
       return;
     }
@@ -266,9 +254,8 @@ exports.CometSession = Class(function (supr) {
       this.__doWrite(this._nullInBuffer);
     }), this._writeBackoff);
     this._writeBackoff *= 2;
-  };
-
-  this._doWrite = function (sendNull) {
+  }
+  _doWrite(sendNull) {
     if (this._packetsInFlight) {
       if (sendNull) {
         this._nullInBuffer = true;
@@ -277,9 +264,8 @@ exports.CometSession = Class(function (supr) {
       return;
     }
     this.__doWrite(sendNull);
-  };
-
-  this.__doWrite = function (sendNull) {
+  }
+  __doWrite(sendNull) {
     logger.debug('_writeBuffer:', this._writeBuffer);
     if (!this._packetsInFlight && this._writeBuffer) {
       this._packetsInFlight = [this._transport.encodePacket(++this._lastSentId, this._writeBuffer, this._options)];
@@ -302,15 +288,13 @@ exports.CometSession = Class(function (supr) {
     }
     logger.debug('sending packets:', JSON.stringify(this._packetsInFlight));
     this._transport.send(this._url, this._sessionKey, this._lastEventId || 0, JSON.stringify(this._packetsInFlight), this._options);
-  };
-
-  this._doConnectComet = function () {
+  }
+  _doConnectComet() {
     logger.debug('_doConnectComet');
     //		return;
     this._transport.comet(this._url, this._sessionKey, this._lastEventId || 0, this._options);
-  };
-
-  this._cometFailure = function (data) {
+  }
+  _cometFailure(data) {
     if (this.readyState != READYSTATE.CONNECTED) {
       return;
     }
@@ -321,11 +305,14 @@ exports.CometSession = Class(function (supr) {
 
 
 
+
+
+
+
     this._cometTimer = setTimeout(bind(this, '_doConnectComet'), this._cometBackoff);
     this._cometBackoff *= 2;
-  };
-
-  this._cometSuccess = function (data) {
+  }
+  _cometSuccess(data) {
     if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
       return;
     }
@@ -379,35 +366,36 @@ exports.CometSession = Class(function (supr) {
     }
 
 
+
+
     if (this.readyState != READYSTATE.CONNECTED && this.readyState != READYSTATE.DISCONNECTING) {
       return;
     }
 
 
+
+
     // reconnect comet last, after we process all of the packet ids
     this._doConnectComet();
 
-  };
-
-  this._doOnRead = function (data) {
+  }
+  _doOnRead(data) {
     if (typeof this.onread == 'function') {
       logger.debug('call onread function', data);
       this.onread(data);
     } else {
       logger.debug('skipping onread callback (function missing)');
     }
-  };
-
-  this._doOnDisconnect = function (err) {
+  }
+  _doOnDisconnect(err) {
     if (typeof this.ondisconnect == 'function') {
       logger.debug('call ondisconnect function', err);
       this.ondisconnect(err);
     } else {
       logger.debug('skipping ondisconnect callback (function missing)');
     }
-  };
-
-  this._doOnConnect = function () {
+  }
+  _doOnConnect() {
     if (typeof this.onconnect == 'function') {
       logger.debug('call onconnect function');
       try {
@@ -422,20 +410,17 @@ exports.CometSession = Class(function (supr) {
     } else {
       logger.debug('skipping onconnect callback (function missing)');
     }
-  };
-
-  this._resetTimeoutTimer = function () {
+  }
+  _resetTimeoutTimer() {
     clearTimeout(this._timeoutTimer);
     this._timeoutTimer = setTimeout(bind(this, function () {
       logger.debug('connection timeout expired');
       this.close(new errors.ConnectionTimeout());
     }), this._getTimeoutInterval());
-  };
-
-  this._getTimeoutInterval = function () {
+  }
+  _getTimeoutInterval() {
     return kDefaultTimeoutInterval;
-  };
-
-});
+  }
+};
 
 export default exports;

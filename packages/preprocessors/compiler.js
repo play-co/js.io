@@ -21,6 +21,8 @@ function testComment(match) {
 }
 
 
+
+
 exports = function (path, moduleDef, opts) {
   opts = opts || {};
 
@@ -28,6 +30,8 @@ exports = function (path, moduleDef, opts) {
     moduleDef.src = '';
     return;
   }
+
+
 
 
   logger.info('compiling', moduleDef.path);
@@ -58,6 +62,8 @@ exports = function (path, moduleDef, opts) {
   }
 
 
+
+
   var jsioNormal = /^(.*)jsio\s*\(\s*(['"].+?['"])\s*(,\s*\{[^}]+\})?\)/gm;
   while (true) {
     var match = jsioNormal.exec(moduleDef.src);
@@ -67,6 +73,8 @@ exports = function (path, moduleDef, opts) {
     if (!testComment(match)) {
       continue;
     }
+
+
 
 
     logger.debug(moduleDef.path, 'detected', match[0]);
@@ -82,6 +90,12 @@ exports = function (path, moduleDef, opts) {
 
 
 
+
+
+
+
+
+
     if (inlineOpts) {
       try {
         inlineOpts = eval('(' + inlineOpts + ')') || {};
@@ -91,9 +105,13 @@ exports = function (path, moduleDef, opts) {
     }
 
 
+
+
     if (!inlineOpts) {
       inlineOpts = {};
     }
+
+
 
 
     if (gCompilerOpts.preprocessors) {
@@ -109,12 +127,16 @@ exports = function (path, moduleDef, opts) {
     }
 
 
+
+
     try {
       run(moduleDef, cmd, inlineOpts);
     } catch (e) {
       logger.warn('could not compile import from', self + ':', cmd);
     }
   }
+
+
 
 
   var jsioDynamic = /^(.*)jsio\s*\(\s*DYNAMIC_IMPORT_(.*?)\s*(,\s*\{[^}]+\})?\)/gm;
@@ -125,6 +147,8 @@ exports = function (path, moduleDef, opts) {
     }
 
 
+
+
     var cmd = match[2];
     var inlineOpts;
     try {
@@ -132,6 +156,12 @@ exports = function (path, moduleDef, opts) {
     } catch (e) {
       inlineOpts = {};
     }
+
+
+
+
+
+
 
 
 
@@ -153,6 +183,8 @@ exports = function (path, moduleDef, opts) {
       logger.error('Missing: import definition\nConstant', cmd, 'for DYNAMIC_IMPORT_' + cmd, ' was not provided to the compiler for ', path, 'from', moduleDef.path);
     }
   }
+
+
 
 
   // store a copy of the module def (with the source code)
@@ -186,6 +218,8 @@ exports.generateSrc = function (opts, callback) {
   }
 
 
+
+
   var cb = bind(this, buildJsio, opts, callback);
   if (opts.compressSources) {
     compressTable(gSrcTable, opts, cb);
@@ -213,6 +247,8 @@ function replaceSlashes(str) {
 }
 
 
+
+
 function buildJsio(opts, callback) {
   function getJsioSrc() {
     var src = jsio.__jsio.__init__.toString(-1);
@@ -221,6 +257,8 @@ function buildJsio(opts, callback) {
     }
     return src;
   }
+
+
 
 
   var src;
@@ -234,6 +272,8 @@ function buildJsio(opts, callback) {
     table[relPath].path = relPath;
     table[relPath].directory = replaceSlashes(path.relative(cwd, gSrcTable[entry].directory));
   }
+
+
 
 
   // if we're not allowed to modify the jsio source or we're not including the jsio source
@@ -253,6 +293,8 @@ function buildJsio(opts, callback) {
   }
 
 
+
+
   if (opts.compressResult && gCompilerOpts.compressor) {
     logger.info('compressing final code...');
     gCompilerOpts.compressor(null, src, opts, callback);
@@ -260,6 +302,8 @@ function buildJsio(opts, callback) {
     callback(src);
   }
 }
+
+
 
 
 function compressTable(table, opts, callback) {
@@ -271,8 +315,12 @@ function compressTable(table, opts, callback) {
   }
 
 
+
+
   compressStep(queue, table, opts, queue.pop(), callback);
 }
+
+
 
 
 function compressStep(queue, table, opts, key, callback) {
@@ -290,6 +338,10 @@ function compressStep(queue, table, opts, key, callback) {
 
 
 
+
+
+
+
 exports.getTable = function () {
   return gSrcTable;
 };
@@ -301,6 +353,8 @@ exports.setCompilerOpts = function (opts) {
   if ('debugLevel' in opts) {
     logger.setLevel(opts.debugLevel);
   }
+
+
 
 
   if (opts.path) {
@@ -323,6 +377,8 @@ function run(moduleDef, cmd, opts) {
 }
 
 
+
+
 function updateOpts(opts) {
   opts = opts || {};
 
@@ -334,10 +390,18 @@ function updateOpts(opts) {
 
 
 
+
+
+
+
+
+
   opts.reload = true;
   opts.initialImport = true;
   return opts;
 }
+
+
 
 
 function checkDynamicImports(moduleDef) {
@@ -365,6 +429,12 @@ function checkDynamicImports(moduleDef) {
 
 
 
+
+
+
+
+
+
       if (imports && imports.forEach) {
         imports.forEach(function (imp) {
           logger.log('dynamic import:', imp);
@@ -373,6 +443,8 @@ function checkDynamicImports(moduleDef) {
           if (gCompilerOpts.preprocessors) {
             opts.preprocessors = gCompilerOpts.preprocessors.slice(0);
           }
+
+
 
 
           try {
@@ -388,5 +460,6 @@ function checkDynamicImports(moduleDef) {
     }
   }
 }
+
 
 export default exports;

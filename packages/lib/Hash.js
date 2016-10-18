@@ -16,8 +16,8 @@ import { GLOBAL } from 'base';
  *  h.contains('1') ==> true
  *  h.hasKey('a') ==> true
  */
-exports = Class(function () {
-  this.init = function () {
+exports = class {
+  constructor() {
     this._keys = {};
     this._dict = {};
     this._values = {};
@@ -36,21 +36,21 @@ exports = Class(function () {
       }
       ;
     }
-  };
-
-  this.contains = function (val) {
+  }
+  contains(val) {
     return this._values.hasOwnProperty(val);
-  };
-  this.hasKey = this.containsKey = function (key) {
+  }
+  containsKey(key) {
     return this._keys.hasOwnProperty(key);
-  };
-  this.each = function (f, ctx) {
+  }
+  each(f, ctx) {
     for (var i in keys) {
       if (this._keys.hasOwnProperty(i)) {
         f.call(ctx || GLOBAL, i, this._values[i], this);
       }
     }
-  };
-});
+  }
+};
 
+exports.prototype.hasKey = exports.prototype.containsKey;
 export default exports;

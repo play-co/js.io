@@ -12,8 +12,8 @@ import Errors from 'net/errors';
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(interfaces.Connector, function () {
-  this.connect = function () {
+exports.Connector = class extends interfaces.Connector {
+  connect() {
     this._state = interfaces.STATE.CONNECTING;
 
     var url = this._opts.url, ctor = this._opts.wsConstructor || window.WebSocket;
@@ -23,13 +23,11 @@ exports.Connector = Class(interfaces.Connector, function () {
     var ws = new ctor(url);
     ws.onopen = bind(this, 'webSocketOnOpen', ws);
     ws.onclose = bind(this, 'webSocketOnClose', ws);
-  };
-
-  this.webSocketOnOpen = function (ws) {
+  }
+  webSocketOnOpen(ws) {
     this.onConnect(new Transport(ws));
-  };
-
-  this.webSocketOnClose = function (ws, e) {
+  }
+  webSocketOnClose(ws, e) {
     var err, data = {
         rawError: e,
         webSocket: ws
@@ -45,34 +43,35 @@ exports.Connector = Class(interfaces.Connector, function () {
     }
 
 
+
+
     logger.debug('conn closed', err);
     this.onDisconnect(err);
-  };
-});
+  }
+};
 
-var Transport = Class(interfaces.Transport, function () {
-  this.init = function (ws) {
+class Transport extends interfaces.Transport {
+  constructor(ws) {
+    super();
+
     this._ws = ws;
-  };
-
-  this.makeConnection = function (protocol) {
+  }
+  makeConnection(protocol) {
     this._ws.onmessage = function (data) {
       var payload = utf8.encode(data.data);
       protocol.dataReceived(payload);
     };
-  };
-
-  this.write = function (data, encoding) {
+  }
+  write(data, encoding) {
     if (this._encoding == 'plain') {
       result = utf8.decode(data);
       data = result[0];
     }
     this._ws.send(data);
-  };
-
-  this.loseConnection = function (protocol) {
+  }
+  loseConnection(protocol) {
     this._ws.close();
-  };
-});
+  }
+}
 
 export default exports;

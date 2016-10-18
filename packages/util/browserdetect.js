@@ -101,6 +101,8 @@ exports.BrowserDetect = new function () {
   }
 
 
+
+
   function searchVersion(dataString) {
     if (dataString && typeof dataString === 'string') {
       var index = dataString.indexOf(versionSearchString);
@@ -110,6 +112,8 @@ exports.BrowserDetect = new function () {
     }
     return;
   }
+
+
 
 
   this.browser = searchString(dataBrowser) || 'unknown';

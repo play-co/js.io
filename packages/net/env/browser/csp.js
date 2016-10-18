@@ -13,8 +13,8 @@ import utf8 from '../../../std/utf8';
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(interfaces.Connector, function () {
-  this.connect = function () {
+exports.Connector = class extends interfaces.Connector {
+  connect() {
     this._state = interfaces.STATE.CONNECTING;
 
     var conn = new CometSession();
@@ -26,31 +26,28 @@ exports.Connector = Class(interfaces.Connector, function () {
       this._opts.encoding = 'utf8';
     }
     conn.connect(this._opts.url, this._opts);
-  };
-
-  //{encoding: 'plain'});
-  this.cometSessionOnConnect = function (conn) {
+  }
+  cometSessionOnConnect(conn) {
     logger.debug('conn has opened');
     this.onConnect(new Transport(conn));
-  };
-});
+  }
+};
 
-var Transport = Class(interfaces.Transport, function () {
-  this.init = function (conn) {
+class Transport extends interfaces.Transport {
+  constructor(conn) {
+    super();
+
     this._conn = conn;
-  };
-
-  this.makeConnection = function (protocol) {
+  }
+  makeConnection(protocol) {
     this._conn.onread = bind(protocol, 'dataReceived');
-  };
-
-  this.write = function (data) {
+  }
+  write(data) {
     this._conn.write(data);
-  };
-
-  this.loseConnection = function (protocol) {
+  }
+  loseConnection(protocol) {
     this._conn.close();
-  };
-});
+  }
+}
 
 export default exports;

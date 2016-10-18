@@ -50,6 +50,8 @@ let exports = {};
   }
 
 
+
+
   // Current version.
   _.VERSION = '1.6.0';
 
@@ -631,6 +633,8 @@ let exports = {};
     }
 
 
+
+
     return range;
   };
 
@@ -791,6 +795,8 @@ let exports = {};
         result = func.apply(context, args);
         context = args = null;
       }
+
+
 
 
       return result;
@@ -1119,12 +1125,16 @@ let exports = {};
   }
 
 
+
+
   // Optimize `isFunction` if appropriate.
   if (typeof /./ !== 'function') {
     _.isFunction = function (obj) {
       return typeof obj === 'function';
     };
   }
+
+
 
 
   // Is a given object a finite number?
@@ -1350,6 +1360,8 @@ let exports = {};
       source = 'with(obj||{}){\n' + source + '}\n';
 
 
+
+
     source = 'var __t,__p=\'\',__j=Array.prototype.join,' + 'print=function(){__p+=__j.call(arguments,\'\');};\n' + source + 'return __p;\n';
 
     try {
@@ -1358,6 +1370,12 @@ let exports = {};
       e.source = source;
       throw e;
     }
+
+
+
+
+
+
 
 
 

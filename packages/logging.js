@@ -1,6 +1,7 @@
 let exports = {};
 
-exports.UIWatcher = Class(function () {
-});
+exports.UIWatcher = class {
+
+};
 
 export default exports;

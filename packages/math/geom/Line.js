@@ -2,8 +2,8 @@ let exports = {};
 
 import Point from './Point';
 
-exports = Class(function () {
-  this.init = function (a, b, c, d) {
+exports = class {
+  constructor(a, b, c, d) {
     switch (arguments.length) {
     case 0:
       this.start = new Point();
@@ -27,13 +27,13 @@ exports = Class(function () {
       this.end = new Point(c, d);
       break;
     }
-  };
-
-  this.getMagnitude = this.getLength = function () {
+  }
+  getLength() {
     var dx = this.end.x - this.start.x, dy = this.end.y - this.start.y;
 
     return Math.sqrt(dx * dx + dy * dy);
-  };
-});
+  }
+};
 
+exports.prototype.getMagnitude = exports.prototype.getLength;
 export default exports;

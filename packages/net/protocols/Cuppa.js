@@ -12,31 +12,29 @@ import PubSub from 'jsio/lib/PubSub';
 import rtjp from './rtjp';
 let RTJPProtocol = rtjp.RTJPProtocol;
 
-var Error = Class(function () {
-  this.init = function (protocol, id, msg, details, requestId) {
+class Error {
+  constructor(protocol, id, msg, details, requestId) {
     this.id = id;
     this.msg = msg;
     this.details = details;
     this.requestId = requestId;
-  };
-});
+  }
+}
 
-var RPCRequest = Class(function () {
-  this.init = function (protocol, id) {
+class RPCRequest {
+  constructor(protocol, id) {
     this.protocol = protocol;
     this.id = id;
     this._onError = new lib.Callback();
     this._onSuccess = new lib.Callback();
-  };
-
-  this.onError = function () {
+  }
+  onError() {
     this._onError.forward(arguments);
-  };
-  this.onSuccess = function () {
+  }
+  onSuccess() {
     this._onSuccess.forward(arguments);
-  };
-
-  this.bindLater = function (l) {
+  }
+  bindLater(l) {
     var args = [].slice(arguments, 1);
     this._onError.forward([
       l,
@@ -49,24 +47,18 @@ var RPCRequest = Class(function () {
     return l;
   }
 
-;
+}
 
-
-});
-
-var ReceivedRequest = Class(function () {
-  this.type = 'request';
-
-  this.init = function (protocol, id, name, args, target) {
+class ReceivedRequest {
+  constructor(protocol, id, name, args, target) {
     this.protocol = protocol;
     this.id = id;
     this.name = name;
     this.responded = false;
     this.args = args;
     this.target = target;
-  };
-
-  this.error = function (msg, details) {
+  }
+  error(msg, details) {
     if (this.responded) {
       throw new Error('already responded');
     }
@@ -83,9 +75,8 @@ var ReceivedRequest = Class(function () {
     }
     this.responded = true;
     this.protocol.sendFrame('ERROR', args);
-  };
-
-  this.respond = function (args) {
+  }
+  respond(args) {
     if (this.responded) {
       throw new Error('already responded');
     }
@@ -98,10 +89,8 @@ var ReceivedRequest = Class(function () {
       id: this.id,
       args: args == undefined ? {} : args
     });
-  };
-
-  // python cuppa ignores responses with undefined args
-  this.timeoutAfter = function (duration, msg) {
+  }
+  timeoutAfter(duration, msg) {
     if (this.responded) {
       return;
     }
@@ -109,31 +98,30 @@ var ReceivedRequest = Class(function () {
       clearTimeout(this._timer);
     }
     this._timer = setTimeout(bind(this, '_timeout', msg), duration);
-  };
-
-  this._timeout = function (msg) {
+  }
+  _timeout(msg) {
     if (!this.responded) {
       this.error(msg);
     }
-  };
+  }
+}
 
-});
-
-var ReceivedEvent = Class(function () {
-  this.init = function (protocol, id, name, args, target) {
+ReceivedRequest.prototype.type = 'request';
+class ReceivedEvent {
+  constructor(protocol, id, name, args, target) {
     this.id = id;
     this.name = name;
     this.args = args;
     this.target = target;
-  };
-});
+  }
+}
 
 /**
  * @extends net.protocols.rtjp.RTJPProtocol;
  */
-exports = Class(RTJPProtocol, function (supr) {
-  this.init = function () {
-    supr(this, 'init', arguments);
+exports = class extends RTJPProtocol {
+  constructor() {
+    super(...arguments);
 
     this._onConnect = new lib.Callback();
     this._onDisconnect = new lib.Callback();
@@ -142,32 +130,25 @@ exports = Class(RTJPProtocol, function (supr) {
 
     this.onEvent = new lib.PubSub();
     this.onRequest = new lib.PubSub();
-  };
-
-  this.disconnect = function () {
+  }
+  disconnect() {
     this.transport.loseConnection();
-  };
-
-  // pass something to call (ctx, method, args...) when connected
-  this.onConnect = function () {
+  }
+  onConnect() {
     this._onConnect.forward(arguments);
-  };
-  this.onDisconnect = function () {
+  }
+  onDisconnect() {
     this._onDisconnect.forward(arguments);
-  };
-
-  this.reset = function () {
+  }
+  reset() {
     this._onConnect.reset();
     this._onDisconnect.reset();
-  };
-
-  // called when we're connected
-  this.connectionMade = function () {
+  }
+  connectionMade() {
     this._isConnected = true;
     this._onConnect.fire();
-  };
-
-  this.connectionLost = function (err) {
+  }
+  connectionLost(err) {
     for (var i in this._requests) {
       var req = this._requests[i];
       delete this._requests[i];
@@ -177,15 +158,20 @@ exports = Class(RTJPProtocol, function (supr) {
 
 
 
+
+
+
+
     this._isConnected = false;
     this._onDisconnect.fire(err);
-  };
-
-  this.sendRequest = function (name, args, target, cb) {
+  }
+  sendRequest(name, args, target, cb) {
     if (arguments.length > 4) {
       // allow bound functions (e.g. [this, 'onResponse', 123])
       cb = bind.apply(GLOBAL, Array.prototype.slice.call(arguments, 3));
     }
+
+
 
 
     var frameArgs = {
@@ -196,6 +182,8 @@ exports = Class(RTJPProtocol, function (supr) {
     if (target) {
       frameArgs.target = target;
     }
+
+
 
 
     var id = this.sendFrame('RPC', frameArgs), req = this._requests[id] = new RPCRequest(this, id);
@@ -209,19 +197,21 @@ exports = Class(RTJPProtocol, function (supr) {
 
 
 
+
+
+
+
     // will call cb(err)
     return req;
-  };
-
-  this.sendEvent = function (name, args, target) {
+  }
+  sendEvent(name, args, target) {
     this.sendFrame('EVENT', {
       name: name,
       args: args,
       target: target || null
     });
-  };
-
-  this.frameReceived = function (id, name, args) {
+  }
+  frameReceived(id, name, args) {
     logger.debug('RECEIVED', id, name, args);
     switch (name.toUpperCase()) {
     case 'RESPONSE':
@@ -257,7 +247,7 @@ exports = Class(RTJPProtocol, function (supr) {
     default:
       break;
     }
-  };
-});
+  }
+};
 
 export default exports;

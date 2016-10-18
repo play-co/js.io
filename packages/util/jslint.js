@@ -981,6 +981,8 @@ exports = function () {
   }
 
 
+
+
   if (typeof Object.create !== 'function') {
     Object.create = function (o) {
       F.prototype = o;
@@ -991,9 +993,17 @@ exports = function () {
 
 
 
+
+
+
+
   function is_own(object, name) {
     return Object.prototype.hasOwnProperty.call(object, name);
   }
+
+
+
+
 
 
 
@@ -1006,6 +1016,8 @@ exports = function () {
       }
     }
   }
+
+
 
 
   String.prototype.entityify = function () {
@@ -1076,6 +1088,12 @@ exports = function () {
 
 
 
+
+
+
+
+
+
   // Produce an error warning.
   function quit(m, l, ch) {
     throw {
@@ -1085,6 +1103,8 @@ exports = function () {
       message: m + ' (' + Math.floor(l / lines.length * 100) + '% scanned).'
     };
   }
+
+
 
 
   function warning(m, t, a, b, c, d) {
@@ -1120,6 +1140,8 @@ exports = function () {
   }
 
 
+
+
   function warningAt(m, l, ch, a, b, c, d) {
     return warning(m, {
       line: l,
@@ -1128,10 +1150,14 @@ exports = function () {
   }
 
 
+
+
   function error(m, t, a, b, c, d) {
     var w = warning(m, t, a, b, c, d);
     quit('Stopping, unable to continue.', w.line, w.character);
   }
+
+
 
 
   function errorAt(m, l, ch, a, b, c, d) {
@@ -1140,6 +1166,14 @@ exports = function () {
       from: ch
     }, a, b, c, d);
   }
+
+
+
+
+
+
+
+
 
 
 
@@ -1176,6 +1210,10 @@ exports = function () {
       }
       return true;
     }
+
+
+
+
 
 
 
@@ -1218,6 +1256,10 @@ exports = function () {
 
 
 
+
+
+
+
     // Public lex methods
     return {
       init: function (source) {
@@ -1256,6 +1298,8 @@ exports = function () {
         }
 
 
+
+
       },
       // token -- this is called by advance to get the next token.
       token: function () {
@@ -1275,6 +1319,8 @@ exports = function () {
         }
 
 
+
+
         function string(x) {
           var c, j, r = '';
 
@@ -1283,9 +1329,13 @@ exports = function () {
           }
 
 
+
+
           if (xquote === x || xmode === 'scriptstring' && !xquote) {
             return it('(punctuator)', x);
           }
+
+
 
 
           function esc(n) {
@@ -1390,6 +1440,8 @@ exports = function () {
         }
 
 
+
+
         for (;;) {
           if (!s) {
             return it(nextLine() ? '(endline)' : '(end)', '');
@@ -1446,6 +1498,10 @@ exports = function () {
 
 
 
+
+
+
+
             //      number
             if (c.isDigit()) {
               if (xmode !== 'style' && !isFinite(Number(t))) {
@@ -1478,6 +1534,10 @@ exports = function () {
 
 
 
+
+
+
+
             //      // comment
             case '//':
               if (src || xmode && xmode !== 'script') {
@@ -1490,6 +1550,10 @@ exports = function () {
               s = '';
               token.comment = true;
               break;
+
+
+
+
 
 
 
@@ -1526,6 +1590,10 @@ exports = function () {
 
 
 
+
+
+
+
             //      /*members /*jslint /*global
             case '/*members':
             case '/*member':
@@ -1539,6 +1607,8 @@ exports = function () {
                 character: character,
                 from: from
               };
+
+
 
 
             case '':
@@ -1783,6 +1853,10 @@ exports = function () {
 
 
 
+
+
+
+
             //      punctuator
             case '<!--':
               l = line;
@@ -1866,6 +1940,18 @@ exports = function () {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     // Define t in the current function in the current scope.
     if (is_own(funct, t) && !funct['(global)']) {
       warning(funct[t] === true ? '\'{a}\' was used before it was defined.' : '\'{a}\' is already defined.', nexttoken, t);
@@ -1881,6 +1967,10 @@ exports = function () {
       scope[t] = funct;
     }
   }
+
+
+
+
 
 
 
@@ -1980,6 +2070,12 @@ exports = function () {
 
 
 
+
+
+
+
+
+
   // We need a peek function. If it has an argument, it peeks that much farther
   // ahead. It is used to distinguish
   //     for ( var i in ...
@@ -1997,6 +2093,14 @@ exports = function () {
     }
     return t;
   }
+
+
+
+
+
+
+
+
 
 
 
@@ -2029,6 +2133,8 @@ exports = function () {
     }
 
 
+
+
     if (id && nexttoken.id !== id) {
       if (t) {
         if (nexttoken.id === '(end)') {
@@ -2056,6 +2162,16 @@ exports = function () {
       }
     }
   }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2121,6 +2237,12 @@ exports = function () {
 
 
 
+
+
+
+
+
+
   // Functions for conformance of style.
   function adjacent(left, right) {
     left = left || token;
@@ -2133,6 +2255,8 @@ exports = function () {
   }
 
 
+
+
   function nobreak(left, right) {
     left = left || token;
     right = right || nexttoken;
@@ -2140,6 +2264,8 @@ exports = function () {
       warning('Unexpected space before \'{a}\'.', right, right.value);
     }
   }
+
+
 
 
   function nospace(left, right) {
@@ -2155,6 +2281,10 @@ exports = function () {
 
 
 
+
+
+
+
   function nonadjacent(left, right) {
     if (option.white) {
       left = left || token;
@@ -2164,6 +2294,8 @@ exports = function () {
       }
     }
   }
+
+
 
 
   function nobreaknonadjacent(left, right) {
@@ -2181,6 +2313,8 @@ exports = function () {
   }
 
 
+
+
   function indentation(bias) {
     var i;
     if (option.white && nexttoken.id !== '(end)') {
@@ -2192,12 +2326,18 @@ exports = function () {
   }
 
 
+
+
   function nolinebreak(t) {
     t = t || token;
     if (t.line !== nexttoken.line) {
       warning('Line breaking error \'{a}\'.', t, t.value);
     }
   }
+
+
+
+
 
 
 
@@ -2213,6 +2353,12 @@ exports = function () {
     advance(',');
     nonadjacent(token, nexttoken);
   }
+
+
+
+
+
+
 
 
 
@@ -2236,9 +2382,17 @@ exports = function () {
 
 
 
+
+
+
+
   function delim(s) {
     return symbol(s, 0);
   }
+
+
+
+
 
 
 
@@ -2253,11 +2407,19 @@ exports = function () {
 
 
 
+
+
+
+
   function blockstmt(s, f) {
     var x = stmt(s, f);
     x.block = true;
     return x;
   }
+
+
+
+
 
 
 
@@ -2269,6 +2431,10 @@ exports = function () {
     }
     return x;
   }
+
+
+
+
 
 
 
@@ -2294,12 +2460,20 @@ exports = function () {
 
 
 
+
+
+
+
   function type(s, f) {
     var x = delim(s);
     x.type = s;
     x.nud = f;
     return x;
   }
+
+
+
+
 
 
 
@@ -2313,6 +2487,10 @@ exports = function () {
 
 
 
+
+
+
+
   function reservevar(s, v) {
     return reserve(s, function () {
       if (typeof v === 'function') {
@@ -2321,6 +2499,10 @@ exports = function () {
       return this;
     });
   }
+
+
+
+
 
 
 
@@ -2343,6 +2525,10 @@ exports = function () {
     };
     return x;
   }
+
+
+
+
 
 
 
@@ -2377,9 +2563,17 @@ exports = function () {
 
 
 
+
+
+
+
   function isPoorRelation(node) {
     return node && (node.type === '(number)' && +node.value === 0 || node.type === '(string)' && node.value === '' || node.type === 'true' || node.type === 'false' || node.type === 'undefined' || node.type === 'null');
   }
+
+
+
+
 
 
 
@@ -2428,6 +2622,10 @@ exports = function () {
 
 
 
+
+
+
+
   function bitwise(s, f, p) {
     var x = symbol(s, p);
     reserveName(x);
@@ -2441,6 +2639,10 @@ exports = function () {
     };
     return x;
   }
+
+
+
+
 
 
 
@@ -2470,6 +2672,10 @@ exports = function () {
 
 
 
+
+
+
+
   function suffix(s, f) {
     var x = symbol(s, 150);
     x.led = function (left) {
@@ -2483,6 +2689,10 @@ exports = function () {
     };
     return x;
   }
+
+
+
+
 
 
 
@@ -2502,6 +2712,10 @@ exports = function () {
 
 
 
+
+
+
+
   function identifier() {
     var i = optionalidentifier();
     if (i) {
@@ -2513,6 +2727,10 @@ exports = function () {
       error('Expected an identifier and instead saw \'{a}\'.', nexttoken, nexttoken.value);
     }
   }
+
+
+
+
 
 
 
@@ -2542,6 +2760,10 @@ exports = function () {
 
 
 
+
+
+
+
   function statement(noindent) {
     var i = indent, r, s = scope, t = nexttoken;
 
@@ -2552,6 +2774,10 @@ exports = function () {
       advance(';');
       return;
     }
+
+
+
+
 
 
 
@@ -2571,6 +2797,10 @@ exports = function () {
       nexttoken.label = t.value;
       t = nexttoken;
     }
+
+
+
+
 
 
 
@@ -2601,11 +2831,19 @@ exports = function () {
 
 
 
+
+
+
+
     // Restore the indentation.
     indent = i;
     scope = s;
     return r;
   }
+
+
+
+
 
 
 
@@ -2622,6 +2860,10 @@ exports = function () {
       return false;
     }
   }
+
+
+
+
 
 
 
@@ -2695,6 +2937,10 @@ exports = function () {
 
 
 
+
+
+
+
   function block(f) {
     var a, b = inblock, old_indent = indent, s = scope, t;
     inblock = f;
@@ -2735,6 +2981,10 @@ exports = function () {
 
 
 
+
+
+
+
   function countMember(m) {
     if (membersOnly && typeof membersOnly[m] !== 'boolean') {
       warning('Unexpected /*member \'{a}\'.', token, m);
@@ -2745,6 +2995,10 @@ exports = function () {
       member[m] = 1;
     }
   }
+
+
+
+
 
 
 
@@ -2769,6 +3023,14 @@ exports = function () {
 
 
 
+
+
+
+
+
+
+
+
   // CSS parsing.
   function cssName() {
     if (nexttoken.identifier) {
@@ -2776,6 +3038,10 @@ exports = function () {
       return true;
     }
   }
+
+
+
+
 
 
 
@@ -2795,12 +3061,20 @@ exports = function () {
 
 
 
+
+
+
+
   function cssString() {
     if (nexttoken.type === '(string)') {
       advance();
       return true;
     }
   }
+
+
+
+
 
 
 
@@ -2862,6 +3136,10 @@ exports = function () {
 
 
 
+
+
+
+
   function cssLength() {
     if (nexttoken.id === '-') {
       advance('-');
@@ -2880,6 +3158,10 @@ exports = function () {
     }
     return false;
   }
+
+
+
+
 
 
 
@@ -2903,6 +3185,10 @@ exports = function () {
 
 
 
+
+
+
+
   function cssWidth() {
     if (nexttoken.identifier) {
       switch (nexttoken.value) {
@@ -2920,6 +3206,10 @@ exports = function () {
 
 
 
+
+
+
+
   function cssMargin() {
     if (nexttoken.identifier) {
       if (nexttoken.value === 'auto') {
@@ -2930,6 +3220,8 @@ exports = function () {
       return cssLength();
     }
   }
+
+
 
 
   function cssAttr() {
@@ -2949,6 +3241,10 @@ exports = function () {
 
 
 
+
+
+
+
   function cssCommaList() {
     while (nexttoken.id !== ';') {
       if (!cssName() && !cssString()) {
@@ -2960,6 +3256,10 @@ exports = function () {
       comma();
     }
   }
+
+
+
+
 
 
 
@@ -3009,6 +3309,10 @@ exports = function () {
 
 
 
+
+
+
+
   function cssShape() {
     var i;
     if (nexttoken.identifier && nexttoken.value === 'rect') {
@@ -3025,6 +3329,10 @@ exports = function () {
     }
     return false;
   }
+
+
+
+
 
 
 
@@ -3057,6 +3365,10 @@ exports = function () {
     }
     return false;
   }
+
+
+
+
 
 
 
@@ -3622,6 +3934,10 @@ exports = function () {
 
 
 
+
+
+
+
   function styleValue(v) {
     var i = 0, n, once, match, round, start = 0, vi;
     switch (typeof v) {
@@ -3683,6 +3999,8 @@ exports = function () {
   }
 
 
+
+
   function styleChild() {
     if (nexttoken.id === '(number)') {
       advance();
@@ -3709,6 +4027,8 @@ exports = function () {
     }
     warning('Unexpected token \'{a}\'.', nexttoken, nexttoken.value);
   }
+
+
 
 
   function substyle() {
@@ -3747,6 +4067,8 @@ exports = function () {
       }
     }
   }
+
+
 
 
   function styleSelector() {
@@ -3856,6 +4178,8 @@ exports = function () {
   }
 
 
+
+
   function stylePattern() {
     if (nexttoken.id === '{') {
       warning('Expected a style pattern, and instead saw \'{a}\'.', nexttoken, nexttoken.id);
@@ -3872,6 +4196,8 @@ exports = function () {
   }
 
 
+
+
   function stylelist() {
     while (nexttoken.id !== '</' && nexttoken.id !== '(end)') {
       stylePattern();
@@ -3886,6 +4212,8 @@ exports = function () {
       }
     }
   }
+
+
 
 
   function styles() {
@@ -3934,6 +4262,12 @@ exports = function () {
 
 
 
+
+
+
+
+
+
   // HTML parsing.
   function doBegin(n) {
     if (n !== 'html' && !option.fragment) {
@@ -3958,6 +4292,8 @@ exports = function () {
     option.browser = true;
     assume();
   }
+
+
 
 
   function doAttribute(n, a, v) {
@@ -4017,6 +4353,8 @@ exports = function () {
       }
     }
   }
+
+
 
 
   function doTag(n, a) {
@@ -4136,9 +4474,15 @@ exports = function () {
 
 
 
+
+
+
+
   function closetag(n) {
     return '</' + n + '>';
   }
+
+
 
 
   function html() {
@@ -4335,6 +4679,12 @@ exports = function () {
 
 
 
+
+
+
+
+
+
   // Build the syntax table by declaring the syntactic elements of the language.
   type('(number)', function () {
     return this;
@@ -4359,6 +4709,18 @@ exports = function () {
         s = funct;
         funct = f;
       }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4944,6 +5306,10 @@ exports = function () {
 
 
 
+
+
+
+
   function functionparams() {
     var i, t = nexttoken, p = [];
     advance('(');
@@ -4966,6 +5332,10 @@ exports = function () {
       }
     }
   }
+
+
+
+
 
 
 
@@ -4996,6 +5366,10 @@ exports = function () {
     funct = funct['(context)'];
     return f;
   }
+
+
+
+
 
 
 
@@ -5580,6 +5954,8 @@ exports = function () {
     }
 
 
+
+
     function jsonArray() {
       var t = nexttoken;
       advance('[');
@@ -5602,6 +5978,8 @@ exports = function () {
       }
       advance(']');
     }
+
+
 
 
     switch (nexttoken.id) {
@@ -5630,6 +6008,12 @@ exports = function () {
       error('Expected a JSON value.', nexttoken);
     }
   }
+
+
+
+
+
+
 
 
 
@@ -5746,6 +6130,8 @@ exports = function () {
           break;
 
 
+
+
         default:
           if (option.adsafe && option.fragment) {
             error('Expected \'{a}\' and instead saw \'{b}\'.', nexttoken, '<div>', nexttoken.value);
@@ -5771,6 +6157,8 @@ exports = function () {
   }
 
 
+
+
   function to_array(o) {
     var a = [], k;
     for (k in o) {
@@ -5786,6 +6174,12 @@ exports = function () {
 
 
 
+
+
+
+
+
+
   // Data summary.
   itself.data = function () {
     var data = { functions: [] }, fu, globals, implieds = [], f, i, j, members = [], n, unused = [], v;
@@ -5794,9 +6188,13 @@ exports = function () {
     }
 
 
+
+
     if (jsonmode) {
       data.json = true;
     }
+
+
 
 
     for (n in implied) {
@@ -5812,15 +6210,21 @@ exports = function () {
     }
 
 
+
+
     if (urls.length > 0) {
       data.urls = urls;
     }
+
+
 
 
     globals = to_array(scope);
     if (globals.length > 0) {
       data.globals = globals;
     }
+
+
 
 
     for (i = 1; i < functions.length; i += 1) {
@@ -5860,9 +6264,13 @@ exports = function () {
     }
 
 
+
+
     if (unused.length > 0) {
       data.unused = unused;
     }
+
+
 
 
     members = [];
@@ -5872,6 +6280,8 @@ exports = function () {
         break;
       }
     }
+
+
 
 
     return data;
@@ -5901,6 +6311,10 @@ exports = function () {
 
 
 
+
+
+
+
     if (data.errors || data.implieds || data.unused) {
       err = true;
       o.push('<div id=errors><i>Error:</i>');
@@ -5915,6 +6329,8 @@ exports = function () {
       }
 
 
+
+
       if (data.implieds) {
         s = [];
         for (i = 0; i < data.implieds.length; i += 1) {
@@ -5922,6 +6338,8 @@ exports = function () {
         }
         o.push('<p><i>Implied global:</i> ' + s.join(', ') + '</p>');
       }
+
+
 
 
       if (data.unused) {
@@ -5938,12 +6356,16 @@ exports = function () {
     }
 
 
+
+
     if (!option) {
       o.push('<br><div id=functions>');
 
       if (data.urls) {
         detail('URLs<br>', data.urls, '<br>');
       }
+
+
 
 
       if (xmode === 'style') {
@@ -5955,6 +6377,18 @@ exports = function () {
       } else {
         o.push('<div><i>No new global variables introduced.</i></div>');
       }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5971,6 +6405,8 @@ exports = function () {
         detail('Global', f.global);
         detail('Label', f.label);
       }
+
+
 
 
       if (data.member) {

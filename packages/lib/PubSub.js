@@ -26,11 +26,10 @@ let uuid = _uuid.uuid;
 
 var ctx = jsio.__env.global, SLICE = Array.prototype.slice;
 
-exports = Class(function () {
-  this.init = function () {
-  };
-
-  this.publish = function (signal) {
+exports = class {
+  constructor() {
+  }
+  publish(signal) {
     if (this._subscribers) {
       var args = SLICE.call(arguments, 1);
       if (this._subscribers.__any) {
@@ -41,9 +40,13 @@ exports = Class(function () {
       }
 
 
+
+
       if (!this._subscribers[signal]) {
         return this;
       }
+
+
 
 
       var subs = this._subscribers[signal].slice(0);
@@ -52,9 +55,8 @@ exports = Class(function () {
       }
     }
     return this;
-  };
-
-  this.subscribe = function (signal, ctx, method) {
+  }
+  subscribe(signal, ctx, method) {
     var cb;
     if (arguments.length == 2) {
       cb = ctx;
@@ -66,12 +68,13 @@ exports = Class(function () {
     }
 
 
+
+
     var s = this._subscribers || (this._subscribers = {});
     (s[signal] || (s[signal] = [])).push(cb);
     return this;
-  };
-
-  this.subscribeOnce = function (signal, ctx, method) {
+  }
+  subscribeOnce(signal, ctx, method) {
     var args = arguments, cb = bind(this, function () {
         this.unsubscribe(signal, cb);
         if (args.length == 2) {
@@ -87,13 +90,11 @@ exports = Class(function () {
     }
 
 
+
+
     return this.subscribe(signal, cb);
-  };
-
-
-  // If no method is specified, all subscriptions with a callback context
-  // of ctx will be removed.
-  this.unsubscribe = function (signal, ctx, method) {
+  }
+  unsubscribe(signal, ctx, method) {
     if (!this._subscribers || !this._subscribers[signal]) {
       return this;
     }
@@ -104,19 +105,12 @@ exports = Class(function () {
       }
     }
     return this;
-  };
-
-
-  /**
-	 * EventEmitter-style API
-	 * http://nodejs.org/api/events.html
-	 */
-  this.listeners = function (type) {
+  }
+  listeners(type) {
     this._subscribers = this._subscribers ? this._subscribers : {};
     return this.hasOwnProperty.call(this._subscribers, type) ? this._subscribers[type] : this._subscribers[type] = [];
-  };
-
-  this.addListener = this.on = function (type, f) {
+  }
+  on(type, f) {
     if (this.listeners(type).length + 1 > this._maxListeners && this._maxListeners !== 0) {
       if (typeof console !== 'undefined') {
         console.warn('Possible EventEmitter memory leak detected. ' + this._subscribers[type].length + ' listeners added. Use emitter.setMaxListeners() to increase limit.');
@@ -124,18 +118,15 @@ exports = Class(function () {
     }
     this.emit('newListener', type, f);
     return this.subscribe(type, this, f);
-  };
-
-  this.once = function (type, f) {
+  }
+  once(type, f) {
     return this.subscribeOnce(type, this, f);
-  };
-
-  this.removeListener = function (type, f) {
+  }
+  removeListener(type, f) {
     this.unsubscribe(type, this, f);
     return this;
-  };
-
-  this.removeAllListeners = function (type) {
+  }
+  removeAllListeners(type) {
     if (this._subscribers) {
       for (var k in this._subscribers) {
         if (type == null || type == k) {
@@ -144,60 +135,25 @@ exports = Class(function () {
       }
     }
     return this;
-  };
-
-  this.emit = function (type) {
+  }
+  emit(type) {
     this.publish.apply(this, arguments);
     return this.listeners(type).length > 0;
-  };
-
-  this._maxListeners = 10;
-
-  this.setMaxListeners = function (_maxListeners) {
+  }
+  setMaxListeners(_maxListeners) {
     this._maxListeners = _maxListeners;
-  };
-
-  this.hasListeners = function (type) {
+  }
+  hasListeners(type) {
     return this._subscribers && this._subscribers[type] && this._subscribers[type].length;
-  };
-
-  /**
-	 * listenTo for inverting control of #subscribe, #on, etc.
-	 * @param {object} obj something extending js.io's lib.PubSub
-	 * @param {string} name the event name to listen to
-	 * @param {callback} function to run on event
-	 * @return {this}
-	 */
-  this.listenTo = function (obj, name, callback) {
+  }
+  listenTo(obj, name, callback) {
     var listeningTo = this._listeningTo || (this._listeningTo = {});
     var id = obj._listenId || (obj._listenId = uuid(8, 16));
     listeningTo[id] = obj;
     obj.subscribe(name, this, callback);
     return this;
-  };
-
-  /**
-	 * Stop listening to objects previously passed to `listenTo`.
-	 *
-	 * @example
-	 *     // Stop listening to all events on all objects
-	 *     this.stopListening();
-	 *
-	 *     // Stop listening to all events on `obj`
-	 *     this.stopListening(obj);
-	 *
-	 *     // Stop all of my callbacks for a given event
-	 *     this.stopListening(obj, name);
-	 *
-	 *     // Stop a single callback from firing
-	 *     this.stopListening(obj, name, callback);
-	 *
-	 * @param {object} [obj] object extending lib.PubSub and using listenTo
-	 * @param {string} [name] the event name to listen to
-	 * @param {callback} [callback] function to stop running
-	 * @return {this}
-	 */
-  this.stopListening = function (obj, name, callback) {
+  }
+  stopListening(obj, name, callback) {
     var events, names, retain, i, j, k, l, ev;
     var listeningTo = this._listeningTo;
     if (!listeningTo) {
@@ -205,11 +161,15 @@ exports = Class(function () {
     }
 
 
+
+
     logger.log(obj);
     var remove = !name && !callback;
     if (obj) {
       (listeningTo = {})[obj._listenId] = obj;
     }
+
+
 
 
     for (var id in listeningTo) {
@@ -235,8 +195,10 @@ exports = Class(function () {
       }
     }
     return this;
-  };
-});
+  }
+};
 
 
+exports.prototype.addListener = exports.prototype.on;
+exports.prototype._maxListeners = 10;
 export default exports;

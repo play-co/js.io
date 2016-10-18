@@ -9,87 +9,81 @@ import PubSub from '../lib/PubSub';
 
 var ctx = jsio.__env.global;
 
-exports.Protocol = Class(function () {
-  this.connectionMade = function (isReconnect) {
-  };
-  this.dataReceived = function (data) {
-  };
-  this.connectionLost = function (reason) {
-  };
-
-  this._connectionMade = function () {
+exports.Protocol = class {
+  connectionMade(isReconnect) {
+  }
+  dataReceived(data) {
+  }
+  connectionLost(reason) {
+  }
+  _connectionMade() {
     this._isConnected = true;
     this.connectionMade.apply(this, arguments);
-  };
-
-  this._connectionLost = function () {
+  }
+  _connectionLost() {
     this._isConnected = false;
     this.connectionLost.apply(this, arguments);
-  };
-
-  this._isConnected = false;
-  this.isConnected = function () {
+  }
+  isConnected() {
     return !!this._isConnected;
-  };
-
-  this.end = function () {
+  }
+  end() {
     if (this.transport) {
       this.transport.loseConnection();
     }
-  };
-});
+  }
+};
 
-exports.Client = Class(function () {
-  this.init = function (protocol) {
+exports.Protocol.prototype._isConnected = false;
+exports.Client = class {
+  constructor(protocol) {
     this._protocol = protocol;
-  };
-
-  this.connect = function (transportName, opts) {
+  }
+  connect(transportName, opts) {
     this._remote = new this._protocol();
     this._remote._client = this;
     net.connect(this._remote, transportName, opts);
-  };
-});
+  }
+};
 
 // Sort of like a twisted factory
-exports.Server = Class(function () {
-  this.init = function (protocolClass) {
+exports.Server = class {
+  constructor(protocolClass) {
     this._protocolClass = protocolClass;
-  };
-
-  this.buildProtocol = function () {
+  }
+  buildProtocol() {
     return new this._protocolClass();
-  };
-
-  this.listen = function (transportName, opts) {
+  }
+  listen(transportName, opts) {
     return net.listen(this, transportName, opts);
-  };
-});
+  }
+};
 
-exports.Transport = Class(function () {
-  this._encoding = 'plain';
-  this.write = function (data, encoding) {
+exports.Transport = class {
+  write(data, encoding) {
     throw new Error('Not implemented');
-  };
-  this.getPeer = function () {
+  }
+  getPeer() {
     throw new Error('Not implemented');
-  };
-  this.setEncoding = function (encoding) {
+  }
+  setEncoding(encoding) {
     this._encoding = encoding;
-  };
-  this.getEncoding = function () {
+  }
+  getEncoding() {
     return this._encoding;
-  };
-});
+  }
+};
 
+exports.Transport.prototype._encoding = 'plain';
 // emits 'error' event if listen fails
-exports.Listener = Class(PubSub, function () {
-  this.init = function (server, opts) {
+exports.Listener = class extends PubSub {
+  constructor(server, opts) {
+    super();
+
     this._server = server;
     this._opts = opts || {};
-  };
-
-  this.onConnect = function (transport) {
+  }
+  onConnect(transport) {
     //try {
     var p = this._server.buildProtocol();
     p.transport = transport;
@@ -97,31 +91,25 @@ exports.Listener = Class(PubSub, function () {
     transport.protocol = p;
     transport.makeConnection(p);
     p._connectionMade();
-  };
-
-  //} catch(e) {
-  //	logger.error(e);
-  //}
-  this.listen = function () {
+  }
+  listen() {
     throw new Error('Abstract class');
-  };
-  this.stop = function () {
-  };
-});
+  }
+  stop() {
+  }
+};
 
 exports.STATE = Enum('INITIAL', 'DISCONNECTED', 'CONNECTING', 'CONNECTED');
-exports.Connector = Class(function () {
-  this.init = function (protocol, opts) {
+exports.Connector = class {
+  constructor(protocol, opts) {
     this._protocol = protocol;
     this._opts = opts;
     this._state = exports.STATE.INITIAL;
-  };
-
-  this.getState = function () {
+  }
+  getState() {
     return this._state;
-  };
-
-  this.onConnect = function (transport) {
+  }
+  onConnect(transport) {
     this._state = exports.STATE.CONNECTED;
 
     transport.makeConnection(this._protocol);
@@ -131,9 +119,8 @@ exports.Connector = Class(function () {
     } catch (e) {
       throw logger.error(e);
     }
-  };
-
-  this.onDisconnect = function (err) {
+  }
+  onDisconnect(err) {
     var wasConnected = this._state == exports.STATE.CONNECTED;
     this._state = exports.STATE.DISCONNECTED;
 
@@ -142,11 +129,10 @@ exports.Connector = Class(function () {
     } catch (e) {
       throw logger.error(e);
     }
-  };
-
-  this.getProtocol = function () {
+  }
+  getProtocol() {
     return this._protocol;
-  };
-});
+  }
+};
 
 export default exports;

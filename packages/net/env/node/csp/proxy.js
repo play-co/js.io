@@ -58,14 +58,14 @@ var msp = this.msp = exports;
     RemoteConnectionClosed: 109,
     ProtocolError: 110
   };
-  msp.ProxyConnection = Class(function () {
-    this.init = function (inConnection) {
+  msp.ProxyConnection = class {
+    constructor(inConnection) {
       this.inConnection = inConnection;
       this.inBuffer = '';
       this.outConnections = {};
       this.inConnection.addListener('receive', bind(this, this.receiveData)).addListener('eof', bind(this, this.shutdown)).addListener('disconnect', bind(this, this.shutdown)).setEncoding('bytes');
-    };
-    this.receiveData = function (data) {
+    }
+    receiveData(data) {
       var frameBegin;
       this.inBuffer += data;
       try {
@@ -95,8 +95,8 @@ var msp = this.msp = exports;
         this.shutdown(true);
       }
       ;
-    };
-    this.shutdown = function (had_error) {
+    }
+    shutdown(had_error) {
       // close all outgoing TCP connections
       for (var connectionId in this.outConnections) {
         if (had_error) {
@@ -112,12 +112,12 @@ var msp = this.msp = exports;
       // outConn.listeners('eof') = [];
       // outConn.listeners('disconnect') = [];
       ;
-    };
-    this.send = function (frame) {
+    }
+    send(frame) {
       payload = JSON.stringify(frame);
       this.inConnection.send(payload.length + ',' + payload, 'bytes');
-    };
-    this.closeOutgoing = function (connectionId, errorType) {
+    }
+    closeOutgoing(connectionId, errorType) {
       if (connectionId in this.outConnections) {
         var code = errorCodes[errorType];
         this.send([
@@ -129,50 +129,50 @@ var msp = this.msp = exports;
         delete this.outConnections[connectionId];
       }
       ;
-    };
-    this.dispatchFrame = {
-      open: function (connectionId, host, port) {
-        cspUtil.assert(!(connectionId in this.outConnections), 'OPEN frame for existing connection');
-        cspUtil.assert(host && port, 'Invalid host or port');
-        var outConn = this.outConnections[connectionId] = node.tcp.createConnection(port, host);
-        outConn.setEncoding('bytes');
-        outConn.addListener('connect', function () {
-          this.send([
-            connectionId,
-            FRAME_OPENED
-          ]);
-        }).addListener('receive', function (data) {
-          this.send([
-            connectionId,
-            FRAME_DATA,
-            data
-          ]);
-        }).addListener('eof', function () {
-          this.closeOutgoing(connectionId, 'RemoteConnectionClosed');
-        }).addListener('disconnect', function (had_error) {
-          this.closeOutgoing(connectionId, 'RemoteConnectionClosed');
-        });
-      },
-      close: function (connectionId) {
-        this.closeOutgoing(connectionId, 'UserConnectionReset');
-      },
-      data: function (connectionId, data) {
-        data = unescape(data);
-        this.outConnections[connectionId].send(data, 'bytes');
-      }
-    };
-  });
+    }
+  };
 
-  msp.Proxy = Class(function () {
-    this.init = function () {
+  msp.ProxyConnection.prototype.dispatchFrame = {
+    open: function (connectionId, host, port) {
+      cspUtil.assert(!(connectionId in this.outConnections), 'OPEN frame for existing connection');
+      cspUtil.assert(host && port, 'Invalid host or port');
+      var outConn = this.outConnections[connectionId] = node.tcp.createConnection(port, host);
+      outConn.setEncoding('bytes');
+      outConn.addListener('connect', function () {
+        this.send([
+          connectionId,
+          FRAME_OPENED
+        ]);
+      }).addListener('receive', function (data) {
+        this.send([
+          connectionId,
+          FRAME_DATA,
+          data
+        ]);
+      }).addListener('eof', function () {
+        this.closeOutgoing(connectionId, 'RemoteConnectionClosed');
+      }).addListener('disconnect', function (had_error) {
+        this.closeOutgoing(connectionId, 'RemoteConnectionClosed');
+      });
+    },
+    close: function (connectionId) {
+      this.closeOutgoing(connectionId, 'UserConnectionReset');
+    },
+    data: function (connectionId, data) {
+      data = unescape(data);
+      this.outConnections[connectionId].send(data, 'bytes');
+    }
+  };
+  msp.Proxy = class {
+    constructor() {
       this.cspserver = csp.createServer(function (connection) {
         proxyConnection = new msp.ProxyConnection(connection);
       });
-    };
-    this.listen = function (port, host) {
+    }
+    listen(port, host) {
       this.cspserver.listen(port, host);
-    };
-  });
+    }
+  };
 
 }());
 

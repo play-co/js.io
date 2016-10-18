@@ -59,6 +59,8 @@ function validate(instance, schema, property) {
   }
 
 
+
+
   return {
     valid: !errors.length,
     errors: errors
@@ -66,11 +68,15 @@ function validate(instance, schema, property) {
 }
 
 
+
+
 // validate a value against a property definition
 function checkProp(value, schema, path, i, errors) {
   if (!errors) {
     errors = [];
   }
+
+
 
 
   path += path ? typeof i == 'number' ? '[' + i + ']' : typeof i == 'undefined' ? '' : '.' + i : i;
@@ -81,6 +87,8 @@ function checkProp(value, schema, path, i, errors) {
       message: message
     });
   }
+
+
 
 
   var schemaType = typeof schema, isObject = schemaType == 'object', isFunction = schemaType == 'function';
@@ -96,8 +104,16 @@ function checkProp(value, schema, path, i, errors) {
 
 
 
+
+
+
+
+
+
     return errors;
   }
+
+
 
 
   if (gCheckPropChange && schema.readonly) {
@@ -105,10 +121,14 @@ function checkProp(value, schema, path, i, errors) {
   }
 
 
+
+
   // if it extends another schema, it must pass that schema as well
   if (schema['extends']) {
     checkProp(value, schema['extends'], path, i, errors);
   }
+
+
 
 
   if (value === undefined) {
@@ -120,6 +140,8 @@ function checkProp(value, schema, path, i, errors) {
     if (schema.disallow && !checkType(schema.disallow, value).length) {
       addError(' disallowed value was matched');
     }
+
+
 
 
     if (value !== null) {
@@ -161,6 +183,8 @@ function checkProp(value, schema, path, i, errors) {
       }
 
 
+
+
       if (schema['enum']) {
         var enumer = schema['enum'], found;
 
@@ -171,6 +195,8 @@ function checkProp(value, schema, path, i, errors) {
             break;
           }
         }
+
+
 
 
         if (!found) {
@@ -184,8 +210,12 @@ function checkProp(value, schema, path, i, errors) {
   }
 
 
+
+
   return errors;
 }
+
+
 
 
 // validate an object against a schema
@@ -199,6 +229,8 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
     }
 
 
+
+
     for (var i in objTypeDef) {
       if (objTypeDef.hasOwnProperty(i) && !(i.charAt(0) == '_' && i.charAt(1) == '_')) {
         var value = instance[i];
@@ -207,6 +239,8 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
       }
     }
   }
+
+
 
 
   for (i in instance) {
@@ -218,6 +252,8 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
     }
 
 
+
+
     var requires = objTypeDef && objTypeDef[i] && objTypeDef[i].requires;
     if (requires && !(requires in instance)) {
       errors.push({
@@ -227,10 +263,14 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
     }
 
 
+
+
     value = instance[i];
     if (objTypeDef && typeof objTypeDef == 'object' && !(i in objTypeDef)) {
       checkProp(value, additionalProp, path, i, errors);
     }
+
+
 
 
     if (!gCheckPropChange && value && value.$schema) {
@@ -239,8 +279,12 @@ function checkObj(instance, objTypeDef, path, additionalProp, errors) {
   }
 
 
+
+
   return errors;
 }
+
+
 
 
 // validate a value against a type definition
@@ -283,6 +327,8 @@ function checkType(type, value, errors) {
     }
 
 
+
+
     if (Array.isArray(type)) {
       var unionErrors = [];
       for (var j = 0; j < type.length; j++) {
@@ -302,7 +348,12 @@ function checkType(type, value, errors) {
 
 
 
+
+
+
+
   return [];
 }
+
 
 export default exports;

@@ -8,20 +8,18 @@ let Buffer = buffer.Buffer;
 /**
  * @extends net.interfaces.Protocol
  */
-exports.BufferedProtocol = Class(Protocol, function (supr) {
-  this.init = function () {
+exports.BufferedProtocol = class extends Protocol {
+  constructor() {
+    super();
+
     this.buffer = new Buffer();
-  };
-
-  // Overwrite this instead of dataReceived in base classes
-  this.bufferUpdated = function () {
-  };
-
-  this.dataReceived = function (data) {
+  }
+  bufferUpdated() {
+  }
+  dataReceived(data) {
     this.buffer.append(data);
     this.bufferUpdated();
-  };
-
-});
+  }
+};
 
 export default exports;

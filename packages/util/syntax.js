@@ -18,6 +18,8 @@ function validate(code, filename) {
 }
 
 
+
+
 function padString(str, pad) {
   str = str + '';
   while (str.length < pad) {
@@ -25,6 +27,8 @@ function padString(str, pad) {
   }
   return str;
 }
+
+
 
 
 function logColor(color, str) {
@@ -37,6 +41,8 @@ function logColor(color, str) {
 }
 
 
+
+
 function logErrors(filename, code, errors) {
   var title = 'Syntax Error (' + filename + '):';
   if (console.group) {
@@ -44,6 +50,8 @@ function logErrors(filename, code, errors) {
   } else {
     console.error('Syntax Error:');
   }
+
+
 
 
   var linesBefore = 3;
@@ -63,8 +71,14 @@ function logErrors(filename, code, errors) {
   }
 
 
+
+
   console.groupEnd && console.groupEnd();
 }
+
+
+
+
 
 
 

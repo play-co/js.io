@@ -8,34 +8,32 @@ import {
 import interfaces from '../../../interfaces';
 import server from './server';
 
-var Transport = Class(interfaces.Transport, function () {
-  this.init = function (socket) {
+class Transport extends interfaces.Transport {
+  constructor(socket) {
+    super();
+
     this._socket = socket;
     logger.debug('init', socket);
-  };
-
-  this.makeConnection = function (protocol) {
+  }
+  makeConnection(protocol) {
     logger.debug('makeConnection:', protocol);
     this._socket.addListener('receive', bind(protocol, 'dataReceived'));
 
     this._socket.addListener('close', bind(protocol, '_connectionLost'));
-  };
-
-  // TODO: map error codes
-  this.write = function (data) {
+  }
+  write(data) {
     this._socket.send(data);
-  };
-
-  this.loseConnection = function () {
+  }
+  loseConnection() {
     this._socket.forceClose();
-  };
-});
+  }
+}
 
 /**
  * @extends net.interfaces.Listener
  */
-exports.Listener = Class(interfaces.Listener, function (supr) {
-  this.listen = function () {
+exports.Listener = class extends interfaces.Listener {
+  listen() {
     var s = server.createServer(bind(this, '_onConnect'));
     this._cspServer = s;
     var listenString = (this._opts['interface'] || '') + ':' + this._opts.port;
@@ -52,20 +50,17 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
       logger.info('Listening csp@' + listenString);
       s.listen(this._opts.port, this._opts['interface'] || '');
     }
-  };
-
-  this._onConnect = function (socket) {
+  }
+  _onConnect(socket) {
     logger.info('Incoming connection');
     socket.setEncoding('utf8');
     socket.addListener('connect', bind(this, function () {
       this.onConnect(new Transport(socket));
     }));
-  };
-
-  // for express middleware
-  this.createMiddleware = function () {
+  }
+  createMiddleware() {
     return bind(this._cspServer, '_handleRequest');
-  };
-});
+  }
+};
 
 export default exports;

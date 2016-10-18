@@ -2,42 +2,27 @@ let exports = {};
 
 import { bind } from 'base';
 
-exports = Class(function () {
-  this._fired = false;
-  this._id = 0;
-  this._pending = null;
-
-  this.init = function () {
+exports = class {
+  constructor() {
     this._run = [];
-  };
-
-  /* fired is @deprecated in favor of hasFired*/
-  this.hasFired = this.fired = function () {
+  }
+  fired() {
     return this._fired;
-  };
-
-  // preserve pending callbacks, but clear fired status
-  this.reset = function () {
+  }
+  reset() {
     this._args = [];
     this._fired = false;
-  };
-
-  // clear fired status and remove any pending callbacks
-  this.clear = function () {
+  }
+  clear() {
     this.reset();
     this._run = [];
     this._pending = null;
     this._stat = null;
-  };
-
-  // a convenience function to proxy arguments to `this.run`: arguments passed as the first argument
-  this.forward = function (args) {
+  }
+  forward(args) {
     this.run.apply(this, args);
-  };
-
-  // when the lib.Callback object fires, run a ctx, method, and
-  // (optional) curried arguments or a single callback function
-  this.run = function (ctx, method) {
+  }
+  run(ctx, method) {
     var f = method ? bind.apply(this, arguments) : ctx;
     if (f) {
       if (this._fired) {
@@ -47,12 +32,13 @@ exports = Class(function () {
       }
     }
     return this;
-  };
-
-  this.runOrTimeout = function (onFire, onTimeout, duration) {
+  }
+  runOrTimeout(onFire, onTimeout, duration) {
     if (!onFire && !onTimeout) {
       return;
     }
+
+
 
 
     if (this._fired) {
@@ -74,12 +60,13 @@ exports = Class(function () {
         }
 
 
+
+
         onTimeout();
       }), duration);
     }
-  };
-
-  this.fire = function () {
+  }
+  fire() {
     if (this._fired) {
       return;
     }
@@ -92,9 +79,8 @@ exports = Class(function () {
         cbs[i].apply(this, arguments);
       }
     }
-  };
-
-  this.chain = function (id) {
+  }
+  chain(id) {
     if (!this._pending) {
       this._pending = {};
     }
@@ -105,15 +91,16 @@ exports = Class(function () {
 
     this.reset();
     return bind(this, '_deferred', id);
-  };
-
-  this._deferred = function (id) {
+  }
+  _deferred(id) {
     if (!this._stat) {
       this._stat = {};
     }
     if (this._stat.hasOwnProperty(id)) {
       return;
     }
+
+
 
 
     this._stat[id] = Array.prototype.slice.call(arguments, 1);
@@ -126,8 +113,14 @@ exports = Class(function () {
     }
 
 
-    this.fire(this._stat);
-  };
-});
 
+
+    this.fire(this._stat);
+  }
+};
+
+exports.prototype._fired = false;
+exports.prototype._id = 0;
+exports.prototype._pending = null;
+exports.prototype.hasFired = exports.prototype.fired;
 export default exports;

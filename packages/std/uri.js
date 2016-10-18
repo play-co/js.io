@@ -17,8 +17,8 @@ var attrs = [
   'anchor'
 ];
 
-var URI = module.exports = Class(function () {
-  this.init = function (url, isStrict) {
+var URI = module.exports = class {
+  constructor(url, isStrict) {
     if (url instanceof URI) {
       for (var i = 0, attr; attr = attrs[i]; ++i) {
         this['_' + attr] = url['_' + attr];
@@ -27,63 +27,57 @@ var URI = module.exports = Class(function () {
     }
 
 
+
+
     this._isStrict = isStrict;
 
     var uriData = URI.parse(url, isStrict);
     for (var attr in uriData) {
       this['_' + attr] = uriData[attr];
     }
-  };
-
-  this.query = function (key) {
+  }
+  query(key) {
     return URI.parseQuery(this._query)[key];
-  };
-  this.hash = function (key) {
+  }
+  hash(key) {
     return URI.parseQuery(this._anchor)[key];
-  };
-
-  this.addHash = function (kvp) {
+  }
+  addHash(kvp) {
     var hash = URI.parseQuery(this._anchor);
     for (var i in kvp) {
       hash[i] = kvp[i];
     }
     this._anchor = URI.buildQuery(hash);
     return this;
-  };
-
-  this.setPath = function (path) {
+  }
+  setPath(path) {
     var pieces = utilPath.splitPath(path);
     this._file = pieces.filename;
     this._directory = pieces.directory;
     this._path = path;
     return this;
-  };
-
-  this.setFile = function (file) {
+  }
+  setFile(file) {
     return this.setPath(utilPath.join(this._directory, file));
-  };
-
-  this.setDirectory = function (directory) {
+  }
+  setDirectory(directory) {
     return this.setPath(utilPath.join(directory, this._file));
-  };
-
-  this.push = function (path) {
+  }
+  push(path) {
     if (path) {
       this._path = (this._path + '/' + path).replace(/\/\/+/g, '/');
     }
     return this;
-  };
-
-  this.addQuery = function (kvp) {
+  }
+  addQuery(kvp) {
     var query = URI.parseQuery(this._query);
     for (var i in kvp) {
       query[i] = kvp[i];
     }
     this._query = URI.buildQuery(query);
     return this;
-  };
-
-  this.removeQuery = function (keys) {
+  }
+  removeQuery(keys) {
     var query = URI.parseQuery(this._query);
     if (Array.isArray(keys)) {
       for (var i = 0, n = keys.length; i < n; ++i) {
@@ -94,13 +88,11 @@ var URI = module.exports = Class(function () {
     }
     this._query = URI.buildQuery(query);
     return this;
-  };
-
-  this.toJSON = function () {
+  }
+  toJSON() {
     return this.toString(false);
-  };
-
-  this.toString = function (onlyBase) {
+  }
+  toString(onlyBase) {
     // XXX TODO: This is vaguely reasonable, but not complete. fix it...
     var a = this._protocol ? this._protocol + '://' : '';
     var b = this._host ? this._host + ((this._port || 80) == 80 ? '' : ':' + this._port) : '';
@@ -110,12 +102,14 @@ var URI = module.exports = Class(function () {
     }
 
 
+
+
     var c = this._path;
     var d = this._query ? '?' + this._query : '';
     var e = this._anchor ? '#' + this._anchor : '';
     return a + b + c + d + e;
-  };
-});
+  }
+};
 
 
 for (var i = 0, attr; attr = attrs[i]; ++i) {
@@ -134,6 +128,10 @@ for (var i = 0, attr; attr = attrs[i]; ++i) {
 
 
 
+
+
+
+
 URI.relativeTo = function (url, base) {
   var url = String(url);
   if (base && !/^http(s?):\/\//.test(url)) {
@@ -141,6 +139,8 @@ URI.relativeTo = function (url, base) {
 
     url = URI.resolveRelative(baseURI + url);
   }
+
+
 
 
   return new URI(url);
@@ -192,6 +192,8 @@ URI.parse = function (str, isStrict) {
   for (var i = 0, attr; attr = attrs[i]; ++i) {
     result[attr] = match[i] || '';
   }
+
+
 
 
   var qs = result['queryKey'] = {};
