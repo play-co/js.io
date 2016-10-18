@@ -2,7 +2,7 @@
  * Model a vector in two-dimensional space.
  * Pass an "angle" option in radians to this function to initialize an angle.
  */
-var Vec2D = exports = Class(function () {
+exports = Class(function () {
   this.init = function (opts) {
     if ('angle' in opts) {
       this.x = opts.magnitude * Math.cos(opts.angle);
@@ -106,4 +106,5 @@ var Vec2D = exports = Class(function () {
   };
 
 });
+var Vec2D = exports;
 

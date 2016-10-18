@@ -101,7 +101,8 @@ function canUseXHR(url) {
 }
 ;
 
-var transports = exports.transports = {};
+exports.transports = {};
+var transports = exports.transports;
 
 exports.chooseTransport = function (url, options) {
   switch (options.preferredTransport) {

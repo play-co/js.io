@@ -12,9 +12,11 @@ function isWindow(el) {
 }
 
 
+
+
 var singleId = /^#([\w-]+)$/;
 
-var $ = exports.$ = function (selector, win) {
+exports.$ = function (selector, win) {
   switch (typeof selector) {
   case 'object':
     if ($.isElement(selector)) {
@@ -30,8 +32,8 @@ var $ = exports.$ = function (selector, win) {
     return Sizzle.apply(GLOBAL, arguments);
   }
 }
-
 ;
+var $ = exports.$;
 
 var DOM2 = typeof HTMLElement === 'object';
 $.isElement = DOM2 ? function (el) {

@@ -39,7 +39,8 @@
   // for Closure Compiler "advanced" mode.
   if (typeof exports !== 'undefined') {
     if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = _;
+      module.exports = _;
+      exports = module.exports;
     }
     exports._ = _;
   } else {

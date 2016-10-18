@@ -10,13 +10,14 @@ import errors from 'net/errors';
 import transports from './transports';
 import Enum from 'lib/Enum';
 
-var READYSTATE = exports.READYSTATE = Enum({
+exports.READYSTATE = Enum({
   INITIAL: 0,
   CONNECTING: 1,
   CONNECTED: 2,
   DISCONNECTING: 3,
   DISCONNECTED: 4
 });
+var READYSTATE = exports.READYSTATE;
 
 
 var id = 0;

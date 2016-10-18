@@ -3,11 +3,12 @@ import { logger } from 'base';
 import interfaces from 'net/interfaces';
 let Protocol = interfaces.Protocol;
 
-var EmptyBufferError = exports.EmptyBufferError = Class(function () {
+exports.EmptyBufferError = Class(function () {
   this.init = function (message) {
     this.message = message;
   };
 });
+var EmptyBufferError = exports.EmptyBufferError;
 
 exports.Buffer = Class(function (supr) {
   this.init = function (rawBuffer) {

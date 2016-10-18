@@ -2,7 +2,7 @@
  * @package math.geom.Point;
  * Models a Point in 2D space.
  */
-var Point = exports = Class(function () {
+exports = Class(function () {
   this.init = function (a, b) {
     switch (arguments.length) {
     case 0:
@@ -133,6 +133,7 @@ var Point = exports = Class(function () {
   };
 
 });
+var Point = exports;
 
 /*
  */

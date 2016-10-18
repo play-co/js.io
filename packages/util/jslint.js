@@ -273,7 +273,7 @@ SOFTWARE.
 // application itself.
 'use strict';
 
-var JSLINT = exports = function () {
+exports = function () {
   var adsafe_id,
     // The widget's ADsafe id.
     adsafe_may,
@@ -6008,3 +6008,4 @@ var JSLINT = exports = function () {
   return itself;
 
 }();
+var JSLINT = exports;

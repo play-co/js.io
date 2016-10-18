@@ -120,7 +120,7 @@ exports.StompProtocol = Class(BufferedProtocol, function (supr) {
 });
 
 /* FALL THROUGH and LOOP */
-var StompFrame = exports.StompFrame = Class(function () {
+exports.StompFrame = Class(function () {
   this.init = function (_method, _body, _headers) {
     this._headers = !!_headers ? _headers : {};
     this._method = !!_method ? _method : null;
@@ -177,3 +177,4 @@ var StompFrame = exports.StompFrame = Class(function () {
     return output;
   };
 });
+var StompFrame = exports.StompFrame;

@@ -191,7 +191,7 @@ var ErrorParentClass = exports.__class__(function ErrorCls() {
 /**
  * Merge two objects together.
  */
-exports.Class.defaults = exports.merge = function (base, extra) {
+exports.merge = function (base, extra) {
   base = base || {};
 
   for (var i = 1, len = arguments.length; i < len; ++i) {
@@ -204,10 +204,12 @@ exports.Class.defaults = exports.merge = function (base, extra) {
   }
 
 
+
+
   return base;
 }
-
 ;
+exports.Class.defaults = exports.merge;
 
 
 /**

@@ -7,7 +7,7 @@ import intersect from './intersect';
 /**
  * Model a rectangle.
  */
-var Rect = exports = Class(function () {
+exports = Class(function () {
   this.init = function (a, b, c, d) {
     switch (arguments.length) {
     case 0:
@@ -157,6 +157,7 @@ var Rect = exports = Class(function () {
     return new Point(this.x + this.width / 2, this.y + this.height / 2);
   };
 });
+var Rect = exports;
 
 var SIDES = Rect.SIDES = Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT');
 var CORNERS = Rect.CORNERS = Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');

@@ -4,7 +4,7 @@
  *  Released under the MIT, BSD, and GPL Licenses.
  *  More information: http://sizzlejs.com/
  */
-var Sizzle = exports = function () {
+exports = function () {
   var chunker = /((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^[\]]*\]|['"][^'"]*['"]|[^[\]'"]+)+\]|\\.|[^ >+~,(\[\\]+)+|[>+~])(\s*,\s*)?/g, done = 0, toString = Object.prototype.toString, hasDuplicate = false;
 
   var Sizzle = function (selector, context, results, seed) {
@@ -1018,3 +1018,4 @@ var Sizzle = exports = function () {
   return Sizzle;
 
 }();
+var Sizzle = exports;

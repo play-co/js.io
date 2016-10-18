@@ -84,7 +84,7 @@ exports.mod = function (m, n) {
    * `util.round.ROUND_HALF_ALTERNATE` ---Alternate rounding up/down with sequential uses of this function.
  *
  */
-var round = exports.round = function (a, precision, method) {
+exports.round = function (a, precision, method) {
   if (!method || method == round.ROUND_HALF_AWAY_FROM_ZERO) {
     return a.toFixed(precision);
   }
@@ -121,8 +121,8 @@ var round = exports.round = function (a, precision, method) {
 }
 
 
-
 ;
+var round = exports.round;
 
 
 /**
