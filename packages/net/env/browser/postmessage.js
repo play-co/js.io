@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   bind,
   logger
@@ -213,3 +215,5 @@ exports.Transport = Class(interfaces.Transport, function () {
     this._protocol._connectionLost.apply(this._protocol, arguments);
   };
 });
+
+export default exports;

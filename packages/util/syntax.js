@@ -1,3 +1,5 @@
+let exports = {};
+
 import esprima from './esprima';
 
 function validate(code, filename) {
@@ -78,3 +80,5 @@ var printLines = console.group ? function (pad, lines, from, to) {
 };
 
 exports = validate;
+
+export default exports;

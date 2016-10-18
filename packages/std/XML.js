@@ -1,3 +1,5 @@
+let exports = {};
+
 exports.parseString = function (str) {
   if (jsio.__env.name == 'browser') {
     // Is it IE? XXX TODO: test this on a Windows computer
@@ -13,3 +15,5 @@ exports.parseString = function (str) {
   ;
 
 };
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 /***********************************************************************
@@ -1594,3 +1596,5 @@ exports.is_alphanumeric_char = is_alphanumeric_char;
 exports.set_logger = function (logger) {
   warn = logger;
 };
+
+export default exports;

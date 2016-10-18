@@ -1,3 +1,5 @@
+let exports = {};
+
 var makeErrorClass = function (name, _code) {
   var toString = function () {
     return name + (this.message ? ': ' + this.message : '');
@@ -36,3 +38,5 @@ exports.ServerProtocolError = makeErrorClass('ServerProtocolError', 200);
 
 exports.ServerClosedConnection = makeErrorClass('ServerClosedConnection', 301);
 exports.ConnectionClosedCleanly = makeErrorClass('ConnectionClosedCleanly', 300);
+
+export default exports;

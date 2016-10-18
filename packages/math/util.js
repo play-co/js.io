@@ -1,3 +1,5 @@
+let exports = {};
+
 import Enum from 'lib/Enum';
 
 
@@ -135,3 +137,5 @@ Enum.call(round, 'ROUND_HALF_UP', 'ROUND_HALF_AWAY_FROM_ZERO', 'ROUND_HALF_TO_EV
  * Alternating flag for rounding strategy ROUND_HALF_ALTERNATE.
  */
 round.alt = true;
+
+export default exports;

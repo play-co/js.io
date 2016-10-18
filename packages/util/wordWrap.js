@@ -1,3 +1,5 @@
+let exports = {};
+
 exports = function (str, maxWidth, prefix, tabWidth) {
   prefix = prefix || '';
   maxWidth -= exports.getLengthWithTabs(prefix, tabWidth);
@@ -56,3 +58,5 @@ exports.getLengthWithTabs = function (str, tabWidth) {
   });
   return str.length + tabs * (tabWidth || 8);
 };
+
+export default exports;

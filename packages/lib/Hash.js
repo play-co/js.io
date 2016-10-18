@@ -1,3 +1,5 @@
+let exports = {};
+
 import { GLOBAL } from 'base';
 
 /**
@@ -50,3 +52,5 @@ exports = Class(function () {
     }
   };
 });
+
+export default exports;

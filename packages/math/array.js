@@ -1,3 +1,5 @@
+let exports = {};
+
 import util from 'math/util';
 
 
@@ -102,5 +104,9 @@ exports.rotate = function (a, count) {
   }
 
 
+
+
   return b;
 };
+
+export default exports;

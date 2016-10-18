@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 exports.Later = Class(function () {
@@ -68,3 +70,5 @@ exports.Later.succeed = function () {
   return l.succeed.apply(l, arguments);
 };
 
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
  * GCRand
  * 	A new Marsaglia's KISS -style PRNG
@@ -130,3 +132,5 @@ var RNG = Class(function () {
  */
 exports = new RNG(Date.now());
 exports.RNG = RNG;
+
+export default exports;

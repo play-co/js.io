@@ -1,3 +1,5 @@
+let exports = {};
+
 function createGetter(ctx, name) {
   return function () {
     return this[name];
@@ -65,3 +67,5 @@ exports = function (ctx, name, def) {
     }
   }
 };
+
+export default exports;

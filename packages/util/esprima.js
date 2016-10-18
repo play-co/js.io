@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
   Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
 
@@ -1862,6 +1864,8 @@
           delete last.trailingComments;
         }
       }
+
+
 
 
       // Eating the stack.
@@ -5850,3 +5854,5 @@
   }();
 
 }));  /* vim: set sw=4 ts=4 et tw=80 : */
+
+export default exports;

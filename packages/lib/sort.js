@@ -1,3 +1,5 @@
+let exports = {};
+
 import { bind } from 'base';
 
 var zeroPadding = [];
@@ -105,3 +107,5 @@ exports = function (arr, indexer) {
     }
   }
 };
+
+export default exports;

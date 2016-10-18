@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 import interfaces from 'net/interfaces';
@@ -78,3 +80,5 @@ exports.Buffer = Class(function (supr) {
   };
 
 });
+
+export default exports;

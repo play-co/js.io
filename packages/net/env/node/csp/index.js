@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   bind
@@ -65,3 +67,5 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
     return bind(this._cspServer, '_handleRequest');
   };
 });
+
+export default exports;

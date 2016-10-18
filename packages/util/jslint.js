@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   log
@@ -6009,3 +6011,5 @@ exports = function () {
 
 }();
 var JSLINT = exports;
+
+export default exports;

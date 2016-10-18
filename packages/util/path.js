@@ -1,3 +1,5 @@
+let exports = {};
+
 var util = jsio.__jsio.__util;
 
 exports.join = util.buildPath;
@@ -16,3 +18,5 @@ exports.splitExt = function (path) {
   }
   return res;
 };
+
+export default exports;

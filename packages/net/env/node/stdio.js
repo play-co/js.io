@@ -1,3 +1,5 @@
+let exports = {};
+
 import { bind } from 'base';
 
 import interfaces from '../../interfaces';
@@ -43,3 +45,5 @@ exports.Connector = Class(interfaces.Connector, function () {
     this.onConnect(transport);
   };
 });
+
+export default exports;

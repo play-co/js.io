@@ -1,3 +1,5 @@
+let exports = {};
+
 import Point from './Point';
 
 /**
@@ -40,3 +42,5 @@ exports = Class(Point, function (supr) {
     return this;
   };
 });
+
+export default exports;

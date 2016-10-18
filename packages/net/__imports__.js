@@ -1,3 +1,5 @@
+let exports = {};
+
 exports.map = {
   'node': ['net.env.node.stdio'],
   'browser': [
@@ -12,3 +14,5 @@ exports.map = {
 exports.resolve = function (env, opts) {
   return exports.map[env] || [];
 };
+
+export default exports;

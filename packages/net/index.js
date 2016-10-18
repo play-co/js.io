@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 import env from './env';
@@ -34,3 +36,5 @@ exports.connect = function (protocolInstance, transportName, opts) {
 exports.quickServer = function (protocolClass) {
   return new interfaces.Server(protocolClass);
 };
+
+export default exports;

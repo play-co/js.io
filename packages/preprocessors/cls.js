@@ -1,3 +1,5 @@
+let exports = {};
+
 // var F = exports = Class
 // exports = Class
 var classExport = /^(.*?)exports\s*=\s*Class\s*\(/gm;
@@ -21,3 +23,5 @@ exports = function (path, moduleDef, opts) {
   var moduleCtor = moduleDef.path.replace(/(^[.\/]+|\.([^.]+?)$)/g, '').replace(/[\:\\\/\-\. ]/g, '_');
   moduleDef.src = moduleDef.src.replace(classExport, 'var ' + moduleCtor + '=__class__;$1exports=' + moduleCtor + '(function ' + moduleCtor + '(){return this.init&&this.init.apply(this,arguments)},').replace(class2Export, replacer);
 };
+
+export default exports;

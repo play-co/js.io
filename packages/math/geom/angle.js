@@ -1,3 +1,5 @@
+let exports = {};
+
 var PI = Math.PI;
 var TAU = Math.PI * 2;
 
@@ -32,3 +34,5 @@ exports.range = function (a, b) {
   var r = b - a;
   return r < 0 ? r + TAU : r;
 };
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 import { bind } from 'base';
 
 var SyncTimer = Class(function () {
@@ -158,3 +160,5 @@ exports.easeInOut = function (n) {
 exports.easeOut = function (n) {
   return n * (2 - n);
 };
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   bind,
   logger
@@ -81,3 +83,5 @@ var Transport = Class(interfaces.Transport, function () {
     this._socket.close();
   };
 });
+
+export default exports;

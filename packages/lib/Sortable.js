@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   bind
@@ -127,3 +129,5 @@ exports.sort = function (arr, indexer) {
     }
   }
 };
+
+export default exports;

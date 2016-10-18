@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   merge,
   logger,
@@ -248,3 +250,5 @@ function onReadyStateChange(request, xhr) {
     cb(null, data, xhr.getAllResponseHeaders());
   }
 }
+
+export default exports;

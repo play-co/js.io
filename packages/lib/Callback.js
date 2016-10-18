@@ -1,3 +1,5 @@
+let exports = {};
+
 import { bind } from 'base';
 
 exports = Class(function () {
@@ -127,3 +129,5 @@ exports = Class(function () {
     this.fire(this._stat);
   };
 });
+
+export default exports;

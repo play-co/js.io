@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logging } from 'base';
 
 import net from 'net';
@@ -203,3 +205,5 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
     this.transport.write(s);
   };
 });
+
+export default exports;

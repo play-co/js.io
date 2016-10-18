@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 import interfaces from '../interfaces';
@@ -45,3 +47,5 @@ exports.DelimitedProtocol = Class(interfaces.Protocol, function (supr) {
   };
 });
 
+
+export default exports;

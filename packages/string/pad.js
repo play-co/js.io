@@ -1,3 +1,5 @@
+let exports = {};
+
 // TODO: Support left vs right vs both padding?
 exports = function (input, length, padString) {
   input = String(input);
@@ -7,3 +9,5 @@ exports = function (input, length, padString) {
   }
   return input;
 };
+
+export default exports;

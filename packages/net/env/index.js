@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   bind
@@ -18,5 +20,9 @@ function getObj(objectName, transportName, envName) {
 }
 
 
+
+
 exports.getListener = bind(this, getObj, 'Listener');
 exports.getConnector = bind(this, getObj, 'Connector');
+
+export default exports;

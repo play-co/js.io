@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
 Multiplexing socket proxy implemented against Node JS and my
 Node CSP server, by Jacob Rus.
@@ -182,3 +184,5 @@ function start_server() {
 }
 ;
 start_server();
+
+export default exports;

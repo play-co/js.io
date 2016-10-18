@@ -1,3 +1,5 @@
+let exports = {};
+
 /**
 * JSONSchema Validator
 * ====================
@@ -298,5 +300,9 @@ function checkType(type, value, errors) {
   }
 
 
+
+
   return [];
 }
+
+export default exports;

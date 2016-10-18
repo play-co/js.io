@@ -1,3 +1,5 @@
+let exports = {};
+
 exports.integer = function (number, prefix, unitPlural, unitSingular) {
   prefix = prefix || '';
   if (unitPlural) {
@@ -29,5 +31,13 @@ exports.integer = function (number, prefix, unitPlural, unitSingular) {
 
 
 
+
+
+
+
+
+
   return prefix + arr.join('') + unitPlural;
 };
+
+export default exports;

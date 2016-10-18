@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   logging
@@ -206,9 +208,12 @@ exports.merge = function (base, extra) {
 
 
 
+
+
+
+
   return base;
-}
-;
+};
 exports.Class.defaults = exports.merge;
 
 
@@ -340,3 +345,5 @@ exports.logging = function () {
 
 var logger = exports.logging.get('jsiocore');
 
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 import delimited from './delimited';
@@ -73,6 +75,12 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
   };
 });
 
+
+
+
+
+
+export default exports;
 
 
 

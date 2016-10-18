@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
 Fast incremental JavaScript UTF-8 encoder/decoder, by Jacob Rus.
 
@@ -108,3 +110,5 @@ exports.decode = function (bytes) {
   }
   ;
 };
+
+export default exports;

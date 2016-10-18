@@ -1,3 +1,5 @@
+let exports = {};
+
 var sliceExpr = /INLINE_SLICE\s*\((.+),\s*(.+)\s*\);/g;
 
 function replace(raw, p1, p2) {
@@ -8,3 +10,5 @@ function replace(raw, p1, p2) {
 exports = function (path, moduleDef, opts) {
   moduleDef.src = moduleDef.src.replace(sliceExpr, replace);
 };
+
+export default exports;

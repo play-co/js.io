@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   bind,
   logger
@@ -435,3 +437,5 @@ exports.CometSession = Class(function (supr) {
   };
 
 });
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 import Enum from 'lib/Enum';
 import Point from './Point';
 import Line from './Line';
@@ -161,3 +163,5 @@ var Rect = exports;
 
 var SIDES = Rect.SIDES = Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT');
 var CORNERS = Rect.CORNERS = Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');
+
+export default exports;

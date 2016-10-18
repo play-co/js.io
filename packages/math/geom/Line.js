@@ -1,3 +1,5 @@
+let exports = {};
+
 import Point from './Point';
 
 exports = Class(function () {
@@ -33,3 +35,5 @@ exports = Class(function () {
     return Math.sqrt(dx * dx + dy * dy);
   };
 });
+
+export default exports;

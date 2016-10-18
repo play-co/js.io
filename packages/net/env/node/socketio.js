@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   bind
@@ -61,3 +63,5 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
     this.onConnect(new Transport(socket));
   };
 });
+
+export default exports;

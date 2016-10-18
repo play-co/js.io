@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 /*
@@ -134,3 +136,5 @@ exports.decode = function (b64text) {
   logger.debug('decoded', result);
   return result;
 };
+
+export default exports;

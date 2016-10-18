@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   isArray,
@@ -386,3 +388,5 @@ function checkDynamicImports(moduleDef) {
     }
   }
 }
+
+export default exports;

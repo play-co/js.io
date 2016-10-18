@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
 Helper functions, &c., for a comet server by Jacob Rus.
 
@@ -91,3 +93,5 @@ exports.staticFile = function () {
   };
   return getfile;
 }();
+
+export default exports;

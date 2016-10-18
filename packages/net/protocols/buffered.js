@@ -1,3 +1,5 @@
+let exports = {};
+
 import interfaces from 'net/interfaces';
 let Protocol = interfaces.Protocol;
 import buffer from 'net/buffer';
@@ -21,3 +23,5 @@ exports.BufferedProtocol = Class(Protocol, function (supr) {
   };
 
 });
+
+export default exports;

@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   bind,
@@ -538,3 +540,5 @@ var EMPTY_FUNCTION = function () {
   });
 
 }());
+
+export default exports;

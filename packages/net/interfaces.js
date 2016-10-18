@@ -1,3 +1,5 @@
+let exports = {};
+
 // Sort of like a twisted protocol
 import { logger } from 'base';
 
@@ -146,3 +148,5 @@ exports.Connector = Class(function () {
     return this._protocol;
   };
 });
+
+export default exports;

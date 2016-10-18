@@ -1,3 +1,5 @@
+let exports = {};
+
 exports.BrowserDetect = new function () {
   var versionSearchString;
   var dataBrowser = [
@@ -116,3 +118,5 @@ exports.BrowserDetect = new function () {
   this.isWebKit = RegExp(' AppleWebKit/').test(navigator.userAgent);
   this['is' + this.browser] = this.version;
 }();
+
+export default exports;

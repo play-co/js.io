@@ -1,3 +1,5 @@
+let exports = {};
+
 var importExpr = /^(\s*)(import\s+[^=+*"'\r\n;\/]+|from\s+[^=+"'\r\n;\/ ]+\s+import\s+[^=+"'\r\n;\/]+)(;|\/|$)/gm;
 
 function replace(raw, p1, p2, p3) {
@@ -11,3 +13,5 @@ function replace(raw, p1, p2, p3) {
 exports = function (path, moduleDef, opts) {
   moduleDef.src = moduleDef.src.replace(importExpr, replace);
 };
+
+export default exports;

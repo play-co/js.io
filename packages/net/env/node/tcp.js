@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   bind,
   logger
@@ -71,3 +73,5 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
     }));
   };
 });
+
+export default exports;

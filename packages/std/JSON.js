@@ -1,3 +1,5 @@
+let exports = {};
+
 // Based on json2.js (version 2009-09-29) http://www.JSON.org/json2.js
 // exports createGlobal, stringify, parse, stringifyDate
 /**
@@ -263,3 +265,5 @@ exports.createGlobal = function () {
     throw new SyntaxError('JSON.parse');
   };
 }());
+
+export default exports;

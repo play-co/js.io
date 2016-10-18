@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   isArray,
@@ -178,3 +180,5 @@ exports.printUsage = function (usage, optsDef) {
     }
   }
 };
+
+export default exports;

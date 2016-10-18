@@ -1,3 +1,5 @@
+let exports = {};
+
 var FORMATS = [
   [
     60,
@@ -134,5 +136,9 @@ exports = function (dateString, formats, isLocal, offset) {
   }
 
 
+
+
   return date;
 };
+
+export default exports;

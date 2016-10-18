@@ -1,3 +1,5 @@
+let exports = {};
+
 /**
  * @package math.geom.Point;
  * Models a Point in 2D space.
@@ -278,3 +280,5 @@ Point.project = function (a, b) {
   var unitB = new Point(b).normalize();
   return unitB.scale(unitB.x * a.x + unitB.y * a.y);
 };
+
+export default exports;

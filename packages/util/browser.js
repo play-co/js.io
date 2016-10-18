@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   GLOBAL,
   bind
@@ -31,8 +33,7 @@ exports.$ = function (selector, win) {
     }
     return Sizzle.apply(GLOBAL, arguments);
   }
-}
-;
+};
 var $ = exports.$;
 
 var DOM2 = typeof HTMLElement === 'object';
@@ -391,3 +392,5 @@ $.insertCSSFile = function (filename) {
     }
   }));
 };
+
+export default exports;

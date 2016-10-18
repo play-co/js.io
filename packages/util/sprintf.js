@@ -1,3 +1,5 @@
+let exports = {};
+
 // XXX: Lets have a reasonable implementation of this fucntion
 //	  -mcarter 9/18/09
 // Code from http://www.webtoolkit.info/javascript-sprintf.html
@@ -147,3 +149,5 @@ var sprintfWrapper = {
 };
 
 exports.sprintf = sprintfWrapper.init;
+
+export default exports;

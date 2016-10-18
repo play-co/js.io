@@ -1,3 +1,5 @@
+let exports = {};
+
 // var logger = require('./logger');
 // logger.replaceLogger("var foo = logger.log('123');")
 var loggerRegex = /logger\.(log|warn|info|error|debug)\(/g;
@@ -86,5 +88,9 @@ exports.replaceLogger = function (src, prefix) {
   }
 
 
+
+
   return src;
 };
+
+export default exports;

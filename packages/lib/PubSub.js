@@ -1,3 +1,5 @@
+let exports = {};
+
 /**
  * Summary: inherit from lib.PubSub if a class wants publish/subscribe ability
  * Methods:
@@ -236,3 +238,5 @@ exports = Class(function () {
   };
 });
 
+
+export default exports;

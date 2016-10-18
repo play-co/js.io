@@ -1,3 +1,5 @@
+let exports = {};
+
 /**
  * Model a vector in two-dimensional space.
  * Pass an "angle" option in radians to this function to initialize an angle.
@@ -108,3 +110,5 @@ exports = Class(function () {
 });
 var Vec2D = exports;
 
+
+export default exports;

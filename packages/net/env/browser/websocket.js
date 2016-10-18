@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   logger,
   bind
@@ -72,3 +74,5 @@ var Transport = Class(interfaces.Transport, function () {
     this._ws.close();
   };
 });
+
+export default exports;

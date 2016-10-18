@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 import buffered from 'net/protocols/buffered';
@@ -178,3 +180,5 @@ exports.StompFrame = Class(function () {
   };
 });
 var StompFrame = exports.StompFrame;
+
+export default exports;

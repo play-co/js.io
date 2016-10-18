@@ -1,3 +1,5 @@
+let exports = {};
+
 import { logger } from 'base';
 
 import interfaces from 'net/interfaces';
@@ -26,3 +28,5 @@ exports.Server = Class(interfaces.Server, function (supr) {
   };
 });
 
+
+export default exports;

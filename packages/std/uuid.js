@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
 Based on Math.uuid.js 1.4 by Robert Kieffer
 
@@ -83,3 +85,5 @@ exports.uuid = function (len, radix) {
   return uuid.join('');
 };
 
+
+export default exports;

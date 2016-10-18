@@ -1,3 +1,5 @@
+let exports = {};
+
 /*
  * Find the smallest element in an array, wrt compare (avoids sorting)
  * @compare : return -1 || 0 || 1
@@ -263,3 +265,5 @@ exports = Class(function () {
     }
   };
 });
+
+export default exports;

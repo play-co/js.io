@@ -1,3 +1,5 @@
+let exports = {};
+
 exports = function () {
   if (arguments.length == 1) {
     if (typeof arguments[0] == 'object') {
@@ -26,3 +28,5 @@ exports = function () {
   }
   return obj;
 };
+
+export default exports;

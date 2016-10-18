@@ -1,3 +1,5 @@
+let exports = {};
+
 /*!
  * Sizzle CSS Selector Engine - v1.0
  *  Copyright 2009, The Dojo Foundation
@@ -1019,3 +1021,5 @@ exports = function () {
 
 }();
 var Sizzle = exports;
+
+export default exports;

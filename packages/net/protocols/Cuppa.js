@@ -1,3 +1,5 @@
+let exports = {};
+
 import {
   bind,
   GLOBAL,
@@ -257,3 +259,5 @@ exports = Class(RTJPProtocol, function (supr) {
     }
   };
 });
+
+export default exports;
