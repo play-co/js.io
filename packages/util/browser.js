@@ -32,7 +32,7 @@ $.id = function(id, win) { return typeof id == 'string' ? (win || window).docume
 
 $.apply = function(el, params) {
 	if (params.attrs) {
-		for(attr in params.attrs) {
+		for(var attr in params.attrs) {
 			el.setAttribute(attr, params.attrs[attr]);
 		}
 	}
@@ -170,7 +170,7 @@ $.style = function(el, style) {
 
 	el = $.id(el);
 	var s = el.style;
-	for(prop in style) {
+	for(var prop in style) {
 		switch(prop) {
 			case 'styleFloat':
 			case 'cssFloat':
