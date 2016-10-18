@@ -1,4 +1,4 @@
-jsio('import .Point');
+import Point from './Point';
 
 /**
  * @extends math.geom.Point

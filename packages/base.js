@@ -102,8 +102,7 @@ exports.Class = function (name, parent, proto) {
   return exports.__class__(function () {
     return this.init && this.init.apply(this, arguments);
   }, name, parent, proto);
-}
-;
+};
 
 exports.__class__ = function (cls, name, parent, proto) {
   var clsProto = function () {
@@ -171,8 +170,7 @@ exports.__class__ = function (cls, name, parent, proto) {
   }
   proto.call(p, logger || supr, logger && supr);
   return cls;
-}
-;
+};
 
 var ErrorParentClass = exports.__class__(function ErrorCls() {
   var err = Error.prototype.constructor.apply(this, arguments);
@@ -250,38 +248,32 @@ exports.logging = function () {
 
   logging.setPrefix = function (prefix) {
     _prefix = prefix + ' ';
-  }
-;
+  };
 
   logging.setProduction = function (prod) {
     _production = !!prod;
     for (var key in _loggers) {
       _loggers[key].setProduction(_production);
     }
-  }
-;
+  };
 
   logging.get = function (name) {
     var logger = name in _loggers ? _loggers[name] : _loggers[name] = new Logger(name);
     logger.setProduction(_production);
     return logger;
-  }
-;
+  };
 
   logging.set = function (name, logger) {
     _loggers[name] = logger;
-  }
-;
+  };
 
   logging.getAll = function () {
     return _loggers;
-  }
-;
+  };
 
   logging.__create = function (pkg, ctx) {
     ctx.logger = logging.get(pkg);
-  }
-;
+  };
 
   var Logger = exports.__class__(function Logger(name, level) {
     this._name = name;
@@ -292,8 +284,7 @@ exports.logging = function () {
     this.setProduction = function (isProduction) {
       this._isProduction = isProduction;
       isProduction && this.setLevel(logging.NONE);
-    }
-;
+    };
 
     this.setLevel = function (level) {
       this._level = level;
@@ -308,8 +299,7 @@ exports.logging = function () {
       this.INFO = level <= logging.INFO;
       this.WARN = level <= logging.WARN;
       this.ERROR = level <= logging.ERROR;
-    }
-;
+    };
 
     function makeLogger(type) {
       var level = logging[type];
@@ -325,10 +315,11 @@ exports.logging = function () {
     }
 
 
+
+
     this.setListener = function (listener) {
       this._listener = listener;
-    }
-;
+    };
 
     this.debug = makeLogger('DEBUG');
     this.log = makeLogger('LOG');

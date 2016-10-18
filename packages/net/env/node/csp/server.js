@@ -28,11 +28,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 // Make the dependancies work rather or not this file was used as a
 // node module or a jsio module.
-jsio('import .....std.uuid as uuid');
-jsio('import .....std.utf8 as utf8');
-jsio('import .....std.base64 as base64');
-jsio('import .....lib.Hash as Hash');
-jsio('import .util as cspUtil');
+import uuid from '../../../../std/uuid';
+import utf8 from '../../../../std/utf8';
+import base64 from '../../../../std/base64';
+import Hash from '../../../../lib/Hash';
+import cspUtil from './util';
 
 var http = require('http');
 var nodeUrl = require('url');

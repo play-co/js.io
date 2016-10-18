@@ -1,6 +1,6 @@
 /*
 * @shim
 */
-jsio('import math.geom.Rect');
-exports = math.geom.Rect;
+import Rect from 'math/geom/Rect';
+exports = Rect;
 logger.log('Warning: math2D.Rect is deprecated');

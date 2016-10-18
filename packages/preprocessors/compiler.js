@@ -155,13 +155,11 @@ exports = function (path, moduleDef, opts) {
 
   // don't actually execute the source!
   moduleDef.src = '';
-}
-;
+};
 
 exports.reset = function () {
   gSrcTable = {};
-}
-;
+};
 
 /**
  * opts.compressSources: compress each source file ** requires an active compressor (see exports.setCompressor)
@@ -185,8 +183,7 @@ exports.generateSrc = function (opts, callback) {
   } else {
     cb();
   }
-}
-;
+};
 
 exports.getPathJS = function () {
   var cwd = jsio.__env.getCwd();
@@ -200,8 +197,7 @@ exports.getPathJS = function () {
     return replaceSlashes(path.relative(cwd, value));
   })) + ');jsio.path.cache=' + JSON.stringify(cache) + ';';
 
-}
-;
+};
 
 function replaceSlashes(str) {
   return str.replace(/\\+/g, '/').replace(/\/{2,}/g, '/');
@@ -283,10 +279,11 @@ function compressStep(queue, table, opts, key, callback) {
 }
 
 
+
+
 exports.getTable = function () {
   return gSrcTable;
-}
-;
+};
 
 // opts.compressor must have the signature function (string source, function callback)
 exports.setCompilerOpts = function (opts) {
@@ -306,13 +303,11 @@ exports.setCompilerOpts = function (opts) {
       jsio.path.add(opts.path);
     }
   }
-}
-;
+};
 
 exports.compile = function (statement, opts) {
   JSIO(statement, updateOpts(opts));
-}
-;
+};
 
 function run(moduleDef, cmd, opts) {
   JSIO.__require({}, moduleDef.directory, moduleDef.filename, cmd, updateOpts(opts));

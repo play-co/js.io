@@ -1,7 +1,8 @@
-jsio('import jsio.lib.Callback');
-jsio('import jsio.lib.PubSub');
+import Callback from 'jsio/lib/Callback';
+import PubSub from 'jsio/lib/PubSub';
 
-jsio('from .rtjp import RTJPProtocol');
+import rtjp from './rtjp';
+let RTJPProtocol = rtjp.RTJPProtocol;
 
 var Error = Class(function () {
   this.init = function (protocol, id, msg, details, requestId) {
@@ -18,16 +19,14 @@ var RPCRequest = Class(function () {
     this.id = id;
     this._onError = new lib.Callback();
     this._onSuccess = new lib.Callback();
-  }
-;
+  };
 
   this.onError = function () {
     this._onError.forward(arguments);
   };
   this.onSuccess = function () {
     this._onSuccess.forward(arguments);
-  }
-;
+  };
 
   this.bindLater = function (l) {
     var args = [].slice(arguments, 1);
@@ -57,8 +56,7 @@ var ReceivedRequest = Class(function () {
     this.responded = false;
     this.args = args;
     this.target = target;
-  }
-;
+  };
 
   this.error = function (msg, details) {
     if (this.responded) {
@@ -77,8 +75,7 @@ var ReceivedRequest = Class(function () {
     }
     this.responded = true;
     this.protocol.sendFrame('ERROR', args);
-  }
-;
+  };
 
   this.respond = function (args) {
     if (this.responded) {
@@ -93,8 +90,7 @@ var ReceivedRequest = Class(function () {
       id: this.id,
       args: args == undefined ? {} : args
     });
-  }
-;
+  };
 
   // python cuppa ignores responses with undefined args
   this.timeoutAfter = function (duration, msg) {
@@ -105,15 +101,13 @@ var ReceivedRequest = Class(function () {
       clearTimeout(this._timer);
     }
     this._timer = setTimeout(bind(this, '_timeout', msg), duration);
-  }
-;
+  };
 
   this._timeout = function (msg) {
     if (!this.responded) {
       this.error(msg);
     }
-  }
-;
+  };
 
 });
 
@@ -140,13 +134,11 @@ exports = Class(RTJPProtocol, function (supr) {
 
     this.onEvent = new lib.PubSub();
     this.onRequest = new lib.PubSub();
-  }
-;
+  };
 
   this.disconnect = function () {
     this.transport.loseConnection();
-  }
-;
+  };
 
   // pass something to call (ctx, method, args...) when connected
   this.onConnect = function () {
@@ -154,21 +146,18 @@ exports = Class(RTJPProtocol, function (supr) {
   };
   this.onDisconnect = function () {
     this._onDisconnect.forward(arguments);
-  }
-;
+  };
 
   this.reset = function () {
     this._onConnect.reset();
     this._onDisconnect.reset();
-  }
-;
+  };
 
   // called when we're connected
   this.connectionMade = function () {
     this._isConnected = true;
     this._onConnect.fire();
-  }
-;
+  };
 
   this.connectionLost = function (err) {
     for (var i in this._requests) {
@@ -178,10 +167,11 @@ exports = Class(RTJPProtocol, function (supr) {
     }
 
 
+
+
     this._isConnected = false;
     this._onDisconnect.fire(err);
-  }
-;
+  };
 
   this.sendRequest = function (name, args, target, cb) {
     if (arguments.length > 4) {
@@ -209,10 +199,11 @@ exports = Class(RTJPProtocol, function (supr) {
     }
 
 
+
+
     // will call cb(err)
     return req;
-  }
-;
+  };
 
   this.sendEvent = function (name, args, target) {
     this.sendFrame('EVENT', {
@@ -220,8 +211,7 @@ exports = Class(RTJPProtocol, function (supr) {
       args: args,
       target: target || null
     });
-  }
-;
+  };
 
   this.frameReceived = function (id, name, args) {
     logger.debug('RECEIVED', id, name, args);

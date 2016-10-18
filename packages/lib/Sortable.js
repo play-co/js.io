@@ -7,9 +7,10 @@ exports = Class('lib.Sortable', function (logger) {
     }
 
 
+
+
     this.toString = indexer;
-  }
-;
+  };
 
   this.toStringPop = function () {
     this.toString = this._toString.pop();

@@ -1,6 +1,7 @@
-jsio('import ...interfaces');
-jsio('from ...csp.client import CometSession');
-jsio('import ....std.utf8 as utf8');
+import interfaces from '../../interfaces';
+import client from '../../csp/client';
+let CometSession = client.CometSession;
+import utf8 from '../../../std/utf8';
 
 /**
  * @extends net.interfaces.Connector
@@ -18,8 +19,7 @@ exports.Connector = Class(interfaces.Connector, function () {
       this._opts.encoding = 'utf8';
     }
     conn.connect(this._opts.url, this._opts);
-  }
-;
+  };
 
   //{encoding: 'plain'});
   this.cometSessionOnConnect = function (conn) {
@@ -31,18 +31,15 @@ exports.Connector = Class(interfaces.Connector, function () {
 var Transport = Class(interfaces.Transport, function () {
   this.init = function (conn) {
     this._conn = conn;
-  }
-;
+  };
 
   this.makeConnection = function (protocol) {
     this._conn.onread = bind(protocol, 'dataReceived');
-  }
-;
+  };
 
   this.write = function (data) {
     this._conn.write(data);
-  }
-;
+  };
 
   this.loseConnection = function (protocol) {
     this._conn.close();

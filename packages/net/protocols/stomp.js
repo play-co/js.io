@@ -1,5 +1,7 @@
-jsio('from net.protocols.buffered import BufferedProtocol');
-jsio('from util.sprintf import sprintf');
+import buffered from 'net/protocols/buffered';
+let BufferedProtocol = buffered.BufferedProtocol;
+import _sprintf from 'util/sprintf';
+let sprintf = _sprintf.sprintf;
 
 /**
  * @extends net.protocols.buffered.BufferedProtocol
@@ -8,8 +10,7 @@ exports.StompProtocol = Class(BufferedProtocol, function (supr) {
   this.init = function () {
     supr(this, 'init', []);
     this.state = 'peek';
-  }
-;
+  };
 
   this.connect = function (username, password) {
     var frame = new StompFrame('CONNECT');
@@ -18,15 +19,13 @@ exports.StompProtocol = Class(BufferedProtocol, function (supr) {
     if (!!password)
       frame.setHeader('passcode', password);
     this.sendFrame(frame);
-  }
-;
+  };
 
   this.send = function (destination, body, headers) {
     var frame = new StompFrame('SEND', body, headers);
     frame.setHeader('destination', destination);
     this.sendFrame(frame);
-  }
-;
+  };
 
   this.subscribe = function (destination, headers) {
     var frame = new StompFrame('SUBSCRIBE', null, headers);
@@ -37,18 +36,15 @@ exports.StompProtocol = Class(BufferedProtocol, function (supr) {
     var frame = new StompFrame('UNSUBSCRIBE', null, headers);
     frame.setHeader('destination', destination);
     this.sendFrame(frame);
-  }
-;
+  };
 
   this.sendFrame = function (frame) {
     this.transport.write(frame.serialize());
-  }
-;
+  };
 
   this.frameReceived = function (frame) {
     logger.info('frame received', frame);
-  }
-;
+  };
 
   this.bufferUpdated = function () {
     logger.debug('bufferUpdated');
@@ -115,8 +111,9 @@ exports.StompProtocol = Class(BufferedProtocol, function (supr) {
     }
 
 
-  }
-;
+
+
+  };
 
 });
 

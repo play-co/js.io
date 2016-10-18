@@ -1,6 +1,6 @@
-jsio('import .env');
-jsio('import ..std.JSON as JSON');
-jsio('import .interfaces');
+import env from './env';
+import JSON from '../std/JSON';
+import interfaces from './interfaces';
 
 JSON.createGlobal();
 
@@ -21,15 +21,13 @@ exports.listen = function (server, transportName, opts) {
 
   listener.listen();
   return listener;
-}
-;
+};
 
 exports.connect = function (protocolInstance, transportName, opts) {
   var ctor = typeof transportName == 'string' ? env.getConnector(transportName) : transportName, connector = new ctor(protocolInstance, opts);
   connector.connect();
   return connector;
-}
-;
+};
 
 exports.quickServer = function (protocolClass) {
   return new interfaces.Server(protocolClass);

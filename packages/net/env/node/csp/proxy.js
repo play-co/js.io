@@ -27,8 +27,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
-jsio('import .util as cspUtil');
-jsio('from .server import csp');
+import cspUtil from './util';
+import server from './server';
+let csp = server.csp;
 
 // msp = "Multiplexing Socket Proxy"
 var msp = this.msp = exports;

@@ -1,4 +1,4 @@
-jsio('import ..interfaces');
+import interfaces from '../interfaces';
 
 /**
  * @extends net.interfaces.Protocol
@@ -10,13 +10,11 @@ exports.DelimitedProtocol = Class(interfaces.Protocol, function (supr) {
     }
     this.delimiter = delimiter;
     this.buffer = '';
-  }
-;
+  };
 
   this.connectionMade = function () {
     logger.debug('connectionMade');
-  }
-;
+  };
 
   this.dataReceived = function (data) {
     if (!data) {
@@ -30,8 +28,7 @@ exports.DelimitedProtocol = Class(interfaces.Protocol, function (supr) {
       this.buffer = this.buffer.slice(i + this.delimiter.length);
       this.lineReceived(line);
     }
-  }
-;
+  };
 
   this.lineReceived = function (line) {
     logger.debug('Not implemented, lineReceived:', line);

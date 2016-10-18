@@ -1,6 +1,6 @@
 /*
 * @shim
 */
-jsio('import math.geom.Point');
-exports = math.geom.Point;
+import Point from 'math/geom/Point';
+exports = Point;
 logger.log('Warning: math2D.Point is deprecated');

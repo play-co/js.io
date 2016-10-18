@@ -37,8 +37,7 @@ var RNG = Class(function () {
     this.z = 345678912 >>> 0;
     this.w = 456789123 >>> 0;
     this.c = 0;
-  }
-;
+  };
 
   // Iterate state object returning the next 32-bit unsigned random value
   this.uint32 = function () {
@@ -63,32 +62,27 @@ var RNG = Class(function () {
     this.w = w;
 
     return x + y + w >>> 0;
-  }
-;
+  };
 
   // Produce a 31-bit integer number in the range [0 ... 0x7fffffff] inclusive
   this.uint31 = function () {
     return this.uint32() >>> 1;
-  }
-;
+  };
 
   // Produce a 32-bit floating-point number in the range [0.0 ... 1.0] inclusive
   this.random = function () {
     return this.uint32() * (1 / 4294967296);
-  }
-;
+  };
 
   // Produce a floating-point number in the range [a ... b] inclusive
   this.rangeReal = function (a, b) {
     return this.uint32() * (1 / 4294967296) * (b - a) + a;
-  }
-;
+  };
 
   // Produce an integer number in the range [a ... b] inclusive
   this.rangeInteger = function (a, b) {
     return this.uint32() * (1 / 4294967296) * (b - a) + a + 0.5 >>> 0;
-  }
-;
+  };
 
   // Produce a 53-bit floating-point number according to a normal distribution
   // with mean = 0 and variance = 1, using the Box-Mulder (trigonometric) method
@@ -101,16 +95,16 @@ var RNG = Class(function () {
     }
 
 
+
+
     return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  }
-;
+  };
 
   // Produce a 53-bit floating-point number according to a Gaussian distribution
   // with your specified mean and variance
   this.gaussian = function (mean, stddev) {
     return stddev * this.normal() + mean;
-  }
-;
+  };
 
   // Same as kiss96_gauss except it also clamps to a specified range
   this.gaussianClamp = function (mean, stddev, clamp_lo, clamp_hi) {

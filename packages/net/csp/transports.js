@@ -1,6 +1,7 @@
-jsio('import std.uri as uri');
-jsio('import std.base64 as base64');
-jsio('from util.browserdetect import BrowserDetect');
+import uri from 'std/uri';
+import base64 from 'std/base64';
+import browserdetect from 'util/browserdetect';
+let BrowserDetect = browserdetect.BrowserDetect;
 
 ;
 (function () {
@@ -40,13 +41,11 @@ jsio('from util.browserdetect import BrowserDetect');
     return new (exports.XHR = win.XMLHttpRequest ? win.XMLHttpRequest : function () {
       return win.ActiveXObject && new win.ActiveXObject('Msxml2.XMLHTTP') || null;
     })();
-  }
-;
+  };
 
   exports.createXHR = function () {
     return new exports.XHR();
-  }
-;
+  };
 
 }());
 
@@ -493,8 +492,7 @@ var EMPTY_FUNCTION = function () {
       req.url = url + '?' + uri.buildQuery(args);
 
       setTimeout(bind(this, '_request', req), 0);
-    }
-;
+    };
 
     this._request = function (req) {
       var ifr = this._ifr[req.type], win = ifr.contentWindow, doc = win.document, body = doc.body;

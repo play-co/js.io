@@ -171,8 +171,7 @@ exports = Class(function () {
       array_sum(y) / y.length
     ];
     return center;
-  }
-;
+  };
 
   this.containsPoint = function (point) {
     var x = point[0];

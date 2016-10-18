@@ -1,16 +1,16 @@
-jsio('import lib.Callback');
-jsio('import net.interfaces');
-jsio('import std.utf8 as utf8');
+import Callback from 'lib/Callback';
+import interfaces from 'net/interfaces';
+import utf8 from 'std/utf8';
 
 var _script;
-var _scriptOnLoad = new lib.Callback();
+var _scriptOnLoad = new Callback();
 
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(net.interfaces.Connector, function () {
+exports.Connector = Class(interfaces.Connector, function () {
   this.connect = function () {
-    this._state = net.interfaces.STATE.CONNECTING;
+    this._state = interfaces.STATE.CONNECTING;
 
     var url = this._opts.url || '/';
     if (!/\/$/.test(url)) {
@@ -35,9 +35,14 @@ exports.Connector = Class(net.interfaces.Connector, function () {
 
 
 
+
+
+
+
+
+
     _scriptOnLoad.run(bind(this, '_connect'));
-  }
-;
+  };
 
   this._connect = function (io) {
     logger.debug('opening the connection');
@@ -54,21 +59,18 @@ exports.Connector = Class(net.interfaces.Connector, function () {
   };
 });
 
-var Transport = Class(net.interfaces.Transport, function () {
+var Transport = Class(interfaces.Transport, function () {
   this.init = function (socket) {
     this._socket = socket;
-  }
-;
+  };
 
   this.makeConnection = function (protocol) {
     this._socket.on('message', bind(protocol, 'dataReceived'));
-  }
-;
+  };
 
   this.write = function (data) {
     this._socket.send(data);
-  }
-;
+  };
 
   this.loseConnection = function (protocol) {
     this._socket.close();

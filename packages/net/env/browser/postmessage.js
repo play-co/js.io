@@ -1,6 +1,7 @@
-jsio('import net.interfaces');
-jsio('from util.browser import $');
-jsio('import std.uuid');
+import interfaces from 'net/interfaces';
+import browser from 'util/browser';
+let $ = browser.$;
+import uuid from 'std/uuid';
 
 
 var ID = 0;
@@ -10,7 +11,7 @@ var uniqueId = 1;
 /**
  * @extends net.interfaces.Listener
  */
-exports.Listener = Class(net.interfaces.Listener, function (supr) {
+exports.Listener = Class(interfaces.Listener, function (supr) {
   this.init = function () {
     supr(this, 'init', arguments);
     this._clients = {};
@@ -19,14 +20,14 @@ exports.Listener = Class(net.interfaces.Listener, function (supr) {
     }
 
 
+
+
     this._port = '' + (this._opts.port || '');
-  }
-;
+  };
 
   this.listen = function () {
     $.onEvent(window, 'message', bind(this, '_onMessage'));
-  }
-;
+  };
 
   this.getButton = function (url, text) {
     var button = $({
@@ -36,8 +37,7 @@ exports.Listener = Class(net.interfaces.Listener, function (supr) {
     });
     $.onEvent(button, 'click', bind(this, 'openWindow', url || this._opts.clientUrl));
     return button;
-  }
-;
+  };
 
   this.openWindow = function (url) {
     var options = {
@@ -58,8 +58,7 @@ exports.Listener = Class(net.interfaces.Listener, function (supr) {
     }
     var win = window.open(url, 'W' + uniqueId++, arr.join(','));
     win.focus();
-  }
-;
+  };
 
   this._onMessage = function (evt) {
     if (typeof evt.data != 'string' || this._port != evt.data.substring(0, this._port.length)) {
@@ -109,19 +108,18 @@ exports.Listener = Class(net.interfaces.Listener, function (supr) {
 /**
  * @extends net.interfaces.Connector
  */
-exports.Connector = Class(net.interfaces.Connector, function () {
+exports.Connector = Class(interfaces.Connector, function () {
   this.connect = function () {
     this._port = '' + (this._opts.port || '');
     this._win = this._opts.win || window.opener || window.parent;
     $.onEvent(window, 'message', bind(this, '_onMessage'));
 
-    this._uid = std.uuid.uuid();
+    this._uid = uuid.uuid();
     this._win.postMessage(this._port + JSON.stringify({
       type: 'open',
       uid: this._uid
     }), '*');
-  }
-;
+  };
 
   this._onMessage = function (evt) {
     if (typeof evt.data != 'string' || this._port != evt.data.substring(0, this._port.length)) {
@@ -165,21 +163,19 @@ exports.Connector = Class(net.interfaces.Connector, function () {
 /**
  * @extends net.interfaces.Transport
  */
-exports.Transport = Class(net.interfaces.Transport, function () {
+exports.Transport = Class(interfaces.Transport, function () {
   this.init = function (win, port, uid) {
     if (!uid)
       debugger;
     this._win = win;
     this._port = port;
     this._uid = uid;
-  }
-;
+  };
 
   // unique identifier for clients
   this.makeConnection = function (protocol) {
     this._protocol = protocol;
-  }
-;
+  };
 
   this.write = function (data, encoding) {
     if (this.encoding == 'utf8') {
@@ -195,8 +191,7 @@ exports.Transport = Class(net.interfaces.Transport, function () {
         payload: data
       }), '*');
     }
-  }
-;
+  };
 
   this.loseConnection = function (protocol) {
     this._win.postMessage(this._port + JSON.stringify({
@@ -204,8 +199,7 @@ exports.Transport = Class(net.interfaces.Transport, function () {
       uid: this._uid,
       code: 301
     }), '*');
-  }
-;
+  };
 
   this.onData = function () {
     this._protocol.dataReceived.apply(this._protocol, arguments);

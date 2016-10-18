@@ -1,4 +1,4 @@
-jsio('import math.util as util');
+import util from 'math/util';
 
 
 

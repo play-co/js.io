@@ -138,8 +138,7 @@ var Point = exports = Class(function () {
  */
 Point.getPolarR = function (x, y) {
   throw 'notImplemented';
-}
-;
+};
 
 /*
 	### Class Method: Point.getPolarTheta (x, y)
@@ -150,8 +149,7 @@ Point.getPolarR = function (x, y) {
 Point.getPolarTheta = function (x, y) {
   var val = Math.atan2(y, x) + Math.PI * 2;
   return val > Math.PI * 2 ? val % (Math.PI * 2) : val;
-}
-;
+};
 
 /*
 	### Class Method: Point.add (a, b, c, d)
@@ -171,8 +169,7 @@ Point.add = Point.translate = function (a, b, c, d) {
   case 4:
     return new Point(a, b).add(c, d);
   }
-}
-;
+};
 
 /*
 	### Class Method: Point.subtract (a, b, c, d)
@@ -191,8 +188,7 @@ Point.subtract = function (a, b, c, d) {
   case 4:
     return new Point(a, b).subtract(c, d);
   }
-}
-;
+};
 
 /*
 	### Class Method: Point.scale (a, b, c) 
@@ -208,8 +204,7 @@ Point.scale = function (a, b, c) {
   case 3:
     return new Point(a, b).scale(c);
   }
-}
-;
+};
 
 /*
 	### Class Method: Point.setMagnitude (a, b, c)
@@ -225,8 +220,7 @@ Point.setMagnitude = function (a, b, c) {
   case 3:
     return new Point(a, b).setMagnitude(c);
   }
-}
-;
+};
 
 /*
 	### Class Method: Point.addMagnitude (a, b, c)
@@ -247,8 +241,7 @@ Point.addMagnitude = function (a, b, c) {
   }
 
   return pt.addMagnitude(b);
-}
-;
+};
 
 /*
 	### Class Method: Point.getMagnitude (a, b)
@@ -258,8 +251,7 @@ Point.addMagnitude = function (a, b, c) {
  */
 Point.getMagnitude = function (a, b) {
   return new Point(a, b).getMagnitude();
-}
-;
+};
 
 /*
 	### Class Method: Point.rotate (a, b, c)
@@ -275,8 +267,7 @@ Point.rotate = function (a, b, c) {
   case 3:
     return new Point(a, b).rotate(c);
   }
-}
-;
+};
 
 /**
  * Treat two points as vectors and project a onto b

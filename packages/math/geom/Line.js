@@ -1,4 +1,4 @@
-jsio('import .Point');
+import Point from './Point';
 
 exports = Class(function () {
   this.init = function (a, b, c, d) {
@@ -25,8 +25,7 @@ exports = Class(function () {
       this.end = new Point(c, d);
       break;
     }
-  }
-;
+  };
 
   this.getMagnitude = this.getLength = function () {
     var dx = this.end.x - this.start.x, dy = this.end.y - this.start.y;

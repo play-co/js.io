@@ -1,4 +1,4 @@
-jsio('import util.path as utilPath');
+import utilPath from 'util/path';
 
 var attrs = [
   'source',

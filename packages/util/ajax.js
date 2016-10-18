@@ -1,4 +1,4 @@
-jsio('import std.uri as URI');
+import URI from 'std/uri';
 
 exports.MAX_SIMULTANEOUS = 4;
 
@@ -44,8 +44,7 @@ var ctor = function () {
 
 exports.createXHR = function () {
   return new ctor();
-}
-;
+};
 
 exports.post = function (opts, cb) {
   return exports.get(merge({ method: 'POST' }, opts), cb);
@@ -120,8 +119,7 @@ exports.get = function (opts, cb) {
   } else {
     _send(request);
   }
-}
-;
+};
 
 function _sendNext() {
   //logger.log('====INFLIGHT', _inflight, exports.MAX_SIMULTANEOUS, 'might send next?');

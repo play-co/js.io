@@ -144,7 +144,6 @@ var sprintfWrapper = {
       }
     }
   }
-}
-;
+};
 
 exports.sprintf = sprintfWrapper.init;

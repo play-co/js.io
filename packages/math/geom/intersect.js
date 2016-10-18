@@ -1,6 +1,6 @@
-jsio('import .Point');
-jsio('import .Line');
-jsio('import .Rect');
+import Point from './Point';
+import Line from './Line';
+import Rect from './Rect';
 
 /**
  * @package math.geom.intersect

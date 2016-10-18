@@ -1,6 +1,6 @@
-jsio('import .sizzle as Sizzle');
+import Sizzle from './sizzle';
 
-jsio('import math.geom.Rect');
+import Rect from 'math/geom/Rect';
 
 function isWindow(el) {
   return el && !$.isElement(el) && $.isElement(el.document);
@@ -37,8 +37,7 @@ $.isElement = DOM2 ? function (el) {
 
 $.id = function (id, win) {
   return typeof id == 'string' ? (win || window).document.getElementById(id) : id;
-}
-;
+};
 
 $.apply = function (el, params) {
   if (params.attrs) {
@@ -93,9 +92,10 @@ $.apply = function (el, params) {
   }
 
 
+
+
   return el;
-}
-;
+};
 
 $.insertBefore = function (parentNode, el, beforeNode) {
   if (!parentNode || !el) {
@@ -106,8 +106,7 @@ $.insertBefore = function (parentNode, el, beforeNode) {
   } else {
     parentNode.appendChild(el);
   }
-}
-;
+};
 
 $.insertAfter = function (parentNode, el, afterNode) {
   if (!parentNode || !el) {
@@ -120,8 +119,7 @@ $.insertAfter = function (parentNode, el, afterNode) {
   } else {
     parentNode.insertBefore(el, afterNode.nextSibling);
   }
-}
-;
+};
 
 $.create = function (params) {
   var doc = (params && params.win || window).document;
@@ -131,16 +129,14 @@ $.create = function (params) {
   ;
 
   return $.apply(params.el || doc.createElement(params.tag || params.tagName || 'div'), params);
-}
-;
+};
 
 $.show = function (el, how) {
   $.id(el).style.display = how || 'block';
 };
 $.hide = function (el) {
   $.id(el).style.display = 'none';
-}
-;
+};
 
 // accepts an array or a space-delimited string of classNames
 $.addClass = function (el, classNames) {
@@ -162,10 +158,11 @@ $.addClass = function (el, classNames) {
   }
 
 
+
+
   el.className = current.replace(/^\s+|\s+$/g, '');
   return $;
-}
-;
+};
 
 /* returns true if the given className is found in the list of
  * classes on the given element.
@@ -191,8 +188,7 @@ $.hasClass = function (el, className) {
 
 $.getTag = function (from, tag) {
   return from.getElementsByTagName(tag);
-}
-;
+};
 
 $.removeClass = function (el, classNames) {
   if (!el) {
@@ -200,8 +196,7 @@ $.removeClass = function (el, classNames) {
   }
   var el = $.id(el);
   el.className = (' ' + el.className + ' ').replace(' ', '  ').replace(new RegExp('( ' + classNames.replace('s+', ' | ').replace('-', '-') + ' )', 'g'), ' ').replace(/\s+/, ' ').replace(/^\s+|\s+$/g, '');
-}
-;
+};
 
 function ieGetAlpha(el) {
   try {
@@ -300,8 +295,7 @@ $.removeEvent = function (el, name, f) {
   } else {
     el.detachEvent('on' + name, f);
   }
-}
-;
+};
 
 $.stopEvent = function (e) {
   if (e) {
@@ -311,8 +305,7 @@ $.stopEvent = function (e) {
     if (e.preventDefault)
       e.preventDefault();
   }
-}
-;
+};
 
 $.setText = function (el, text) {
   el = $.id(el);
@@ -325,8 +318,7 @@ $.setText = function (el, text) {
     el.innerHTML = '';
     el.appendChild(document.createTextNode(text));
   }
-}
-;
+};
 
 $.setValue = function (el, value) {
   el = $.id(el);
@@ -342,16 +334,14 @@ $.remove = function (el) {
   if (el && el.parentNode) {
     el.parentNode.removeChild(el);
   }
-}
-;
+};
 
 $.cursorPos = function (ev, el) {
   var offset = $.pos(el);
   offset.top = ev.clientY - offset.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop);
   offset.left = ev.clientX - offset.left + (window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft);
   return offset;
-}
-;
+};
 
 $.pos = function (el) {
   var parent = el;
@@ -370,8 +360,7 @@ $.pos = function (el) {
     parent = parent.offsetParent;
   }
   return offset;
-}
-;
+};
 
 $.size = function (el) {
   if ($.isElement(el)) {
@@ -381,10 +370,9 @@ $.size = function (el) {
     };
   } else if (el.document) {
     var doc = el.document.documentElement || el.document.body;
-    return new math.geom.Rect(doc.offsetTop, doc.offsetLeft, el.innerWidth || (doc.clientWidth || doc.clientWidth), el.innerHeight || (doc.clientHeight || doc.clientHeight));
+    return new Rect(doc.offsetTop, doc.offsetLeft, el.innerWidth || (doc.clientWidth || doc.clientWidth), el.innerHeight || (doc.clientHeight || doc.clientHeight));
   }
-}
-;
+};
 
 $.insertCSSFile = function (filename) {
   document.getElementsByTagName('head')[0].appendChild($({

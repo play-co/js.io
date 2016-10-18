@@ -32,8 +32,7 @@ exports = Class(function () {
       }
       ;
     }
-  }
-;
+  };
 
   this.contains = function (val) {
     return this._values.hasOwnProperty(val);

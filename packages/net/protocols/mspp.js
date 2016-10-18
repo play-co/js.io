@@ -1,6 +1,7 @@
-jsio('import net');
-jsio('from net.protocols.buffered import BufferedProtocol');
-jsio('import std.utf8 as utf8');
+import net from 'net';
+import buffered from 'net/protocols/buffered';
+let BufferedProtocol = buffered.BufferedProtocol;
+import utf8 from 'std/utf8';
 
 
 /*
@@ -37,36 +38,31 @@ exports.MSPPStream = Class(function () {
   this.setMultiplexer = function (multiplexer) {
     loggers.stream.debug('setMultiplexer: ' + multiplexer);
     this.multiplexer = multiplexer;
-  }
-;
+  };
 
   this.setEncoding = function (encoding) {
     loggers.stream.debug('setEncoding: ' + encoding);
     this.encoding = encoding;
-  }
-;
+  };
 
   this.open = function (host, port, isBinary) {
     if (isBinary)
       this.encoding = 'utf8';
     this.id = this.multiplexer.openStream(this, host, port);
     loggers.stream.debug('open ' + this.id + ': ' + host + ' ' + port + ' ' + isBinary);
-  }
-;
+  };
 
   this.close = function () {
     loggers.stream.debug('close ' + this.id);
     this.multiplexer.close(this.id);
-  }
-;
+  };
 
   this.send = function (data, encoding) {
     loggers.stream.debug('send ' + this.id + ': ' + data + ' ' + encoding);
     if ((encoding || this.encoding) == 'utf8')
       data = utf8.encode(data);
     this.multiplexer.writeToStream(this.id, data);
-  }
-;
+  };
 
   this._onreadraw = function (data) {
     if (this.encoding == 'utf8') {
@@ -80,8 +76,7 @@ exports.MSPPStream = Class(function () {
     }
     loggers.stream.debug('_onreadraw ' + data);
     this.onread(data);
-  }
-;
+  };
 
   this.onopen = function () {
   };
@@ -109,14 +104,12 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
     this.currentId = 0;
     this.streams = {};
     this.writeBuffer = [];
-  }
-;
+  };
 
   this.setTransport = function (transportType, transportOptions) {
     this.transportType = transportType;
     this.transportOptions = transportOptions;
-  }
-;
+  };
 
   this.connectionMade = function (isReconnect) {
     loggers.protocol.debug('connectionMade');
@@ -124,16 +117,14 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
     for (var i = 0; i < this.writeBuffer.length; i++)
       this._write(this.writeBuffer[i]);
     writeBuffer = [];
-  }
-;
+  };
 
   this.connectionLost = function (reason) {
     loggers.protocol.debug('closed: ' + reason);
     this.state = state.closed;
     for (var stream in this.streams)
       this.streams[stream].onclose(reason);
-  }
-;
+  };
 
   this.openStream = function (stream, host, port) {
     if (this.state == state.closed) {
@@ -148,8 +139,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
       host + ',' + port
     ]);
     return id;
-  }
-;
+  };
 
   this.closeStream = function (id) {
     this._write([
@@ -157,8 +147,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
       frames.CLOSE,
       ''
     ]);
-  }
-;
+  };
 
   this.writeToStream = function (id, data) {
     this._write([
@@ -166,8 +155,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
       frames.DATA,
       data
     ]);
-  }
-;
+  };
 
   this.bufferUpdated = function () {
     loggers.protocol.debug('bufferUpdated. state: ' + this.state + '. buffer: ' + this.buffer._rawBuffer);
@@ -199,8 +187,7 @@ exports.MSPPProtocol = Class(BufferedProtocol, function (supr) {
     default:
       throw new Error('invalid MSPP data type!');
     }
-  }
-;
+  };
 
   this._write = function (data) {
     if (this.state != state.consuming) {

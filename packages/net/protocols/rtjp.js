@@ -1,4 +1,5 @@
-jsio('from .delimited import DelimitedProtocol');
+import delimited from './delimited';
+let DelimitedProtocol = delimited.DelimitedProtocol;
 
 
 var error = function (e) {
@@ -14,21 +15,18 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
     var delimiter = '\r\n';
     supr(this, 'init', [delimiter]);
     this.frameId = 0;
-  }
-;
+  };
 
   this.connectionMade = function () {
     if (this._client && this._client.connectionMade) {
       this._client.connectionMade();
     }
     logger.debug('connectionMade');
-  }
-;
+  };
 
   // Inherit and overwrite
   this.frameReceived = function (id, name, args) {
-  }
-;
+  };
 
   // Public
   this.sendFrame = function (name, args) {
@@ -42,8 +40,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
       args
     ]));
     return this.frameId;
-  }
-;
+  };
 
   this.lineReceived = function (line) {
     try {
@@ -67,8 +64,7 @@ exports.RTJPProtocol = Class(DelimitedProtocol, function (supr) {
     if (frame) {
       this.frameReceived(frame[0], frame[1], frame[2]);
     }
-  }
-;
+  };
 
   this.connectionLost = function () {
     logger.debug('conn lost');

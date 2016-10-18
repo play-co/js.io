@@ -44,9 +44,10 @@ exports = function (str, maxWidth, prefix, tabWidth) {
   }
 
 
+
+
   return lines.join('\n');
-}
-;
+};
 
 exports.getLengthWithTabs = function (str, tabWidth) {
   var tabs = 0;

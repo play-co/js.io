@@ -1,26 +1,23 @@
-jsio('import ....interfaces');
-jsio('import .server');
+import interfaces from '../../../interfaces';
+import server from './server';
 
 var Transport = Class(interfaces.Transport, function () {
   this.init = function (socket) {
     this._socket = socket;
     logger.debug('init', socket);
-  }
-;
+  };
 
   this.makeConnection = function (protocol) {
     logger.debug('makeConnection:', protocol);
     this._socket.addListener('receive', bind(protocol, 'dataReceived'));
 
     this._socket.addListener('close', bind(protocol, '_connectionLost'));
-  }
-;
+  };
 
   // TODO: map error codes
   this.write = function (data) {
     this._socket.send(data);
-  }
-;
+  };
 
   this.loseConnection = function () {
     this._socket.forceClose();
@@ -48,8 +45,7 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
       logger.info('Listening csp@' + listenString);
       s.listen(this._opts.port, this._opts['interface'] || '');
     }
-  }
-;
+  };
 
   this._onConnect = function (socket) {
     logger.info('Incoming connection');
@@ -57,8 +53,7 @@ exports.Listener = Class(interfaces.Listener, function (supr) {
     socket.addListener('connect', bind(this, function () {
       this.onConnect(new Transport(socket));
     }));
-  }
-;
+  };
 
   // for express middleware
   this.createMiddleware = function () {

@@ -1,6 +1,6 @@
 /*
 * @shim
 */
-jsio('import math.geom.Circle');
-exports = math.geom.Circle;
+import Circle from 'math/geom/Circle';
+exports = Circle;
 logger.log('Warning: math2D.Circle is deprecated');

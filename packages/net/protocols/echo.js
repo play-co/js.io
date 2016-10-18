@@ -1,14 +1,13 @@
-jsio('import net.interfaces');
+import interfaces from 'net/interfaces';
 
 /**
  * @extends net.interfaces.Protocol
  */
-exports.Protocol = Class(net.interfaces.Protocol, function () {
+exports.Protocol = Class(interfaces.Protocol, function () {
   this.connectionMade = function () {
     logger.debug('in connectionMade');
     this.transport.write('Welcome');
-  }
-;
+  };
 
   this.dataReceived = function (data) {
     logger.debug('dataReceived:', data);
@@ -19,7 +18,7 @@ exports.Protocol = Class(net.interfaces.Protocol, function () {
   };
 });
 
-exports.Server = Class(net.interfaces.Server, function (supr) {
+exports.Server = Class(interfaces.Server, function (supr) {
   this.init = function () {
     supr(this, 'init', [exports.Protocol]);
   };

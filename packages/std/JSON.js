@@ -189,9 +189,14 @@ exports.createGlobal = function () {
 
 
 
+
+
+
+
+
+
     return '"' + year + '-' + month + '-' + day + 'T' + hours + ':' + minutes + ':' + seconds + '.' + ms + 'Z"';
-  }
-;
+  };
 
   /**
 	 * The parse method takes a text and an optional reviver function, and returns

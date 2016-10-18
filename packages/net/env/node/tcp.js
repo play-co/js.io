@@ -1,23 +1,20 @@
-jsio('import ...interfaces');
+import interfaces from '../../interfaces';
 var net = require('net');
 
 var Transport = Class(interfaces.Transport, function () {
   this.init = function (socket) {
     this._socket = socket;
-  }
-;
+  };
 
   this.makeConnection = function (protocol) {
     this._socket.addListener('data', bind(protocol, 'dataReceived'));
     this._socket.addListener('close', bind(protocol, 'connectionLost'));
-  }
-;
+  };
 
   // TODO: map error codes
   this.write = function (data) {
     this._socket.write(data);
-  }
-;
+  };
 
   this.loseConnection = function () {
     this._socket.end();

@@ -1,5 +1,4 @@
-var req = require.context('.', true, /\.js$/)
-;
+var req = require.context('.', true, /\.js$/);
 
 function getObj(objectName, transportName, envName) {
   try {

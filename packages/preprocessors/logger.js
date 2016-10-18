@@ -5,8 +5,7 @@ var delimiterRegex = /^(\\.|[\(\)"'\\])/;
 
 exports = function (path, moduleDef, opts) {
   moduleDef.src = exports.replaceLogger(moduleDef.src, moduleDef.friendlyPath);
-}
-;
+};
 
 exports.replaceLogger = function (src, prefix) {
   loggerRegex.lastIndex = 0;

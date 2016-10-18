@@ -1,7 +1,7 @@
-jsio('import lib.Enum');
-jsio('import .Point');
-jsio('import .Line');
-jsio('import .intersect');
+import Enum from 'lib/Enum';
+import Point from './Point';
+import Line from './Line';
+import intersect from './intersect';
 
 
 /**
@@ -158,5 +158,5 @@ var Rect = exports = Class(function () {
   };
 });
 
-var SIDES = Rect.SIDES = lib.Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT');
-var CORNERS = Rect.CORNERS = lib.Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');
+var SIDES = Rect.SIDES = Enum('TOP', 'BOTTOM', 'LEFT', 'RIGHT');
+var CORNERS = Rect.CORNERS = Enum('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT');

@@ -1,5 +1,5 @@
-jsio('import .jsonSchema');
-jsio('import ..lib.Enum');
+import jsonSchema from './jsonSchema';
+import Enum from '../lib/Enum';
 
 
 
@@ -36,7 +36,9 @@ function addAlso(optsDef, also, value) {
 }
 
 
-var truthyValues = lib.Enum('true', '1', 'yes'), falsyValues = lib.Enum('false', '0', 'no');
+
+
+var truthyValues = Enum('true', '1', 'yes'), falsyValues = Enum('false', '0', 'no');
 
 function addArg(result, optsDef, argv, i) {
   var val, srcName = argv[i], itemSchema = optsDef[argv[i]], len = argv.length, itemType = itemSchema && itemSchema.type && itemSchema.type.toLowerCase();
@@ -147,7 +149,7 @@ exports = function (argv, origDef) {
 ;
 
 
-jsio('import ..util.wordWrap');
+import wordWrap from '../util/wordWrap';
 
 exports.printUsage = function (usage, optsDef) {
   var print = jsio.__env.log;
@@ -165,7 +167,7 @@ exports.printUsage = function (usage, optsDef) {
     }
     print('\t' + opt.join(', '));
     if (optsDef[i].description) {
-      print(util.wordWrap(optsDef[i].description, 80, '\t\t'));
+      print(wordWrap(optsDef[i].description, 80, '\t\t'));
     }
   }
 };

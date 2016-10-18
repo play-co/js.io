@@ -13,7 +13,8 @@
  *     Calling the super constructor is not required for descendants of
  *     lib.PubSub.
  */
-jsio('from ..std.uuid import uuid');
+import _uuid from '../std/uuid';
+let uuid = _uuid.uuid;
 
 var ctx = jsio.__env.global, SLICE = Array.prototype.slice;
 

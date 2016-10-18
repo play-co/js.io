@@ -1,6 +1,6 @@
 /*
 * @shim
 */
-jsio('import math.geom.intersect');
-exports = math.geom.intersect;
+import intersect from 'math/geom/intersect';
+exports = intersect;
 logger.log('Warning: math2D.intersect is deprecated');

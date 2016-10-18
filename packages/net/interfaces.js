@@ -1,7 +1,7 @@
 // Sort of like a twisted protocol
-jsio('import .index as net');
-jsio('import ..lib.Enum as Enum');
-jsio('import ..lib.PubSub as PubSub');
+import net from './index';
+import Enum from '../lib/Enum';
+import PubSub from '../lib/PubSub';
 
 var ctx = jsio.__env.global;
 
@@ -11,26 +11,22 @@ exports.Protocol = Class(function () {
   this.dataReceived = function (data) {
   };
   this.connectionLost = function (reason) {
-  }
-;
+  };
 
   this._connectionMade = function () {
     this._isConnected = true;
     this.connectionMade.apply(this, arguments);
-  }
-;
+  };
 
   this._connectionLost = function () {
     this._isConnected = false;
     this.connectionLost.apply(this, arguments);
-  }
-;
+  };
 
   this._isConnected = false;
   this.isConnected = function () {
     return !!this._isConnected;
-  }
-;
+  };
 
   this.end = function () {
     if (this.transport) {
@@ -42,8 +38,7 @@ exports.Protocol = Class(function () {
 exports.Client = Class(function () {
   this.init = function (protocol) {
     this._protocol = protocol;
-  }
-;
+  };
 
   this.connect = function (transportName, opts) {
     this._remote = new this._protocol();
@@ -56,13 +51,11 @@ exports.Client = Class(function () {
 exports.Server = Class(function () {
   this.init = function (protocolClass) {
     this._protocolClass = protocolClass;
-  }
-;
+  };
 
   this.buildProtocol = function () {
     return new this._protocolClass();
-  }
-;
+  };
 
   this.listen = function (transportName, opts) {
     return net.listen(this, transportName, opts);
@@ -90,8 +83,7 @@ exports.Listener = Class(PubSub, function () {
   this.init = function (server, opts) {
     this._server = server;
     this._opts = opts || {};
-  }
-;
+  };
 
   this.onConnect = function (transport) {
     //try {
@@ -101,8 +93,7 @@ exports.Listener = Class(PubSub, function () {
     transport.protocol = p;
     transport.makeConnection(p);
     p._connectionMade();
-  }
-;
+  };
 
   //} catch(e) {
   //	logger.error(e);
@@ -120,13 +111,11 @@ exports.Connector = Class(function () {
     this._protocol = protocol;
     this._opts = opts;
     this._state = exports.STATE.INITIAL;
-  }
-;
+  };
 
   this.getState = function () {
     return this._state;
-  }
-;
+  };
 
   this.onConnect = function (transport) {
     this._state = exports.STATE.CONNECTED;
@@ -138,8 +127,7 @@ exports.Connector = Class(function () {
     } catch (e) {
       throw logger.error(e);
     }
-  }
-;
+  };
 
   this.onDisconnect = function (err) {
     var wasConnected = this._state == exports.STATE.CONNECTED;
@@ -150,8 +138,7 @@ exports.Connector = Class(function () {
     } catch (e) {
       throw logger.error(e);
     }
-  }
-;
+  };
 
   this.getProtocol = function () {
     return this._protocol;

@@ -5,8 +5,7 @@ exports.Later = Class(function () {
     this.values = [];
     this.errors = [];
     this.cancelback = null;
-  }
-;
+  };
 
   this.succeed = this.callback = function () {
     logger.debug('callback', [].slice.call(arguments, 0));
@@ -18,8 +17,7 @@ exports.Later = Class(function () {
     } else {
       this.values.push(arguments);
     }
-  }
-;
+  };
 
   this.fail = this.errback = function () {
     logger.debug('eb', [].slice.call(arguments, 0));
@@ -28,8 +26,7 @@ exports.Later = Class(function () {
     } else {
       this.errors.push(arguments);
     }
-  }
-;
+  };
 
   this.cancel = function () {
     if (this.cancelback) {
@@ -67,6 +64,5 @@ exports.Later.fail = function () {
 exports.Later.succeed = function () {
   var l = new Later();
   return l.succeed.apply(l, arguments);
-}
-;
+};
 

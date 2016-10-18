@@ -1,4 +1,4 @@
-jsio('import .esprima');
+import esprima from './esprima';
 
 function validate(code, filename) {
   try {
