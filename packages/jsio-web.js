@@ -1,5 +1,3 @@
-import { bind } from 'base';
-
 // Copyright (c) 2010
 // Michael Carter (cartermichael@gmail.com)
 // Martin Hunt (mghunt@gmail.com)
@@ -403,6 +401,7 @@ import { bind } from 'base';
       this.log = function(args...) {};
     }
     */
+
     function ENV_browser () {
       var XHR = window.XMLHttpRequest || function () {
           return new ActiveXObject('Msxml2.XMLHTTP');
@@ -875,7 +874,7 @@ import { bind } from 'base';
             for (var k = 0; k < kMax; ++k) {
               var segment = segments[k];
               if (!segment)
-                { continue; }
+                continue;
               if (!c[segment]) {
                 c[segment] = {};
               }

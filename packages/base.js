@@ -1,9 +1,6 @@
-let exports = {};
+import jsio from 'jsio';
 
-import {
-  logger,
-  logging
-} from 'base';
+let exports = {};
 
 /**
  * base.js
@@ -318,5 +315,44 @@ exports.logging = (function () {
 }());
 
 var logger = exports.logging.get('jsiocore');
+exports.logger = logger;
+
+// TODO: make this not a hack
+var _exportLog = exports.log;
+var _exportIsArray = exports.isArray;
+var _exportBind = exports.bind;
+var _exportMerge = exports.merge;
+var _exportDelay = exports.delay;
+var _exportLogging = exports.logging;
+var _exportLogger = exports.logger;
+var _exportCONFIG = typeof CONFIG !== 'undefined' ? CONFIG : {};
+var _exportNATIVE = typeof NATIVE !== 'undefined' ? NATIVE : {};
+var _exportCACHE = typeof CACHE !== 'undefined' ? CACHE : {};
+
+var _exportGLOBAL;
+if (typeof GLOBAL !== 'undefined') {
+  throw new Error('Unexpected, GLOBAL should not exist in a webpack build');
+  // _exportGLOBAL = GLOBAL;
+} else {
+  // lol
+  window.CACHE = _exportCACHE;
+  window.CONFIG = _exportCONFIG;
+  window.NATIVE = _exportNATIVE;
+  _exportGLOBAL = window;
+}
+
+export {
+  _exportLog as log,
+  _exportIsArray as isArray,
+  _exportBind as bind,
+  _exportMerge as merge,
+  _exportDelay as delay,
+  _exportLogging as logging,
+  _exportLogger as logger,
+  _exportGLOBAL as GLOBAL,
+  _exportNATIVE as NATIVE,
+  _exportCONFIG as CONFIG,
+  _exportCACHE as CACHE
+};
 
 export default exports;
