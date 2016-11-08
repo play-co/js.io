@@ -4,7 +4,7 @@ let exports = {};
  * Model a vector in two-dimensional space.
  * Pass an "angle" option in radians to this function to initialize an angle.
  */
-exports = class {
+exports = class Vec2D {
   constructor (opts) {
     if ('angle' in opts) {
       this.x = opts.magnitude * Math.cos(opts.angle);

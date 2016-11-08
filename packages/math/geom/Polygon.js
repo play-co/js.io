@@ -59,7 +59,7 @@ function norm (v) {
   return Math.pow(v[0] * v[0] + v[1] * v[1], 0.5);
 }
 
-exports = class {
+exports = class Polygon {
   constructor (opts) {
     this.x = opts.x;
     this.y = opts.y;

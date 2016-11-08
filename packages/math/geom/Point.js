@@ -4,7 +4,7 @@ let exports = {};
  * @package math.geom.Point;
  * Models a Point in 2D space.
  */
-exports = class {
+exports = class Point {
   constructor (a, b) {
     switch (arguments.length) {
       case 0:

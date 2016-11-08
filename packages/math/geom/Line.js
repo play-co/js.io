@@ -2,7 +2,7 @@ let exports = {};
 
 import Point from './Point';
 
-exports = class {
+exports = class Line {
   constructor (a, b, c, d) {
     switch (arguments.length) {
       case 0:

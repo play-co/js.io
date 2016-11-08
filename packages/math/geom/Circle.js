@@ -8,7 +8,7 @@ import Point from './Point';
  *   Circle(x, y, radius)
  *   Circle({x: default 0, y: default 0, radius: default 0})
  */
-exports = class extends Point {
+exports = class Circle extends Point {
   constructor (a, b, c) {
     super();
 

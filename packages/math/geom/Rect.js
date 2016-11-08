@@ -8,7 +8,7 @@ import intersect from './intersect';
 /**
  * Model a rectangle.
  */
-exports = class {
+exports = class Rect {
   constructor (a, b, c, d) {
     switch (arguments.length) {
       case 0:
