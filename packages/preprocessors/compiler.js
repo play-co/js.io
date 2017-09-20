@@ -1,5 +1,4 @@
-var path = require("jsio/util/path");
-
+import jsio.util.path as path;
 // compiler should be able to compile itself, so use a different name for calls to jsio that we don't want to try to compile
 var JSIO = jsio.__jsio;
 
